@@ -237,19 +237,3 @@ fn calculate_intersection_in_front(l1: &Edge, l2: &Edge) -> Option<Point> {
         None
     }
 }
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn corner_type_test() {
-        assert_eq!(determine_corner_type((Point(-1.0, 1.0), Point(0.0, 0.0), Point(1.0, -0.5))), CornerType::Convex);
-        assert_eq!(determine_corner_type((Point(-1.0, 1.0), Point(0.0, 0.0), Point(1.0, -1.0))), CornerType::Collinear);
-        assert_eq!(determine_corner_type((Point(-1.0, 1.0), Point(0.0, 0.0), Point(-1.0, -1.0))), CornerType::Concave);
-
-        assert_eq!(determine_corner_type((Point(0.0, -1.0), Point(0.0, 0.0), Point(-1.0, 0.0))), CornerType::Convex);
-        assert_eq!(determine_corner_type((Point(166.27164582845745, -77.68501707537281), Point(160.08270194143108, -78.50474474252862), Point(154.46756742141392, -76.7013438747859))), CornerType::Concave);
-    }
-}

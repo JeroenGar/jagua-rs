@@ -1,16 +1,16 @@
 use itertools::Itertools;
-use log::{debug, info};
-use ordered_float::NotNan;
+use log::{info};
+
 use rand::distributions::uniform::UniformSampler;
 use rand::prelude::{SliceRandom, SmallRng};
 
 use jaguars::entities::item::Item;
 use jaguars::entities::layout::Layout;
-use jaguars::geometry::d_transformation::DTransformation;
-use jaguars::geometry::geo_enums::GeoRelation;
-use jaguars::geometry::geo_traits::{CollidesWith, Shape};
-use jaguars::geometry::primitives::aa_rectangle::AARectangle;
-use jaguars::geometry::primitives::point::Point;
+
+
+use jaguars::geometry::geo_traits::{Shape};
+
+
 use jaguars::geometry::transformation::Transformation;
 use crate::lbf_cost::LBFCost;
 

@@ -1,6 +1,6 @@
 use std::convert::Into;
 use std::fmt::{Display, Formatter};
-use std::string::ToString;
+
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use jaguars::N_QUALITIES;
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]

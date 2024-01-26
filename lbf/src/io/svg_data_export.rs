@@ -1,22 +1,22 @@
-use std::{env};
-use std::process::Command;
 
-use svg::Document;
+
+
+
 use svg::node::element::{Circle, Path, Pattern, Rectangle};
 use svg::node::element::path::Data;
 use jaguars::collision_detection::hazards::hazard_entity::HazardEntity;
 
 use jaguars::collision_detection::quadtree::qt_hazard_type::QTHazType;
 use jaguars::collision_detection::quadtree::qt_node::QTNode;
-use jaguars::entities::instance::Instance;
-use jaguars::entities::layout::Layout;
-use jaguars::entities::placed_item_uid::PlacedItemUID;
+
+
+
 use jaguars::geometry;
 use jaguars::geometry::primitives::edge::Edge;
-use jaguars::geometry::geo_traits::Transformable;
+
 use jaguars::geometry::primitives::point::Point;
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::io::svg_util::SvgDrawOptions;
+
 
 pub fn simple_polygon_data(s_poly: &SimplePolygon) -> Data {
     let mut data = Data::new().move_to::<(f64, f64)>(s_poly.get_point(0).into());

@@ -44,7 +44,7 @@ impl Layout {
         StoredLayout::new(self.id, self.bin.clone(), placed_items, cde_snapshot, usage)
     }
 
-    pub fn restore(&mut self, stored_layout: &StoredLayout, instance: &Instance) {
+    pub fn restore(&mut self, stored_layout: &StoredLayout, _instance: &Instance) {
         assert_eq!(self.bin.id(), stored_layout.bin().id());
 
         self.placed_items = stored_layout.placed_items().clone();

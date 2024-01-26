@@ -69,7 +69,7 @@ pub fn generate(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> 
         let min_loss_ray = clipped_rays.iter()
             .enumerate()
             .min_by_key(|(i, _)| loss_values[*i])
-            .map(|(i, ray)| ray);
+            .map(|(_i, ray)| ray);
 
         match min_loss_ray {
             None => panic!("No ray found"),

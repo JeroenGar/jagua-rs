@@ -4,7 +4,7 @@ use ordered_float::NotNan;
 use rand_distr::num_traits::Zero;
 use jaguars::geometry::geo_traits::Shape;
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
-use jaguars::insertion::insertion_option::InsertionOption;
+
 
 #[derive(PartialEq)]
 pub struct LBFCost {

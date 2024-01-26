@@ -54,7 +54,7 @@ pub fn generate_poles(shape: &SimplePolygon, max_poles: usize, min_poles: usize,
         let mut sorted_poles: Vec<Circle> = vec![poles.remove(0)];
 
         while !poles.is_empty() {
-            let next_pole = poles.iter().enumerate().max_by_key(|(i, p)| {
+            let next_pole = poles.iter().enumerate().max_by_key(|(_i, p)| {
                 //or to centroid if no other poles present
                 let min_distance_to_existing_poles = sorted_poles.iter()
                     .map(|p2| p.distance_from_border(&p2.centroid()).1)

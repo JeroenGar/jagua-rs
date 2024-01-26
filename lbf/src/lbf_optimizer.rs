@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use itertools::Itertools;
-use log::{debug, info};
+use log::{info};
 use ordered_float::NotNan;
 use rand::prelude::SmallRng;
 
@@ -13,7 +13,7 @@ use jaguars::entities::instance::{Instance, PackingType};
 use jaguars::entities::item::Item;
 use jaguars::entities::problems::bp_problem::BPProblem;
 use jaguars::entities::problems::problem::{LayoutIndex, Problem, ProblemEnum};
-use jaguars::entities::problems::sp_problem;
+
 use jaguars::entities::problems::sp_problem::SPProblem;
 use jaguars::entities::solution::Solution;
 use jaguars::geometry::convex_hull::convex_hull_from_points;

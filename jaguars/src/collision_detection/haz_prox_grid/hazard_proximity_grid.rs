@@ -2,7 +2,7 @@ use std::iter;
 
 use itertools::Itertools;
 
-use crate::collision_detection::haz_prox_grid::{grid_generator, hp_cell};
+use crate::collision_detection::haz_prox_grid::{grid_generator};
 use crate::collision_detection::haz_prox_grid::boundary_fill::BoundaryFillGrid;
 use crate::collision_detection::haz_prox_grid::grid::Grid;
 use crate::collision_detection::haz_prox_grid::hp_cell::{HPCell, HPCellUpdate};
@@ -10,8 +10,8 @@ use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
+
+
 use crate::util::config::HazProxConfig;
 
 #[derive(Debug, Clone)]
@@ -95,8 +95,8 @@ impl HazardProximityGrid {
                 let undetected = self.grid.elements_mut().iter_mut().enumerate()
                     .flat_map(|(i, cell)| cell.as_mut().map(|cell| (i, cell)))
                     .map(|(i, cell)| (i, cell.register_hazard(to_register)))
-                    .filter(|(i, res)| res == &HPCellUpdate::Affected)
-                    .map(|(i, res)| i)
+                    .filter(|(_i, res)| res == &HPCellUpdate::Affected)
+                    .map(|(i, _res)| i)
                     .collect_vec();
 
                 let undetected_row_cols = undetected.iter().map(|i| self.grid.get_row_col(*i).unwrap()).collect_vec();

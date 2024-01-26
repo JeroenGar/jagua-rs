@@ -20,14 +20,14 @@ pub struct BoundaryFillGrid {
 
 impl BoundaryFillGrid {
     pub fn new<T>(seed_bbox: AARectangle, grid: &Grid<T>) -> Self {
-        let mut state = vec![CellState::new(); grid.n_rows() * grid.n_cols()];
+        let state = vec![CellState::new(); grid.n_rows() * grid.n_cols()];
 
         //Find the range of rows and columns which reside inside the seed_bbox
         let row_range = grid.rows_in_range(seed_bbox.y_min()..=seed_bbox.y_max());
         let col_range = grid.cols_in_range(seed_bbox.x_min()..=seed_bbox.x_max());
 
         //FIFO queue to keep track of which cells to visit next
-        let mut queue = VecDeque::with_capacity(state.len());
+        let queue = VecDeque::with_capacity(state.len());
 
         //Queue all cells within the seed_box, from the inside out. (seed is more likely to be in the center)
         let seed_iterator = CirclingIterator::new(row_range, col_range);

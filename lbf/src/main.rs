@@ -1,18 +1,18 @@
-use std::{env, fs};
+use std::{fs};
 use std::fs::File;
 use std::io::{BufReader};
 use std::path::{Path};
 use std::sync::Arc;
-use std::time::Instant;
+
 use clap::Parser as ClapParser;
 use log::{info, warn};
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
-use once_cell::sync::Lazy;
-use jaguars::entities::layout::Layout;
+
+
 use jaguars::parse::parser;
 use jaguars::parse::parser::Parser;
-use jaguars::simplification::simplification_config::PolySimplConfig;
+
 use lbf::config::Config;
 use lbf::{EPOCH, io};
 use lbf::lbf_optimizer::LBFOptimizer;

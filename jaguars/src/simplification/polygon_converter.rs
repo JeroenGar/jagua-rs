@@ -3,7 +3,7 @@ use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 
-pub fn convert_to_simple_polygon(outer: &SimplePolygon, inners: &Vec<SimplePolygon>) -> SimplePolygon {
+pub fn convert_to_simple_polygon(_outer: &SimplePolygon, _inners: &Vec<SimplePolygon>) -> SimplePolygon {
     todo!("Implement this")
 }
 

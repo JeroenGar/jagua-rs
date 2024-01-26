@@ -17,7 +17,7 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
 
     let theme = &options.theme;
 
-    let mut doc = Document::new()
+    let doc = Document::new()
         .set("viewBox", (vbox.x_min(), vbox.y_min(), vbox.width(), vbox.height()));
 
     let stroke_width = f64::min(vbox.width(), vbox.height()) * 0.001 * theme.stroke_width_multiplier;

@@ -235,7 +235,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
             _ => panic!("Layout object type does not match packing type")
         };
         //Create the layout by inserting the first item
-        let (empty_layout_index, empty_layout) = problem.empty_layouts().iter().enumerate()
+        let (empty_layout_index, _empty_layout) = problem.empty_layouts().iter().enumerate()
             .find(|(_, layout)| layout.bin().id() == bin.map_or(0, |b| b.id())).unwrap();
 
         let bin_centering = bin.map_or(DTransformation::empty(), |b| DTransformation::from(b.centering_transform())).translation();
