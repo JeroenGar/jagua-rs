@@ -7,10 +7,11 @@ use crate::collision_detection::cd_engine::CDEngine;
 use crate::collision_detection::hazards::filters::combo_haz_filter::CombinedHazardFilter;
 use crate::collision_detection::hazards::filters::entity_haz_filter::EntityHazardFilter;
 use crate::collision_detection::hazards::filters::hazard_filter;
+use crate::collision_detection::hazards::filters::hazard_filter::HazardFilter;
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
-use crate::collision_detection::quadtree::qt_hazard_type::QTHazType;
+use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::entities::bin::Bin;
 use crate::entities::instance::PackingType;
@@ -77,10 +78,10 @@ pub fn collision_hazards_sorted_correctly(hazards: &Vec<QTHazard>) -> bool {
     let mut partial_hazard_detected = false;
     for hazard in hazards.iter() {
         match hazard.haz_type() {
-            QTHazType::Partial(_) => {
+            QTHazPresence::Partial(_) => {
                 partial_hazard_detected = true;
             }
-            QTHazType::Entire => {
+            QTHazPresence::Entire => {
                 if partial_hazard_detected {
                     return false;
                 }
@@ -103,11 +104,10 @@ pub fn item_to_place_does_not_collide(item: &Item, transformation: &Transformati
     let t_shape = shape.transform_clone(transformation);
 
     let entities_to_ignore = haz_filter
-        .map(|f| hazard_filter::ignored_entities(f, layout.cde().all_hazards()))
-        .flatten();
+        .map_or(vec![], |f| hazard_filter::ignored_entities(f, layout.cde().all_hazards()));
 
-    if layout.cde().surrogate_collides(shape.surrogate(), transformation, entities_to_ignore.as_ref()) ||
-        layout.cde().poly_collides(&t_shape, entities_to_ignore.as_ref()) {
+    if layout.cde().surrogate_collides(shape.surrogate(), transformation, &entities_to_ignore) ||
+        layout.cde().poly_collides(&t_shape, &entities_to_ignore) {
         return false;
     }
     return true;
@@ -120,9 +120,9 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
             None => CombinedHazardFilter::new().add(&hef),
             Some(hf) => CombinedHazardFilter::new().add(&hef).add(hf)
         };
-        let entities_to_ignore = hazard_filter::ignored_entities(&combo_filter, layout.cde().all_hazards());
+        let entities_to_ignore = hazard_filter::ignored_entities(&combo_filter,layout.cde().all_hazards());
 
-        if layout.cde().poly_collides(pi.shape(), entities_to_ignore.as_ref()) {
+        if layout.cde().poly_collides(pi.shape(), &entities_to_ignore) {
             println!("Collision detected for item {:.?}", pi.uid());
             fixed_layout_printer::print_layout(layout);
             return false;
@@ -285,7 +285,7 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
                     false,
                     |qn| {
                         qn.hazards().active_iter()
-                            .any(|h| matches!(h.haz_type(), QTHazType::Partial(_)))
+                            .any(|h| matches!(h.haz_type(), QTHazPresence::Partial(_)))
                     },
                 );
             if qn1_has_partial_hazards {
@@ -302,7 +302,7 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
                 qn2.map_or(
                     false,
                     |qn| qn.hazards().active_iter()
-                        .any(|h| matches!(h.haz_type(), QTHazType::Partial(_))),
+                        .any(|h| matches!(h.haz_type(), QTHazPresence::Partial(_))),
                 );
             if qn2_has_partial_hazards {
                 for child in c2.as_ref() {

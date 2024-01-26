@@ -35,8 +35,12 @@ impl QTPartialHazard {
         }
     }
 
-    pub fn shape(&self) -> &Weak<SimplePolygon> {
+    pub fn shape_weak(&self) -> &Weak<SimplePolygon> {
         &self.shape
+    }
+
+    pub fn shape(&self) -> Arc<SimplePolygon> {
+        self.shape.upgrade().expect("polygon reference is not alive")
     }
 
     pub fn position(&self) -> GeoPosition {
@@ -46,6 +50,11 @@ impl QTPartialHazard {
     pub fn intervals(&self) -> &[(usize, usize)] {
         &self.intervals
     }
+
+    pub fn encompasses_all_edges(&self) -> bool {
+        self.intervals.len() == 1 && self.intervals[0] == (0, 0)
+    }
+
 }
 
 impl CollidesWith<Edge> for QTPartialHazard {

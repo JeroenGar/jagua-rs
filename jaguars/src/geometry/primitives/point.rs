@@ -1,6 +1,7 @@
 use std::hash::{Hash, Hasher};
 
-use crate::geometry::geo_traits::{Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{CollidesWith, Transformable, TransformableFrom};
+use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::transformation::Transformation;
 
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -70,5 +71,11 @@ impl From<Point> for (f64, f64) {
 impl From<(f64, f64)> for Point {
     fn from(p: (f64, f64)) -> Self {
         Point(p.0, p.1)
+    }
+}
+
+impl<T> CollidesWith<T> for Point where T: CollidesWith<Point>{
+    fn collides_with(&self, other: &T) -> bool {
+        other.collides_with(self)
     }
 }

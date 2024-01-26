@@ -6,7 +6,7 @@ use svg::node::element::{Circle, Path, Pattern, Rectangle};
 use svg::node::element::path::Data;
 use jaguars::collision_detection::hazards::hazard_entity::HazardEntity;
 
-use jaguars::collision_detection::quadtree::qt_hazard_type::QTHazType;
+use jaguars::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
 use jaguars::collision_detection::quadtree::qt_node::QTNode;
 
 
@@ -26,7 +26,7 @@ pub fn simple_polygon_data(s_poly: &SimplePolygon) -> Data {
     data.close()
 }
 
-pub fn quad_tree_data(qt_root: &QTNode, ignored_entities: Option<&Vec<&HazardEntity>>) -> (Data, Data, Data) {
+pub fn quad_tree_data(qt_root: &QTNode, ignored_entities: &[HazardEntity]) -> (Data, Data, Data) {
     qt_node_data(qt_root, Data::new(), Data::new(), Data::new(), ignored_entities)
 }
 
@@ -35,7 +35,7 @@ fn qt_node_data(
     mut data_eh: Data, //entire inclusion data
     mut data_ph: Data, //partial inclusion data
     mut data_nh: Data, //no inclusion data
-    ignored_entities: Option<&Vec<&HazardEntity>>,
+    ignored_entities: &[HazardEntity],
 ) -> (Data, Data, Data) {
     //Only draw qt_nodes that do not have a child
 
@@ -64,8 +64,8 @@ fn qt_node_data(
             match qt_node.hazards().strongest(ignored_entities) {
                 Some(ch) => {
                     match ch.haz_type() {
-                        QTHazType::Entire => data_eh = draw(data_eh),
-                        QTHazType::Partial(_) => data_ph = draw(data_ph)
+                        QTHazPresence::Entire => data_eh = draw(data_eh),
+                        QTHazPresence::Partial(_) => data_ph = draw(data_ph)
                     }
                 }
                 None => data_nh = draw(data_nh),

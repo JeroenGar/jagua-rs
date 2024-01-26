@@ -2,7 +2,7 @@ use std::slice::Iter;
 
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
-use crate::collision_detection::quadtree::qt_hazard_type::QTHazType;
+use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
 
 //Vector of QTHazards, which always keep the Entire types at the front of the vector
 #[derive(Clone, Debug)]
@@ -22,10 +22,10 @@ impl QTHazardVec {
     pub fn add(&mut self, ch: QTHazard) {
         debug_assert!(self.hazards.iter().filter(|other| other.entity() == ch.entity() && matches!(ch.entity(), HazardEntity::Item(_))).count() == 0, "More than one hazard from same item entity in the vector! (This should never happen!)");
         match ch.haz_type() {
-            QTHazType::Entire => {
+            QTHazPresence::Entire => {
                 self.hazards.insert(0, ch);
             }
-            QTHazType::Partial(_) => {
+            QTHazPresence::Partial(_) => {
                 self.hazards.push(ch);
             }
         }
@@ -44,12 +44,10 @@ impl QTHazardVec {
     }
 
     #[inline(always)]
-    pub fn strongest(&self, ignored_entities: Option<&Vec<&HazardEntity>>) -> Option<&QTHazard> {
+    pub fn strongest(&self, ignored_entities: &[HazardEntity]) -> Option<&QTHazard> {
         match ignored_entities {
-            None => {
-                self.strongest.map(|pos| &self.hazards[pos])
-            }
-            Some(ignored_entities) => {
+            [] => self.strongest.map(|pos| &self.hazards[pos]),
+            _ => {
                 self.strongest.map(|pos| {
                     let mut pos = pos;
                     while pos < self.hazards.len() && ignored_entities.contains(&self.hazards[pos].entity()) {

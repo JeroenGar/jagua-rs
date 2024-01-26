@@ -1,22 +1,20 @@
+use std::sync::Arc;
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::collision_detection::quadtree::constrict_cache::{CCEntry, ConstrictCache};
 use crate::collision_detection::quadtree::edge_interval_iter::EdgeIntervalIterator;
-use crate::collision_detection::quadtree::qt_hazard_type::QTHazType;
+use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
 use crate::collision_detection::quadtree::qt_partial_hazard::QTPartialHazard;
 use crate::geometry::primitives::aa_rectangle::{AARectangle};
 use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::point::Point;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 
-//CollisionHazards define possible causes for a collision
-//Associated with a QTNode
+//Hazards in a QTNode
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct QTHazard {
     entity: HazardEntity,
-    //Cause of the hazard
-    haz_type: QTHazType,
-    //Encompasses either the entire QTNode or only partially
+    presence: QTHazPresence,
     active: bool,
 }
 
@@ -24,30 +22,27 @@ impl From<&Hazard> for QTHazard {
     fn from(hazard: &Hazard) -> Self {
         Self {
             entity: hazard.entity().clone(),
-            haz_type: QTHazType::Partial(hazard.into()),
+            presence: QTHazPresence::Partial(hazard.into()),
             active: true,
         }
     }
 }
 
 impl QTHazard {
-    fn new(entity: HazardEntity, haz_type: QTHazType, active: bool) -> Self {
-        Self { entity, haz_type, active }
+    fn new(entity: HazardEntity, haz_type: QTHazPresence, active: bool) -> Self {
+        Self { entity, presence: haz_type, active }
     }
 
-    /// This function returns a constricted version of hazard for a smaller rectangle.
+    /// This function returns a constricted version of QTHazard for a smaller rectangle.
     /// If the hazard is not present in the rectangle, None is returned.
-    pub fn constrict(&self, rect: &AARectangle, qt_node_index: usize, cache: &ConstrictCache) -> Option<Self> {
+    pub fn constrict(&self, rect: &AARectangle, cache: &ConstrictCache, cache_qt_node_index: usize) -> Option<Self> {
         //Couple of cases that are easy to resolve
-        if let QTHazType::Partial(partial_hazard) = &self.haz_type {
-            if partial_hazard.intervals().len() == 1 && partial_hazard.intervals()[0] == (0, 0) &&
-                partial_hazard.position() == GeoPosition::Interior {
-                //If the hazard is an interior hazard and encompasses the entire shape
-                let bbox = partial_hazard.shape().upgrade().expect("polygon reference is not alive").bbox();
+        if let QTHazPresence::Partial(p_haz) = &self.presence {
+            if p_haz.encompasses_all_edges() && p_haz.position() == GeoPosition::Interior {
+                let bbox = p_haz.shape().bbox();
 
                 //If its bounding box is either completely inside the rectangle or completely unrelated we can return early
-                let relation = rect.relation_to(&bbox);
-                match relation {
+                match rect.relation_to(&bbox) {
                     GeoRelation::Disjoint => return None,
                     GeoRelation::Surrounding => return Some(self.clone()),
                     _ => {}
@@ -55,12 +50,12 @@ impl QTHazard {
             }
         }
 
-        match &self.haz_type {
-            QTHazType::Entire => Some(self.clone()), //Entire hazards always remain entire inclusion when constricted
-            QTHazType::Partial(partial_hazard) => {
+        match &self.presence {
+            QTHazPresence::Entire => Some(self.clone()), //Entire hazards always remain entire inclusion when constricted
+            QTHazPresence::Partial(partial_hazard) => {
                 //Partial hazards can become either no hazard, entire or partial inclusion when constricted
                 let mut child_intervals = Vec::with_capacity(partial_hazard.intervals().len());
-                let shape = partial_hazard.shape().upgrade().expect("polygon reference is not alive");
+                let shape = partial_hazard.shape();
                 let n_points = shape.number_of_points();
 
                 //Test all the intervals of edges active in the original hazard
@@ -107,7 +102,7 @@ impl QTHazard {
                     true => {
                         //rectangle does not intersect with any of the edges
                         //meaning is either entirely inside or outside the shape
-                        let entire_or_absent_hazard = match cache.fetch(qt_node_index) {
+                        let entire_or_absent_hazard = match cache.fetch(cache_qt_node_index) {
                             Some(cache_entry) => cache_entry,
                             None => match (partial_hazard.position(), shape.collides_with(&rect.centroid())) {
                                 (GeoPosition::Interior, true) => {
@@ -132,7 +127,7 @@ impl QTHazard {
                             CCEntry::EntireHazard => {
                                 Some(QTHazard::new(
                                     self.entity.clone(),
-                                    QTHazType::Entire,
+                                    QTHazPresence::Entire,
                                     self.active,
                                 ))
                             }
@@ -143,9 +138,9 @@ impl QTHazard {
                         //create a new collision hazard with the child intervals
                         Some(QTHazard::new(
                             self.entity.clone(),
-                            QTHazType::Partial(
+                            QTHazPresence::Partial(
                                 QTPartialHazard::new(
-                                    partial_hazard.shape().clone(),
+                                    partial_hazard.shape_weak().clone(),
                                     partial_hazard.position(),
                                     child_intervals,
                                 )),
@@ -161,8 +156,8 @@ impl QTHazard {
         &self.entity
     }
 
-    pub fn haz_type(&self) -> &QTHazType {
-        &self.haz_type
+    pub fn haz_type(&self) -> &QTHazPresence {
+        &self.presence
     }
 
     pub fn activate(&mut self) {

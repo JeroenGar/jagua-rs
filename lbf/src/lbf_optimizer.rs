@@ -143,7 +143,7 @@ fn find_placement(problem: &ProblemEnum, item: &Item, config: &Config, rng: &mut
 fn sample_layout(problem: &ProblemEnum,layout_index: &LayoutIndex, item: &Item, config: &Config, rng: &mut SmallRng) -> Option<InsertionOption> {
     let layout = problem.get_layout(&layout_index);
     let entities_to_ignore = item.hazard_filter()
-        .map_or(None, |hf| hazard_filter::ignored_entities(hf, layout.cde().all_hazards()));
+        .map_or(vec![], |hf| hazard_filter::ignored_entities(hf, layout.cde().all_hazards()));
 
     let shape = item.shape();
     let mut buffer_shape = item.shape().clone();

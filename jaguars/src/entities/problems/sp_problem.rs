@@ -4,6 +4,7 @@ use std::sync::Arc;
 use itertools::Itertools;
 use ordered_float::NotNan;
 use crate::collision_detection::hazards::filters::hazard_filter;
+use crate::collision_detection::hazards::filters::hazard_filter::HazardFilter;
 
 use crate::entities::bin::Bin;
 use crate::entities::instance::{Instance, PackingType};
@@ -57,10 +58,10 @@ impl SPProblem {
 
         for p_uid in old_p_uids {
             let item = self.instance.item(p_uid.item_id());
-            let entities_to_ignore = item.hazard_filter().map(|f| hazard_filter::ignored_entities(f, self.layout.cde().all_hazards())).flatten();
+            let entities_to_ignore = item.hazard_filter().map_or(vec![], |f| hazard_filter::ignored_entities(f, self.layout.cde().all_hazards()));
             let shape = item.shape();
             let transformation = p_uid.d_transformation().compose();
-            if !self.layout.cde().surrogate_collides(shape.surrogate(), &transformation, entities_to_ignore.as_ref()) {
+            if !self.layout.cde().surrogate_collides(shape.surrogate(), &transformation, entities_to_ignore.as_slice()) {
                 let transformed_shape = shape.transform_clone(&transformation);
                 if !self.layout.cde().poly_collides(&transformed_shape, entities_to_ignore.as_ref()) {
                     let insert_opt = InsertionOption::new(

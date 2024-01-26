@@ -209,6 +209,12 @@ impl CollidesWith<Edge> for Edge {
     }
 }
 
+impl CollidesWith<AARectangle> for Edge {
+    fn collides_with(&self, other: &AARectangle) -> bool {
+        other.collides_with(self)
+    }
+}
+
 fn edge_intersection(e1: &Edge, e2: &Edge, calculate_location: bool) -> Intersection {
     if f64::max(e1.x_min(), e2.x_min()) > f64::min(e1.x_max(), e2.x_max()) {
         return Intersection::No;

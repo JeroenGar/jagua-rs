@@ -161,7 +161,7 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
     let quadtree_group = {
         let mut group = Group::new();
         if options.quadtree {
-            let qt_data = svg_data_export::quad_tree_data(layout.cde().quadtree(), None);
+            let qt_data = svg_data_export::quad_tree_data(layout.cde().quadtree(), &[]);
             group = group.add(svg_data_export::data_to_path(
                 qt_data.0,
                 &[

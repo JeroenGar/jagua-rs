@@ -18,5 +18,5 @@ pub enum GeoRelation {
     Intersecting,
     Enclosed,
     Surrounding,
-    Disjoint,
+    Disjoint
 }

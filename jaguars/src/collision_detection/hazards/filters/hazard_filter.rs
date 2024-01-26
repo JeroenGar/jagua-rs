@@ -7,13 +7,9 @@ pub trait HazardFilter {
     fn is_relevant(&self, entity: &HazardEntity) -> bool;
 }
 
-pub fn ignored_entities<'a>(filter: &impl HazardFilter, hazards: impl Iterator<Item=&'a Hazard>) -> Option<Vec<&'a HazardEntity>> {
-    let ignored_entities = hazards
+pub fn ignored_entities<'a>(filter: &impl HazardFilter, hazards: impl Iterator<Item=&'a Hazard>) -> Vec<HazardEntity> {
+    hazards
         .filter(|h| !filter.is_relevant(h.entity()))
-        .map(|h| h.entity()).collect_vec();
-
-    match ignored_entities.is_empty() {
-        true => None,
-        false => Some(ignored_entities)
-    }
+        .map(|h| h.entity().clone())
+        .collect_vec()
 }

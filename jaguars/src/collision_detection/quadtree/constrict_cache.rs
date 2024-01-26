@@ -12,7 +12,7 @@
 
 
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
-use crate::collision_detection::quadtree::qt_hazard_type::QTHazType;
+use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
 
 // QTNode children array layout:
 // 0 -- 1
@@ -50,8 +50,8 @@ impl ConstrictCache {
         match hazard {
             Some(hazard) => {
                 match hazard.haz_type() {
-                    QTHazType::Partial(_) => (),
-                    QTHazType::Entire => self.0[child_index] = Some(CCEntry::EntireHazard),
+                    QTHazPresence::Partial(_) => (),
+                    QTHazPresence::Entire => self.0[child_index] = Some(CCEntry::EntireHazard),
                 }
             }
             None => self.0[child_index] = Some(CCEntry::AbsentHazard),

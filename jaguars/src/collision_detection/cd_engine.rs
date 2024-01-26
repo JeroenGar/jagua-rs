@@ -206,14 +206,14 @@ impl CDEngine {
     }
 
     //QUERY ----------------------------------------------------------------------------------------
-    pub fn poly_collides(&self, shape: &SimplePolygon, ignored_entities: Option<&Vec<&HazardEntity>>) -> bool {
+    pub fn poly_collides(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool {
         match self.bbox.relation_to(&shape.bbox()) {
             GeoRelation::Disjoint | GeoRelation::Enclosed | GeoRelation::Intersecting => {
                 return true;
             } //Not fully inside quadtree -> definite collision
             GeoRelation::Surrounding => {
                 //Intersection test
-                if shape.edge_iter().any(|e| self.quadtree.edge_collides(&e, ignored_entities).is_some()) {
+                if shape.edge_iter().any(|e| self.quadtree.collides(&e, ignored_entities).is_some()) {
                     return true;
                 }
 
@@ -226,19 +226,19 @@ impl CDEngine {
         }
     }
 
-    pub fn surrogate_collides(&self, base_surrogate: &SPSurrogate, transform: &Transformation, ignored_entities: Option<&Vec<&HazardEntity>>) -> bool {
+    pub fn surrogate_collides(&self, base_surrogate: &SPSurrogate, transform: &Transformation, ignored_entities: &[HazardEntity]) -> bool {
         let ff_range_poles = base_surrogate.config().ff_range_poles();
         let ff_range_clips = base_surrogate.config().ff_range_clips();
 
         for pole in &base_surrogate.poles()[ff_range_poles] {
             let t_pole = pole.transform_clone(transform);
-            if self.quadtree.circle_collides(&t_pole, ignored_entities).is_some() {
+            if self.quadtree.collides(&t_pole, ignored_entities).is_some() {
                 return true;
             }
         }
         for clip in &base_surrogate.clips()[ff_range_clips] {
             let t_clip = clip.transform_clone(transform);
-            if self.quadtree.edge_collides(&t_clip, ignored_entities).is_some() {
+            if self.quadtree.collides(&t_clip, ignored_entities).is_some() {
                 return true;
             }
         }
@@ -254,38 +254,38 @@ impl CDEngine {
         }
     }
 
-    pub fn edge_definitely_collides(&self, edge: &Edge, ignored_entities: Option<&Vec<&HazardEntity>>) -> bool {
+    pub fn edge_definitely_collides(&self, edge: &Edge, ignored_entities: &[HazardEntity]) -> bool {
         match !self.bbox.collides_with(&edge.start()) || !self.bbox.collides_with(&edge.end()) {
             true => {
                 //if either the start or end of the edge is outside the quadtree, it definitely collides
                 true
             }
             false => {
-                self.quadtree.edge_definitely_collides(edge, ignored_entities) == Collides::Yes
+                self.quadtree.definitely_collides(edge, ignored_entities) == Collides::Yes
             }
         }
     }
 
-    pub fn circle_definitely_collides(&self, circle: &Circle, ignored_entities: Option<&Vec<&HazardEntity>>) -> bool {
+    pub fn circle_definitely_collides(&self, circle: &Circle, ignored_entities: &[HazardEntity]) -> bool {
         match !self.bbox.collides_with(&circle.center()) {
             true => true,
             false => {
                 //let haz_entities_to_ignore = hazard_filter::ignored_entities(hazard_filter, &mut self.all_hazards());
-                self.quadtree.circle_definitely_collides(circle, ignored_entities) == Collides::Yes
+                self.quadtree.definitely_collides(circle, ignored_entities) == Collides::Yes
             }
         }
     }
 
-    pub fn entities_in_circle(&self, circle: &Circle, ignored_entities: Option<&Vec<&HazardEntity>>) -> Vec<HazardEntity> {
+    pub fn entities_in_circle(&self, circle: &Circle, ignored_entities: &[HazardEntity]) -> Vec<HazardEntity> {
         let mut colliding_entities = vec![];
-        let mut ignored_entities = ignored_entities.map_or(vec![], |v| v.clone());
+        let mut ignored_entities = ignored_entities.iter().cloned().collect_vec();
 
         //Keep testing the quadtree for intersections until no (non-ignored) entities collide
         loop {
-            match self.quadtree.circle_collides(circle, Some(&ignored_entities)) {
+            match self.quadtree.collides(circle, &ignored_entities) {
                 Some(e) => {
                     colliding_entities.push(e.clone());
-                    ignored_entities.push(e);
+                    ignored_entities.push(e.clone());
                 }
                 None => break
             }
@@ -303,13 +303,13 @@ impl CDEngine {
         colliding_entities
     }
 
-    fn collision_by_inclusion(&self, shape: &SimplePolygon, ignored_entities: Option<&Vec<&HazardEntity>>) -> bool
+    fn collision_by_inclusion(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool
     {
         //TODO: restructure to improve readability
 
         let mut relevant_hazards = self.all_hazards()
             .filter(|h| h.is_active())
-            .filter(|h| ignored_entities.map_or(true, |e| !e.contains(&h.entity())));
+            .filter(|h| !ignored_entities.contains(h.entity()));
 
         let shape_point = shape.surrogate().pole_of_inaccessibility().center();
 
