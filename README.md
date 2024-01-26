@@ -1,1 +1,1 @@
-# jagua.rs
+# jagua-rs
