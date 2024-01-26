@@ -125,11 +125,12 @@ impl Parser {
 
                             let material_value = (bin_outer.area() - bin_holes.iter().map(|hole| hole.area()).sum::<f64>()) as u64;
 
-                            let mut quality_zones = <[_; N_QUALITIES]>::default();
+                            let mut quality_zones = vec![];
 
                             match json_bin.zones.as_ref() {
                                 Some(json_zones) => {
                                     let different_qualities = json_zones.values().map(|zone| zone.quality).unique().collect::<Vec<usize>>();
+
 
                                     for quality in different_qualities {
                                         let zones = json_zones.values()
@@ -146,7 +147,7 @@ impl Parser {
                                             .collect_vec();
                                         let qz = QualityZone::new(quality, zones);
                                         assert!((quality as usize) < N_QUALITIES, "Quality {} is out of range, (set N_QUALITIES const higher)", quality);
-                                        quality_zones[quality as usize] = Some(qz);
+                                        quality_zones.push(qz);
                                     }
                                 }
                                 None => {}

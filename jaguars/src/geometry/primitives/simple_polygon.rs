@@ -280,3 +280,16 @@ impl DistanceFrom<Point> for SimplePolygon {
         }
     }
 }
+
+impl From<AARectangle> for SimplePolygon {
+    fn from(r: AARectangle) -> Self {
+        SimplePolygon::new(
+            vec![
+                (r.x_min(), r.y_min()).into(),
+                (r.x_max(), r.y_min()).into(),
+                (r.x_max(), r.y_max()).into(),
+                (r.x_min(), r.y_max()).into(),
+            ]
+        )
+    }
+}

@@ -15,7 +15,7 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
 
     let vbox = bin.bbox().clone().scale(1.05);
 
-    let theme = &options.theme.get_theme();
+    let theme = &options.theme;
 
     let mut doc = Document::new()
         .set("viewBox", (vbox.x_min(), vbox.y_min(), vbox.width(), vbox.height()));
@@ -31,7 +31,7 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
             svg_data_export::data_to_path(
                 svg_data_export::simple_polygon_data(bin.outer()),
                 &[
-                    ("fill", theme.bin_fill),
+                    ("fill", &*format!("{}", theme.bin_fill)),
                     ("stroke", "black"),
                     ("stroke-width", &*format!("{}", 2.0 * stroke_width)),
                 ]
@@ -44,7 +44,7 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
                 svg_data_export::data_to_path(
                     svg_data_export::simple_polygon_data(hole),
                     &[
-                        ("fill", theme.hole_fill),
+                        ("fill", &*format!("{}", theme.hole_fill)),
                         ("stroke", "black"),
                         ("stroke-width", &*format!("{}", 1.0 * stroke_width)),
                     ]
@@ -60,15 +60,15 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
         //quality zones
         for qz in bin.quality_zones().iter().rev().flatten() {
             let color = theme.qz_fill[qz.quality()];
-            let stroke_color = svg_util::change_brightness(&color, 0.5);
+            let stroke_color = svg_util::change_brightness(color, 0.5);
             for qz_shape in qz.shapes().iter() {
                 group = group.add(
                     svg_data_export::data_to_path(
                         svg_data_export::simple_polygon_data(qz_shape),
                         &[
-                            ("fill", &*color),
+                            ("fill", &*format!("{}", color)),
                             ("fill-opacity", "0.50"),
-                            ("stroke", &*stroke_color),
+                            ("stroke", &*format!("{}", stroke_color)),
                             ("stroke-width", &*format!("{}", 2.0 * stroke_width)),
                             ("stroke-opacity", &*format!("{}", theme.qz_stroke_opac)),
                             ("stroke-dasharray", &*format!("{}", 5.0 * stroke_width)),
@@ -100,7 +100,7 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
             group = group.add(svg_data_export::data_to_path(
                 svg_data_export::simple_polygon_data(&shape),
                 &[
-                    ("fill", &*color),
+                    ("fill", &*format!("{}", color)),
                     ("stroke-width", &*format!("{}", stroke_width)),
                     ("fill-rule", "nonzero"),
                     ("stroke", "black"),

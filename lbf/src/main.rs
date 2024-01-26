@@ -13,19 +13,13 @@ use jaguars::entities::layout::Layout;
 use jaguars::parse::parser;
 use jaguars::parse::parser::Parser;
 use jaguars::simplification::simplification_config::PolySimplConfig;
-use crate::config::Config;
-use crate::lbf_optimizer::LBFOptimizer;
-use crate::io::cli::Cli;
-use crate::io::json_output::JsonOutput;
-use crate::io::layout_to_svg::layout_to_svg;
+use lbf::config::Config;
+use lbf::{EPOCH, io};
+use lbf::lbf_optimizer::LBFOptimizer;
+use lbf::io::cli::Cli;
+use lbf::io::json_output::JsonOutput;
+use lbf::io::layout_to_svg::layout_to_svg;
 
-mod lbf_optimizer;
-mod samplers;
-mod io;
-mod lbf_cost;
-mod config;
-
-pub static EPOCH: Lazy<Instant> = Lazy::new(Instant::now);
 
 fn main() {
     io::init_logger();

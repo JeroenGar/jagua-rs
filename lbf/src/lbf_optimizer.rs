@@ -120,8 +120,8 @@ impl LBFOptimizer {
     pub fn problem(&self) -> &ProblemEnum {
         &self.problem
     }
-    pub fn config(&self) -> Config {
-        self.config
+    pub fn config(&self) -> &Config {
+        &self.config
     }
 }
 

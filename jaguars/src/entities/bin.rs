@@ -28,9 +28,20 @@ pub struct Bin {
 }
 
 impl Bin {
-    pub fn new(id: usize, outer: SimplePolygon, value: u64, centering_transform: Transformation, holes: Vec<SimplePolygon>, quality_zones: [Option<QualityZone>; N_QUALITIES], cde_config: CDEConfig) -> Self {
+    pub fn new(id: usize, outer: SimplePolygon, value: u64, centering_transform: Transformation, holes: Vec<SimplePolygon>, quality_zones: Vec<QualityZone>, cde_config: CDEConfig) -> Self {
         let outer = Arc::new(outer);
         let holes = holes.into_iter().map(|z| Arc::new(z)).collect_vec();
+        assert_eq!(quality_zones.len(), quality_zones.iter().map(|qz| qz.quality()).unique().count(), "Quality zones must have unique qualities");
+        assert!(quality_zones.iter().map(|qz| qz.quality()).all(|q| q < N_QUALITIES), "All quality zones must be below N_QUALITIES");
+        let quality_zones = {
+            let mut qz = <[_; N_QUALITIES]>::default();
+            for q in quality_zones {
+                let quality = q.quality();
+                qz[quality] = Some(q);
+            }
+            qz
+        };
+
         let base_cde = CDEngine::new(
             outer.bbox().inflate_to_square(),
             Self::generate_hazards(&outer, &holes, &quality_zones),
@@ -53,17 +64,10 @@ impl Bin {
 
     pub fn from_strip(id: usize, width: f64, height: f64, cde_config: CDEConfig) -> Self {
         //TODO: move this out of here
-        let points = vec![
-            (0.0, 0.0).into(),
-            (width, 0.0).into(),
-            (width, height).into(),
-            (0.0, height).into(),
-        ];
-        let poly = SimplePolygon::new(points);
+        let poly = SimplePolygon::from(AARectangle::new(0.0, 0.0, width, height));
         let value = poly.area() as u64;
-        let quality_zones = <[_; N_QUALITIES]>::default();
 
-        Bin::new(id, poly, value, Transformation::empty(), vec![], quality_zones, cde_config)
+        Bin::new(id, poly, value, Transformation::empty(), vec![], vec![], cde_config)
     }
     fn generate_hazards(outer: &Arc<SimplePolygon>, holes: &[Arc<SimplePolygon>], quality_zones: &[Option<QualityZone>]) -> Vec<Hazard> {
         let mut hazards = vec![
