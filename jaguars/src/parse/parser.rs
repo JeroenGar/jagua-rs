@@ -53,8 +53,6 @@ impl Parser {
                     let item_value = json_item.value.unwrap_or(0);
                     let base_quality = json_item.base_quality;
 
-                    //let mut quality_zones = <[_; N_QUALITIES]>::default();
-
                     match json_item.zones.as_ref() {
                         Some(json_zones) => {
                             if !json_zones.is_empty() {

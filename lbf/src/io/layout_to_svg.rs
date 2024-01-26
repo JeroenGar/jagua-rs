@@ -198,7 +198,7 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
     let haz_prox_grid_group = {
         let mut group = Group::new();
         if options.haz_prox_grid {
-            for hp_cell in layout.cde().haz_prox_grid().unwrap().cells().unwrap().iter().flatten() {
+            for hp_cell in layout.cde().haz_prox_grid().unwrap().cells().iter().flatten() {
                 let center = hp_cell.centroid();
                 let prox = hp_cell.hazard_proximity(None);
 

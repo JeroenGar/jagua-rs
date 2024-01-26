@@ -101,7 +101,6 @@ impl CDEngine {
         CDESnapshot::new(
             self.dynamic_hazards.clone(),
             self.haz_prox_grid.grid().clone(),
-            self.haz_prox_grid.value().unwrap(),
         )
     }
 
@@ -144,7 +143,7 @@ impl CDEngine {
         }
 
         //HAZPROXGRID
-        self.haz_prox_grid.restore(snapshot.grid().clone(), snapshot.grid_value());
+        self.haz_prox_grid.restore(snapshot.grid().clone());
 
         debug_assert!(self.dynamic_hazards.len() == snapshot.dynamic_hazards().len());
     }

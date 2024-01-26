@@ -8,7 +8,7 @@ use log::{debug, info};
 use ordered_float::NotNan;
 use rand::prelude::SmallRng;
 
-use jaguars::collision_detection::hazards::hazard_filter;
+use jaguars::collision_detection::hazards::filters::hazard_filter;
 use jaguars::entities::instance::{Instance, PackingType};
 use jaguars::entities::item::Item;
 use jaguars::entities::problems::bp_problem::BPProblem;

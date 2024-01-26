@@ -161,49 +161,6 @@ impl HPCell {
         self.centroid
     }
 
-    pub fn value(&self) -> f64 {
-        //TODO: needs to move to heuristic
-        Self::calculate_value(
-            self.uni_haz_prox.0,
-            self.qz_haz_prox,
-        )
-    }
-
-    pub fn calculate_value(uni_haz_prox: Proximity, qz_prox: [Proximity; N_QUALITIES]) -> f64 {
-        let value = uni_haz_prox.distance_from_border.powi(2); // value proportional with area instead of radius
-
-        let centroid_in_qz = qz_prox.iter()
-            .position(|qz_prox| qz_prox.position == GeoPosition::Interior);
-
-        let quality_correction_factor = match centroid_in_qz {
-            Some(quality) => (quality as f64 / N_QUALITIES as f64),
-            None => 1.0,
-        };
-
-        value * quality_correction_factor
-    }
-
-    pub fn value_loss(&self, new_hazard_proximity: Proximity) -> (Option<f64>, HPCellUpdate) {
-        match new_hazard_proximity.partial_cmp(&self.uni_haz_prox.0).unwrap() {
-            Ordering::Less => {
-                //new hazard is closer than current (avoiding floating point precision errors)
-                let new_value = Self::calculate_value(
-                    new_hazard_proximity,
-                    self.qz_haz_prox,
-                );
-
-                (Some(self.value() - new_value), HPCellUpdate::Affected)
-            }
-            _ => {
-                //no value loss and the cell might be a boundary cell
-                match new_hazard_proximity.distance_from_border > self.uni_haz_prox.0.distance_from_border + 2.0 * self.radius {
-                    true => (None, HPCellUpdate::Boundary),
-                    false => (None, HPCellUpdate::Unaffected)
-                }
-            }
-        }
-    }
-
     pub fn hazard_proximity(&self, quality_level: Option<usize>) -> Proximity {
         //calculate the minimum distance to either bin, item or qz
         let mut haz_prox = self.uni_haz_prox.0;
@@ -228,12 +185,10 @@ impl HPCell {
         self.qz_haz_prox
     }
 
-
     pub fn static_uni_haz_prox(&self) -> &(Proximity, HazardEntity) {
         &self.static_uni_haz_prox
     }
 }
-
 
 pub fn distance_to_surrogate_poles_border(hp_cell: &HPCell, poles: &[Circle]) -> Proximity {
     poles.iter()

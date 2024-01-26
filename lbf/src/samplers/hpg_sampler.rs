@@ -32,7 +32,7 @@ impl<'a> HPGSampler<'a> {
 
         let cell_radius = hpg.cell_radius();
 
-        let hpg_cells = hpg.cells().expect("grid changes present");
+        let hpg_cells = hpg.cells();
 
         //center the shape's POI to the origin
         let pretransform = Transformation::from_translation((-poi.center().0, -poi.center().1));

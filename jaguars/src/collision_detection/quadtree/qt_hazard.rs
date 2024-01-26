@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::collision_detection::quadtree::constrict_cache::{CCEntry, ConstrictCache};

@@ -1,7 +1,7 @@
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
+use crate::collision_detection::hazards::filters::qz_haz_filter::QZHazardFilter;
 
-use crate::collision_detection::hazards::qz_haz_filter::QZHazardFilter;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::primitives::sp_surrogate::SPSurrogateConfig;
 use crate::geometry::transformation::Transformation;

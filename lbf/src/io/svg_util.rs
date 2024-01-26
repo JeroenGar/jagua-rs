@@ -18,7 +18,7 @@ impl Default for SvgDrawOptions {
             theme: SvgLayoutTheme::default(),
             quadtree: false,
             haz_prox_grid: false,
-            ff_surrogate: false,
+            ff_surrogate: true,
         }
     }
 }

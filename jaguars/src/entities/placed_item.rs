@@ -1,8 +1,8 @@
 use std::sync::Arc;
+use crate::collision_detection::hazards::filters::qz_haz_filter::QZHazardFilter;
 
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
-use crate::collision_detection::hazards::qz_haz_filter::QZHazardFilter;
 use crate::entities::item::Item;
 use crate::entities::placed_item_uid::PlacedItemUID;
 use crate::geometry::d_transformation::DTransformation;

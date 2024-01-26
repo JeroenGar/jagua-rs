@@ -3,8 +3,8 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 use ordered_float::NotNan;
+use crate::collision_detection::hazards::filters::hazard_filter;
 
-use crate::collision_detection::hazards::hazard_filter;
 use crate::entities::bin::Bin;
 use crate::entities::instance::{Instance, PackingType};
 use crate::entities::layout::Layout;
@@ -103,7 +103,7 @@ impl SPProblem {
 
 impl Problem for SPProblem {
     fn insert_item(&mut self, i_opt: &InsertionOption) {
-        assert_eq!(i_opt.layout_index(), &LayoutIndex::Existing(0));
+        assert_eq!(i_opt.layout_index(), &LayoutIndex::Existing(0), "strip packing problems only have a single layout");
         let item_id = i_opt.item_id();
         let item = self.instance.item(item_id);
         self.layout.place_item(item, i_opt.d_transformation());
@@ -112,7 +112,7 @@ impl Problem for SPProblem {
     }
 
     fn remove_item(&mut self, layout_index: usize, pi_uid: &PlacedItemUID) {
-        assert_eq!(layout_index, 0);
+        assert_eq!(layout_index, 0, "strip packing problems only have a single layout");
         self.layout.remove_item(pi_uid, false);
         self.unregister_included_item(pi_uid.item_id());
     }

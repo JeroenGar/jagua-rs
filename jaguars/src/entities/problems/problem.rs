@@ -15,8 +15,7 @@ use crate::insertion::insertion_option::InsertionOption;
 
 #[enum_dispatch]
 pub enum ProblemEnum {
-    BPProblem,
-    //Bin Packing Problem
+    BPProblem, //Bin Packing Problem
     SPProblem, //Strip Packing Problem
 }
 
