@@ -2,7 +2,6 @@ use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Weak};
 
 use crate::collision_detection::hazards::hazard::Hazard;
-use crate::collision_detection::quadtree::edge_interval_iter::EdgeIntervalIterator;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::geo_traits::CollidesWith;
@@ -13,7 +12,13 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 pub struct QTPartialHazard {
     shape: Weak<SimplePolygon>,
     presence: GeoPosition,
-    intervals: Vec<(usize, usize)>,
+    edge_indices: EdgeIndices,
+}
+
+#[derive(Clone, Debug, PartialEq, Hash, Eq)]
+pub enum EdgeIndices {
+    All,
+    Some(Vec<usize>)
 }
 
 impl From<&Hazard> for QTPartialHazard {
@@ -21,17 +26,18 @@ impl From<&Hazard> for QTPartialHazard {
         Self {
             shape: Arc::downgrade(hazard.shape()),
             presence: hazard.entity().presence(),
-            intervals: vec![(0, 0)],
+            edge_indices: EdgeIndices::All,
         }
     }
 }
 
 impl QTPartialHazard {
-    pub fn new(shape: Weak<SimplePolygon>, presence: GeoPosition, intervals: Vec<(usize, usize)>) -> Self {
+
+    pub fn new(shape: Arc<SimplePolygon>, presence: GeoPosition, edge_indices: EdgeIndices) -> Self {
         Self {
-            shape,
+            shape: Arc::downgrade(&shape),
             presence,
-            intervals,
+            edge_indices,
         }
     }
 
@@ -43,16 +49,28 @@ impl QTPartialHazard {
         self.shape.upgrade().expect("polygon reference is not alive")
     }
 
-    pub fn position(&self) -> GeoPosition {
+    pub fn presence(&self) -> GeoPosition {
         self.presence
     }
 
-    pub fn intervals(&self) -> &[(usize, usize)] {
-        &self.intervals
+    pub fn edge_indices(&self) -> &EdgeIndices{
+        &self.edge_indices
     }
 
     pub fn encompasses_all_edges(&self) -> bool {
-        self.intervals.len() == 1 && self.intervals[0] == (0, 0)
+        match self.edge_indices {
+            EdgeIndices::All => true,
+            EdgeIndices::Some(_) => false
+        }
+    }
+
+    pub fn add_edge_index(&mut self, index: usize) {
+        match &mut self.edge_indices {
+            EdgeIndices::All => panic!("cannot add edge to a hazard that encompasses all edges"),
+            EdgeIndices::Some(indices) => {
+                indices.push(index);
+            }
+        }
     }
 
 }
@@ -60,34 +78,43 @@ impl QTPartialHazard {
 impl CollidesWith<Edge> for QTPartialHazard {
     fn collides_with(&self, edge: &Edge) -> bool {
         let shape = self.shape.upgrade().expect("polygon reference is not alive");
-        let n_points = shape.number_of_points();
-
-        //check if any edge from any interval collides with the given edge
-        self.intervals.iter().any(|interval| {
-            EdgeIntervalIterator::new(*interval, n_points)
-                .map(|pair| shape.get_edge(pair.0, pair.1))
-                .any(|shape_edge| edge.collides_with(&shape_edge))
-        })
+        match self.edge_indices() {
+            EdgeIndices::All => {
+                shape.edge_iter().any(|e| {
+                    edge.collides_with(&e)
+                })
+            },
+            EdgeIndices::Some(indices) => {
+                indices.iter().any(|&i| {
+                    edge.collides_with(&shape.get_edge(i))
+                })
+            }
+        }
     }
 }
 
 impl CollidesWith<Circle> for QTPartialHazard {
     fn collides_with(&self, circle: &Circle) -> bool {
         let shape = self.shape.upgrade().expect("polygon reference is not alive");
-        let n_points = shape.number_of_points();
-
-        self.intervals.iter().any(|interval| {
-            EdgeIntervalIterator::new(*interval, n_points)
-                .map(|pair| shape.get_edge(pair.0, pair.1))
-                .any(|shape_edge| circle.collides_with(&shape_edge))
-        })
+        match self.edge_indices() {
+            EdgeIndices::All => {
+                shape.edge_iter().any(|e| {
+                    circle.collides_with(&e)
+                })
+            },
+            EdgeIndices::Some(indices) => {
+                indices.iter().any(|&i| {
+                    circle.collides_with(&shape.get_edge(i))
+                })
+            }
+        }
     }
 }
 
 impl PartialEq for QTPartialHazard {
     fn eq(&self, other: &Self) -> bool {
         self.presence == other.presence &&
-            self.intervals == other.intervals
+            self.edge_indices == other.edge_indices
     }
 }
 
@@ -96,6 +123,6 @@ impl Eq for QTPartialHazard {}
 impl Hash for QTPartialHazard {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.presence.hash(state);
-        self.intervals.hash(state);
+        self.edge_indices.hash(state);
     }
 }

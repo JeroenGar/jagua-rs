@@ -1,14 +1,16 @@
-use std::sync::Arc;
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
-use crate::collision_detection::quadtree::constrict_cache::{CCEntry, ConstrictCache};
-use crate::collision_detection::quadtree::edge_interval_iter::EdgeIntervalIterator;
 use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
-use crate::collision_detection::quadtree::qt_partial_hazard::QTPartialHazard;
-use crate::geometry::primitives::aa_rectangle::{AARectangle};
-use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::point::Point;
+use crate::collision_detection::quadtree::qt_partial_hazard::{EdgeIndices, QTPartialHazard};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
+use crate::geometry::geo_traits::{CollidesWith, Shape};
+use crate::geometry::primitives::aa_rectangle::AARectangle;
+
+// QTNode children array layout:
+// 0 -- 1
+// |    |
+// 2 -- 3
+const CHILD_NEIGHBORS: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
 
 //Hazards in a QTNode
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -29,125 +31,114 @@ impl From<&Hazard> for QTHazard {
 }
 
 impl QTHazard {
-    fn new(entity: HazardEntity, haz_type: QTHazPresence, active: bool) -> Self {
-        Self { entity, presence: haz_type, active }
+    fn new(entity: HazardEntity, presence: QTHazPresence, active: bool) -> Option<Self> {
+        match presence {
+            QTHazPresence::None => None,
+            _ => Some(Self { entity, presence, active })
+        }
     }
 
     /// This function returns a constricted version of QTHazard for a smaller rectangle.
     /// If the hazard is not present in the rectangle, None is returned.
-    pub fn constrict(&self, rect: &AARectangle, cache: &ConstrictCache, cache_qt_node_index: usize) -> Option<Self> {
-        //Couple of cases that are easy to resolve
-        if let QTHazPresence::Partial(p_haz) = &self.presence {
-            if p_haz.encompasses_all_edges() && p_haz.position() == GeoPosition::Interior {
-                let bbox = p_haz.shape().bbox();
-
-                //If its bounding box is either completely inside the rectangle or completely unrelated we can return early
-                match rect.relation_to(&bbox) {
-                    GeoRelation::Disjoint => return None,
-                    GeoRelation::Surrounding => return Some(self.clone()),
-                    _ => {}
-                };
-            }
-        }
-
+    pub fn constrict(&self, quadrants: [&AARectangle; 4]) -> [Option<Self>; 4] {
         match &self.presence {
-            QTHazPresence::Entire => Some(self.clone()), //Entire hazards always remain entire inclusion when constricted
-            QTHazPresence::Partial(partial_hazard) => {
-                //Partial hazards can become either no hazard, entire or partial inclusion when constricted
-                let mut child_intervals = Vec::with_capacity(partial_hazard.intervals().len());
-                let shape = partial_hazard.shape();
-                let n_points = shape.number_of_points();
+            QTHazPresence::None => [None, None, None, None],
+            QTHazPresence::Entire => [Some(self.clone()), Some(self.clone()), Some(self.clone()), Some(self.clone())],
+            QTHazPresence::Partial(partial_haz) => {
+                //check the bbox of the hazard with the bboxes of the quadrants
+                let haz_bbox = partial_haz.shape().bbox();
+                let haz_quad_relations = [
+                    haz_bbox.relation_to(quadrants[0]),
+                    haz_bbox.relation_to(quadrants[1]),
+                    haz_bbox.relation_to(quadrants[2]),
+                    haz_bbox.relation_to(quadrants[3]),
+                ];
+                let mut constricted_presence = [None, None, None, None];
 
-                //Test all the intervals of edges active in the original hazard
-                for interval in partial_hazard.intervals() {
-                    //every existing interval could potentially split in multiple intervals due to the contraction of the bbox
-                    let mut child_interval_start: Option<usize> = None;
-                    for (i, j) in EdgeIntervalIterator::new(*interval, n_points) {
-                        let edge = shape.get_edge(i, j);
-                        match (child_interval_start, rect.collides_with(&edge)) {
-                            (None, true) => {
-                                //inactive -> active
-                                child_interval_start = Some(i);
-                            }
-                            (Some(start), false) => {
-                                //active -> inactive
-                                child_intervals.push((start, i));
-                                child_interval_start = None;
-                            }
-                            (Some(_), true) | (None, false) => {
-                                //active -> active or inactive -> inactive
+                if let Some(quad_index) = haz_quad_relations.iter().position(|r| r == &GeoRelation::Enclosed) {
+                    //if the hazard is entirely inside one of the quadrants, clone the current hazard for that quadrant and set all the rest to none
+                    //ensure all the other quadrants are disjoint
+                    debug_assert!(haz_quad_relations.iter().enumerate()
+                        .filter(|(i, _)| *i != quad_index)
+                        .all(|(_, r)| r == &GeoRelation::Disjoint));
+                    constricted_presence[quad_index] = Some(self.presence.clone());
+                } else {
+                    //the hazard is partially active in multiple quadrants, find them
+                    let shape = partial_haz.shape();
+                    let mut check_collisions_with_quadrants = |edge_index: usize| {
+                        let edge = shape.get_edge(edge_index);
+                        for quad_index in 0..4 {
+                            let quadrant = quadrants[quad_index];
+                            if quadrant.collides_with(&edge) {
+                                let constricted_haz_presence = constricted_presence[quad_index].get_or_insert(
+                                    QTHazPresence::Partial(
+                                        QTPartialHazard::new(
+                                            partial_haz.shape(),
+                                            partial_haz.presence(),
+                                            EdgeIndices::Some(vec![]),
+                                        )
+                                    )
+                                );
+                                match constricted_haz_presence {
+                                    QTHazPresence::Partial(constricted_haz) => {
+                                        constricted_haz.add_edge_index(edge_index);
+                                    }
+                                    _ => panic!("constricted hazard is not partial"),
+                                }
                             }
                         }
-                    }
-                    if let Some(start) = child_interval_start {
-                        //if the child interval was not closed before the end of the interval
-                        match child_intervals.get_mut(0) {
+                    };
+
+                    match partial_haz.edge_indices() {
+                        EdgeIndices::All => {
+                            for edge_index in 0..shape.number_of_points() {
+                                check_collisions_with_quadrants(edge_index);
+                            }
+                        }
+                        EdgeIndices::Some(indices) => {
+                            for edge_index in indices {
+                                check_collisions_with_quadrants(*edge_index);
+                            }
+                        }
+                    };
+
+                    //for the quadrants that do not have any intersecting edges, determine if they are entirely inside or outside the hazard
+                    for i in 0..4 {
+                        match constricted_presence[i] {
+                            Some(_) => (), //already handled
                             None => {
-                                //no previous child intervals have been detected, so end the current one at the end of the interval
-                                child_intervals.push((start, interval.1));
-                            }
-                            Some(first_child_interval) => {
-                                if first_child_interval.0 == interval.0 {
-                                    //first child interval start at the front of the interval, merge first and last children
-                                    first_child_interval.0 = start;
-                                } else {
-                                    child_intervals.push((start, interval.1));
+                                //check if a neighbor is already resolved
+                                let [n_0, n_1] = CHILD_NEIGHBORS[i];
+                                constricted_presence[i] = match (&constricted_presence[n_0], &constricted_presence[n_1]) {
+                                    (Some(QTHazPresence::Entire), _) | (_, Some(QTHazPresence::Entire)) => {
+                                        Some(QTHazPresence::Entire)
+                                    }
+                                    (Some(QTHazPresence::None), _) | (_, Some(QTHazPresence::None)) => {
+                                        Some(QTHazPresence::None)
+                                    }
+                                    _ => {
+                                        let point_to_test = quadrants[i].centroid();
+                                        match (partial_haz.presence(), shape.collides_with(&point_to_test)) {
+                                            (GeoPosition::Interior, true) => Some(QTHazPresence::Entire),
+                                            (GeoPosition::Exterior, false) => Some(QTHazPresence::Entire),
+                                            _ => Some(QTHazPresence::None),
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                match child_intervals.is_empty() {
-                    true => {
-                        //rectangle does not intersect with any of the edges
-                        //meaning is either entirely inside or outside the shape
-                        let entire_or_absent_hazard = match cache.fetch(cache_qt_node_index) {
-                            Some(cache_entry) => cache_entry,
-                            None => match (partial_hazard.position(), shape.collides_with(&rect.centroid())) {
-                                (GeoPosition::Interior, true) => {
-                                    debug_assert!(rect.corners().iter().all(|c| {
-                                        let middle = Point((rect.centroid().0 + c.0) / 2.0, (rect.centroid().1 + c.1) / 2.0);
-                                        shape.collides_with(&middle)
-                                    }), "inconsistent pip test, shape: {:?},\n point: {:?},\n corners {:?}", shape, rect.centroid(), rect.corners());
-                                    CCEntry::EntireHazard
-                                }
-                                (GeoPosition::Exterior, false) => {
-                                    debug_assert!(rect.corners().iter().all(|c| {
-                                        let middle = Point((rect.centroid().0 + c.0) / 2.0, (rect.centroid().1 + c.1) / 2.0);
-                                        !shape.collides_with(&middle)
-                                    }), "inconsistent pip test, shape: {:?},\n point: {:?},\n corners {:?}", shape, rect.centroid(), rect.corners());
-                                    CCEntry::EntireHazard
-                                }
-                                (_, _) => CCEntry::AbsentHazard
-                            }
-                        };
-
-                        match entire_or_absent_hazard {
-                            CCEntry::EntireHazard => {
-                                Some(QTHazard::new(
-                                    self.entity.clone(),
-                                    QTHazPresence::Entire,
-                                    self.active,
-                                ))
-                            }
-                            CCEntry::AbsentHazard => None,
+                //convert them to QTHazards
+                let constricted_hazards: [Option<Self>; 4] = constricted_presence
+                    .map(|hp|
+                        match hp {
+                            Some(hp) => Self::new(self.entity.clone(), hp, self.active),
+                            None => None
                         }
-                    }
-                    false => {
-                        //create a new collision hazard with the child intervals
-                        Some(QTHazard::new(
-                            self.entity.clone(),
-                            QTHazPresence::Partial(
-                                QTPartialHazard::new(
-                                    partial_hazard.shape_weak().clone(),
-                                    partial_hazard.position(),
-                                    child_intervals,
-                                )),
-                            self.active,
-                        ))
-                    }
-                }
+                    );
+                constricted_hazards
             }
         }
     }
@@ -156,7 +147,7 @@ impl QTHazard {
         &self.entity
     }
 
-    pub fn haz_type(&self) -> &QTHazPresence {
+    pub fn haz_presence(&self) -> &QTHazPresence {
         &self.presence
     }
 

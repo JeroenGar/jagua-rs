@@ -184,8 +184,8 @@ fn replacing_vertex_convex_convex_candidate(shape: &SimplePolygon, candidate: &C
         Candidate::ConvexConvex(c1, c2) => {
             assert!(c1.i_next() == c2.i() && c1.i() == c2.i_prev(), "non-consecutive corners {:?},{:?}", c1, c2); //ensure the corners are adjacent
 
-            let edge_prev = shape.get_edge(c1.i_prev(), c1.i());
-            let edge_next = shape.get_edge(c2.i_next(), c2.i());
+            let edge_prev = Edge::new(shape.get_point(c1.i_prev()), shape.get_point(c1.i()));
+            let edge_next = Edge::new(shape.get_point(c2.i_next()), shape.get_point(c2.i()));
 
             calculate_intersection_in_front(&edge_prev, &edge_next)
         }

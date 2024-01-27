@@ -16,7 +16,7 @@ impl Default for SvgDrawOptions {
     fn default() -> Self {
         Self{
             theme: SvgLayoutTheme::default(),
-            quadtree: false,
+            quadtree: true,
             haz_prox_grid: false,
             ff_surrogate: true,
         }

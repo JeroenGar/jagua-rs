@@ -22,14 +22,11 @@ impl<'a> Iterator for EdgeIterator<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         match self.i < self.shape.number_of_points() {
             true => {
-                let j = (self.i + 1) % self.shape.number_of_points();
-                let line = self.shape.get_edge(self.i, j);
-
+                let edge = self.shape.get_edge(self.i);
                 self.i += 1;
-
-                Some(line)
+                Some(edge)
             }
-            false => None
+            false => None,
         }
     }
 }

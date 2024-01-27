@@ -63,9 +63,10 @@ fn qt_node_data(
 
             match qt_node.hazards().strongest(ignored_entities) {
                 Some(ch) => {
-                    match ch.haz_type() {
+                    match ch.haz_presence() {
                         QTHazPresence::Entire => data_eh = draw(data_eh),
-                        QTHazPresence::Partial(_) => data_ph = draw(data_ph)
+                        QTHazPresence::Partial(_) => data_ph = draw(data_ph),
+                        QTHazPresence::None => unreachable!()
                     }
                 }
                 None => data_nh = draw(data_nh),

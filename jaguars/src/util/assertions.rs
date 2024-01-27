@@ -77,7 +77,7 @@ pub fn layouts_match(layout: &Layout, stored_layout: &StoredLayout) -> bool {
 pub fn collision_hazards_sorted_correctly(hazards: &Vec<QTHazard>) -> bool {
     let mut partial_hazard_detected = false;
     for hazard in hazards.iter() {
-        match hazard.haz_type() {
+        match hazard.haz_presence() {
             QTHazPresence::Partial(_) => {
                 partial_hazard_detected = true;
             }
@@ -85,6 +85,9 @@ pub fn collision_hazards_sorted_correctly(hazards: &Vec<QTHazard>) -> bool {
                 if partial_hazard_detected {
                     return false;
                 }
+            }
+            QTHazPresence::None => {
+                panic!("None hazard in collision hazard vec");
             }
         };
     }
@@ -285,7 +288,7 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
                     false,
                     |qn| {
                         qn.hazards().active_iter()
-                            .any(|h| matches!(h.haz_type(), QTHazPresence::Partial(_)))
+                            .any(|h| matches!(h.haz_presence(), QTHazPresence::Partial(_)))
                     },
                 );
             if qn1_has_partial_hazards {
@@ -302,7 +305,7 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
                 qn2.map_or(
                     false,
                     |qn| qn.hazards().active_iter()
-                        .any(|h| matches!(h.haz_type(), QTHazPresence::Partial(_))),
+                        .any(|h| matches!(h.haz_presence(), QTHazPresence::Partial(_))),
                 );
             if qn2_has_partial_hazards {
                 for child in c2.as_ref() {

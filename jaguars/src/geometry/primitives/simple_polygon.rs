@@ -71,9 +71,9 @@ impl SimplePolygon {
         self.points[i]
     }
 
-    pub fn get_edge(&self, i: usize, j: usize) -> Edge {
-        debug_assert!(j == (i + 1) % self.number_of_points() || i == (j + 1) % self.number_of_points(), "i:{i} and j:{j} are not adjacent. (n:{})", self.number_of_points());
-        Edge::new(self.get_point(i), self.get_point(j))
+    pub fn get_edge(&self, i: usize) -> Edge {
+        let j = (i + 1) % self.number_of_points();
+        Edge::new(Point::from(self.points[i]), self.points[j])
     }
 
     pub fn edge_iter(&self) -> EdgeIterator {

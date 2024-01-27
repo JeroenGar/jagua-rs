@@ -2,7 +2,6 @@ use itertools::Itertools;
 
 use crate::collision_detection::collision::Collides;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
-use crate::collision_detection::quadtree::constrict_cache::ConstrictCache;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
@@ -35,13 +34,18 @@ impl QTNode {
     pub fn register_hazard(&mut self, hazard: QTHazard) {
         fn register_to_children(children: &mut Option<Box<[QTNode; 4]>>, hazard: &QTHazard) {
             if let Some(children) = children.as_mut() {
-                let mut c_cache = ConstrictCache::new();
-                for i in 0..children.len() {
-                    let child = &mut children[i];
-                    let c_hazard = hazard.constrict(&child.bbox, &c_cache, i);
-                    c_cache.store(i, &c_hazard);
+                let child_bboxes = [
+                    children[0].bbox(),
+                    children[1].bbox(),
+                    children[2].bbox(),
+                    children[3].bbox(),
+                ];
+
+                let constricted_hazards = hazard.constrict(child_bboxes);
+
+                for (i,c_hazard) in constricted_hazards.into_iter().enumerate(){
                     if let Some(c_hazard) = c_hazard {
-                        child.register_hazard(c_hazard);
+                        children[i].register_hazard(c_hazard);
                     }
                 }
             }
@@ -50,7 +54,7 @@ impl QTNode {
         self.invalidate_cache();
 
         //If the hazard is of the partial type, and we are not at the max tree depth: generate children
-        if !self.has_children() && self.level > 0 && matches!(hazard.haz_type(), QTHazPresence::Partial(_)) {
+        if !self.has_children() && self.level > 0 && matches!(hazard.haz_presence(), QTHazPresence::Partial(_)) {
             self.generate_children();
             //register all existing hazards to the newly created children
             for hazard in self.hazards.all_iter() {
@@ -68,7 +72,7 @@ impl QTNode {
         let removed_ch = self.hazards.remove(hazard_entity);
 
         if removed_ch.is_some() && self.has_children() {
-            if self.hazards.is_empty() || self.hazards.all_iter().all(|h| matches!(h.haz_type(), QTHazPresence::Entire)) {
+            if self.hazards.is_empty() || self.hazards.all_iter().all(|h| matches!(h.haz_presence(), QTHazPresence::Entire)) {
                 //If there are no more inclusion, or only inclusion of type Entire, drop the children
                 self.drop_children();
             } else {
@@ -161,7 +165,8 @@ impl QTNode {
             None => None,
             Some(strongest_hazard) => match entity.collides_with(self.bbox()) {
                 false => None,
-                true => match strongest_hazard.haz_type() {
+                true => match strongest_hazard.haz_presence() {
+                    QTHazPresence::None => None,
                     QTHazPresence::Entire => Some(strongest_hazard.entity()),
                     QTHazPresence::Partial(_) => match self.children() {
                         Some(children) => {
@@ -173,8 +178,8 @@ impl QTNode {
                         }
                         None => {
                             for hz in self.hazards.active_iter() {
-                                match hz.haz_type() {
-                                    QTHazPresence::Entire => {} //non-ignored Entire inclusion are caught by the previous match
+                                match hz.haz_presence() {
+                                    QTHazPresence::Entire | QTHazPresence::None => {} //non-ignored Entire inclusion are caught by the previous match
                                     QTHazPresence::Partial(partial_hazard) => {
                                         if !ignored_entities.contains(&hz.entity()) {
                                             //do intersection test if this shape is not ignored
@@ -199,8 +204,8 @@ impl QTNode {
     {
         match self.hazards.strongest(ignored_entities) {
             None => Collides::No,
-            Some(hazard) => match (entity.collides_with(self.bbox()), hazard.haz_type()) {
-                (false, _) => Collides::No,
+            Some(hazard) => match (entity.collides_with(self.bbox()), hazard.haz_presence()) {
+                (false, _) | (_, QTHazPresence::None) => Collides::No,
                 (true, QTHazPresence::Entire) => Collides::Yes,
                 (true, QTHazPresence::Partial(_)) => match self.children() {
                     Some(children) => {
@@ -227,7 +232,8 @@ impl QTNode {
             None => Collides::No, //Node does not contain inclusion
             Some(hazard) => match self.bbox.collides_with(point) {
                 false => Collides::No, //Hazard present, but the point is fully outside of the node
-                true => match hazard.haz_type() {
+                true => match hazard.haz_presence() {
+                    QTHazPresence::None => Collides::No, //The hazard is of type None, a collision is impossible
                     QTHazPresence::Entire => Collides::Yes, //The hazard is of type Entire, a collision is guaranteed
                     QTHazPresence::Partial(_) => match &self.children {
                         Some(children) => {

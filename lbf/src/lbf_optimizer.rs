@@ -102,7 +102,7 @@ impl LBFOptimizer {
         match &mut self.problem{
             ProblemEnum::BPProblem(_) => {},
             ProblemEnum::SPProblem(sp_problem) => {
-                sp_problem.fit_strip_width();
+                //sp_problem.fit_strip_width();
                 info!("final strip width: {:.3}", sp_problem.strip_width());
             }
         }

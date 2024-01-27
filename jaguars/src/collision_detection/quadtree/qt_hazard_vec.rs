@@ -21,13 +21,14 @@ impl QTHazardVec {
 
     pub fn add(&mut self, ch: QTHazard) {
         debug_assert!(self.hazards.iter().filter(|other| other.entity() == ch.entity() && matches!(ch.entity(), HazardEntity::Item(_))).count() == 0, "More than one hazard from same item entity in the vector! (This should never happen!)");
-        match ch.haz_type() {
+        match ch.haz_presence() {
             QTHazPresence::Entire => {
                 self.hazards.insert(0, ch);
             }
             QTHazPresence::Partial(_) => {
                 self.hazards.push(ch);
             }
+            QTHazPresence::None => {}
         }
         self.strongest = self.hazards.iter().position(|ch| ch.is_active());
     }
