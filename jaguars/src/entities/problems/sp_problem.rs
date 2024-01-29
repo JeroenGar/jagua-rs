@@ -136,7 +136,7 @@ impl Problem for SPProblem {
         debug_assert!(solution.stored_layouts().len() == 1);
         self.layout.restore(&solution.stored_layouts()[0], &self.instance);
         self.missing_item_qtys.iter_mut().enumerate().for_each(|(i, qty)| {
-            *qty = (self.instance.item_qty(i) - solution.included_item_qtys()[i]) as isize
+            *qty = (self.instance.item_qty(i) - solution.placed_item_qtys()[i]) as isize
         });
 
         debug_assert!(assertions::problem_matches_solution(self, solution));

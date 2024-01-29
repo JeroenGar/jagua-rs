@@ -1,5 +1,6 @@
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Weak};
+use smallvec::SmallVec;
 
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::geometry::primitives::circle::Circle;
@@ -11,7 +12,7 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 #[derive(Clone, Debug)]
 pub struct QTPartialHazard {
     shape: Weak<SimplePolygon>,
-    presence: GeoPosition,
+    position: GeoPosition,
     edge_indices: EdgeIndices,
 }
 
@@ -25,7 +26,7 @@ impl From<&Hazard> for QTPartialHazard {
     fn from(hazard: &Hazard) -> Self {
         Self {
             shape: Arc::downgrade(hazard.shape()),
-            presence: hazard.entity().presence(),
+            position: hazard.entity().presence(),
             edge_indices: EdgeIndices::All,
         }
     }
@@ -36,7 +37,7 @@ impl QTPartialHazard {
     pub fn new(shape: Arc<SimplePolygon>, presence: GeoPosition, edge_indices: EdgeIndices) -> Self {
         Self {
             shape: Arc::downgrade(&shape),
-            presence,
+            position: presence,
             edge_indices,
         }
     }
@@ -49,8 +50,8 @@ impl QTPartialHazard {
         self.shape.upgrade().expect("polygon reference is not alive")
     }
 
-    pub fn presence(&self) -> GeoPosition {
-        self.presence
+    pub fn position(&self) -> GeoPosition {
+        self.position
     }
 
     pub fn edge_indices(&self) -> &EdgeIndices{
@@ -58,10 +59,7 @@ impl QTPartialHazard {
     }
 
     pub fn encompasses_all_edges(&self) -> bool {
-        match self.edge_indices {
-            EdgeIndices::All => true,
-            EdgeIndices::Some(_) => false
-        }
+        self.edge_indices == EdgeIndices::All
     }
 
     pub fn add_edge_index(&mut self, index: usize) {
@@ -113,7 +111,7 @@ impl CollidesWith<Circle> for QTPartialHazard {
 
 impl PartialEq for QTPartialHazard {
     fn eq(&self, other: &Self) -> bool {
-        self.presence == other.presence &&
+        self.position == other.position &&
             self.edge_indices == other.edge_indices
     }
 }
@@ -122,7 +120,7 @@ impl Eq for QTPartialHazard {}
 
 impl Hash for QTPartialHazard {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.presence.hash(state);
+        self.position.hash(state);
         self.edge_indices.hash(state);
     }
 }

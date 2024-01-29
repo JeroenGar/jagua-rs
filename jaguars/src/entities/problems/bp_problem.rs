@@ -232,7 +232,7 @@ impl Problem for BPProblem {
         }
 
         self.missing_item_qtys.iter_mut().enumerate().for_each(|(i, qty)| {
-            *qty = (self.instance.item_qty(i) - solution.included_item_qtys()[i]) as isize
+            *qty = (self.instance.item_qty(i) - solution.placed_item_qtys()[i]) as isize
         });
         self.bin_qtys.clone_from_slice(solution.bin_qtys());
         self.uncommitted_removed_layouts.clear();

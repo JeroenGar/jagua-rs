@@ -1,7 +1,7 @@
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Collides {
-    No,
     Yes,
+    No,
     Unsure
 }
 

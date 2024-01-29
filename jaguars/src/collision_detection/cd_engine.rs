@@ -247,7 +247,7 @@ impl CDEngine {
 
     pub fn point_definitely_collides_with(&self, point: &Point, entity: &HazardEntity) -> Collides {
         if !self.bbox.collides_with(point) {
-            //point is outside of the quadtree, so no information available
+            //point is outside the quadtree, so no information available
             Collides::Unsure
         } else {
             self.quadtree.point_definitely_collides_with(point, entity)

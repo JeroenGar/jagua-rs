@@ -1,3 +1,4 @@
+use smallvec::smallvec;
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
@@ -6,11 +7,6 @@ use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 
-// QTNode children array layout:
-// 0 -- 1
-// |    |
-// 2 -- 3
-const CHILD_NEIGHBORS: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
 
 //Hazards in a QTNode
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -38,9 +34,13 @@ impl QTHazard {
         }
     }
 
-    /// This function returns a constricted version of QTHazard for a smaller rectangle.
-    /// If the hazard is not present in the rectangle, None is returned.
     pub fn constrict(&self, quadrants: [&AARectangle; 4]) -> [Option<Self>; 4] {
+        // QTNode children array layout:
+        // 0 -- 1
+        // |    |
+        // 2 -- 3
+        const CHILD_NEIGHBORS: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
+
         match &self.presence {
             QTHazPresence::None => [None, None, None, None],
             QTHazPresence::Entire => [Some(self.clone()), Some(self.clone()), Some(self.clone()), Some(self.clone())],
@@ -48,10 +48,10 @@ impl QTHazard {
                 //check the bbox of the hazard with the bboxes of the quadrants
                 let haz_bbox = partial_haz.shape().bbox();
                 let haz_quad_relations = [
-                    haz_bbox.relation_to(quadrants[0]),
-                    haz_bbox.relation_to(quadrants[1]),
-                    haz_bbox.relation_to(quadrants[2]),
-                    haz_bbox.relation_to(quadrants[3]),
+                    haz_bbox.relation_to(&quadrants[0]),
+                    haz_bbox.relation_to(&quadrants[1]),
+                    haz_bbox.relation_to(&quadrants[2]),
+                    haz_bbox.relation_to(&quadrants[3]),
                 ];
                 let mut constricted_presence = [None, None, None, None];
 
@@ -74,7 +74,7 @@ impl QTHazard {
                                     QTHazPresence::Partial(
                                         QTPartialHazard::new(
                                             partial_haz.shape(),
-                                            partial_haz.presence(),
+                                            partial_haz.position(),
                                             EdgeIndices::Some(vec![]),
                                         )
                                     )
@@ -104,25 +104,24 @@ impl QTHazard {
 
                     //for the quadrants that do not have any intersecting edges, determine if they are entirely inside or outside the hazard
                     for i in 0..4 {
-                        match constricted_presence[i] {
-                            Some(_) => (), //already handled
-                            None => {
-                                //check if a neighbor is already resolved
-                                let [n_0, n_1] = CHILD_NEIGHBORS[i];
-                                constricted_presence[i] = match (&constricted_presence[n_0], &constricted_presence[n_1]) {
-                                    (Some(QTHazPresence::Entire), _) | (_, Some(QTHazPresence::Entire)) => {
-                                        Some(QTHazPresence::Entire)
-                                    }
-                                    (Some(QTHazPresence::None), _) | (_, Some(QTHazPresence::None)) => {
-                                        Some(QTHazPresence::None)
-                                    }
-                                    _ => {
-                                        let point_to_test = quadrants[i].centroid();
-                                        match (partial_haz.presence(), shape.collides_with(&point_to_test)) {
-                                            (GeoPosition::Interior, true) => Some(QTHazPresence::Entire),
-                                            (GeoPosition::Exterior, false) => Some(QTHazPresence::Entire),
-                                            _ => Some(QTHazPresence::None),
-                                        }
+                        if constricted_presence[i].is_none() {
+                            //check if a neighbor is already resolved
+                            // Because nodes with Entire and None are never neighboring (they are always separated by a node with Partial),
+                            // if a neighbor is either Entire or None, this quadrant is also Entire or None
+                            let [n_0, n_1] = CHILD_NEIGHBORS[i];
+                            constricted_presence[i] = match (&constricted_presence[n_0], &constricted_presence[n_1]) {
+                                (Some(QTHazPresence::Entire), _) | (_, Some(QTHazPresence::Entire)) => {
+                                    Some(QTHazPresence::Entire)
+                                }
+                                (Some(QTHazPresence::None), _) | (_, Some(QTHazPresence::None)) => {
+                                    Some(QTHazPresence::None)
+                                }
+                                _ => {
+                                    let point_to_test = quadrants[i].centroid();
+                                    match (partial_haz.position(), shape.collides_with(&point_to_test)) {
+                                        (GeoPosition::Interior, true) => Some(QTHazPresence::Entire),
+                                        (GeoPosition::Exterior, false) => Some(QTHazPresence::Entire),
+                                        _ => Some(QTHazPresence::None),
                                     }
                                 }
                             }

@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use log::{info};
+use log::{debug, info};
 
 use rand::distributions::uniform::UniformSampler;
 use rand::prelude::{SliceRandom, SmallRng};
@@ -77,7 +77,7 @@ impl<'a> HPGSampler<'a> {
         let new_x_bound = *best.x_max - poi_rad; //we need at least one POI radius of space to the left of the best solution
 
         if new_x_bound < self.x_bound {
-            info!("tightening x bound from {} to {}", self.x_bound, new_x_bound);
+            debug!("tightening x bound from {} to {}", self.x_bound, new_x_bound);
             //remove all cells that are out of bounds, update the coverage area
             self.cell_samplers
                 .retain(|cell_sampler| {

@@ -111,4 +111,8 @@ impl QTHazardVec {
     pub fn len(&self) -> usize {
         self.hazards.len()
     }
+
+    pub fn only_entire_hazards(&self) -> bool {
+        self.hazards.iter().all(|hz| hz.haz_presence() == &QTHazPresence::Entire)
+    }
 }

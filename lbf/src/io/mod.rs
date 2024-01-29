@@ -40,7 +40,7 @@ pub fn write_svg(document: &Document, path: &Path) {
     info!("svg written to {:?}", fs::canonicalize(&path).expect("could not canonicalize path"));
 }
 
-pub fn init_logger(){
+pub fn init_logger(level_filter: LevelFilter){
     fern::Dispatch::new()
         // Perform allocation-free log formatting
         .format(|out, message, record| {
@@ -63,7 +63,7 @@ pub fn init_logger(){
             out.finish(format_args!("{:<27}{}", prefix, message))
         })
         // Add blanket level filter -
-        .level(LevelFilter::Info)
+        .level(level_filter)
         .chain(std::io::stdout())
         .apply().expect("could not initialize logger");
     log!(Level::Info, "time: {}", humantime::format_rfc3339_seconds(std::time::SystemTime::now()));

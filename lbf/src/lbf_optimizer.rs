@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use itertools::Itertools;
-use log::{info};
+use log::{debug, info, Level, log};
 use ordered_float::NotNan;
 use rand::prelude::SmallRng;
 
@@ -59,7 +59,6 @@ impl LBFOptimizer {
     }
 
     pub fn solve(&mut self) -> Solution {
-        let start = Instant::now();
         //sort the items by descending diameter of convex hull
         let sorted_item_indices = (0..self.instance.items().len())
             .sorted_by_cached_key(|i| {
@@ -71,6 +70,8 @@ impl LBFOptimizer {
                 Reverse(ch_diam)
             })
             .collect_vec();
+
+        let start = Instant::now();
 
         'outer: for item_index in sorted_item_indices {
             let item = &self.instance.items()[item_index].0;
@@ -102,14 +103,14 @@ impl LBFOptimizer {
         match &mut self.problem{
             ProblemEnum::BPProblem(_) => {},
             ProblemEnum::SPProblem(sp_problem) => {
-                //sp_problem.fit_strip_width();
+                sp_problem.fit_strip_width();
                 info!("final strip width: {:.3}", sp_problem.strip_width());
             }
         }
 
-        let solution = self.problem.create_solution(&None);
+        let solution : Solution = self.problem.create_solution(&None);
 
-        info!("BLFOptimizer finished in {}ms, usage: {:.3}%", start.elapsed().as_millis(), solution.usage() * 100.0);
+        info!("BLFOptimizer finished, {} items placed in {}ms, usage: {:.3}%", solution.n_items_placed(), start.elapsed().as_millis(), solution.usage() * 100.0);
         solution
     }
 
@@ -152,7 +153,6 @@ fn sample_layout(problem: &ProblemEnum,layout_index: &LayoutIndex, item: &Item, 
 
     let n_ls_samples = (config.n_samples_per_item as f32 * config.ls_samples_fraction) as usize;
     let n_random_samples = config.n_samples_per_item - n_ls_samples;
-    dbg!(n_random_samples, n_ls_samples);
 
     //random sampling within the valid cells of the Hazard Proximity Grid, tracking the best valid insertion option
     match HPGSampler::new(item, layout) {
@@ -173,18 +173,13 @@ fn sample_layout(problem: &ProblemEnum,layout_index: &LayoutIndex, item: &Item, 
                         let d_transf = sampled_transf.decompose();
                         let i_opt = InsertionOption::new(layout_index.clone(), item.id(), sampled_transf, d_transf);
                         sampler.tighten_x_bound(&cost);
-                        println!("new random best: {}", &cost);
+                        debug!("new random best: {}", &cost);
                         best = Some((i_opt, cost));
                     }
                 }
             }
         }
     }
-
-    //add some local search on top to push it into place
-    /*if let Some((best_iopt, best_cost)) = &best {
-        let ls_sampler = LSSampler::new(item, best_iopt.d_transformation(), )
-    }*/
 
     //local search samples
     if best.is_some() {
@@ -218,7 +213,7 @@ fn sample_layout(problem: &ProblemEnum,layout_index: &LayoutIndex, item: &Item, 
                     let d_transf = sampled_transf.decompose();
                     ls_sampler.set_mean(&d_transf);
                     let i_opt = InsertionOption::new(layout_index.clone(), item.id(), sampled_transf, d_transf);
-                    println!("new ls best: {}", &cost);
+                    debug!("new ls best: {}", &cost);
                     best = Some((i_opt, cost));
                 }
             }

@@ -5,9 +5,10 @@ use std::path::{Path};
 use std::sync::Arc;
 
 use clap::Parser as ClapParser;
-use log::{info, warn};
+use log::{info, LevelFilter, warn};
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
+use jaguars::entities::solution::Solution;
 
 
 use jaguars::parse::parser;
@@ -22,7 +23,7 @@ use lbf::io::layout_to_svg::layout_to_svg;
 
 
 fn main() {
-    io::init_logger();
+    io::init_logger(LevelFilter::Info);
 
     let args = Cli::parse();
     let config_file = File::open(args.config_file).expect("could not open config file");
