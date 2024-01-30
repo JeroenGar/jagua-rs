@@ -40,7 +40,8 @@ pub fn write_svg(document: &Document, path: &Path) {
     info!("svg written to {:?}", fs::canonicalize(&path).expect("could not canonicalize path"));
 }
 
-pub fn init_logger(level_filter: LevelFilter){
+pub fn init_logger(level_filter: Option<LevelFilter>){
+    let level_filter = level_filter.unwrap_or(LevelFilter::Info);
     fern::Dispatch::new()
         // Perform allocation-free log formatting
         .format(|out, message, record| {

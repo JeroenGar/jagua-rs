@@ -45,7 +45,7 @@ impl LBFOptimizer {
         let problem = match instance.packing_type() {
             PackingType::BinPacking(_) => BPProblem::new(instance.clone()).into(),
             PackingType::StripPacking { height } => {
-                let strip_width = instance.item_area() / height * 2.0; //initiate with usage 50%
+                let strip_width = instance.item_area() * 2.0 / height; //initiate with usage 50%
                 SPProblem::new(instance.clone(), strip_width, config.cde_config).into()
             }
         };

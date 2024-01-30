@@ -26,3 +26,14 @@ pub struct SPSurrogateConfig {
     pub n_ff_poles: usize, //number of poles to test during fail fast
     pub n_ff_piers: usize, //number of piers to test during fail fast
 }
+
+impl SPSurrogateConfig{
+    pub fn none() -> Self {
+        Self {
+            pole_coverage_goal: 0.0,
+            max_poles: 0,
+            n_ff_poles: 0,
+            n_ff_piers: 0,
+        }
+    }
+}

@@ -23,7 +23,7 @@ use lbf::io::layout_to_svg::layout_to_svg;
 
 
 fn main() {
-    io::init_logger(LevelFilter::Info);
+    io::init_logger(Some(LevelFilter::Info));
 
     let args = Cli::parse();
     let config_file = File::open(args.config_file).expect("could not open config file");
