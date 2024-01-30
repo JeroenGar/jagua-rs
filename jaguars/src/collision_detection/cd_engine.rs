@@ -14,7 +14,7 @@ use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable};
 use crate::geometry::primitives::point::Point;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::primitives::sp_surrogate::SPSurrogate;
+use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::transformation::Transformation;
 use crate::util::assertions;
 use crate::util::config::{CDEConfig, QuadTreeConfig};
@@ -227,18 +227,15 @@ impl CDEngine {
     }
 
     pub fn surrogate_collides(&self, base_surrogate: &SPSurrogate, transform: &Transformation, ignored_entities: &[HazardEntity]) -> bool {
-        let ff_range_poles = base_surrogate.config().ff_range_poles();
-        let ff_range_clips = base_surrogate.config().ff_range_clips();
-
-        for pole in &base_surrogate.poles()[ff_range_poles] {
+        for pole in base_surrogate.ff_poles() {
             let t_pole = pole.transform_clone(transform);
             if self.quadtree.collides(&t_pole, ignored_entities).is_some() {
                 return true;
             }
         }
-        for clip in &base_surrogate.clips()[ff_range_clips] {
-            let t_clip = clip.transform_clone(transform);
-            if self.quadtree.collides(&t_clip, ignored_entities).is_some() {
+        for pier in base_surrogate.piers() {
+            let t_pier = pier.transform_clone(transform);
+            if self.quadtree.collides(&t_pier, ignored_entities).is_some() {
                 return true;
             }
         }
@@ -311,10 +308,10 @@ impl CDEngine {
             .filter(|h| h.is_active())
             .filter(|h| !ignored_entities.contains(h.entity()));
 
-        let shape_point = shape.surrogate().pole_of_inaccessibility().center();
+        let shape_point = shape.poi().center();
 
         relevant_hazards.any(|haz| {
-            let haz_point = haz.shape().surrogate().pole_of_inaccessibility().center();
+            let haz_point = haz.shape().poi().center();
 
             let bbox_relation = haz.shape().bbox().relation_to(&shape.bbox());
 

@@ -4,15 +4,17 @@ use std::usize;
 use itertools::Itertools;
 use num_integer::Integer;
 use ordered_float::NotNan;
+use crate::geometry::fail_fast::poi;
 
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom};
-use crate::geometry::edge_iterator::EdgeIterator;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::primitives::sp_surrogate::{SPSurrogate, SPSurrogateConfig};
+use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
+use crate::geometry::primitives::circle::Circle;
 use crate::geometry::transformation::Transformation;
+use crate::util::config::SPSurrogateConfig;
 use crate::util::f64a::F64A;
 
 //https://en.wikipedia.org/wiki/Simple_polygon
@@ -23,6 +25,7 @@ pub struct SimplePolygon {
     bbox: AARectangle,
     area: f64,
     diameter: f64,
+    poi: Circle,
     surrogate: Option<SPSurrogate>,
 }
 
@@ -33,7 +36,7 @@ impl SimplePolygon {
             panic!("simple poly needs at least 3 points, but was only {} points", points.len());
         }
         //assert that there are no duplicate points
-        assert!(points.iter().unique().count() == points.len(), "there are duplicate points in the poly: {:?}", points);
+        assert_eq!(points.iter().unique().count(), points.len(), "there are duplicate points in the poly: {:?}", points);
 
         let mut area = SimplePolygon::calculate_area(&points);
 
@@ -49,16 +52,16 @@ impl SimplePolygon {
 
         let diameter = SimplePolygon::calculate_diameter(&points);
         let bbox = SimplePolygon::generate_bounding_box(&points);
+        let poi = SimplePolygon::calculate_poi(&points);
 
         let mut simple_poly = SimplePolygon {
             points,
             bbox,
             area,
             diameter,
+            poi,
             surrogate: None,
         };
-
-        simple_poly.generate_surrogate(SPSurrogateConfig::default());
 
         simple_poly
     }
@@ -76,8 +79,8 @@ impl SimplePolygon {
         Edge::new(Point::from(self.points[i]), self.points[j])
     }
 
-    pub fn edge_iter(&self) -> EdgeIterator {
-        EdgeIterator::new(self)
+    pub fn edge_iter(&self) -> impl Iterator<Item=Edge> + '_ {
+        (0..self.number_of_points()).map(move |i| self.get_edge(i))
     }
 
     pub fn points(&self) -> &Vec<Point> {
@@ -88,8 +91,12 @@ impl SimplePolygon {
         self.points.len()
     }
 
+    pub fn poi(&self) -> &Circle {
+        &self.poi
+    }
+
     pub fn surrogate(&self) -> &SPSurrogate {
-        self.surrogate.as_ref().expect("surrogate should initialized during construction")
+        self.surrogate.as_ref().expect("surrogate not generated")
     }
 
     pub fn calculate_diameter(points: &[Point]) -> f64 {
@@ -131,6 +138,28 @@ impl SimplePolygon {
         }
 
         0.5 * sigma
+    }
+
+    pub fn calculate_poi(points: &Vec<Point>) -> Circle {
+        //need to make a dummy simple polygon, because the pole generation algorithm
+        //relies on many of the methods provided by the simple polygon struct
+        let dummy_sp = {
+            let bbox = SimplePolygon::generate_bounding_box(points);
+            let area = SimplePolygon::calculate_area(points);
+            let diameter = SimplePolygon::calculate_diameter(points);
+            let dummy_poi = Circle::new(Point(f64::MAX, f64::MAX), f64::MAX);
+
+            SimplePolygon {
+                points: points.clone(),
+                bbox,
+                area,
+                diameter,
+                poi: dummy_poi,
+                surrogate: None,
+            }
+        };
+
+        poi::generate_next_pole(&dummy_sp, &[])
     }
 }
 
@@ -175,10 +204,13 @@ impl Shape for SimplePolygon {
 
 impl Transformable for SimplePolygon {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
-        let SimplePolygon { points, bbox, area: _, diameter: _, surrogate } = self;
+        //destructuring pattern to ensure that the code is updated when the struct changes
+        let SimplePolygon { points, bbox, area: _, diameter: _, poi, surrogate } = self;
 
         //transform all points of the simple poly
         points.iter_mut().for_each(|p| { p.transform(t); });
+
+        poi.transform(t);
 
         //transform the surrogate
         if let Some(surrogate) = surrogate.as_mut() {
@@ -194,11 +226,14 @@ impl Transformable for SimplePolygon {
 
 impl TransformableFrom for SimplePolygon {
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self {
-        let SimplePolygon { points, bbox, area: _, diameter: _, surrogate } = self;
+        //destructuring pattern to ensure that the code is updated when the struct changes
+        let SimplePolygon { points, bbox, area: _, diameter: _, poi, surrogate } = self;
 
         for (p, ref_p) in points.iter_mut().zip(&reference.points) {
             p.transform_from(ref_p, t);
         }
+
+        poi.transform_from(reference.poi(), t);
 
         //transform the surrogate
         if let Some(surrogate) = surrogate.as_mut() {
@@ -224,7 +259,7 @@ impl CollidesWith<Point> for SimplePolygon {
 
 
                 let mut n_intersections = 0;
-                for edge in EdgeIterator::new(self) {
+                for edge in self.edge_iter() {
                     //Check if the ray does not go through (or almost through) a vertex
                     //This can result in funky behaviour, which could incorrect results
                     //Therefore we handle this case

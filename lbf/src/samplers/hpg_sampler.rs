@@ -26,7 +26,7 @@ pub struct HPGSampler<'a> {
 
 impl<'a> HPGSampler<'a> {
     pub fn new(item: &'a Item, layout: &Layout) -> Option<HPGSampler<'a>> {
-        let poi = item.shape().surrogate().pole_of_inaccessibility();
+        let poi = item.shape().poi();
 
         let hpg = layout.cde().haz_prox_grid().expect("grid changes present");
 
@@ -73,7 +73,7 @@ impl<'a> HPGSampler<'a> {
     }
 
     pub fn tighten_x_bound(&mut self, best: &LBFCost){
-        let poi_rad = self.item.shape().surrogate().pole_of_inaccessibility().radius();
+        let poi_rad = self.item.shape().poi().radius();
         let new_x_bound = *best.x_max - poi_rad; //we need at least one POI radius of space to the left of the best solution
 
         if new_x_bound < self.x_bound {

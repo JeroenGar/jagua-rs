@@ -83,9 +83,10 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
     };
 
     //draw items
-    let item_group = {
-        let mut group = Group::new();
+    let items_group = {
+        let mut items_group = Group::new();
         for pi in layout.placed_items() {
+            let mut group = Group::new();
             let item = instance.item(pi.item_id());
             let shape = pi.shape();
             let color = match item.base_quality() {
@@ -108,7 +109,7 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
                 ],
             ));
 
-            if options.ff_surrogate {
+            if options.surrogate {
                 let poi_style = [
                     ("fill", "black"),
                     ("fill-opacity", "0.1"),
@@ -131,31 +132,29 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
                     ("stroke-linecap", "round"),
                     ("stroke-linejoin", "round")
                 ];
-                let transformed_surrogate = item.shape().surrogate().transform_clone(&pi.d_transformation().compose());
-                let ff_range_poles = transformed_surrogate.config().ff_range_poles();
-                let ff_range_clips = transformed_surrogate.config().ff_range_clips();
 
+                let transformed_surrogate = item.shape().surrogate().transform_clone(&pi.d_transformation().compose());
+                let poi = &transformed_surrogate.poles()[0];
+                let ff_poles = transformed_surrogate.ff_poles();
 
                 for i in 0..transformed_surrogate.poles().len() {
                     let pole = &transformed_surrogate.poles()[i];
-                    match i {
-                        0 => group = group.add(svg_data_export::circle(pole, &poi_style)),
-                        i if ff_range_poles.contains(&i) =>
-                            group = group.add(svg_data_export::circle(pole, &ff_style)),
-                        _ => group = group.add(svg_data_export::circle(pole, &no_ff_style)),
-                    };
+                    if pole == poi {
+                        group = group.add(svg_data_export::circle(pole, &poi_style));
+                    }
+                    if ff_poles.contains(&pole) {
+                        group = group.add(svg_data_export::circle(pole, &ff_style));
+                    } else {
+                        group = group.add(svg_data_export::circle(pole, &no_ff_style));
+                    }
                 }
-                for i in 0..transformed_surrogate.clips().len() {
-                    let clip = &transformed_surrogate.clips()[i];
-
-                    match ff_range_clips.contains(&i) {
-                        true => group = group.add(svg_data_export::data_to_path(svg_data_export::edge_data(clip), &ff_style)),
-                        false => group = group.add(svg_data_export::data_to_path(svg_data_export::edge_data(clip), &no_ff_style)),
-                    };
+                for pier in transformed_surrogate.piers() {
+                    group = group.add(svg_data_export::data_to_path(svg_data_export::edge_data(pier), &ff_style));
                 }
             }
+            items_group = items_group.add(group);
         }
-        group
+        items_group
     };
 
     let quadtree_group = {
@@ -220,7 +219,7 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
     };
 
     doc.add(bin_group)
-        .add(item_group)
+        .add(items_group)
         .add(qz_group)
         .add(quadtree_group)
         .add(haz_prox_grid_group)

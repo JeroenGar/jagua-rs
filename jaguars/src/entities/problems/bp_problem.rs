@@ -9,7 +9,7 @@ use crate::entities::placed_item_uid::PlacedItemUID;
 use crate::entities::problems::problem::{LayoutIndex, Problem};
 use crate::entities::problems::problem::private::ProblemPrivate;
 use crate::entities::solution::Solution;
-use crate::insertion::insertion_option::InsertionOption;
+use crate::entities::insertion_option::InsertionOption;
 use crate::util::assertions;
 
 pub struct BPProblem {

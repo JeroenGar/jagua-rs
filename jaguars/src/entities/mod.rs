@@ -8,3 +8,4 @@ pub mod placed_item_uid;
 pub mod instance;
 pub mod solution;
 pub mod problems;
+pub mod insertion_option;

@@ -33,11 +33,12 @@ impl Circle {
         self.radius
     }
 
-    pub fn bounding_circle(&self, circles: &[Circle]) -> Circle {
+    pub fn bounding_circle(circles: &[Circle]) -> Circle {
         //Returns the smallest possible circle that fully contains all in circles (including self)
-        let mut bounding_circle = self.clone();
+        let mut circles_iter = circles.iter();
+        let mut bounding_circle = circles_iter.next().expect("no circles provided").clone();
 
-        for circle in circles.iter() {
+        for circle in circles_iter {
             let distance_between_centers = bounding_circle.center().distance(&circle.center());
             match bounding_circle.radius.partial_cmp(&(distance_between_centers + circle.radius)).unwrap() {
                 Ordering::Less => {

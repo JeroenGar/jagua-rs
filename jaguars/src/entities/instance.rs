@@ -13,8 +13,6 @@ pub struct Instance {
 impl Instance {
     pub fn new(items: Vec<(Item, usize)>, packing_type: PackingType) -> Instance {
         assert!(assertions::instance_item_bin_ids_correct(&items, &packing_type));
-        assert!(items.iter().all(|(item, _)| assertions::item_has_default_surrogate(item)),
-                "item shapes must have default item surrogate structures initiated");
 
         let item_area = items.iter().map(|(item, qty)| item.shape().area() * *qty as f64).sum();
 

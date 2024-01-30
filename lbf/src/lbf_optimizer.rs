@@ -19,7 +19,7 @@ use jaguars::entities::solution::Solution;
 use jaguars::geometry::convex_hull::convex_hull_from_points;
 use jaguars::geometry::geo_traits::{Shape, TransformableFrom};
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
-use jaguars::insertion::insertion_option::InsertionOption;
+use jaguars::entities::insertion_option::InsertionOption;
 use crate::config::Config;
 use crate::lbf_cost::LBFCost;
 
@@ -45,7 +45,7 @@ impl LBFOptimizer {
         let problem = match instance.packing_type() {
             PackingType::BinPacking(_) => BPProblem::new(instance.clone()).into(),
             PackingType::StripPacking { height } => {
-                let strip_width = instance.item_area() / height; //initiate with usage 100%
+                let strip_width = instance.item_area() / height * 2.0; //initiate with usage 50%
                 SPProblem::new(instance.clone(), strip_width, config.cde_config).into()
             }
         };
@@ -147,6 +147,7 @@ fn sample_layout(problem: &ProblemEnum,layout_index: &LayoutIndex, item: &Item, 
         .map_or(vec![], |hf| hazard_filter::ignored_entities(hf, layout.cde().all_hazards()));
 
     let shape = item.shape();
+    let scale = shape.diameter();
     let mut buffer_shape = item.shape().clone();
 
     let mut best = None;
@@ -178,6 +179,7 @@ fn sample_layout(problem: &ProblemEnum,layout_index: &LayoutIndex, item: &Item, 
                     }
                 }
             }
+            //dbg!(sampler.coverage_area() / layout.bin().area() * 100.0);
         }
     }
 

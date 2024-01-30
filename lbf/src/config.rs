@@ -1,4 +1,4 @@
-use jaguars::util::config::{CDEConfig, HazProxConfig, QuadTreeConfig};
+use jaguars::util::config::{CDEConfig, HazProxConfig, QuadTreeConfig, SPSurrogateConfig};
 use serde::{Deserialize, Serialize};
 use jaguars::simplification::simplification_config::PolySimplConfig;
 use crate::io::svg_util::SvgDrawOptions;
@@ -20,6 +20,12 @@ impl Default for Config {
             cde_config: CDEConfig{
                 quadtree: QuadTreeConfig::FixedDepth(4),
                 haz_prox: HazProxConfig::Number(10000),
+                item_surrogate_config: SPSurrogateConfig{
+                    pole_coverage_goal: 0.9,
+                    max_poles: 10,
+                    n_ff_poles: 1,
+                    n_ff_piers: 1,
+                }
             },
             poly_simpl_config: PolySimplConfig::Enabled {
                 tolerance: 0.001

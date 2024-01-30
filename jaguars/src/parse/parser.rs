@@ -17,7 +17,7 @@ use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
-use crate::insertion::insertion_option::InsertionOption;
+use crate::entities::insertion_option::InsertionOption;
 use crate::N_QUALITIES;
 use crate::parse::json::json_instance::{JsonInstance, JsonPoly, JsonSimplePoly};
 use crate::parse::json::json_solution::{JsonLayout, JsonLayoutStats, JsonObjectType, JsonPlacedItem, JsonSolution, JsonTransformation};
@@ -85,7 +85,7 @@ impl Parser {
                         None => AllowedOrients::full_range()
                     };
 
-                    (Item::new(item_id, shape, item_value, allowed_orientations, centering_transf, base_quality), json_item.demand as usize)
+                    (Item::new(item_id, shape, item_value, allowed_orientations, centering_transf, base_quality, self.cde_config.item_surrogate_config.clone()), json_item.demand as usize)
                 });
                 item_join_handles.push(handle);
             }

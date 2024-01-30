@@ -44,13 +44,13 @@ pub fn generate(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> 
     let clipped_rays = rays.iter().map(|l| clip(shape, l)).flatten().collect_vec();
     let grid_of_unrepresented_points = generate_unrepresented_point_grid(&expanded_bbox, shape, poles, N_POINTS_PER_DIMENSION);
 
-    let mut selected_clips = Vec::new();
+    let mut selected_piers = Vec::new();
 
     let radius_of_ray_influence = ACTION_RADIUS_RATIO * expanded_bbox.width();
     let forfeit_distance = f64::sqrt(bbox.width().powi(2) * bbox.height().powi(2));
 
     for _ in 0..n {
-        let min_distance_selected_rays = min_distances_to_rays(&grid_of_unrepresented_points, &selected_clips, forfeit_distance);
+        let min_distance_selected_rays = min_distances_to_rays(&grid_of_unrepresented_points, &selected_piers, forfeit_distance);
         let min_distance_poles = min_distances_to_poles(&grid_of_unrepresented_points, &poles, forfeit_distance);
 
         let loss_values = clipped_rays.iter()
@@ -73,10 +73,10 @@ pub fn generate(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> 
 
         match min_loss_ray {
             None => panic!("No ray found"),
-            Some(ray) => selected_clips.push(ray.clone()),
+            Some(ray) => selected_piers.push(ray.clone()),
         }
     }
-    selected_clips
+    selected_piers
 }
 
 fn generate_ray_transformations(bbox: &AARectangle, rays_per_angle: usize, n_angles: usize) -> Vec<Transformation> {
@@ -97,7 +97,7 @@ fn generate_ray_transformations(bbox: &AARectangle, rays_per_angle: usize, n_ang
         .collect_vec()
 }
 
-//clips a ray against the border of a polygon, potentially creating multiple "clips"8
+//clips a ray against the border of a polygon, potentially creating multiple "clips"
 fn clip(shape: &SimplePolygon, ray: &Edge) -> Vec<Edge> {
     //both ends of the ray should be outside the shape
     assert!(!shape.collides_with(&ray.start()) && !shape.collides_with(&ray.end()));

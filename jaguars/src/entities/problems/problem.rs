@@ -11,7 +11,7 @@ use crate::entities::problems::problem::private::ProblemPrivate;
 use crate::entities::problems::sp_problem::SPProblem;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::Shape;
-use crate::insertion::insertion_option::InsertionOption;
+use crate::entities::insertion_option::InsertionOption;
 
 #[enum_dispatch]
 pub enum ProblemEnum {

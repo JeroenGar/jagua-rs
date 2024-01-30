@@ -14,7 +14,7 @@ use crate::entities::problems::problem::{LayoutIndex, Problem};
 use crate::entities::problems::problem::private::ProblemPrivate;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
-use crate::insertion::insertion_option::InsertionOption;
+use crate::entities::insertion_option::InsertionOption;
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
 

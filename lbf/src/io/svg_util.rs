@@ -9,16 +9,16 @@ pub struct SvgDrawOptions {
     pub theme: SvgLayoutTheme,
     pub quadtree: bool, //draws the quadtree
     pub haz_prox_grid: bool, //draws the hazard proximity grid
-    pub ff_surrogate: bool, //draws the fail fast surrogate for each item
+    pub surrogate: bool, //draws the fail fast surrogate for each item
 }
 
 impl Default for SvgDrawOptions {
     fn default() -> Self {
         Self{
             theme: SvgLayoutTheme::default(),
-            quadtree: true,
+            quadtree: false,
             haz_prox_grid: false,
-            ff_surrogate: true,
+            surrogate: false,
         }
     }
 }

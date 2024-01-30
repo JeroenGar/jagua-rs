@@ -21,7 +21,6 @@ use crate::entities::problems::problem::Problem;
 use crate::entities::solution::Solution;
 use crate::entities::stored_layout::StoredLayout;
 use crate::geometry::geo_traits::{Shape, Transformable};
-use crate::geometry::primitives::sp_surrogate::SPSurrogateConfig;
 use crate::geometry::transformation::Transformation;
 use crate::util::fixed_layout_printer;
 
@@ -343,8 +342,4 @@ fn hazards_match(chv1: &[Hazard], chv2: &[Hazard]) -> bool {
         return false;
     }
     true
-}
-
-pub fn item_has_default_surrogate(item: &Item) -> bool {
-    item.shape().surrogate().config() == SPSurrogateConfig::item_default()
 }
