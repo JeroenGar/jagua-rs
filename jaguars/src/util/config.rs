@@ -15,19 +15,20 @@ pub enum QuadTreeConfig {
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub enum HazProxConfig {
-    Number(usize),
-    Density, //TODO
+    Disabled,
+    Enabled { n_cells: usize },
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct SPSurrogateConfig {
     pub pole_coverage_goal: f64,
     pub max_poles: usize,
-    pub n_ff_poles: usize, //number of poles to test during fail fast
+    pub n_ff_poles: usize,
+    //number of poles to test during fail fast
     pub n_ff_piers: usize, //number of piers to test during fail fast
 }
 
-impl SPSurrogateConfig{
+impl SPSurrogateConfig {
     pub fn none() -> Self {
         Self {
             pole_coverage_goal: 0.0,

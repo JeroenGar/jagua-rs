@@ -10,22 +10,17 @@ use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::util::config::HazProxConfig;
 
 #[derive(Debug, Clone)]
 pub struct HazardProximityGrid {
-    config: HazProxConfig,
     grid: Grid<HPGCell>,
     cell_radius: f64,
-    pending_deregisters: Vec<HazardEntity>,
+    pending_deregisters: Vec<HazardEntity>
 }
 
 impl HazardProximityGrid {
-    pub fn new(bbox: AARectangle, static_hazards: &[Hazard], config: HazProxConfig) -> Self {
-        let cells = match config {
-            HazProxConfig::Number(n_dots_target) => grid_generator::generate(bbox, static_hazards, n_dots_target),
-            HazProxConfig::Density => panic!("Not implemented yet"),
-        };
+    pub fn new(bbox: AARectangle, static_hazards: &[Hazard], n_cells: usize) -> Self {
+        let cells = grid_generator::generate(bbox, static_hazards, n_cells);
 
         let cell_radius = {
             let half_width = cells[0].width() / 2.0;
@@ -44,7 +39,6 @@ impl HazardProximityGrid {
         };
 
         HazardProximityGrid {
-            config,
             grid,
             cell_radius,
             pending_deregisters: vec![],
@@ -161,10 +155,6 @@ impl HazardProximityGrid {
 
     pub fn grid(&self) -> &Grid<HPGCell> {
         &self.grid
-    }
-
-    pub fn config(&self) -> HazProxConfig {
-        self.config
     }
 
 }

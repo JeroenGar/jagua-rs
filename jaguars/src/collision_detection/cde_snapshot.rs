@@ -7,11 +7,11 @@ use crate::collision_detection::hazards::hazard::Hazard;
 #[derive(Clone, Debug)]
 pub struct CDESnapshot {
     dynamic_hazards: Vec<Hazard>,
-    grid: Grid<HPGCell>
+    grid: Option<Grid<HPGCell>>
 }
 
 impl CDESnapshot {
-    pub fn new(dynamic_hazards: Vec<Hazard>, grid: Grid<HPGCell>) -> Self {
+    pub fn new(dynamic_hazards: Vec<Hazard>, grid: Option<Grid<HPGCell>>) -> Self {
         Self {
             dynamic_hazards,
             grid
@@ -21,7 +21,7 @@ impl CDESnapshot {
         &self.dynamic_hazards
     }
 
-    pub fn grid(&self) -> &Grid<HPGCell> {
+    pub fn grid(&self) -> &Option<Grid<HPGCell>> {
         &self.grid
     }
 

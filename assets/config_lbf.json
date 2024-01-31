@@ -4,7 +4,9 @@
       "FixedDepth": 4
     },
     "haz_prox": {
-      "Number": 10000
+      "Enabled": {
+        "n_cells": 10000
+      }
     },
     "item_surrogate_config": {
       "pole_coverage_goal": 0.9,
@@ -19,11 +21,11 @@
     }
   },
   "deterministic_mode": true,
-  "n_samples_per_item": 50000,
-  "ls_samples_fraction": 0.5,
+  "n_samples_per_item": 5000,
+  "ls_samples_fraction": 0.2,
   "svg_draw_options": {
     "quadtree": false,
     "haz_prox_grid": false,
-    "surrogate": true
+    "surrogate": false
   }
 }

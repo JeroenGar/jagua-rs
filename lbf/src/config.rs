@@ -19,7 +19,7 @@ impl Default for Config {
         Self {
             cde_config: CDEConfig{
                 quadtree: QuadTreeConfig::FixedDepth(4),
-                haz_prox: HazProxConfig::Number(10000),
+                haz_prox: HazProxConfig::Enabled{n_cells: 10000},
                 item_surrogate_config: SPSurrogateConfig{
                     pole_coverage_goal: 0.9,
                     max_poles: 10,

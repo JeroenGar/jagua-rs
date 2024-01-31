@@ -1,8 +1,4 @@
-
-
-
-
-use svg::node::element::{Circle, Path, Pattern, Rectangle};
+use svg::node::element::{Circle, Path};
 use svg::node::element::path::Data;
 use jaguars::collision_detection::hazards::hazard_entity::HazardEntity;
 
@@ -104,47 +100,8 @@ pub fn circle(circle: &geometry::primitives::circle::Circle, params: &[(&str, &s
     circle
 }
 
-pub fn rect_data(rect: &geometry::primitives::aa_rectangle::AARectangle) -> Data {
-    Data::new()
-        .move_to((rect.x_min(), rect.y_min()))
-        .line_to((rect.x_max(), rect.y_min()))
-        .line_to((rect.x_max(), rect.y_max()))
-        .line_to((rect.x_min(), rect.y_max()))
-        .close()
-}
-
 pub fn edge_data(edge: &Edge) -> Data {
     Data::new()
         .move_to((edge.start().0, edge.start().1))
         .line_to((edge.end().0, edge.end().1))
-}
-
-pub fn rgb_to_hex(r: i32, g: i32, b: i32) -> String {
-    format!(
-        "#{:02X}{:02X}{:02X}",
-        r as f32 as u8, g as f32 as u8, b as f32 as u8
-    )
-}
-
-pub fn diagonal_hatch_pattern(id: &str, background_color: &str, hatch_color: &str, distance: f64, width: f64) -> Pattern {
-    Pattern::new()
-        .set("id", id)
-        .set("width", distance)
-        .set("height", distance)
-        .set("patternTransform", "rotate(45 0 0)")
-        .set("patternUnits", "userSpaceOnUse")
-        .add(
-            Rectangle::new()
-                .set("width", distance)
-                .set("height", distance)
-                .set("fill", background_color),
-        )
-        .add(
-            svg::node::element::Line::new()
-                .set("x1", 0)
-                .set("y1", 0)
-                .set("x2", 0)
-                .set("y2", distance)
-                .set("style", format!("stroke:{}; stroke-width:{}", hatch_color, width)),
-        )
 }

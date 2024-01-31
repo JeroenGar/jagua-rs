@@ -8,8 +8,6 @@ use clap::Parser as ClapParser;
 use log::{info, LevelFilter, warn};
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
-use jaguars::entities::solution::Solution;
-
 
 use jaguars::parse::parser;
 use jaguars::parse::parser::Parser;

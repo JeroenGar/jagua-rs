@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use ordered_float::NotNan;
-use rand_distr::num_traits::Zero;
 use jaguars::geometry::geo_traits::Shape;
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
 
@@ -22,10 +21,6 @@ impl LBFCost {
         }
     }
     pub fn cmp(&self, other: &LBFCost) -> Ordering {
-        /*let dx = self.x_max - other.x_max;
-        let dy = self.y_max - other.y_max;
-
-        (NotNan::new(10.0).unwrap() * dx + dy).cmp(&NotNan::zero())*/
         let x_mltp = NotNan::new(100.0).unwrap();
 
         (x_mltp * self.x_max + self.y_max).cmp(&(x_mltp * other.x_max + other.y_max))

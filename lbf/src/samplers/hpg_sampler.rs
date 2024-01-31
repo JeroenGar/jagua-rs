@@ -1,7 +1,6 @@
 use itertools::Itertools;
-use log::{debug, info};
+use log::{debug};
 
-use rand::distributions::uniform::UniformSampler;
 use rand::prelude::{SliceRandom, SmallRng};
 
 use jaguars::entities::item::Item;
@@ -29,8 +28,6 @@ impl<'a> HPGSampler<'a> {
         let poi = item.shape().poi();
 
         let hpg = layout.cde().haz_prox_grid().expect("grid changes present");
-
-        let cell_radius = hpg.cell_radius();
 
         let hpg_cells = hpg.cells();
 

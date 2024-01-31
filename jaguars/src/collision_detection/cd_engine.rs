@@ -17,14 +17,14 @@ use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::assertions;
-use crate::util::config::{CDEConfig, QuadTreeConfig};
+use crate::util::config::{CDEConfig, HazProxConfig, QuadTreeConfig};
 
 #[derive(Clone, Debug)]
 pub struct CDEngine {
     quadtree: QTNode,
     static_hazards: Vec<Hazard>,
     dynamic_hazards: Vec<Hazard>,
-    haz_prox_grid: HazardProximityGrid,
+    haz_prox_grid: Option<HazardProximityGrid>,
     config: CDEConfig,
     bbox: AARectangle,
     uncommited_deregisters: Vec<Hazard>,
@@ -37,7 +37,13 @@ impl CDEngine {
             QuadTreeConfig::Auto => panic!("not implemented, quadtree depth must be specified"),
         };
 
-        let haz_prox_grid = HazardProximityGrid::new(bbox.clone(), &static_hazards, config.haz_prox);
+        let haz_prox_grid = match config.haz_prox {
+            HazProxConfig::Disabled => None,
+            HazProxConfig::Enabled { n_cells } => {
+                Some(HazardProximityGrid::new(bbox.clone(), &static_hazards, n_cells))
+            }
+        };
+
         let mut qt_root = QTNode::new(qt_depth, bbox.clone(), None);
 
         for haz in static_hazards.iter() {
@@ -72,7 +78,7 @@ impl CDEngine {
                 hazard
             }
         };
-        self.haz_prox_grid.register_hazard(&hazard);
+        self.haz_prox_grid.as_mut().map(|hpg| hpg.register_hazard(&hazard));
         self.dynamic_hazards.push(hazard);
 
         debug_assert!(assertions::qt_contains_no_dangling_hazards(&self));
@@ -90,22 +96,22 @@ impl CDEngine {
                 self.uncommited_deregisters.push(hazard);
             }
         }
-        self.haz_prox_grid.deregister_hazard(hazard_entity, self.dynamic_hazards.iter(), commit_instantly);
+        self.haz_prox_grid.as_mut().map(|hpg| hpg.deregister_hazard(hazard_entity, self.dynamic_hazards.iter(), commit_instantly));
 
         debug_assert!(assertions::qt_contains_no_dangling_hazards(&self));
     }
 
     pub fn create_snapshot(&mut self) -> CDESnapshot {
         self.commit_deregisters();
-        assert!(!self.haz_prox_grid.has_pending_deregisters());
+        assert!(!self.haz_prox_grid.as_ref().map_or(false, |hpg| hpg.has_pending_deregisters()));
         CDESnapshot::new(
             self.dynamic_hazards.clone(),
-            self.haz_prox_grid.grid().clone(),
+            self.haz_prox_grid.as_ref().map(|hpg| hpg.grid().clone()),
         )
     }
 
     pub fn restore(&mut self, snapshot: &CDESnapshot) {
-        //QUADTREE
+        //Quadtree
         let mut hazards_to_remove = self.dynamic_hazards.iter().map(|h| h.entity().clone()).collect::<IndexSet<HazardEntity>>();
         debug_assert!(hazards_to_remove.len() == self.dynamic_hazards.len());
         let mut hazards_to_add = vec![];
@@ -142,8 +148,10 @@ impl CDEngine {
             self.dynamic_hazards.push(hazard);
         }
 
-        //HAZPROXGRID
-        self.haz_prox_grid.restore(snapshot.grid().clone());
+        //Hazard proximity grid
+        self.haz_prox_grid.as_mut().map(|hpg| {
+            hpg.restore(snapshot.grid().clone().expect("no hpg in snapshot"));
+        });
 
         debug_assert!(self.dynamic_hazards.len() == snapshot.dynamic_hazards().len());
     }
@@ -152,7 +160,7 @@ impl CDEngine {
         for uc_haz in self.uncommited_deregisters.drain(..) {
             self.quadtree.deregister_hazard(uc_haz.entity());
         }
-        self.haz_prox_grid.flush_deregisters(self.dynamic_hazards.iter());
+        self.haz_prox_grid.as_mut().map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
     }
 
     pub fn quadtree(&self) -> &QTNode {
@@ -179,14 +187,15 @@ impl CDEngine {
     }
 
     pub fn haz_prox_grid(&self) -> Result<&HazardProximityGrid, PendingChangesErr> {
-        match self.haz_prox_grid.has_pending_deregisters() {
+        let grid = self.haz_prox_grid.as_ref().expect("no hpg present");
+        match grid.has_pending_deregisters() {
             true => Err(PendingChangesErr),
-            false => Ok(&self.haz_prox_grid)
+            false => Ok(grid)
         }
     }
 
     pub fn flush_changes(&mut self) {
-        self.haz_prox_grid.flush_deregisters(self.dynamic_hazards.iter());
+        self.haz_prox_grid.as_mut().map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
     }
 
     pub fn has_uncommitted_deregisters(&self) -> bool {

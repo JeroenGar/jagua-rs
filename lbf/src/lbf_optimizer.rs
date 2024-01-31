@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use itertools::Itertools;
-use log::{debug, info, Level, log};
+use log::{debug, info};
 use ordered_float::NotNan;
 use rand::prelude::SmallRng;
 
@@ -147,7 +147,6 @@ fn sample_layout(problem: &ProblemEnum,layout_index: &LayoutIndex, item: &Item, 
         .map_or(vec![], |hf| hazard_filter::ignored_entities(hf, layout.cde().all_hazards()));
 
     let shape = item.shape();
-    let scale = shape.diameter();
     let mut buffer_shape = item.shape().clone();
 
     let mut best = None;
