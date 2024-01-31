@@ -111,7 +111,7 @@ impl CDEngine {
         let mut hazards_to_add = vec![];
 
         for hazard in snapshot.dynamic_hazards().iter() {
-            let hazard_already_present = hazards_to_remove.remove(hazard.entity());
+            let hazard_already_present = hazards_to_remove.swap_remove(hazard.entity());
             if !hazard_already_present {
                 hazards_to_add.push(hazard.clone());
             }
