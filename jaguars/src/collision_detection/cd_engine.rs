@@ -299,13 +299,12 @@ impl CDEngine {
     {
         //collect all active and non-ignored hazards
         let mut relevant_hazards = self.all_hazards()
-            .filter(|h| h.is_active())
-            .filter(|h| !ignored_entities.contains(h.entity()));
+            .filter(|h| h.is_active() && !ignored_entities.contains(h.entity()));
 
         relevant_hazards.any(|haz| {
-            //due to possible floating point precision issues, we need to check if the bboxes are "almost" related
-            //"almost" meaning that, when edges are close together, they are considered equal.
-            //Which results in Intersecting relations being considered Enclosed or Surrounding
+            //Due to possible fp issues, we check if the bboxes are "almost" related
+            //"almost" meaning that, when edges are very close together, they are considered equal.
+            //Some relations which would normally be seen as Intersecting are now being considered Enclosed/Surrounding
             let haz_shape = haz.shape().as_ref();
             let bbox_relation = haz_shape.bbox().almost_relation_to(&shape.bbox());
 
@@ -314,9 +313,9 @@ impl CDEngine {
                 GeoRelation::Enclosed => (haz_shape, shape), //inclusion possible
                 GeoRelation::Disjoint | GeoRelation::Intersecting => {
                     //no inclusion is possible
-                    match haz.entity().presence() {
-                        GeoPosition::Interior => return false,
-                        GeoPosition::Exterior => return true,
+                    return match haz.entity().presence() {
+                        GeoPosition::Interior => false,
+                        GeoPosition::Exterior => true,
                     }
                 },
             };
