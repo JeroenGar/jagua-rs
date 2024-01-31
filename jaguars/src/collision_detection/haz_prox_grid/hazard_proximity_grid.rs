@@ -5,7 +5,7 @@ use itertools::Itertools;
 use crate::collision_detection::haz_prox_grid::{grid_generator};
 use crate::collision_detection::haz_prox_grid::boundary_fill::BoundaryFillGrid;
 use crate::collision_detection::haz_prox_grid::grid::Grid;
-use crate::collision_detection::haz_prox_grid::hp_cell::{HPCell, HPCellUpdate};
+use crate::collision_detection::haz_prox_grid::hpg_cell::{HPGCell, HPCellUpdate};
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
@@ -17,7 +17,7 @@ use crate::util::config::HazProxConfig;
 #[derive(Debug, Clone)]
 pub struct HazardProximityGrid {
     config: HazProxConfig,
-    grid: Grid<HPCell>,
+    grid: Grid<HPGCell>,
     cell_radius: f64,
     pending_deregisters: Vec<HazardEntity>,
 }
@@ -37,7 +37,7 @@ impl HazardProximityGrid {
 
         let grid = {
             let elements = cells.into_iter()
-                .map(|bbox| HPCell::new(bbox, static_hazards))
+                .map(|bbox| HPGCell::new(bbox, static_hazards))
                 .map(|cell| {
                     let centroid = cell.centroid();
                     (cell, centroid.into())
@@ -53,7 +53,7 @@ impl HazardProximityGrid {
         }
     }
 
-    pub fn restore(&mut self, grid: Grid<HPCell>) {
+    pub fn restore(&mut self, grid: Grid<HPGCell>) {
         assert_eq!(self.grid.elements().len(), grid.elements().len());
         self.grid = grid;
         self.pending_deregisters.clear();
@@ -153,7 +153,7 @@ impl HazardProximityGrid {
         !self.pending_deregisters.is_empty()
     }
 
-    pub fn cells(&self) -> &Vec<Option<HPCell>> {
+    pub fn cells(&self) -> &Vec<Option<HPGCell>> {
         &self.grid.elements()
     }
 
@@ -161,7 +161,7 @@ impl HazardProximityGrid {
         self.cell_radius
     }
 
-    pub fn grid(&self) -> &Grid<HPCell> {
+    pub fn grid(&self) -> &Grid<HPGCell> {
         &self.grid
     }
 

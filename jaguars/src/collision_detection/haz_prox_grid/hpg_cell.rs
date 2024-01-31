@@ -5,6 +5,7 @@ use itertools::Itertools;
 use crate::collision_detection::haz_prox_grid::proximity::Proximity;
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
+use crate::entities::item::Item;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::geo_traits::{DistanceFrom, Shape};
@@ -13,7 +14,7 @@ use crate::geometry::geo_enums::GeoPosition;
 use crate::N_QUALITIES;
 
 #[derive(Clone, Debug)]
-pub struct HPCell {
+pub struct HPGCell {
     bbox: AARectangle,
     centroid: Point,
     radius: f64,
@@ -24,7 +25,7 @@ pub struct HPCell {
     qz_haz_prox: [Proximity; N_QUALITIES], //proximity of closest quality zone for each quality
 }
 
-impl HPCell {
+impl HPGCell {
     pub fn new(bbox: AARectangle, static_hazards: &[Hazard]) -> Self {
         //Calculate the exact distance to the edge bin (add new method in shape trait to do this)
         //For each of the distinct quality zones in a bin, calculate the distance to the closest zone
@@ -161,6 +162,13 @@ impl HPCell {
         self.centroid
     }
 
+    pub fn could_accommodate_item(&self, item: &Item) -> bool {
+        let haz_prox : f64 = (&self.hazard_proximity(item.base_quality())).into();
+        let item_poi_radius = item.shape().poi().radius();
+
+        item_poi_radius < haz_prox + self.radius
+    }
+
     pub fn hazard_proximity(&self, quality_level: Option<usize>) -> Proximity {
         //calculate the minimum distance to either bin, item or qz
         let mut haz_prox = self.uni_haz_prox.0;
@@ -190,7 +198,7 @@ impl HPCell {
     }
 }
 
-pub fn distance_to_surrogate_poles_border(hp_cell: &HPCell, poles: &[Circle]) -> Proximity {
+pub fn distance_to_surrogate_poles_border(hp_cell: &HPGCell, poles: &[Circle]) -> Proximity {
     poles.iter()
         .map(|p| p.distance_from_border(&hp_cell.centroid))
         .map(|(pos, dist)| Proximity::new(pos, dist.abs()))

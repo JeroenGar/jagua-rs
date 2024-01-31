@@ -40,10 +40,7 @@ impl<'a> HPGSampler<'a> {
         //collect all eligible cells from the Hazard Proximity Grid
         let cell_samplers = hpg_cells.iter()
             .flatten()
-            .filter(|cell| {
-                let prox : f64 = (&cell.hazard_proximity(item.base_quality())).into();
-                poi.radius() < prox + cell_radius
-            })
+            .filter(|cell| cell.could_accommodate_item(item))
             .map(|cell| UniformAARectSampler::new(cell.bbox().clone(), item))
             .collect_vec();
 

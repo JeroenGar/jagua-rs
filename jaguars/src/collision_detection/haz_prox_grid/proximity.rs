@@ -30,6 +30,12 @@ impl Into<f64> for &Proximity {
     }
 }
 
+impl Into<f64> for Proximity {
+    fn into(self) -> f64 {
+        (&self).into()
+    }
+}
+
 impl Default for Proximity {
     fn default() -> Self {
         Self {

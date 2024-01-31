@@ -1,5 +1,5 @@
 use crate::collision_detection::haz_prox_grid::grid::Grid;
-use crate::collision_detection::haz_prox_grid::hp_cell::HPCell;
+use crate::collision_detection::haz_prox_grid::hpg_cell::HPGCell;
 use crate::collision_detection::hazards::hazard::Hazard;
 
 //Snapshot of the CDE state at a given time.
@@ -7,11 +7,11 @@ use crate::collision_detection::hazards::hazard::Hazard;
 #[derive(Clone, Debug)]
 pub struct CDESnapshot {
     dynamic_hazards: Vec<Hazard>,
-    grid: Grid<HPCell>
+    grid: Grid<HPGCell>
 }
 
 impl CDESnapshot {
-    pub fn new(dynamic_hazards: Vec<Hazard>, grid: Grid<HPCell>) -> Self {
+    pub fn new(dynamic_hazards: Vec<Hazard>, grid: Grid<HPGCell>) -> Self {
         Self {
             dynamic_hazards,
             grid
@@ -21,7 +21,7 @@ impl CDESnapshot {
         &self.dynamic_hazards
     }
 
-    pub fn grid(&self) -> &Grid<HPCell> {
+    pub fn grid(&self) -> &Grid<HPGCell> {
         &self.grid
     }
 

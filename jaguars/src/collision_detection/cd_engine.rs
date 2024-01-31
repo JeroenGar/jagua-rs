@@ -1,20 +1,20 @@
 use indexmap::IndexSet;
 use itertools::Itertools;
+use tribool::Tribool;
 
 use crate::collision_detection::cde_snapshot::CDESnapshot;
-use crate::collision_detection::collision::Collides;
 use crate::collision_detection::haz_prox_grid::hazard_proximity_grid::{HazardProximityGrid, PendingChangesErr};
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::collision_detection::quadtree::qt_node::QTNode;
-use crate::geometry::primitives::aa_rectangle::{AARectangle};
+use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
+use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
+use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable};
+use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
-use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable};
 use crate::geometry::primitives::point::Point;
-use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::transformation::Transformation;
 use crate::util::assertions;
 use crate::util::config::{CDEConfig, QuadTreeConfig};
@@ -217,8 +217,8 @@ impl CDEngine {
                     return true;
                 }
 
-                //Inclusion test
-                if self.collision_by_inclusion(shape, ignored_entities) {
+                //Containment test
+                if self.collision_by_containment(shape, ignored_entities) {
                     return true;
                 }
                 return false;
@@ -242,34 +242,24 @@ impl CDEngine {
         false
     }
 
-    pub fn point_definitely_collides_with(&self, point: &Point, entity: &HazardEntity) -> Collides {
-        if !self.bbox.collides_with(point) {
-            //point is outside the quadtree, so no information available
-            Collides::Unsure
-        } else {
-            self.quadtree.point_definitely_collides_with(point, entity)
+    pub fn point_definitely_collides_with(&self, point: &Point, entity: &HazardEntity) -> Tribool {
+        match self.bbox.collides_with(point) {
+            false => Tribool::Indeterminate, //point is outside the quadtree, so no information available
+            true => self.quadtree.point_definitely_collides_with(point, entity)
         }
     }
 
-    pub fn edge_definitely_collides(&self, edge: &Edge, ignored_entities: &[HazardEntity]) -> bool {
+    pub fn edge_definitely_collides(&self, edge: &Edge, ignored_entities: &[HazardEntity]) -> Tribool {
         match !self.bbox.collides_with(&edge.start()) || !self.bbox.collides_with(&edge.end()) {
-            true => {
-                //if either the start or end of the edge is outside the quadtree, it definitely collides
-                true
-            }
-            false => {
-                self.quadtree.definitely_collides(edge, ignored_entities) == Collides::Yes
-            }
+            true => Tribool::True, //if either the start or end of the edge is outside the quadtree, it definitely collides
+            false => self.quadtree.definitely_collides(edge, ignored_entities)
         }
     }
 
-    pub fn circle_definitely_collides(&self, circle: &Circle, ignored_entities: &[HazardEntity]) -> bool {
-        match !self.bbox.collides_with(&circle.center()) {
-            true => true,
-            false => {
-                //let haz_entities_to_ignore = hazard_filter::ignored_entities(hazard_filter, &mut self.all_hazards());
-                self.quadtree.definitely_collides(circle, ignored_entities) == Collides::Yes
-            }
+    pub fn circle_definitely_collides(&self, circle: &Circle, ignored_entities: &[HazardEntity]) -> Tribool {
+        match self.bbox.collides_with(&circle.center()) {
+            false => Tribool::True, //outside the quadtree, so definitely collides
+            true => self.quadtree.definitely_collides(circle, ignored_entities)
         }
     }
 
@@ -278,21 +268,17 @@ impl CDEngine {
         let mut ignored_entities = ignored_entities.iter().cloned().collect_vec();
 
         //Keep testing the quadtree for intersections until no (non-ignored) entities collide
-        loop {
-            match self.quadtree.collides(circle, &ignored_entities) {
-                Some(e) => {
-                    colliding_entities.push(e.clone());
-                    ignored_entities.push(e.clone());
-                }
-                None => break
-            }
+        while let Some(haz_entity) = self.quadtree.collides(circle, &ignored_entities) {
+            colliding_entities.push(haz_entity.clone());
+            ignored_entities.push(haz_entity.clone());
         }
 
-        let circle_center_in_bbox = self.bbox.collides_with(&circle.center());
+        let circle_center_in_qt = self.bbox.collides_with(&circle.center());
 
-        if !circle_center_in_bbox && colliding_entities.is_empty() {
+        if !circle_center_in_qt && colliding_entities.is_empty() {
+            // The circle center is outside the quadtree
             if !ignored_entities.contains(&&HazardEntity::BinOuter) {
-                //If the center of the circle falls outside the scope of the quadtree, add the bin as a hazard, unless it is ignored
+                //Add the bin as a hazard, unless it is ignored
                 colliding_entities.push(HazardEntity::BinOuter);
             }
         }
@@ -300,52 +286,45 @@ impl CDEngine {
         colliding_entities
     }
 
-    fn collision_by_inclusion(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool
+    fn collision_by_containment(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool
     {
-        //TODO: restructure to improve readability
-
+        //collect all active and non-ignored hazards
         let mut relevant_hazards = self.all_hazards()
             .filter(|h| h.is_active())
             .filter(|h| !ignored_entities.contains(h.entity()));
 
-        let shape_point = shape.poi().center();
-
         relevant_hazards.any(|haz| {
-            let haz_point = haz.shape().poi().center();
+            //due to possible floating point precision issues, we need to check if the bboxes are "almost" related
+            //"almost" meaning that, when edges are close together, they are considered equal.
+            //Which results in Intersecting relations being considered Enclosed or Surrounding
+            let haz_shape = haz.shape().as_ref();
+            let bbox_relation = haz_shape.bbox().almost_relation_to(&shape.bbox());
 
-            let bbox_relation = haz.shape().bbox().relation_to(&shape.bbox());
-
-            let (point, poly) = match (bbox_relation, haz.entity().presence()) {
-                (GeoRelation::Disjoint, GeoPosition::Exterior) => return true, //exclusion collision
-                (GeoRelation::Disjoint, GeoPosition::Interior) => return false, //no inclusion collision possible with unrelated bboxes
-                (GeoRelation::Intersecting, GeoPosition::Exterior) => (shape_point, haz.shape().as_ref()), //exclusion collision possible
-                (GeoRelation::Surrounding, _) => (shape_point, haz.shape().as_ref()), //collision possible
-                (GeoRelation::Enclosed, _) => (haz_point, shape), //collision possible
-                (GeoRelation::Intersecting, GeoPosition::Interior) => {
-                    //Due to limited fp precision, we need to check if the bboxes are almost related
-                    match haz.shape().bbox().almost_relation_to(&shape.bbox()) {
-                        GeoRelation::Enclosed => (haz_point, shape), //collision possible
-                        GeoRelation::Surrounding => (shape_point, haz.shape().as_ref()), //collision possible
-                        _ => return false, //no inclusion possible with intersecting bboxes
+            let (s_mu, s_omega) = match bbox_relation {
+                GeoRelation::Surrounding => (shape, haz_shape), //inclusion possible
+                GeoRelation::Enclosed => (haz_shape, shape), //inclusion possible
+                GeoRelation::Disjoint | GeoRelation::Intersecting => {
+                    //no inclusion is possible
+                    match haz.entity().presence() {
+                        GeoPosition::Interior => return false,
+                        GeoPosition::Exterior => return true,
                     }
-                }
+                },
             };
 
-            if std::ptr::eq(poly, haz.shape().as_ref()) {
-                //The poly to test against is the hazard, which is registered in the quadtree.
-                //We can use the quadtree for possibly a faster resolve time
-                match self.quadtree.point_definitely_collides_with(&point, haz.entity()) {
-                    Collides::Yes => return true, //inclusion or exclusion collision
-                    Collides::No => return false,
-                    Collides::Unsure => (),
+            if std::ptr::eq(haz_shape, s_omega) {
+                //s_omega is registered in the quadtree.
+                //maybe the quadtree can help us.
+                match self.quadtree.point_definitely_collides_with(&s_mu.poi().center(), haz.entity()).try_into() {
+                    Ok(collides) => return collides,
+                    Err(_) => (), //no definitive answer
                 }
             }
+            let inclusion = s_omega.collides_with(&s_mu.poi().center());
 
-            match (haz.entity().presence(), poly.collides_with(&point)) {
-                (GeoPosition::Interior, true) => true, //inclusion collision
-                (GeoPosition::Exterior, false) => true, //exclusion collision
-                (GeoPosition::Exterior, true) => false,
-                (GeoPosition::Interior, false) => false,
+            match haz.entity().presence() {
+                GeoPosition::Interior => inclusion,
+                GeoPosition::Exterior => !inclusion,
             }
         })
     }

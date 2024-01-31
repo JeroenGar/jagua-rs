@@ -1,6 +1,6 @@
 use itertools::Itertools;
+use tribool::Tribool;
 
-use crate::collision_detection::collision::Collides;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
@@ -199,57 +199,57 @@ impl QTNode {
     }
 
 
-    pub fn definitely_collides<T>(&self, entity: &T, ignored_entities: &[HazardEntity]) -> Collides
+    pub fn definitely_collides<T>(&self, entity: &T, ignored_entities: &[HazardEntity]) -> Tribool
     where T: CollidesWith<AARectangle>
     {
         match self.hazards.strongest(ignored_entities) {
-            None => Collides::No,
+            None => Tribool::False,
             Some(hazard) => match (entity.collides_with(self.bbox()), hazard.haz_presence()) {
-                (false, _) | (_, QTHazPresence::None) => Collides::No,
-                (true, QTHazPresence::Entire) => Collides::Yes,
+                (false, _) | (_, QTHazPresence::None) => Tribool::False,
+                (true, QTHazPresence::Entire) => Tribool::True,
                 (true, QTHazPresence::Partial(_)) => match self.children() {
                     Some(children) => {
                         //There is a partial hazard and the node has children, check all children
-                        let mut collides = Collides::No; //Assume no collision
+                        let mut result = Tribool::False; //Assume no collision
                         for i in 0..4 {
                             let child = &children[i];
                             match child.definitely_collides(entity, ignored_entities) {
-                                Collides::Yes => return Collides::Yes, //If a child for sure collides, we can immediately return Yes
-                                Collides::Unsure => collides = Collides::Unsure, //If a child might collide, switch from to Maybe
-                                Collides::No => {} //If child does not collide, do nothing
+                                Tribool::True => return Tribool::True, //If a child for sure collides, we can immediately return Yes
+                                Tribool::Indeterminate => result = Tribool::Indeterminate, //If a child might collide, switch from to Maybe
+                                Tribool::False => {} //If child does not collide, do nothing
                             }
                         }
-                        collides
+                        result
                     }
-                    None => Collides::Unsure,
+                    None => Tribool::Indeterminate,
                 },
             },
         }
     }
 
-    pub fn point_definitely_collides_with(&self, point: &Point, entity: &HazardEntity) -> Collides {
+    pub fn point_definitely_collides_with(&self, point: &Point, entity: &HazardEntity) -> Tribool {
         match self.hazards.get(entity) {
-            None => Collides::No, //Node does not contain inclusion
+            None => Tribool::False, //Node does not contain inclusion
             Some(hazard) => match self.bbox.collides_with(point) {
-                false => Collides::No, //Hazard present, but the point is fully outside of the node
+                false => Tribool::False, //Hazard present, but the point is fully outside the node
                 true => match hazard.haz_presence() {
-                    QTHazPresence::None => Collides::No, //The hazard is of type None, a collision is impossible
-                    QTHazPresence::Entire => Collides::Yes, //The hazard is of type Entire, a collision is guaranteed
+                    QTHazPresence::None => Tribool::False, //The hazard is of type None, a collision is impossible
+                    QTHazPresence::Entire => Tribool::True, //The hazard is of type Entire, a collision is guaranteed
                     QTHazPresence::Partial(_) => match &self.children {
                         Some(children) => {
                             //There is a partial hazard and the node has children, check all children
-                            let mut collides = Collides::No; //Assume no collision
+                            let mut result = Tribool::False; //Assume no collision
                             for i in 0..4 {
                                 let child = &children[i];
                                 match child.point_definitely_collides_with(point, entity) {
-                                    Collides::Yes => return Collides::Yes, //If a child for sure collides, we can immediately return Yes
-                                    Collides::Unsure => collides = Collides::Unsure, //If a child might collide, switch from No to Maybe
-                                    Collides::No => () //If child does not collide, do nothing
+                                    Tribool::True => return Tribool::True, //If a child for sure collides, we can immediately return Yes
+                                    Tribool::Indeterminate => result = Tribool::Indeterminate, //If a child might collide, switch from to Maybe
+                                    Tribool::False => {} //If child does not collide, do nothing
                                 }
                             }
-                            collides
+                            result
                         }
-                        None => Collides::Unsure, //There are no children, so we can't be sure
+                        None => Tribool::Indeterminate, //There are no children, so we can't be sure
                     }
                 }
             }
