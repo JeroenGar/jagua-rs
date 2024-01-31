@@ -1,8 +1,8 @@
 use itertools::Itertools;
 use log::{Level, log};
 
-use crate::geometry::primitives::edge::Edge;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
+use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::simplification::corner::{Corner, CornerType};
@@ -191,10 +191,6 @@ fn replacing_vertex_convex_convex_candidate(shape: &SimplePolygon, candidate: &C
         }
         _ => panic!("candidate is not of type convex convex")
     }
-}
-
-fn get_points(shape: &SimplePolygon, corner: Corner) -> (Point, Point, Point) {
-    (shape.get_point(corner.i_prev()), shape.get_point(corner.i()), shape.get_point(corner.i_next()))
 }
 
 fn calculate_intersection_in_front(l1: &Edge, l2: &Edge) -> Option<Point> {

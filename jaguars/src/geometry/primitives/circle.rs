@@ -1,11 +1,11 @@
 use std::cmp::Ordering;
 use std::f64::consts::PI;
 
+use crate::geometry::geo_enums::GeoPosition;
+use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::edge::Edge;
-use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom};
 use crate::geometry::primitives::point::Point;
-use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::transformation::Transformation;
 
 #[derive(Clone, Debug, PartialEq)]

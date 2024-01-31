@@ -1,6 +1,6 @@
+use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
-use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::transformation::Transformation;
 
 pub trait CollidesWith<T> {

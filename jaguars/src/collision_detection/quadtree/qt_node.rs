@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use tribool::Tribool;
 
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
@@ -6,10 +5,8 @@ use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_partial_hazard::QTPartialHazard;
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::circle::Circle;
-use crate::geometry::primitives::edge::Edge;
 use crate::geometry::geo_traits::CollidesWith;
+use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
 
 #[derive(Clone, Debug)]

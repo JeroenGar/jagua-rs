@@ -3,6 +3,7 @@ use std::sync::Arc;
 use enum_dispatch::enum_dispatch;
 use itertools::Itertools;
 
+use crate::entities::insertion_option::InsertionOption;
 use crate::entities::instance::Instance;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item_uid::PlacedItemUID;
@@ -10,8 +11,6 @@ use crate::entities::problems::bp_problem::BPProblem;
 use crate::entities::problems::problem::private::ProblemPrivate;
 use crate::entities::problems::sp_problem::SPProblem;
 use crate::entities::solution::Solution;
-use crate::geometry::geo_traits::Shape;
-use crate::entities::insertion_option::InsertionOption;
 
 #[enum_dispatch]
 pub enum ProblemEnum {

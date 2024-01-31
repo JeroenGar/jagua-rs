@@ -2,10 +2,9 @@ use std::collections::VecDeque;
 
 use ordered_float::NotNan;
 
+use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
-use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape};
-use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
 //Based on Mapbox's "Polylabel" algorithm: https://github.com/mapbox/polylabel

@@ -1,4 +1,3 @@
-use smallvec::smallvec;
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
@@ -6,7 +5,6 @@ use crate::collision_detection::quadtree::qt_partial_hazard::{EdgeIndices, QTPar
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
-
 
 //Hazards in a QTNode
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

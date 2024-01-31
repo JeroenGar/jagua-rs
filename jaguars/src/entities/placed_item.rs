@@ -1,6 +1,6 @@
 use std::sync::Arc;
-use crate::collision_detection::hazards::filters::qz_haz_filter::QZHazardFilter;
 
+use crate::collision_detection::hazards::filters::qz_haz_filter::QZHazardFilter;
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::entities::item::Item;

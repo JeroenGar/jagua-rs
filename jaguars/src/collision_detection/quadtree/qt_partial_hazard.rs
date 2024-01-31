@@ -1,12 +1,11 @@
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Weak};
-use smallvec::SmallVec;
 
 use crate::collision_detection::hazards::hazard::Hazard;
+use crate::geometry::geo_enums::GeoPosition;
+use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
-use crate::geometry::geo_traits::CollidesWith;
-use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
 #[derive(Clone, Debug)]

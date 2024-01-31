@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
 
 use crate::collision_detection::hazards::hazard::Hazard;
-use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::geo_traits::{DistanceFrom, Shape};
+use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
 
 pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) -> Vec<AARectangle> {

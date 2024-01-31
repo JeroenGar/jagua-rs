@@ -1,5 +1,5 @@
-use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::collision_detection::hazards::filters::hazard_filter::HazardFilter;
+use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 
 pub struct CombinedHazardFilter<'a> {
     pub filters: Vec<Box<&'a dyn HazardFilter>>,

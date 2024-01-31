@@ -2,10 +2,10 @@ use std::cmp::Ordering;
 
 use ordered_float::NotNan;
 
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::geo_traits::{AlmostCollidesWith, CollidesWith, DistanceFrom, Shape};
-use crate::geometry::primitives::point::Point;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
+use crate::geometry::geo_traits::{AlmostCollidesWith, CollidesWith, DistanceFrom, Shape};
+use crate::geometry::primitives::edge::Edge;
+use crate::geometry::primitives::point::Point;
 use crate::util::f64a::F64A;
 
 //Axis-aligned Rectangle

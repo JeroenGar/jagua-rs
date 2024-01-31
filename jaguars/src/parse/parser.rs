@@ -5,6 +5,7 @@ use itertools::Itertools;
 use log::{Level, log, warn};
 
 use crate::entities::bin::Bin;
+use crate::entities::insertion_option::InsertionOption;
 use crate::entities::instance::{Instance, PackingType};
 use crate::entities::item::{AllowedOrients, Item};
 use crate::entities::problems::bp_problem::BPProblem;
@@ -17,7 +18,6 @@ use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
-use crate::entities::insertion_option::InsertionOption;
 use crate::N_QUALITIES;
 use crate::parse::json::json_instance::{JsonInstance, JsonPoly, JsonSimplePoly};
 use crate::parse::json::json_solution::{JsonLayout, JsonLayoutStats, JsonObjectType, JsonPlacedItem, JsonSolution, JsonTransformation};

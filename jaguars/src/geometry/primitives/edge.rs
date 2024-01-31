@@ -1,7 +1,7 @@
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom};
-use crate::geometry::primitives::point::Point;
 use crate::geometry::geo_enums::GeoPosition;
+use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom};
+use crate::geometry::primitives::aa_rectangle::AARectangle;
+use crate::geometry::primitives::point::Point;
 use crate::geometry::transformation::Transformation;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -223,7 +223,7 @@ fn edge_intersection(e1: &Edge, e2: &Edge, calculate_location: bool) -> Intersec
         return Intersection::No;
     }
 
-    //https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line_segment
+    //based on: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line_segment
     let Point(x1, y1) = e1.start;
     let Point(x2, y2) = e1.end;
     let Point(x3, y3) = e2.start;

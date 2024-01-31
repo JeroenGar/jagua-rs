@@ -6,11 +6,11 @@ use crate::collision_detection::haz_prox_grid::proximity::Proximity;
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::entities::item::Item;
+use crate::geometry::geo_enums::GeoPosition;
+use crate::geometry::geo_traits::{DistanceFrom, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
-use crate::geometry::geo_traits::{DistanceFrom, Shape};
 use crate::geometry::primitives::point::Point;
-use crate::geometry::geo_enums::GeoPosition;
 use crate::N_QUALITIES;
 
 #[derive(Clone, Debug)]

@@ -109,12 +109,5 @@ impl CellState {
         }
     }
 
-    fn dequeue(&mut self) {
-        *self = match self {
-            CellState::Queued => CellState::NotQueued,
-            CellState::NotQueued => unreachable!("invalid state: cell already not queued"),
-            CellState::Visited => unreachable!("invalid state: cell already visited")
-        }
-    }
 }
 

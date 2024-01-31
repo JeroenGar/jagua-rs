@@ -3,10 +3,10 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 use ordered_float::NotNan;
-use crate::collision_detection::hazards::filters::hazard_filter;
-use crate::collision_detection::hazards::filters::hazard_filter::HazardFilter;
 
+use crate::collision_detection::hazards::filters::hazard_filter;
 use crate::entities::bin::Bin;
+use crate::entities::insertion_option::InsertionOption;
 use crate::entities::instance::{Instance, PackingType};
 use crate::entities::layout::Layout;
 use crate::entities::placed_item_uid::PlacedItemUID;
@@ -14,7 +14,6 @@ use crate::entities::problems::problem::{LayoutIndex, Problem};
 use crate::entities::problems::problem::private::ProblemPrivate;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
-use crate::entities::insertion_option::InsertionOption;
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
 

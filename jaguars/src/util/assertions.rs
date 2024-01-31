@@ -7,7 +7,6 @@ use crate::collision_detection::cd_engine::CDEngine;
 use crate::collision_detection::hazards::filters::combo_haz_filter::CombinedHazardFilter;
 use crate::collision_detection::hazards::filters::entity_haz_filter::EntityHazardFilter;
 use crate::collision_detection::hazards::filters::hazard_filter;
-use crate::collision_detection::hazards::filters::hazard_filter::HazardFilter;
 use crate::collision_detection::hazards::hazard::Hazard;
 use crate::collision_detection::hazards::hazard_entity::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;

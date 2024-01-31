@@ -3,13 +3,13 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 
+use crate::entities::insertion_option::InsertionOption;
 use crate::entities::instance::{Instance, PackingType};
 use crate::entities::layout::Layout;
 use crate::entities::placed_item_uid::PlacedItemUID;
 use crate::entities::problems::problem::{LayoutIndex, Problem};
 use crate::entities::problems::problem::private::ProblemPrivate;
 use crate::entities::solution::Solution;
-use crate::entities::insertion_option::InsertionOption;
 use crate::util::assertions;
 
 pub struct BPProblem {

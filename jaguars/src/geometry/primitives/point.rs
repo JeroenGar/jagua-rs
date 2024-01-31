@@ -1,7 +1,6 @@
 use std::hash::{Hash, Hasher};
 
 use crate::geometry::geo_traits::{CollidesWith, Transformable, TransformableFrom};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::transformation::Transformation;
 
 #[derive(Debug, Clone, PartialEq, Copy)]

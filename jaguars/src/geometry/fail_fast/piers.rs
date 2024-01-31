@@ -3,10 +3,10 @@ use ndarray::Array;
 use ordered_float::NotNan;
 use rand_distr::num_traits::FloatConst;
 
+use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
-use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable};
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;

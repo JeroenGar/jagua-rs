@@ -4,15 +4,15 @@ use std::usize;
 use itertools::Itertools;
 use num_integer::Integer;
 use ordered_float::NotNan;
-use crate::geometry::fail_fast::poi;
 
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom};
-use crate::geometry::primitives::point::Point;
-use crate::geometry::geo_enums::GeoPosition;
+use crate::geometry::fail_fast::poi;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
+use crate::geometry::geo_enums::GeoPosition;
+use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom};
+use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
+use crate::geometry::primitives::edge::Edge;
+use crate::geometry::primitives::point::Point;
 use crate::geometry::transformation::Transformation;
 use crate::util::config::SPSurrogateConfig;
 use crate::util::f64a::F64A;
@@ -54,16 +54,14 @@ impl SimplePolygon {
         let bbox = SimplePolygon::generate_bounding_box(&points);
         let poi = SimplePolygon::calculate_poi(&points);
 
-        let mut simple_poly = SimplePolygon {
+        SimplePolygon {
             points,
             bbox,
             area,
             diameter,
             poi,
             surrogate: None,
-        };
-
-        simple_poly
+        }
     }
 
     pub fn generate_surrogate(&mut self, config: SPSurrogateConfig) {
