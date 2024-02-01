@@ -19,7 +19,6 @@ use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
 use lbf::io::layout_to_svg::layout_to_svg;
 
-
 fn main() {
     io::init_logger(Some(LevelFilter::Info));
 

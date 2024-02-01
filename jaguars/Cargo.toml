@@ -17,5 +17,4 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 itertools = "0.12.0"
 enum_dispatch = "0.3.11"
-mimalloc = "0.1.39"
 tribool = "0.3.0"

@@ -7,7 +7,7 @@ use log::{Level, log, warn};
 use crate::entities::bin::Bin;
 use crate::entities::insertion_option::InsertionOption;
 use crate::entities::instance::{Instance, PackingType};
-use crate::entities::item::{AllowedOrients, Item};
+use crate::entities::item::Item;
 use crate::entities::problems::bp_problem::BPProblem;
 use crate::entities::problems::problem::{LayoutIndex, Problem, ProblemEnum};
 use crate::entities::problems::sp_problem::SPProblem;
@@ -17,6 +17,7 @@ use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use crate::geometry::rotation::Rotation;
 use crate::geometry::transformation::Transformation;
 use crate::N_QUALITIES;
 use crate::parse::json::json_instance::{JsonInstance, JsonPoly, JsonSimplePoly};
@@ -81,8 +82,15 @@ impl Parser {
                         None => {}
                     };
                     let allowed_orientations = match json_item.allowed_orientations.as_ref() {
-                        Some(a_o) => AllowedOrients::Set(a_o.iter().map(|angle| angle.to_radians()).collect()),
-                        None => AllowedOrients::full_range()
+                        Some(a_o) => {
+                            if a_o.is_empty() || (a_o.len() == 1 && a_o[0] == 0.0) {
+                                Rotation::None
+                            }
+                            else{
+                                Rotation::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
+                            }
+                        },
+                        None => Rotation::Continuous,
                     };
 
                     (Item::new(item_id, shape, item_value, allowed_orientations, centering_transf, base_quality, self.cde_config.item_surrogate_config.clone()), json_item.demand as usize)

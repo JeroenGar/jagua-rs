@@ -20,6 +20,7 @@ use jaguars::geometry::convex_hull::convex_hull_from_points;
 use jaguars::geometry::geo_traits::{Shape, TransformableFrom};
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
 use jaguars::entities::insertion_option::InsertionOption;
+use jaguars::entities::layout::Layout;
 use crate::config::Config;
 use crate::lbf_cost::LBFCost;
 
@@ -142,7 +143,7 @@ fn find_placement(problem: &ProblemEnum, item: &Item, config: &Config, rng: &mut
 }
 
 fn sample_layout(problem: &ProblemEnum,layout_index: &LayoutIndex, item: &Item, config: &Config, rng: &mut SmallRng) -> Option<InsertionOption> {
-    let layout = problem.get_layout(&layout_index);
+    let layout : &Layout = problem.get_layout(&layout_index);
     let entities_to_ignore = item.hazard_filter()
         .map_or(vec![], |hf| hazard_filter::ignored_entities(hf, layout.cde().all_hazards()));
 
