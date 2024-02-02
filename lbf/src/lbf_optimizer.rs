@@ -11,19 +11,18 @@ use rand::prelude::SmallRng;
 use jaguars::collision_detection::hazard_filters::hazard_filter;
 use jaguars::entities::instance::{Instance, PackingType};
 use jaguars::entities::item::Item;
+use jaguars::entities::layout::Layout;
+use jaguars::entities::placing_option::PlacingOption;
 use jaguars::entities::problems::bp_problem::BPProblem;
 use jaguars::entities::problems::problem::{LayoutIndex, Problem, ProblemEnum};
-
 use jaguars::entities::problems::sp_problem::SPProblem;
 use jaguars::entities::solution::Solution;
 use jaguars::geometry::convex_hull::convex_hull_from_points;
 use jaguars::geometry::geo_traits::{Shape, TransformableFrom};
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
-use jaguars::entities::placing_option::PlacingOption;
-use jaguars::entities::layout::Layout;
+
 use crate::config::Config;
 use crate::lbf_cost::LBFCost;
-
 use crate::samplers::hpg_sampler::HPGSampler;
 use crate::samplers::ls_sampler::LSSampler;
 
@@ -32,7 +31,7 @@ pub const STDDEV_TRANSL_END_FRAC: f64 = 0.001;
 pub const STDDEV_ROT_START_FRAC: f64 = 2.0 * (PI / 180.0);
 pub const STDDEV_ROT_END_FRAC: f64 = 0.5 * (PI / 180.0);
 
-pub const ITEM_LIMIT : usize = 1000;
+pub const ITEM_LIMIT: usize = 1000;
 
 pub struct LBFOptimizer {
     instance: Arc<Instance>,
@@ -79,16 +78,16 @@ impl LBFOptimizer {
             //place all items of this type
             while self.problem.missing_item_qtys()[item_index] > 0 {
                 //find a position and insert it
-                match find_placement(&self.problem, item, &self.config, &mut self.rng){
+                match find_placement(&self.problem, item, &self.config, &mut self.rng) {
                     Some(i_opt) => {
                         info!("inserting item {}", i_opt.item_id);
                         self.problem.insert_item(&i_opt);
                         if self.problem.included_item_qtys().iter().sum::<usize>() >= ITEM_LIMIT {
                             break 'outer;
                         }
-                    },
+                    }
                     None => {
-                        match &mut self.problem{
+                        match &mut self.problem {
                             ProblemEnum::BPProblem(_) => break,
                             ProblemEnum::SPProblem(sp_problem) => {
                                 let new_width = sp_problem.strip_width() * 1.1;
@@ -101,15 +100,15 @@ impl LBFOptimizer {
             }
         }
 
-        match &mut self.problem{
-            ProblemEnum::BPProblem(_) => {},
+        match &mut self.problem {
+            ProblemEnum::BPProblem(_) => {}
             ProblemEnum::SPProblem(sp_problem) => {
                 sp_problem.fit_strip_width();
                 info!("final strip width: {:.3}", sp_problem.strip_width());
             }
         }
 
-        let solution : Solution = self.problem.create_solution(&None);
+        let solution: Solution = self.problem.create_solution(&None);
 
         info!("BLFOptimizer finished, {} items placed in {}ms, usage: {:.3}%", solution.n_items_placed(), start.elapsed().as_millis(), solution.usage() * 100.0);
         solution
@@ -131,8 +130,8 @@ fn find_placement(problem: &ProblemEnum, item: &Item, config: &Config, rng: &mut
     let layouts_to_sample =
         (0..problem.layouts().len()).map(|i| (LayoutIndex::Existing(i)))
             .chain((0..problem.empty_layouts().len())
-                    .filter(|&i| problem.empty_layout_has_stock(i))
-                    .map(|i| (LayoutIndex::Empty(i)))
+                .filter(|&i| problem.empty_layout_has_stock(i))
+                .map(|i| (LayoutIndex::Empty(i)))
             ).collect_vec();
 
     let best_i_opt = layouts_to_sample.iter().filter_map(|l_i| {
@@ -142,9 +141,9 @@ fn find_placement(problem: &ProblemEnum, item: &Item, config: &Config, rng: &mut
     best_i_opt
 }
 
-fn sample_layout(problem: &ProblemEnum,layout_index: LayoutIndex, item: &Item, config: &Config, rng: &mut SmallRng) -> Option<PlacingOption> {
+pub fn sample_layout(problem: &ProblemEnum, layout_index: LayoutIndex, item: &Item, config: &Config, rng: &mut SmallRng) -> Option<PlacingOption> {
     let item_id = item.id();
-    let layout : &Layout = problem.get_layout(&layout_index);
+    let layout: &Layout = problem.get_layout(&layout_index);
     let entities_to_ignore = item.hazard_filter()
         .map_or(vec![], |hf| hazard_filter::ignored_entities(hf, layout.cde().all_hazards()));
 
@@ -159,7 +158,7 @@ fn sample_layout(problem: &ProblemEnum,layout_index: LayoutIndex, item: &Item, c
 
     //random sampling within the valid cells of the Hazard Proximity Grid, tracking the best valid insertion option
     match HPGSampler::new(item, layout) {
-        None => {},
+        None => {}
         Some(mut sampler) => {
             for _ in 0..n_random_samples {
                 let transf = sampler.sample(rng);
@@ -174,7 +173,7 @@ fn sample_layout(problem: &ProblemEnum,layout_index: LayoutIndex, item: &Item, c
                     if worth_testing && !layout.cde().poly_collides(&buffer_shape, entities_to_ignore.as_ref()) {
                         //sample is a valid option
                         let d_transf = transf.decompose();
-                        let i_opt = PlacingOption{ layout_index, item_id, transf, d_transf };
+                        let i_opt = PlacingOption { layout_index, item_id, transf, d_transf };
                         sampler.tighten_x_bound(&cost);
                         debug!("new random best: {}", &cost);
                         best = Some((i_opt, cost));

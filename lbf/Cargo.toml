@@ -23,7 +23,7 @@ mimalloc = "0.1.39"
 criterion = "0.5.1"
 
 [[bench]]
-name = "cde_bench"
+name = "quadtree_bench"
 harness = false
 
 [profile.release]

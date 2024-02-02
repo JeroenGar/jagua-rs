@@ -13,6 +13,7 @@ use crate::entities::problems::sp_problem::SPProblem;
 use crate::entities::solution::Solution;
 
 #[enum_dispatch]
+#[derive(Clone)]
 pub enum ProblemEnum {
     BPProblem, //Bin Packing Problem
     SPProblem, //Strip Packing Problem
@@ -22,7 +23,7 @@ pub enum ProblemEnum {
 pub trait Problem: ProblemPrivate {
     fn insert_item(&mut self, i_opt: &PlacingOption);
 
-    fn remove_item(&mut self, layout_index: usize, pi_uid: &PlacedItemUID);
+    fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID);
 
     fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution;
 
@@ -92,7 +93,7 @@ pub(super) mod private {
     use crate::entities::problems::problem::ProblemEnum;
 
     #[enum_dispatch(ProblemEnum)]
-    pub trait ProblemPrivate {
+    pub trait ProblemPrivate : Clone {
         fn next_solution_id(&mut self) -> usize;
 
         fn missing_item_qtys_mut(&mut self) -> &mut [isize];

@@ -196,7 +196,8 @@ impl CDEngine {
     }
 
     pub fn flush_changes(&mut self) {
-        self.haz_prox_grid.as_mut().map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
+        self.haz_prox_grid.as_mut()
+            .map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
     }
 
     pub fn has_uncommitted_deregisters(&self) -> bool {

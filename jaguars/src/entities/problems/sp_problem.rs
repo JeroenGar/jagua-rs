@@ -17,6 +17,7 @@ use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
 
+#[derive(Clone)]
 pub struct SPProblem {
     instance: Arc<Instance>,
     layout: Layout,
@@ -111,8 +112,8 @@ impl Problem for SPProblem {
         self.register_included_item(item_id);
     }
 
-    fn remove_item(&mut self, layout_index: usize, pi_uid: &PlacedItemUID) {
-        assert_eq!(layout_index, 0, "strip packing problems only have a single layout");
+    fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID) {
+        assert_eq!(layout_index, LayoutIndex::Existing(0), "strip packing problems only have a single layout");
         self.layout.remove_item(pi_uid, false);
         self.unregister_included_item(pi_uid.item_id);
     }

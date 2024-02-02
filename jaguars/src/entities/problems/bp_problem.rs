@@ -12,6 +12,7 @@ use crate::entities::problems::problem::private::ProblemPrivate;
 use crate::entities::solution::Solution;
 use crate::util::assertions;
 
+#[derive(Clone)]
 pub struct BPProblem {
     instance: Arc<Instance>,
     layouts: Vec<Layout>,
@@ -57,7 +58,7 @@ impl BPProblem {
         }
     }
 
-    pub fn remove_layout(&mut self, layout_index: usize) {
+    pub fn remove_layout(&mut self, layout_index: LayoutIndex) {
         self.unregister_layout(layout_index);
     }
 
@@ -71,13 +72,18 @@ impl BPProblem {
         self.layouts.push(layout);
     }
 
-    pub fn unregister_layout(&mut self, layout_index: usize) {
-        let layout = self.layouts.remove(layout_index);
-        self.layout_has_changed(layout.id());
-        self.unregister_bin(layout.bin().id());
-        layout.placed_items().iter().for_each(
-            |v| { self.unregister_included_item(v.item_id()) });
-        self.uncommitted_removed_layouts.push(layout);
+    pub fn unregister_layout(&mut self, layout_index: LayoutIndex) {
+        match layout_index {
+            LayoutIndex::Existing(i) => {
+                let layout = self.layouts.remove(i);
+                self.layout_has_changed(layout.id());
+                self.unregister_bin(layout.bin().id());
+                layout.placed_items().iter().for_each(
+                    |v| { self.unregister_included_item(v.item_id()) });
+                self.uncommitted_removed_layouts.push(layout);
+            }
+            LayoutIndex::Empty(_) => unreachable!("cannot remove empty layout")
+        }
     }
 
     fn next_layout_id(&mut self) -> usize {
@@ -130,15 +136,20 @@ impl Problem for BPProblem {
         self.layout_has_changed(layout_id);
     }
 
-    fn remove_item(&mut self, layout_index: usize, pi_uid: &PlacedItemUID) {
-        self.layout_has_changed(self.layouts[layout_index].id());
-        let layout = &mut self.layouts[layout_index];
-        layout.remove_item(pi_uid, false);
-        if layout.is_empty() {
-            //if layout is empty, remove it
-            self.unregister_layout(layout_index);
+    fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID) {
+        match layout_index {
+            LayoutIndex::Existing(i) => {
+                self.layout_has_changed(self.layouts[i].id());
+                let layout = &mut self.layouts[i];
+                layout.remove_item(pi_uid, false);
+                if layout.is_empty() {
+                    //if layout is empty, remove it
+                    self.unregister_layout(layout_index);
+                }
+                self.unregister_included_item(pi_uid.item_id);
+            }
+            LayoutIndex::Empty(_) => unreachable!("cannot remove item from empty layout")
         }
-        self.unregister_included_item(pi_uid.item_id);
     }
 
     fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution {
