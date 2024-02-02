@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -22,25 +20,34 @@ pub struct JsonBin {
     pub cost: u64,
     pub stock: u64,
     pub shape: JsonPoly,
-    pub zones: Option<HashMap<String, JsonZone>>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub zones: Vec<JsonQualityZone>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
+pub struct JsonStrip {
+    pub height: f64,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct JsonItem {
     pub demand: u64,
-    pub base_quality: Option<usize>,
     pub allowed_orientations: Option<Vec<f64>>,
     pub shape: JsonPoly,
-    pub zones: Option<HashMap<String, JsonZone>>,
-    pub value: Option<u64>
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub zones: Vec<JsonQualityZone>,
+    pub value: Option<u64>,
+    pub base_quality: Option<usize>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct JsonPoly {
     pub outer: JsonSimplePoly,
-    pub inner: Option<Vec<JsonSimplePoly>>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub inner: Vec<JsonSimplePoly>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -48,13 +55,7 @@ pub struct JsonSimplePoly(pub Vec<(f64, f64)>);
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
-pub struct JsonZone {
+pub struct JsonQualityZone {
     pub quality: usize,
     pub shape: JsonPoly,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
-pub struct JsonStrip {
-    pub height: f64,
 }

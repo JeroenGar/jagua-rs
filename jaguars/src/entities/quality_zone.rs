@@ -5,8 +5,8 @@ use crate::N_QUALITIES;
 
 #[derive(Clone, Debug)]
 pub struct QualityZone {
+    /// Higher quality is better
     quality: usize,
-    //higher the better
     shapes: Vec<Arc<SimplePolygon>>,
 }
 

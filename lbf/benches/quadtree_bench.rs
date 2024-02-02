@@ -19,7 +19,6 @@ use jaguars::util::config::{CDEConfig, HazProxConfig, QuadTreeConfig, SPSurrogat
 use jaguars::util::polygon_simplification::PolySimplConfig;
 use lbf::config::Config;
 use lbf::lbf_optimizer::LBFOptimizer;
-use lbf::samplers::hpg_sampler::HPGSampler;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
 
 criterion_main!(benches);
@@ -88,7 +87,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
 }
 
 /// Benchmark the query operation of the quadtree for different depths
-/// We use the HPG sampler to sample 1000 transformations for each of the 5 removed items
+/// We validate 1000 sampled transformations for each of the 5 removed items
 fn quadtree_query_bench(c: &mut Criterion) {
     let json_instance: JsonInstance = serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
     let mut config = Config {

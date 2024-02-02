@@ -5,9 +5,9 @@ use itertools::Itertools;
 use log::{Level, log, warn};
 
 use crate::entities::bin::Bin;
-use crate::entities::placing_option::PlacingOption;
 use crate::entities::instance::{Instance, PackingType};
 use crate::entities::item::Item;
+use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bp_problem::BPProblem;
 use crate::entities::problems::problem::{LayoutIndex, Problem, ProblemEnum};
 use crate::entities::problems::sp_problem::SPProblem;
@@ -34,7 +34,7 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(poly_simpl_config: PolySimplConfig, cde_config: CDEConfig, center_polygons: bool) -> Parser {
-        Parser {poly_simpl_config, cde_config, center_polygons }
+        Parser { poly_simpl_config, cde_config, center_polygons }
     }
 
     pub fn parse(&self, json_instance: &JsonInstance) -> Instance {
@@ -54,42 +54,18 @@ impl Parser {
                     let item_value = json_item.value.unwrap_or(0);
                     let base_quality = json_item.base_quality;
 
-                    match json_item.zones.as_ref() {
-                        Some(json_zones) => {
-                            if !json_zones.is_empty() {
-                                warn!("Quality zones for items are not supported yet, ignoring them");
-                            }
-                            /*let different_qualities = json_zones.values().map(|zone| zone.quality).unique().collect::<Vec<usize>>();
+                    if !json_item.zones.is_empty() {
+                        warn!("Quality zones for items are not supported yet, ignoring them");
+                    }
 
-                            for quality in different_qualities {
-                                let zones = json_zones.values()
-                                    .filter(|zone| zone.quality == quality)
-                                    .map(|zone| {
-                                        let (zone_shape, _) = json_shape_to_polygon(
-                                            &zone.shape,
-                                            false,
-                                            self.config.poly_simplification_config,
-                                            SimplificationMode::Deflate,
-                                        );
-                                        zone_shape.transform_clone(&centering_transf)
-                                    })
-                                    .collect::<Vec<Polygon>>();
-                                let qz = QualityZone::new(quality, zones);
-                                assert!((quality as usize) < N_QUALITIES, "Quality {} is out of range, (configure N_QUALITIES const higher)", quality);
-                                quality_zones[quality as usize] = Some(qz);
-                            }*/
-                        }
-                        None => {}
-                    };
                     let allowed_orientations = match json_item.allowed_orientations.as_ref() {
                         Some(a_o) => {
                             if a_o.is_empty() || (a_o.len() == 1 && a_o[0] == 0.0) {
                                 AllowedRotation::None
-                            }
-                            else{
+                            } else {
                                 AllowedRotation::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
                             }
-                        },
+                        }
                         None => AllowedRotation::Continuous,
                     };
 
@@ -114,50 +90,38 @@ impl Parser {
                                 PolySimplMode::Deflate,
                             );
 
-                            let bin_holes = match json_bin.shape.inner.as_ref() {
-                                Some(json_holes) => {
-                                    json_holes.iter().map(|jsp| {
-                                        let (hole, _) = simple_json_shape_to_simple_polygon(
-                                            jsp,
+                            let bin_holes = json_bin.shape.inner.iter()
+                                .map(|jsp| {
+                                    let (hole, _) = simple_json_shape_to_simple_polygon(
+                                        jsp,
+                                        false,
+                                        self.poly_simpl_config,
+                                        PolySimplMode::Inflate,
+                                    );
+                                    hole.transform_clone(&centering_transf)
+                                }).collect_vec();
+
+                            let material_value = (bin_outer.area() - bin_holes.iter().map(|hole| hole.area()).sum::<f64>()) as u64;
+
+                            assert!(json_bin.zones.iter().all(|zone| zone.quality < N_QUALITIES), "Quality must be less than N_QUALITIES");
+
+                            let quality_zones = (0..N_QUALITIES).map(|quality| {
+                                let zones = json_bin.zones.iter()
+                                    .filter(|zone| zone.quality == quality)
+                                    .map(|zone| {
+                                        let (zone_shape, _) = json_shape_to_simple_polygon(
+                                            &zone.shape,
                                             false,
                                             self.poly_simpl_config,
                                             PolySimplMode::Inflate,
                                         );
-                                        hole.transform_clone(&centering_transf)
-                                    }).collect_vec()
-                                }
-                                None => vec![]
-                            };
+                                        zone_shape.transform_clone(&centering_transf)
+                                    })
+                                    .collect_vec();
 
-                            let material_value = (bin_outer.area() - bin_holes.iter().map(|hole| hole.area()).sum::<f64>()) as u64;
+                                QualityZone::new(quality, zones)
+                            }).collect_vec();
 
-                            let mut quality_zones = vec![];
-
-                            match json_bin.zones.as_ref() {
-                                Some(json_zones) => {
-                                    let different_qualities = json_zones.values().map(|zone| zone.quality).unique().collect::<Vec<usize>>();
-
-
-                                    for quality in different_qualities {
-                                        let zones = json_zones.values()
-                                            .filter(|zone| zone.quality == quality)
-                                            .map(|zone| {
-                                                let (zone_shape, _) = json_shape_to_simple_polygon(
-                                                    &zone.shape,
-                                                    false,
-                                                    self.poly_simpl_config,
-                                                    PolySimplMode::Inflate,
-                                                );
-                                                zone_shape.transform_clone(&centering_transf)
-                                            })
-                                            .collect_vec();
-                                        let qz = QualityZone::new(quality, zones);
-                                        assert!((quality as usize) < N_QUALITIES, "Quality {} is out of range, (set N_QUALITIES const higher)", quality);
-                                        quality_zones.push(qz);
-                                    }
-                                }
-                                None => {}
-                            };
                             let bin = Bin::new(
                                 bin_id,
                                 bin_outer,
@@ -261,7 +225,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
 
         let d_transf = transf.decompose();
 
-        let initial_insert_opt = PlacingOption{
+        let initial_insert_opt = PlacingOption {
             layout_index: LayoutIndex::Empty(empty_layout_index),
             item_id: first_item.id(),
             transf,
@@ -284,7 +248,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
 
             let d_transf = transf.decompose();
 
-            let insert_opt = PlacingOption{
+            let insert_opt = PlacingOption {
                 layout_index: LayoutIndex::Existing(layout_index),
                 item_id: item.id(),
                 transf,
@@ -354,15 +318,13 @@ pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: In
 }
 
 fn json_shape_to_simple_polygon(json_shape: &JsonPoly, center_polygon: bool, simpl_config: PolySimplConfig, simpl_mode: PolySimplMode) -> (SimplePolygon, Transformation) {
-    let outer = SimplePolygon::new(json_simple_poly_to_points(&json_shape.outer));
 
-    let mut inners = vec![];
-    if let Some(json_shape_inner) = json_shape.inner.as_ref() {
-        for jp_vec in json_shape_inner {
-            let shape = SimplePolygon::new(json_simple_poly_to_points(jp_vec));
-            inners.push(shape);
-        }
-    }
+    let outer = SimplePolygon::new(json_simple_poly_to_points(&json_shape.outer));
+    let inners = json_shape.inner.iter()
+        .map(|jsp| {
+            SimplePolygon::new(json_simple_poly_to_points(jsp))
+        })
+        .collect_vec();
 
     let shape = match inners.is_empty() {
         true => outer,
