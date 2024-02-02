@@ -23,10 +23,10 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
         let cell_radius = f64::sqrt(2.0 * (cell_dim / 2.0).powi(2)); //half of the maximum distance between two cell centers
 
         for i in 0..n_cells_in_x {
-            let x_min = bbox.x_min() + cell_dim * i as f64;
+            let x_min = bbox.x_min + cell_dim * i as f64;
             let x_max = x_min + cell_dim;
             for j in 0..n_cells_in_y {
-                let y_min = bbox.y_min() + cell_dim * j as f64;
+                let y_min = bbox.y_min + cell_dim * j as f64;
                 let y_max = y_min + cell_dim;
                 let rect = AARectangle::new(x_min, y_min, x_max, y_max);
                 //test if the cell is relevant

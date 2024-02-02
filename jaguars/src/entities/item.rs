@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use crate::collision_detection::hazard_filters::qz_haz_filter::QZHazardFilter;
+use crate::geometry::geo_enums::AllowedRotation;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::rotation::Rotation;
 use crate::geometry::transformation::Transformation;
 use crate::util::config::SPSurrogateConfig;
 
@@ -10,7 +10,7 @@ use crate::util::config::SPSurrogateConfig;
 pub struct Item {
     id: usize,
     shape: Arc<SimplePolygon>,
-    allowed_orientations: Rotation,
+    allowed_rotation: AllowedRotation,
     base_quality: Option<usize>,
     value: u64,
     centering_transform: Transformation,
@@ -18,12 +18,12 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn new(id: usize, mut shape: SimplePolygon, value: u64, allowed_orientations: Rotation,
+    pub fn new(id: usize, mut shape: SimplePolygon, value: u64, allowed_rotation: AllowedRotation,
                centering_transform: Transformation, base_quality: Option<usize>, surrogate_config: SPSurrogateConfig) -> Item {
         shape.generate_surrogate(surrogate_config);
         let shape = Arc::new(shape);
         let hazard_filter = base_quality.map(|q| QZHazardFilter { base_quality: q });
-        Item { id, shape, allowed_orientations, base_quality, value, centering_transform, hazard_filter }
+        Item { id, shape, allowed_rotation, base_quality, value, centering_transform, hazard_filter }
     }
 
     pub fn clone_with_id(&self, id: usize) -> Item {
@@ -57,7 +57,7 @@ impl Item {
         self.hazard_filter.as_ref()
     }
 
-    pub fn allowed_orientations(&self) -> &Rotation {
-        &self.allowed_orientations
+    pub fn allowed_rotation(&self) -> &AllowedRotation {
+        &self.allowed_rotation
     }
 }

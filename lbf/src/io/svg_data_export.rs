@@ -50,10 +50,10 @@ fn qt_node_data(
             let rect = qt_node.bbox();
             let draw = |data: Data| -> Data {
                 data
-                    .move_to((rect.x_min(), rect.y_min()))
-                    .line_to((rect.x_max(), rect.y_min()))
-                    .line_to((rect.x_max(), rect.y_max()))
-                    .line_to((rect.x_min(), rect.y_max()))
+                    .move_to((rect.x_min, rect.y_min))
+                    .line_to((rect.x_max, rect.y_min))
+                    .line_to((rect.x_max, rect.y_max))
+                    .line_to((rect.x_min, rect.y_max))
                     .close()
             };
 
@@ -91,9 +91,9 @@ pub fn point(Point(x, y): Point, fill: Option<&str>, rad: Option<f64>) -> Circle
 
 pub fn circle(circle: &geometry::primitives::circle::Circle, params: &[(&str, &str)]) -> Circle {
     let mut circle = Circle::new()
-        .set("cx", circle.center().0)
-        .set("cy", circle.center().1)
-        .set("r", circle.radius());
+        .set("cx", circle.center.0)
+        .set("cy", circle.center.1)
+        .set("r", circle.radius);
     for param in params {
         circle = circle.set(param.0, param.1)
     }

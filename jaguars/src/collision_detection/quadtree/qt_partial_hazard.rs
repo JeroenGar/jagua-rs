@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Weak};
 
@@ -21,11 +22,11 @@ pub enum EdgeIndices {
     Some(Vec<usize>)
 }
 
-impl From<&Hazard> for QTPartialHazard {
-    fn from(hazard: &Hazard) -> Self {
+impl<T> From<T> for QTPartialHazard where T: Borrow<Hazard> {
+    fn from(hazard: T) -> Self {
         Self {
-            shape: Arc::downgrade(&hazard.shape),
-            position: hazard.entity.presence(),
+            shape: Arc::downgrade(&hazard.borrow().shape),
+            position: hazard.borrow().entity.presence(),
             edge_indices: EdgeIndices::All,
         }
     }

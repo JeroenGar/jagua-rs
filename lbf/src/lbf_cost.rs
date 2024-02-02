@@ -13,8 +13,8 @@ pub struct LBFCost {
 
 impl LBFCost {
     pub fn new(shape: &SimplePolygon) -> Self {
-        let x_max = shape.bbox().x_max();
-        let y_max = shape.bbox().y_max();
+        let x_max = shape.bbox().x_max;
+        let y_max = shape.bbox().y_max;
         Self {
             x_max: NotNan::new(x_max).unwrap(),
             y_max: NotNan::new(y_max).unwrap(),

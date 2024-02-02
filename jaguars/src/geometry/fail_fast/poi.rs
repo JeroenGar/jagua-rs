@@ -15,7 +15,7 @@ pub fn generate_next_pole(shape: &SimplePolygon, poles: &[Circle]) -> Circle {
     let root = POINode::new(square_bbox, MAX_POI_TREE_DEPTH, shape, &poles);
     let mut queue = VecDeque::from([root]);
     let mut best: Option<Circle> = None;
-    let distance = |circle: &Option<Circle>| circle.as_ref().map_or(0.0, |c| c.radius());
+    let distance = |circle: &Option<Circle>| circle.as_ref().map_or(0.0, |c| c.radius);
 
     while let Some(node) = queue.pop_front() {
         //check if better than current best
@@ -69,7 +69,7 @@ pub fn generate_additional_surrogate_poles(shape: &SimplePolygon, max_poles: usi
                     })
                     .min().unwrap();
 
-                let radius = p.radius();
+                let radius = p.radius;
 
                 NotNan::new(radius.powi(2)).unwrap() * min_distance_to_existing_poles
             }).unwrap();

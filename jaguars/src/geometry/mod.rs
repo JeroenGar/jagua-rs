@@ -6,4 +6,3 @@ pub mod geo_traits;
 pub mod geo_enums;
 pub mod primitives;
 pub mod fail_fast;
-pub mod rotation;

@@ -1,10 +1,9 @@
 use std::cmp::Ordering;
 
 use almost::AlmostEqual;
-use ordered_float::NotNan;
 
-//Wrapper around the almost crate for easy comparison with tolerance of floats
-//the almost crate considers two floats equal if they are within a certain tolerance of each other.
+///Wrapper around the almost crate for easy comparison with tolerance of floats
+///the almost crate considers two floats equal if they are within a certain tolerance of each other.
 pub struct F64A(pub f64);
 
 impl F64A {
@@ -18,15 +17,9 @@ impl F64A {
 }
 
 
-impl From<NotNan<f64>> for F64A {
-    fn from(n: NotNan<f64>) -> Self {
+impl<T> From<T> for F64A where T: Into<f64> {
+    fn from(n: T) -> Self {
         F64A(n.into())
-    }
-}
-
-impl From<f64> for F64A {
-    fn from(n: f64) -> Self {
-        F64A(n)
     }
 }
 

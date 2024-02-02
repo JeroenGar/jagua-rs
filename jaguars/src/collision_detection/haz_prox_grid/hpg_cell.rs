@@ -165,7 +165,7 @@ impl HPGCell {
 
     pub fn could_accommodate_item(&self, item: &Item) -> bool {
         let haz_prox : f64 = (&self.hazard_proximity(item.base_quality())).into();
-        let item_poi_radius = item.shape().poi().radius();
+        let item_poi_radius = item.shape().poi().radius;
 
         item_poi_radius < haz_prox + self.radius
     }

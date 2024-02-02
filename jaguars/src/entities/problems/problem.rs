@@ -3,10 +3,10 @@ use std::sync::Arc;
 use enum_dispatch::enum_dispatch;
 use itertools::Itertools;
 
-use crate::entities::insertion_option::InsertionOption;
+use crate::entities::placing_option::PlacingOption;
 use crate::entities::instance::Instance;
 use crate::entities::layout::Layout;
-use crate::entities::placed_item_uid::PlacedItemUID;
+use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::problems::bp_problem::BPProblem;
 use crate::entities::problems::problem::private::ProblemPrivate;
 use crate::entities::problems::sp_problem::SPProblem;
@@ -20,7 +20,7 @@ pub enum ProblemEnum {
 
 #[enum_dispatch(ProblemEnum)]
 pub trait Problem: ProblemPrivate {
-    fn insert_item(&mut self, i_opt: &InsertionOption);
+    fn insert_item(&mut self, i_opt: &PlacingOption);
 
     fn remove_item(&mut self, layout_index: usize, pi_uid: &PlacedItemUID);
 

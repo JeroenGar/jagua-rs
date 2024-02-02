@@ -1,6 +1,6 @@
 use jaguars::util::config::{CDEConfig, HazProxConfig, QuadTreeConfig, SPSurrogateConfig};
 use serde::{Deserialize, Serialize};
-use jaguars::simplification::simplification_config::PolySimplConfig;
+use jaguars::util::polygon_simplification::PolySimplConfig;
 use crate::io::svg_util::SvgDrawOptions;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]

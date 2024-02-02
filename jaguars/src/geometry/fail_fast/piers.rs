@@ -82,7 +82,7 @@ pub fn generate(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> 
 fn generate_ray_transformations(bbox: &AARectangle, rays_per_angle: usize, n_angles: usize) -> Vec<Transformation> {
     //translations
     let dx = bbox.width() / rays_per_angle as f64;
-    let translations = (0..rays_per_angle).map(|i| bbox.x_min() + dx * i as f64)
+    let translations = (0..rays_per_angle).map(|i| bbox.x_min + dx * i as f64)
         .map(|x| Transformation::from_translation((x, 0.0)))
         .collect_vec();
 
@@ -127,8 +127,8 @@ fn clip(shape: &SimplePolygon, ray: &Edge) -> Vec<Edge> {
 }
 
 pub fn generate_unrepresented_point_grid(bbox: &AARectangle, shape: &SimplePolygon, poles: &[Circle], n_points_per_dimension: usize) -> Vec<Point> {
-    let x_range = Array::linspace(bbox.x_min(), bbox.x_max(), n_points_per_dimension);
-    let y_range = Array::linspace(bbox.y_min(), bbox.y_max(), n_points_per_dimension);
+    let x_range = Array::linspace(bbox.x_min, bbox.x_max, n_points_per_dimension);
+    let y_range = Array::linspace(bbox.y_min, bbox.y_max, n_points_per_dimension);
 
     x_range.iter().map(|x| y_range.iter()
         .map(move |y| Point::from((*x, *y))) //create the points

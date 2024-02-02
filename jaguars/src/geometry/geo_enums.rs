@@ -20,3 +20,10 @@ pub enum GeoRelation {
     Surrounding,
     Disjoint
 }
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum AllowedRotation {
+    None,
+    Continuous,
+    Discrete(Vec<f64>)
+}

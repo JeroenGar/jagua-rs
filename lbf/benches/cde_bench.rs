@@ -3,11 +3,11 @@ use std::io::BufReader;
 use std::sync::Arc;
 use criterion::{Criterion, criterion_group, criterion_main};
 use rand::prelude::SmallRng;
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 use jaguars::entities::instance::Instance;
 use jaguars::entities::solution::Solution;
-use jaguars::parse::json::json_instance::JsonInstance;
-use jaguars::parse::parser::Parser;
+use jaguars::io::json::json_instance::JsonInstance;
+use jaguars::io::parser::Parser;
 use jaguars::simplification::simplification_config::PolySimplConfig;
 use jaguars::util::config::{CDEConfig, HazProxConfig, QuadTreeConfig, SPSurrogateConfig};
 use lbf::config::Config;
@@ -16,8 +16,34 @@ use lbf::lbf_optimizer::LBFOptimizer;
 criterion_main!(benches);
 criterion_group!(benches, test_bench);
 
-fn test_bench(c: &mut Criterion) {
-    let config = Config{
+fn quadtree_update_bench(c: &mut Criterion) {
+    let (instance, mut layout) = create_benchmark_instance_and_layout();
+    let mut rng = SmallRng::seed_from_u64(0);
+
+    c.bench_function("quadtree_update", |b| {
+        b.iter(|| {
+            let remove_items_uids = remove_items(N_ITEMS_REMOVED, &mut layout, &mut rng);
+            insert_items(&mut layout, &remove_items_uids, &instance);
+        })
+    });
+}
+
+fn quadtree_query_bench(c: &mut Criterion) {
+    let (instance, mut layout) = create_benchmark_instance_and_layout();
+    let mut rng = SmallRng::seed_from_u64(0);
+
+    remove_items(N_ITEMS_REMOVED, &mut layout, &mut rng);
+
+    c.bench_function("quadtree_query", |b| {
+        b.iter(|| {
+            let random_item = rng.gen_range(0..instance.items().len());
+            query(instance.item(random_item), &layout, N_SAMPLES_PER_ITEM, &mut rng);
+        })
+    });
+}
+
+fn get_config() -> Config {
+    Config{
         cde_config: CDEConfig {
             quadtree: QuadTreeConfig::FixedDepth(0),
             haz_prox: HazProxConfig::Disabled,
@@ -33,21 +59,12 @@ fn test_bench(c: &mut Criterion) {
         n_samples_per_item: 1000,
         ls_samples_fraction: 0.5,
         svg_draw_options: Default::default(),
-    };
-
-
-    let json_instance : JsonInstance = serde_json::from_reader(BufReader::new(File::open("assets/shirts.json").unwrap())).unwrap();
-    let instance = create_instance(&json_instance, &config);
-    let blf_solution = create_blf_solution(instance);
-
-    //c.bench_function("")
+    }
 }
 
 
-
-
-fn create_instance(json_instance: &JsonInstance, config: &Config) -> Arc<Instance> {
-    let parser = Parser::new(config.poly_simpl_config, config.cde_config, true);
+fn create_instance(json_instance: &JsonInstance, cde_config: CDEConfig, poly_simpl_config: PolySimplConfig) -> Arc<Instance> {
+    let parser = Parser::new(poly_simpl_config, cde_config, true);
     Arc::new(parser.parse(json_instance))
 }
 

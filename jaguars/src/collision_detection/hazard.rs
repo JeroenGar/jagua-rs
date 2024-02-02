@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::entities::placed_item_uid::PlacedItemUID;
+use crate::entities::placed_item::PlacedItemUID;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 

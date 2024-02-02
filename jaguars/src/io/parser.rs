@@ -5,7 +5,7 @@ use itertools::Itertools;
 use log::{Level, log, warn};
 
 use crate::entities::bin::Bin;
-use crate::entities::insertion_option::InsertionOption;
+use crate::entities::placing_option::PlacingOption;
 use crate::entities::instance::{Instance, PackingType};
 use crate::entities::item::Item;
 use crate::entities::problems::bp_problem::BPProblem;
@@ -14,17 +14,17 @@ use crate::entities::problems::sp_problem::SPProblem;
 use crate::entities::quality_zone::QualityZone;
 use crate::entities::solution::Solution;
 use crate::geometry::d_transformation::DTransformation;
+use crate::geometry::geo_enums::AllowedRotation;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::rotation::Rotation;
 use crate::geometry::transformation::Transformation;
+use crate::io::json_instance::{JsonInstance, JsonPoly, JsonSimplePoly};
+use crate::io::json_solution::{JsonLayout, JsonLayoutStats, JsonObjectType, JsonPlacedItem, JsonSolution, JsonTransformation};
 use crate::N_QUALITIES;
-use crate::parse::json::json_instance::{JsonInstance, JsonPoly, JsonSimplePoly};
-use crate::parse::json::json_solution::{JsonLayout, JsonLayoutStats, JsonObjectType, JsonPlacedItem, JsonSolution, JsonTransformation};
-use crate::simplification::{poly_simplification, polygon_converter};
-use crate::simplification::simplification_config::{PolySimplConfig, PolySimplMode};
 use crate::util::config::CDEConfig;
+use crate::util::polygon_simplification;
+use crate::util::polygon_simplification::{PolySimplConfig, PolySimplMode};
 
 pub struct Parser {
     poly_simpl_config: PolySimplConfig,
@@ -84,13 +84,13 @@ impl Parser {
                     let allowed_orientations = match json_item.allowed_orientations.as_ref() {
                         Some(a_o) => {
                             if a_o.is_empty() || (a_o.len() == 1 && a_o[0] == 0.0) {
-                                Rotation::None
+                                AllowedRotation::None
                             }
                             else{
-                                Rotation::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
+                                AllowedRotation::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
                             }
                         },
-                        None => Rotation::Continuous,
+                        None => AllowedRotation::Continuous,
                     };
 
                     (Item::new(item_id, shape, item_value, allowed_orientations, centering_transf, base_quality, self.cde_config.item_surrogate_config.clone()), json_item.demand as usize)
@@ -253,20 +253,20 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
 
         let first_item_centering_correction = first_item.centering_transform().clone().inverse().decompose().translation();
 
-        let transformation = Transformation::empty()
+        let transf = Transformation::empty()
             .translate(first_item_centering_correction)
             .rotate(json_first_item.transformation.rotation)
             .translate(json_first_item.transformation.translation)
             .translate(bin_centering);
 
-        let d_transform = transformation.decompose();
+        let d_transf = transf.decompose();
 
-        let initial_insert_opt = InsertionOption::new(
-            LayoutIndex::Empty(empty_layout_index),
-            first_item.id(),
-            transformation,
-            d_transform,
-        );
+        let initial_insert_opt = PlacingOption{
+            layout_index: LayoutIndex::Empty(empty_layout_index),
+            item_id: first_item.id(),
+            transf,
+            d_transf,
+        };
         problem.insert_item(&initial_insert_opt);
         problem.flush_changes();
 
@@ -276,20 +276,20 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
         for json_item in json_layout.placed_items.iter().skip(1) {
             let item = instance.item(json_item.item_index);
             let item_centering_correction = item.centering_transform().clone().inverse().decompose().translation();
-            let transformation = Transformation::empty()
+            let transf = Transformation::empty()
                 .translate(item_centering_correction)
                 .rotate(json_item.transformation.rotation)
                 .translate(json_item.transformation.translation)
                 .translate(bin_centering);
 
-            let d_transform = transformation.decompose();
+            let d_transf = transf.decompose();
 
-            let insert_opt = InsertionOption::new(
-                LayoutIndex::Existing(layout_index),
-                item.id(),
-                transformation,
-                d_transform,
-            );
+            let insert_opt = PlacingOption{
+                layout_index: LayoutIndex::Existing(layout_index),
+                item_id: item.id(),
+                transf,
+                d_transf,
+            };
             problem.insert_item(&insert_opt);
             problem.flush_changes();
         }
@@ -299,7 +299,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
 }
 
 pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: Instant) -> JsonSolution {
-    let layouts = solution.stored_layouts().iter()
+    let layouts = solution.layout_snapshots().iter()
         .map(|sl| {
             let object_type = match instance.packing_type() {
                 PackingType::BinPacking(..) => JsonObjectType::Object { id: sl.bin().id() },
@@ -366,18 +366,18 @@ fn json_shape_to_simple_polygon(json_shape: &JsonPoly, center_polygon: bool, sim
 
     let shape = match inners.is_empty() {
         true => outer,
-        false => polygon_converter::convert_to_simple_polygon(&outer, &inners)
+        false => panic!("no implementation for polygon -> simplepolygon conversion implemented")
     };
 
     let shape = match simpl_config {
         PolySimplConfig::Enabled { tolerance } => {
-            poly_simplification::simplify_simple_poly(&shape, tolerance, simpl_mode)
+            polygon_simplification::simplify_shape(&shape, simpl_mode, tolerance)
         }
         PolySimplConfig::Disabled => shape
     };
 
     let (shape, centering_transform) = match center_polygon {
-        true => polygon_converter::center_around_centroid(&shape),
+        true => shape.center_around_centroid(),
         false => (shape, Transformation::empty())
     };
 
@@ -389,13 +389,13 @@ pub fn simple_json_shape_to_simple_polygon(s_json_shape: &JsonSimplePoly, center
 
     let shape = match simpl_config {
         PolySimplConfig::Enabled { tolerance } => {
-            poly_simplification::simplify_simple_poly(&shape, tolerance, simpl_mode)
+            polygon_simplification::simplify_shape(&shape, simpl_mode, tolerance)
         }
         PolySimplConfig::Disabled => shape
     };
 
     let (shape, centering_transform) = match center_polygon {
-        true => polygon_converter::center_around_centroid(&shape),
+        true => shape.center_around_centroid(),
         false => (shape, Transformation::empty())
     };
 

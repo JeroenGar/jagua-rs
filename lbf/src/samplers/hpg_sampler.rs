@@ -32,7 +32,7 @@ impl<'a> HPGSampler<'a> {
         let hpg_cells = hpg.cells();
 
         //center the shape's POI to the origin
-        let pretransform = Transformation::from_translation((-poi.center().0, -poi.center().1));
+        let pretransform = Transformation::from_translation((-poi.center.0, -poi.center.1));
 
         //collect all eligible cells from the Hazard Proximity Grid
         let cell_samplers = hpg_cells.iter()
@@ -45,7 +45,7 @@ impl<'a> HPGSampler<'a> {
             .map(|s| s.bbox.area())
             .sum();
 
-        let x_bound = layout.bin().bbox().x_max();
+        let x_bound = layout.bin().bbox().x_max;
 
         match cell_samplers.is_empty() {
             true => None,
@@ -67,7 +67,7 @@ impl<'a> HPGSampler<'a> {
     }
 
     pub fn tighten_x_bound(&mut self, best: &LBFCost){
-        let poi_rad = self.item.shape().poi().radius();
+        let poi_rad = self.item.shape().poi().radius;
         let new_x_bound = *best.x_max - poi_rad; //we need at least one POI radius of space to the left of the best solution
 
         if new_x_bound < self.x_bound {
@@ -75,7 +75,7 @@ impl<'a> HPGSampler<'a> {
             //remove all cells that are out of bounds, update the coverage area
             self.cell_samplers
                 .retain(|cell_sampler| {
-                    let in_bounds = cell_sampler.bbox.x_min() < new_x_bound;
+                    let in_bounds = cell_sampler.bbox.x_min < new_x_bound;
 
                     if !in_bounds {
                         self.coverage_area -= cell_sampler.bbox.area();

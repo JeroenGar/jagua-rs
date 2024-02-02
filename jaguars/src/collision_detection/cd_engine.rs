@@ -2,8 +2,9 @@ use indexmap::IndexSet;
 use itertools::Itertools;
 use tribool::Tribool;
 
-use crate::collision_detection::cde_snapshot::CDESnapshot;
+use crate::collision_detection::haz_prox_grid::grid::Grid;
 use crate::collision_detection::haz_prox_grid::hazard_proximity_grid::{HazardProximityGrid, PendingChangesErr};
+use crate::collision_detection::haz_prox_grid::hpg_cell::HPGCell;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_node::QTNode;
@@ -104,10 +105,10 @@ impl CDEngine {
     pub fn create_snapshot(&mut self) -> CDESnapshot {
         self.commit_deregisters();
         assert!(!self.haz_prox_grid.as_ref().map_or(false, |hpg| hpg.has_pending_deregisters()));
-        CDESnapshot::new(
-            self.dynamic_hazards.clone(),
-            self.haz_prox_grid.as_ref().map(|hpg| hpg.grid().clone()),
-        )
+        CDESnapshot {
+            dynamic_hazards: self.dynamic_hazards.clone(),
+            grid: self.haz_prox_grid.as_ref().map(|hpg| hpg.grid().clone())
+        }
     }
 
     pub fn restore(&mut self, snapshot: &CDESnapshot) {
@@ -116,7 +117,7 @@ impl CDEngine {
         debug_assert!(hazards_to_remove.len() == self.dynamic_hazards.len());
         let mut hazards_to_add = vec![];
 
-        for hazard in snapshot.dynamic_hazards().iter() {
+        for hazard in snapshot.dynamic_hazards.iter() {
             let hazard_already_present = hazards_to_remove.swap_remove(&hazard.entity);
             if !hazard_already_present {
                 hazards_to_add.push(hazard.clone());
@@ -150,10 +151,10 @@ impl CDEngine {
 
         //Hazard proximity grid
         self.haz_prox_grid.as_mut().map(|hpg| {
-            hpg.restore(snapshot.grid().clone().expect("no hpg in snapshot"));
+            hpg.restore(snapshot.grid.clone().expect("no hpg in snapshot"));
         });
 
-        debug_assert!(self.dynamic_hazards.len() == snapshot.dynamic_hazards().len());
+        debug_assert!(self.dynamic_hazards.len() == snapshot.dynamic_hazards.len());
     }
 
     fn commit_deregisters(&mut self) {
@@ -266,7 +267,7 @@ impl CDEngine {
     }
 
     pub fn circle_definitely_collides(&self, circle: &Circle, ignored_entities: &[HazardEntity]) -> Tribool {
-        match self.bbox.collides_with(&circle.center()) {
+        match self.bbox.collides_with(&circle.center) {
             false => Tribool::True, //outside the quadtree, so definitely collides
             true => self.quadtree.definitely_collides(circle, ignored_entities)
         }
@@ -282,7 +283,7 @@ impl CDEngine {
             ignored_entities.push(haz_entity.clone());
         }
 
-        let circle_center_in_qt = self.bbox.collides_with(&circle.center());
+        let circle_center_in_qt = self.bbox.collides_with(&circle.center);
 
         if !circle_center_in_qt && colliding_entities.is_empty() {
             // The circle center is outside the quadtree
@@ -323,12 +324,12 @@ impl CDEngine {
             if std::ptr::eq(haz_shape, s_omega) {
                 //s_omega is registered in the quadtree.
                 //maybe the quadtree can help us.
-                match self.quadtree.point_definitely_collides_with(&s_mu.poi().center(), &haz.entity).try_into() {
+                match self.quadtree.point_definitely_collides_with(&s_mu.poi().center, &haz.entity).try_into() {
                     Ok(collides) => return collides,
                     Err(_) => (), //no definitive answer
                 }
             }
-            let inclusion = s_omega.collides_with(&s_mu.poi().center());
+            let inclusion = s_omega.collides_with(&s_mu.poi().center);
 
             match haz.entity.presence() {
                 GeoPosition::Interior => inclusion,
@@ -336,4 +337,12 @@ impl CDEngine {
             }
         })
     }
+}
+
+//Snapshot of the CDE state at a given time.
+//Can be used to restore the CDE to a previous state.
+#[derive(Clone, Debug)]
+pub struct CDESnapshot {
+    dynamic_hazards: Vec<Hazard>,
+    grid: Option<Grid<HPGCell>>
 }

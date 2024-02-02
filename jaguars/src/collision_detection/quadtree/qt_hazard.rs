@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::cmp::Ordering;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
@@ -14,11 +15,11 @@ pub struct QTHazard {
     pub active: bool,
 }
 
-impl From<&Hazard> for QTHazard {
-    fn from(hazard: &Hazard) -> Self {
+impl<T> From<T> for QTHazard where T: Borrow<Hazard> {
+    fn from(hazard: T) -> Self {
         Self {
-            entity: hazard.entity.clone(),
-            presence: QTHazPresence::Partial(hazard.into()),
+            entity: hazard.borrow().entity.clone(),
+            presence: QTHazPresence::Partial(hazard.borrow().into()),
             active: true,
         }
     }

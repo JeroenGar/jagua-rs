@@ -1,12 +1,13 @@
+use std::borrow::Borrow;
 use ordered_float::NotNan;
 
 use crate::geometry::transformation::Transformation;
 
-//A decomposed Transformation represents a rotation followed by a translation
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+///A proper rigid transformation, decomposed into a rotation followed by a translation
 pub struct DTransformation {
-    rotation: NotNan<f64>,
-    translation: (NotNan<f64>, NotNan<f64>),
+    pub rotation: NotNan<f64>,
+    pub translation: (NotNan<f64>, NotNan<f64>),
 }
 
 impl DTransformation {
@@ -20,7 +21,7 @@ impl DTransformation {
         }
     }
 
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         const _0: NotNan<f64> = unsafe { NotNan::new_unchecked(0.0) };
         Self {
             rotation: _0,
@@ -41,14 +42,8 @@ impl DTransformation {
     }
 }
 
-impl From<Transformation> for DTransformation {
-    fn from(t: Transformation) -> Self {
-        t.decompose()
-    }
-}
-
-impl From<&Transformation> for DTransformation {
-    fn from(t: &Transformation) -> Self {
-        t.decompose()
+impl<T> From<T> for DTransformation where T: Borrow<Transformation> {
+    fn from(t: T) -> Self {
+        t.borrow().decompose()
     }
 }

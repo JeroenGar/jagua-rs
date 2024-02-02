@@ -1,10 +1,9 @@
-use crate::collision_detection::cd_engine::CDEngine;
+use crate::collision_detection::cd_engine::{CDEngine, CDESnapshot};
 use crate::entities::bin::Bin;
 use crate::entities::instance::Instance;
 use crate::entities::item::Item;
 use crate::entities::placed_item::PlacedItem;
-use crate::entities::placed_item_uid::PlacedItemUID;
-use crate::entities::stored_layout::StoredLayout;
+use crate::entities::placed_item::PlacedItemUID;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
@@ -28,30 +27,32 @@ impl Layout {
         }
     }
 
-    pub fn new_from_stored(id: usize, stored_layout: &StoredLayout, instance: &Instance) -> Self {
-        let mut layout = Layout::new(id, stored_layout.bin().clone());
-        layout.restore(&stored_layout, instance);
+    pub fn new_from_stored(id: usize, layout_snapshot: &LayoutSnapshot, instance: &Instance) -> Self {
+        let mut layout = Layout::new(id, layout_snapshot.bin.clone());
+        layout.restore(&layout_snapshot, instance);
         layout
     }
 
-    pub fn create_stored_layout(&mut self) -> StoredLayout {
-        let placed_items = self.placed_items.clone();
-        let cde_snapshot = self.cde.create_snapshot();
-        let usage = self.usage();
-
+    pub fn create_layout_snapshot(&mut self) -> LayoutSnapshot {
         debug_assert!(assertions::layout_is_collision_free(self));
 
-        StoredLayout::new(self.id, self.bin.clone(), placed_items, cde_snapshot, usage)
+        LayoutSnapshot{
+            id: self.id,
+            bin: self.bin.clone(),
+            placed_items: self.placed_items.clone(),
+            cde_snapshot: self.cde.create_snapshot(),
+            usage: self.usage()
+        }
     }
 
-    pub fn restore(&mut self, stored_layout: &StoredLayout, _instance: &Instance) {
-        assert_eq!(self.bin.id(), stored_layout.bin().id());
+    pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot, _instance: &Instance) {
+        assert_eq!(self.bin.id(), layout_snapshot.bin.id());
 
-        self.placed_items = stored_layout.placed_items().clone();
-        self.cde.restore(&stored_layout.cde_snapshot());
+        self.placed_items = layout_snapshot.placed_items.clone();
+        self.cde.restore(&layout_snapshot.cde_snapshot);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
-        debug_assert!(assertions::layouts_match(self, stored_layout))
+        debug_assert!(assertions::layouts_match(self, layout_snapshot))
     }
 
     pub fn clone_with_id(&self, id: usize) -> Self {
@@ -109,5 +110,32 @@ impl Layout {
 
     pub fn flush_changes(&mut self) {
         self.cde.flush_changes();
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct LayoutSnapshot {
+    id: usize,
+    bin: Bin,
+    placed_items: Vec<PlacedItem>,
+    cde_snapshot: CDESnapshot,
+    usage: f64,
+}
+
+impl LayoutSnapshot {
+    pub fn id(&self) -> usize {
+        self.id
+    }
+
+    pub fn bin(&self) -> &Bin {
+        &self.bin
+    }
+
+    pub fn placed_items(&self) -> &Vec<PlacedItem> {
+        &self.placed_items
+    }
+
+    pub fn usage(&self) -> f64 {
+        self.usage
     }
 }

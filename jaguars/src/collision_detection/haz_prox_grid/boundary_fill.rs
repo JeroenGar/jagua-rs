@@ -23,8 +23,8 @@ impl BoundaryFillGrid {
         let state = vec![CellState::new(); grid.n_rows() * grid.n_cols()];
 
         //Find the range of rows and columns which reside inside the seed_bbox
-        let row_range = grid.rows_in_range(seed_bbox.y_min()..=seed_bbox.y_max());
-        let col_range = grid.cols_in_range(seed_bbox.x_min()..=seed_bbox.x_max());
+        let row_range = grid.rows_in_range(seed_bbox.y_min..=seed_bbox.y_max);
+        let col_range = grid.cols_in_range(seed_bbox.x_min..=seed_bbox.x_max);
 
         //FIFO queue to keep track of which cells to visit next
         let queue = VecDeque::with_capacity(state.len());

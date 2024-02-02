@@ -21,11 +21,14 @@ pub enum HazProxConfig {
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct SPSurrogateConfig {
+    /// poles will be generated until this percentage of the shape is covered
     pub pole_coverage_goal: f64,
+    /// maximum number of poles to generate
     pub max_poles: usize,
+    ///number of poles to test during fail fast
     pub n_ff_poles: usize,
-    //number of poles to test during fail fast
-    pub n_ff_piers: usize, //number of piers to test during fail fast
+    ///number of piers to test during fail fast
+    pub n_ff_piers: usize,
 }
 
 impl SPSurrogateConfig {

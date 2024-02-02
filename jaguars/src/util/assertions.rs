@@ -18,10 +18,12 @@ use crate::entities::item::Item;
 use crate::entities::layout::Layout;
 use crate::entities::problems::problem::Problem;
 use crate::entities::solution::Solution;
-use crate::entities::stored_layout::StoredLayout;
+use crate::entities::layout::LayoutSnapshot;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::transformation::Transformation;
-use crate::util::fixed_layout_printer;
+use crate::util;
+
+///
 
 pub fn instance_item_bin_ids_correct(items: &Vec<(Item, usize)>, packing_type: &PackingType) -> bool {
     let mut id = 0;
@@ -48,7 +50,7 @@ pub fn instance_item_bin_ids_correct(items: &Vec<(Item, usize)>, packing_type: &
 
 pub fn problem_matches_solution<P: Problem>(problem: &P, solution: &Solution) -> bool {
     for l in problem.layouts() {
-        let sl = solution.stored_layouts().iter().find(|sl| sl.id() == l.id()).unwrap();
+        let sl = solution.layout_snapshots().iter().find(|sl| sl.id() == l.id()).unwrap();
         match layouts_match(l, sl) {
             true => continue,
             false => return false,
@@ -57,11 +59,11 @@ pub fn problem_matches_solution<P: Problem>(problem: &P, solution: &Solution) ->
     true
 }
 
-pub fn layouts_match(layout: &Layout, stored_layout: &StoredLayout) -> bool {
-    if layout.bin().id() != stored_layout.bin().id() {
+pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool {
+    if layout.bin().id() != layout_snapshot.bin().id() {
         return false;
     }
-    for sp_item in stored_layout.placed_items() {
+    for sp_item in layout_snapshot.placed_items().iter() {
         if layout.placed_items().iter().find(|sp| sp.uid() == sp_item.uid()).is_none() {
             return false;
         }
@@ -125,7 +127,7 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
 
         if layout.cde().poly_collides(pi.shape(), &entities_to_ignore) {
             println!("Collision detected for item {:.?}", pi.uid());
-            fixed_layout_printer::print_layout(layout);
+            util::print_layout(layout);
             return false;
         }
     }

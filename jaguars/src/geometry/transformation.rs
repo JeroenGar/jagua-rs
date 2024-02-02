@@ -1,18 +1,19 @@
+use std::borrow::Borrow;
 use std::ops::{Add, Div, Mul, Sub};
 
 use ordered_float::NotNan;
 
 use crate::geometry::d_transformation::DTransformation;
 
-//Proper rigid transformation
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug)]
+///Proper rigid transformation in matrix form
 pub struct Transformation {
     matrix: [[NotNan<f64>; 3]; 3],
 }
 
 impl Transformation {
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self { matrix: EMPTY_MATRIX }
     }
 
@@ -64,15 +65,9 @@ impl Transformation {
     }
 }
 
-impl From<DTransformation> for Transformation {
-    fn from(dt: DTransformation) -> Self {
-        dt.compose()
-    }
-}
-
-impl From<&DTransformation> for Transformation {
-    fn from(dt: &DTransformation) -> Self {
-        dt.compose()
+impl<T> From<T> for Transformation where T: Borrow<DTransformation> {
+    fn from(dt: T) -> Self {
+        dt.borrow().compose()
     }
 }
 

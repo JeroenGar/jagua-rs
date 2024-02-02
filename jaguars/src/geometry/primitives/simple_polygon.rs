@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::usize;
 
@@ -66,6 +67,13 @@ impl SimplePolygon {
 
     pub fn generate_surrogate(&mut self, config: SPSurrogateConfig) {
         self.surrogate = Some(SPSurrogate::new(self, config));
+    }
+
+    pub fn clone_without_surrogate(&self) -> Self {
+        SimplePolygon {
+            surrogate: None,
+            ..self.clone()
+        }
     }
 
     pub fn get_point(&self, i: usize) -> Point {
@@ -159,11 +167,21 @@ impl SimplePolygon {
 
         poi::generate_next_pole(&dummy_sp, &[])
     }
+
+    pub fn center_around_centroid(mut self) -> (SimplePolygon, Transformation) {
+        let Point(c_x, c_y) = self.centroid();
+        let transformation = Transformation::from_translation((-c_x, -c_y));
+
+        self.transform(&transformation);
+
+        (self, transformation)
+    }
 }
 
 impl Shape for SimplePolygon {
-    //https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
     fn centroid(&self) -> Point {
+        //based on: https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
+
         let area = self.area();
         let mut c_x = 0.0;
         let mut c_y = 0.0;
@@ -252,7 +270,7 @@ impl CollidesWith<Point> for SimplePolygon {
             true => {
                 //horizontal ray shot to the right.
                 //Starting from the point to another point that is certainly outside the shape
-                let point_outside = Point(self.bbox.x_max() + self.bbox.width(), point.1);
+                let point_outside = Point(self.bbox.x_max + self.bbox.width(), point.1);
                 let ray = Edge::new(*point, point_outside);
 
 
@@ -314,14 +332,15 @@ impl DistanceFrom<Point> for SimplePolygon {
     }
 }
 
-impl From<AARectangle> for SimplePolygon {
-    fn from(r: AARectangle) -> Self {
+impl<T> From<T> for SimplePolygon where T: Borrow<AARectangle>{
+    fn from(r: T) -> Self {
+        let r = r.borrow();
         SimplePolygon::new(
             vec![
-                (r.x_min(), r.y_min()).into(),
-                (r.x_max(), r.y_min()).into(),
-                (r.x_max(), r.y_max()).into(),
-                (r.x_min(), r.y_max()).into(),
+                (r.x_min, r.y_min).into(),
+                (r.x_max, r.y_min).into(),
+                (r.x_max, r.y_max).into(),
+                (r.x_min, r.y_max).into(),
             ]
         )
     }

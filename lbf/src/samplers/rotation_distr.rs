@@ -5,7 +5,7 @@ use rand::seq::SliceRandom;
 use rand_distr::Normal;
 
 use jaguars::entities::item::Item;
-use jaguars::geometry::rotation::Rotation;
+use jaguars::geometry::geo_enums::AllowedRotation;
 
 pub trait RotationSampler {
     fn sample(&self, rng: &mut SmallRng) -> f64;
@@ -25,10 +25,10 @@ pub enum NormalRotDistr {
 
 impl UniformRotDistr {
     pub fn from_item(item: &Item) -> Self {
-        match item.allowed_orientations() {
-            Rotation::None  => UniformRotDistr::None,
-            Rotation::Continuous => UniformRotDistr::Range(Uniform::new(0.0, 2.0 * PI)),
-            Rotation::Discrete(a_o) => UniformRotDistr::Discrete(a_o.clone())
+        match item.allowed_rotation() {
+            AllowedRotation::None  => UniformRotDistr::None,
+            AllowedRotation::Continuous => UniformRotDistr::Range(Uniform::new(0.0, 2.0 * PI)),
+            AllowedRotation::Discrete(a_o) => UniformRotDistr::Discrete(a_o.clone())
 
         }
     }
@@ -46,10 +46,10 @@ impl UniformRotDistr {
 
 impl NormalRotDistr {
     pub fn from_item(item: &Item, r_ref: f64, stddev: f64) -> Self {
-        match item.allowed_orientations() {
-            Rotation::None  => NormalRotDistr::None,
-            Rotation::Continuous => NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap()),
-            Rotation::Discrete(_) => NormalRotDistr::Discrete(r_ref)
+        match item.allowed_rotation() {
+            AllowedRotation::None  => NormalRotDistr::None,
+            AllowedRotation::Continuous => NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap()),
+            AllowedRotation::Discrete(_) => NormalRotDistr::Discrete(r_ref)
 
         }
     }

@@ -40,15 +40,13 @@ impl QTNode {
 
                 let constricted_hazards = hazard.constrict(child_bboxes);
 
-                for (i,c_hazard) in constricted_hazards.into_iter().enumerate(){
+                for (i, c_hazard) in constricted_hazards.into_iter().enumerate() {
                     if let Some(c_hazard) = c_hazard {
                         children[i].register_hazard(c_hazard);
                     }
                 }
             }
         }
-
-        self.invalidate_cache();
 
         //If the hazard is of the partial type, and we are not at the max tree depth: generate children
         if !self.has_children() && self.level > 0 && matches!(hazard.presence, QTHazPresence::Partial(_)) {
@@ -64,14 +62,12 @@ impl QTNode {
     }
 
     pub fn deregister_hazard(&mut self, hazard_entity: &HazardEntity) {
-        self.invalidate_cache();
-
         let removed_ch = self.hazards.remove(hazard_entity);
 
         if removed_ch.is_some() && self.has_children() {
             if self.hazards.is_empty() || self.hazards.has_only_entire_hazards() {
                 //If there are no more inclusion, or only inclusion of type Entire, drop the children
-                self.drop_children();
+                self.children = None;
             } else {
                 //Otherwise, recursively deregister the entity from the children
                 self.children.as_mut().unwrap().iter_mut()
@@ -83,7 +79,6 @@ impl QTNode {
     pub fn activate_hazard(&mut self, entity: &HazardEntity) {
         let modified = self.hazards.activate_hazard(entity);
         if modified {
-            self.invalidate_cache();
             match &mut self.children {
                 Some(children) => children.iter_mut()
                     .for_each(|c| c.activate_hazard(entity)),
@@ -95,7 +90,6 @@ impl QTNode {
     pub fn deactivate_hazard(&mut self, entity: &HazardEntity) {
         let modified = self.hazards.deactivate_hazard(entity);
         if modified {
-            self.invalidate_cache();
             match &mut self.children {
                 Some(children) => children.iter_mut()
                     .for_each(|c| c.deactivate_hazard(entity)),
@@ -106,16 +100,10 @@ impl QTNode {
 
     fn generate_children(&mut self) {
         if self.level > 0 {
-            self.invalidate_cache();
-
-            self.children = Some(
-                Box::new(
-                    self.bbox.quadrants()
-                        .map(|split_bbox|
-                            QTNode::new(self.level - 1, split_bbox, None)
-                        )
-                )
-            );
+            self.children = Some(Box::new(
+                self.bbox.quadrants()
+                    .map(|split_bbox| QTNode::new(self.level - 1, split_bbox, None))
+            ));
         }
     }
 
@@ -124,11 +112,6 @@ impl QTNode {
             Some(children) => 4 + children.iter().map(|x| x.get_number_of_children()).sum::<usize>(),
             None => 0
         }
-    }
-
-    pub fn drop_children(&mut self) {
-        self.invalidate_cache();
-        self.children = None
     }
 
     pub fn has_children(&self) -> bool {
@@ -149,10 +132,6 @@ impl QTNode {
 
     pub fn hazards(&self) -> &QTHazardVec {
         &self.hazards
-    }
-
-    fn invalidate_cache(&mut self) {
-        //leave this here in case it is useful later
     }
 
     pub fn collides<T>(&self, entity: &T, ignored_entities: &[HazardEntity]) -> Option<&HazardEntity>
@@ -197,7 +176,7 @@ impl QTNode {
 
 
     pub fn definitely_collides<T>(&self, entity: &T, ignored_entities: &[HazardEntity]) -> Tribool
-    where T: CollidesWith<AARectangle>
+        where T: CollidesWith<AARectangle>
     {
         match self.hazards.strongest(ignored_entities) {
             None => Tribool::False,

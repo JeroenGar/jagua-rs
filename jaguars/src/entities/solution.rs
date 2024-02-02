@@ -3,13 +3,13 @@ use std::time::Instant;
 use itertools::Itertools;
 
 use crate::entities::instance::{Instance, PackingType};
-use crate::entities::stored_layout::StoredLayout;
+use crate::entities::layout::LayoutSnapshot;
 use crate::geometry::geo_traits::Shape;
 
 #[derive(Debug, Clone)]
 pub struct Solution {
     id: usize,
-    stored_layouts: Vec<StoredLayout>,
+    layout_snapshots: Vec<LayoutSnapshot>,
     usage: f64,
     placed_item_qtys: Vec<usize>,
     target_item_qtys: Vec<usize>,
@@ -18,10 +18,10 @@ pub struct Solution {
 }
 
 impl Solution {
-    pub fn new(id: usize, stored_layouts: Vec<StoredLayout>, usage: f64, placed_item_qtys: Vec<usize>, target_item_qtys: Vec<usize>, bin_qtys: Vec<usize>) -> Self {
+    pub fn new(id: usize, layout_snapshots: Vec<LayoutSnapshot>, usage: f64, placed_item_qtys: Vec<usize>, target_item_qtys: Vec<usize>, bin_qtys: Vec<usize>) -> Self {
         Solution {
             id,
-            stored_layouts,
+            layout_snapshots,
             usage,
             placed_item_qtys,
             target_item_qtys,
@@ -30,8 +30,8 @@ impl Solution {
         }
     }
 
-    pub fn stored_layouts(&self) -> &Vec<StoredLayout> {
-        &self.stored_layouts
+    pub fn layout_snapshots(&self) -> &Vec<LayoutSnapshot> {
+        &self.layout_snapshots
     }
 
     pub fn is_complete(&self, instance: &Instance) -> bool {
@@ -79,11 +79,11 @@ impl Solution {
         match instance.packing_type() {
             PackingType::StripPacking { .. } => false,
             PackingType::BinPacking(bins) => {
-                match self.stored_layouts.len() {
+                match self.layout_snapshots.len() {
                     0 => panic!("No stored layouts in solution"),
                     1 => {
                         let cheapest_bin = &bins.iter().min_by(|(b1, _), (b2, _)| b1.value().cmp(&b2.value())).unwrap().0;
-                        self.stored_layouts[0].bin().id() == cheapest_bin.id()
+                        self.layout_snapshots[0].bin().id() == cheapest_bin.id()
                     }
                     _ => false
                 }

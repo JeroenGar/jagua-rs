@@ -6,8 +6,8 @@ use crate::geometry::transformation::Transformation;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Edge {
-    start: Point,
-    end: Point,
+    pub start: Point,
+    pub end: Point,
 }
 
 impl Edge {

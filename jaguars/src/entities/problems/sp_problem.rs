@@ -6,10 +6,10 @@ use ordered_float::NotNan;
 
 use crate::collision_detection::hazard_filters::hazard_filter;
 use crate::entities::bin::Bin;
-use crate::entities::insertion_option::InsertionOption;
+use crate::entities::placing_option::PlacingOption;
 use crate::entities::instance::{Instance, PackingType};
 use crate::entities::layout::Layout;
-use crate::entities::placed_item_uid::PlacedItemUID;
+use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::problems::problem::{LayoutIndex, Problem};
 use crate::entities::problems::problem::private::ProblemPrivate;
 use crate::entities::solution::Solution;
@@ -56,19 +56,19 @@ impl SPProblem {
         self.strip_width = new_width;
 
         for p_uid in old_p_uids {
-            let item = self.instance.item(p_uid.item_id());
+            let item = self.instance.item(p_uid.item_id);
             let entities_to_ignore = item.hazard_filter().map_or(vec![], |f| hazard_filter::ignored_entities(f, self.layout.cde().all_hazards()));
             let shape = item.shape();
-            let transformation = p_uid.d_transformation().compose();
-            if !self.layout.cde().surrogate_collides(shape.surrogate(), &transformation, entities_to_ignore.as_slice()) {
-                let transformed_shape = shape.transform_clone(&transformation);
+            let transf = p_uid.d_transf.compose();
+            if !self.layout.cde().surrogate_collides(shape.surrogate(), &transf, entities_to_ignore.as_slice()) {
+                let transformed_shape = shape.transform_clone(&transf);
                 if !self.layout.cde().poly_collides(&transformed_shape, entities_to_ignore.as_ref()) {
-                    let insert_opt = InsertionOption::new(
-                        LayoutIndex::Existing(0),
-                        p_uid.item_id(),
-                        transformation,
-                        p_uid.d_transformation().clone(),
-                    );
+                    let insert_opt = PlacingOption {
+                        layout_index: LayoutIndex::Existing(0),
+                        item_id: p_uid.item_id,
+                        transf,
+                        d_transf: p_uid.d_transf.clone(),
+                    };
                     self.insert_item(&insert_opt);
                 }
             }
@@ -77,7 +77,7 @@ impl SPProblem {
 
     pub fn fit_strip_width(&mut self) {
         let max_x = self.layout.placed_items().iter()
-            .map(|pi| pi.shape().bbox().x_max())
+            .map(|pi| pi.shape().bbox().x_max)
             .map(|x| NotNan::new(x).unwrap())
             .max().map_or(0.0, |x| x.into_inner());
 
@@ -102,11 +102,11 @@ impl SPProblem {
 }
 
 impl Problem for SPProblem {
-    fn insert_item(&mut self, i_opt: &InsertionOption) {
-        assert_eq!(i_opt.layout_index(), &LayoutIndex::Existing(0), "strip packing problems only have a single layout");
-        let item_id = i_opt.item_id();
+    fn insert_item(&mut self, i_opt: &PlacingOption) {
+        assert_eq!(i_opt.layout_index, LayoutIndex::Existing(0), "strip packing problems only have a single layout");
+        let item_id = i_opt.item_id;
         let item = self.instance.item(item_id);
-        self.layout.place_item(item, i_opt.d_transformation());
+        self.layout.place_item(item, &i_opt.d_transf);
 
         self.register_included_item(item_id);
     }
@@ -114,17 +114,17 @@ impl Problem for SPProblem {
     fn remove_item(&mut self, layout_index: usize, pi_uid: &PlacedItemUID) {
         assert_eq!(layout_index, 0, "strip packing problems only have a single layout");
         self.layout.remove_item(pi_uid, false);
-        self.unregister_included_item(pi_uid.item_id());
+        self.unregister_included_item(pi_uid.item_id);
     }
 
     fn create_solution(&mut self, _old_solution: &Option<Solution>) -> Solution {
         let id = self.next_solution_id();
         let included_item_qtys = self.included_item_qtys();
         let bin_qtys = self.bin_qtys().to_vec();
-        let stored_layouts = vec![self.layout.create_stored_layout()];
+        let layout_snapshots = vec![self.layout.create_layout_snapshot()];
         let target_item_qtys = self.instance().items().iter().map(|(_, qty)| *qty).collect_vec();
 
-        let solution = Solution::new(id, stored_layouts, self.usage(), included_item_qtys, target_item_qtys, bin_qtys);
+        let solution = Solution::new(id, layout_snapshots, self.usage(), included_item_qtys, target_item_qtys, bin_qtys);
 
         debug_assert!(assertions::problem_matches_solution(self, &solution));
 
@@ -132,8 +132,8 @@ impl Problem for SPProblem {
     }
 
     fn restore_to_solution(&mut self, solution: &Solution) {
-        debug_assert!(solution.stored_layouts().len() == 1);
-        self.layout.restore(&solution.stored_layouts()[0], &self.instance);
+        debug_assert!(solution.layout_snapshots().len() == 1);
+        self.layout.restore(&solution.layout_snapshots()[0], &self.instance);
         self.missing_item_qtys.iter_mut().enumerate().for_each(|(i, qty)| {
             *qty = (self.instance.item_qty(i) - solution.placed_item_qtys()[i]) as isize
         });

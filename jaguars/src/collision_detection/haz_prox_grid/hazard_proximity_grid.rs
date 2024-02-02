@@ -55,10 +55,10 @@ impl HazardProximityGrid {
         let seed_bbox = {
             let shape_bbox = to_register.shape.bbox();
             AARectangle::new(
-                shape_bbox.x_min() - self.cell_radius,
-                shape_bbox.y_min() - self.cell_radius,
-                shape_bbox.x_max() + self.cell_radius,
-                shape_bbox.y_max() + self.cell_radius,
+                shape_bbox.x_min - self.cell_radius,
+                shape_bbox.y_min - self.cell_radius,
+                shape_bbox.x_max + self.cell_radius,
+                shape_bbox.y_max + self.cell_radius,
             )
         };
 

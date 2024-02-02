@@ -2,14 +2,14 @@ use svg::Document;
 use svg::node::element::Group;
 use jaguars::entities::instance::Instance;
 use jaguars::entities::layout::Layout;
-use jaguars::entities::stored_layout::StoredLayout;
+use jaguars::entities::layout::LayoutSnapshot;
 use jaguars::geometry::geo_enums::GeoPosition;
 use jaguars::geometry::geo_traits::Transformable;
 use jaguars::geometry::primitives::circle::Circle;
 use crate::io::{svg_data_export, svg_util};
 use crate::io::svg_util::{SvgDrawOptions};
 
-pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgDrawOptions) -> Document {
+pub fn layout_to_svg(s_layout: &LayoutSnapshot, instance: &Instance, options: SvgDrawOptions) -> Document {
     let layout = Layout::new_from_stored(s_layout.id(), s_layout, &instance);
     let bin = layout.bin();
 
@@ -18,7 +18,7 @@ pub fn layout_to_svg(s_layout: &StoredLayout, instance: &Instance, options: SvgD
     let theme = &options.theme;
 
     let doc = Document::new()
-        .set("viewBox", (vbox.x_min(), vbox.y_min(), vbox.width(), vbox.height()));
+        .set("viewBox", (vbox.x_min, vbox.y_min, vbox.width(), vbox.height()));
 
     let stroke_width = f64::min(vbox.width(), vbox.height()) * 0.001 * theme.stroke_width_multiplier;
 

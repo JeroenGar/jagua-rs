@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
-use crate::collision_detection::hazard_filters::qz_haz_filter::QZHazardFilter;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
+use crate::collision_detection::hazard_filters::qz_haz_filter::QZHazardFilter;
 use crate::entities::item::Item;
-use crate::entities::placed_item_uid::PlacedItemUID;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
@@ -16,12 +15,19 @@ pub struct PlacedItem {
     shape: Arc<SimplePolygon>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+/// Unique identifier for a placed item
+pub struct PlacedItemUID {
+    pub item_id: usize,
+    pub d_transf: DTransformation,
+}
+
 impl PlacedItem {
-    pub fn new(item: &Item, d_transformation: DTransformation) -> Self {
-        let transformation = d_transformation.compose();
-        let shape = Arc::new(item.shape().transform_clone(&transformation));
+    pub fn new(item: &Item, d_transf: DTransformation) -> Self {
+        let transf = d_transf.compose();
+        let shape = Arc::new(item.shape().transform_clone(&transf));
         let qz_haz_filter = item.hazard_filter().cloned();
-        let pi_uid = PlacedItemUID::new(item.id(), d_transformation);
+        let pi_uid = PlacedItemUID { item_id: item.id(), d_transf };
         PlacedItem {
             pi_uid,
             shape,
@@ -30,11 +36,11 @@ impl PlacedItem {
     }
 
     pub fn item_id(&self) -> usize {
-        self.pi_uid.item_id()
+        self.pi_uid.item_id
     }
 
     pub fn d_transformation(&self) -> &DTransformation {
-        self.pi_uid.d_transformation()
+        &self.pi_uid.d_transf
     }
 
     pub fn shape(&self) -> &Arc<SimplePolygon> {

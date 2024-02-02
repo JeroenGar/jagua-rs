@@ -1,10 +1,6 @@
-
-
-
-
 use serde::{Deserialize, Serialize};
-use jaguars::parse::json::json_instance::JsonInstance;
-use jaguars::parse::json::json_solution::JsonSolution;
+use jaguars::io::json_instance::JsonInstance;
+use jaguars::io::json_solution::JsonSolution;
 use crate::config::Config;
 
 #[derive(Serialize, Deserialize, Clone)]
