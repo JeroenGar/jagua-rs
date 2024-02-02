@@ -1,7 +1,7 @@
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Weak};
 
-use crate::collision_detection::hazards::hazard::Hazard;
+use crate::collision_detection::hazard::Hazard;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::circle::Circle;
@@ -24,8 +24,8 @@ pub enum EdgeIndices {
 impl From<&Hazard> for QTPartialHazard {
     fn from(hazard: &Hazard) -> Self {
         Self {
-            shape: Arc::downgrade(hazard.shape()),
-            position: hazard.entity().presence(),
+            shape: Arc::downgrade(&hazard.shape),
+            position: hazard.entity.presence(),
             edge_indices: EdgeIndices::All,
         }
     }

@@ -5,9 +5,9 @@ use itertools::Itertools;
 use crate::collision_detection::haz_prox_grid::boundary_fill::BoundaryFillGrid;
 use crate::collision_detection::haz_prox_grid::grid::Grid;
 use crate::collision_detection::haz_prox_grid::grid_generator;
-use crate::collision_detection::haz_prox_grid::hpg_cell::{HPCellUpdate, HPGCell};
-use crate::collision_detection::hazards::hazard::Hazard;
-use crate::collision_detection::hazards::hazard_entity::HazardEntity;
+use crate::collision_detection::haz_prox_grid::hpg_cell::{HPGCellUpdate, HPGCell};
+use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazard::HazardEntity;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 
@@ -53,7 +53,7 @@ impl HazardProximityGrid {
 
     pub fn register_hazard(&mut self, to_register: &Hazard) {
         let seed_bbox = {
-            let shape_bbox = to_register.shape().bbox();
+            let shape_bbox = to_register.shape.bbox();
             AARectangle::new(
                 shape_bbox.x_min() - self.cell_radius,
                 shape_bbox.y_min() - self.cell_radius,
@@ -68,13 +68,13 @@ impl HazardProximityGrid {
             let cell = self.grid.elements_mut()[next_dot_index].as_mut();
             if let Some(cell) = cell {
                 match cell.register_hazard(to_register) {
-                    HPCellUpdate::Affected => {
+                    HPGCellUpdate::Affected => {
                         b_fill.queue_neighbors(next_dot_index, &self.grid);
                     }
-                    HPCellUpdate::Unaffected => {
+                    HPGCellUpdate::Unaffected => {
                         b_fill.queue_neighbors(next_dot_index, &self.grid);
                     }
-                    HPCellUpdate::Boundary => ()
+                    HPGCellUpdate::Boundary => ()
                 }
             }
         }
@@ -87,7 +87,7 @@ impl HazardProximityGrid {
                 let undetected = self.grid.elements_mut().iter_mut().enumerate()
                     .flat_map(|(i, cell)| cell.as_mut().map(|cell| (i, cell)))
                     .map(|(i, cell)| (i, cell.register_hazard(to_register)))
-                    .filter(|(_i, res)| res == &HPCellUpdate::Affected)
+                    .filter(|(_i, res)| res == &HPGCellUpdate::Affected)
                     .map(|(i, _res)| i)
                     .collect_vec();
 
@@ -115,9 +115,9 @@ impl HazardProximityGrid {
                 for cell in self.grid.elements_mut().iter_mut().flatten() {
                     let result = cell.deregister_hazards(iter::once(to_deregister), remaining.clone());
                     match result {
-                        HPCellUpdate::Affected => (),
-                        HPCellUpdate::Unaffected => (),
-                        HPCellUpdate::Boundary => unreachable!()
+                        HPGCellUpdate::Affected => (),
+                        HPGCellUpdate::Unaffected => (),
+                        HPGCellUpdate::Boundary => unreachable!()
                     }
                 }
             }

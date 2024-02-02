@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use crate::collision_detection::hazards::filters::qz_haz_filter::QZHazardFilter;
-use crate::collision_detection::hazards::hazard::Hazard;
-use crate::collision_detection::hazards::hazard_entity::HazardEntity;
+use crate::collision_detection::hazard_filters::qz_haz_filter::QZHazardFilter;
+use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazard::HazardEntity;
 use crate::entities::item::Item;
 use crate::entities::placed_item_uid::PlacedItemUID;
 use crate::geometry::d_transformation::DTransformation;
@@ -59,6 +59,6 @@ impl Into<Hazard> for &PlacedItem {
 
 impl Into<HazardEntity> for &PlacedItem {
     fn into(self) -> HazardEntity {
-        HazardEntity::Item(self.pi_uid.clone())
+        HazardEntity::PlacedItem(self.pi_uid.clone())
     }
 }

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use itertools::Itertools;
 use ordered_float::NotNan;
 
-use crate::collision_detection::hazards::filters::hazard_filter;
+use crate::collision_detection::hazard_filters::hazard_filter;
 use crate::entities::bin::Bin;
 use crate::entities::insertion_option::InsertionOption;
 use crate::entities::instance::{Instance, PackingType};

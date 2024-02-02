@@ -1,8 +1,8 @@
 use svg::node::element::{Circle, Path};
 use svg::node::element::path::Data;
-use jaguars::collision_detection::hazards::hazard_entity::HazardEntity;
+use jaguars::collision_detection::hazard::HazardEntity;
 
-use jaguars::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
+use jaguars::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use jaguars::collision_detection::quadtree::qt_node::QTNode;
 
 
@@ -59,7 +59,7 @@ fn qt_node_data(
 
             match qt_node.hazards().strongest(ignored_entities) {
                 Some(ch) => {
-                    match ch.haz_presence() {
+                    match ch.presence {
                         QTHazPresence::Entire => data_eh = draw(data_eh),
                         QTHazPresence::Partial(_) => data_ph = draw(data_ph),
                         QTHazPresence::None => unreachable!()

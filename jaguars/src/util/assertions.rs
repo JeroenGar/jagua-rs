@@ -4,13 +4,13 @@ use itertools::Itertools;
 use log::error;
 
 use crate::collision_detection::cd_engine::CDEngine;
-use crate::collision_detection::hazards::filters::combo_haz_filter::CombinedHazardFilter;
-use crate::collision_detection::hazards::filters::entity_haz_filter::EntityHazardFilter;
-use crate::collision_detection::hazards::filters::hazard_filter;
-use crate::collision_detection::hazards::hazard::Hazard;
-use crate::collision_detection::hazards::hazard_entity::HazardEntity;
+use crate::collision_detection::hazard_filters::combo_haz_filter::CombinedHazardFilter;
+use crate::collision_detection::hazard_filters::entity_haz_filter::EntityHazardFilter;
+use crate::collision_detection::hazard_filters::hazard_filter;
+use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
-use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
+use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::entities::bin::Bin;
 use crate::entities::instance::PackingType;
@@ -75,7 +75,7 @@ pub fn layouts_match(layout: &Layout, stored_layout: &StoredLayout) -> bool {
 pub fn collision_hazards_sorted_correctly(hazards: &Vec<QTHazard>) -> bool {
     let mut partial_hazard_detected = false;
     for hazard in hazards.iter() {
-        match hazard.haz_presence() {
+        match hazard.presence {
             QTHazPresence::Partial(_) => {
                 partial_hazard_detected = true;
             }
@@ -134,7 +134,7 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
 
 pub fn qt_node_contains_no_deactivated_hazards<'a>(node: &'a QTNode, mut stacktrace: Vec<&'a QTNode>) -> (bool, Vec<&'a QTNode>) {
     stacktrace.push(node);
-    let deactivated_hazard = node.hazards().all_iter().find(|h| !h.is_active());
+    let deactivated_hazard = node.hazards().all_hazards().iter().find(|h| !h.active);
     if deactivated_hazard.is_some() {
         println!("Deactivated hazard found");
         dbg!(&stacktrace);
@@ -171,9 +171,9 @@ pub fn qt_contains_no_dangling_hazards(cde: &CDEngine) -> bool {
 }
 
 fn qt_node_contains_no_dangling_hazards(node: &QTNode, parent: &QTNode) -> bool {
-    let parent_h_entities = parent.hazards().all_iter().map(|h| h.entity()).unique().collect_vec();
+    let parent_h_entities = parent.hazards().all_hazards().iter().map(|h| &h.entity).unique().collect_vec();
 
-    let dangling_hazards = node.hazards().all_iter().any(|h| !parent_h_entities.contains(&h.entity()));
+    let dangling_hazards = node.hazards().all_hazards().iter().any(|h| !parent_h_entities.contains(&&h.entity));
     if dangling_hazards {
         println!("Node contains dangling hazard");
         return false;
@@ -194,7 +194,7 @@ fn qt_node_contains_no_dangling_hazards(node: &QTNode, parent: &QTNode) -> bool 
 }
 
 pub fn qt_hz_entity_activation_consistent(cde: &CDEngine) -> bool {
-    for (active, hz_entity) in cde.quadtree().hazards().all_iter().map(|h| (h.is_active(), h.entity())).unique() {
+    for (active, hz_entity) in cde.quadtree().hazards().all_hazards().iter().map(|h| (h.active, &h.entity)).unique() {
         if !hz_entity_same_everywhere(cde.quadtree(), &hz_entity, active) {
             return false;
         }
@@ -203,9 +203,9 @@ pub fn qt_hz_entity_activation_consistent(cde: &CDEngine) -> bool {
 }
 
 pub fn hz_entity_same_everywhere(qt_node: &QTNode, hz_entity: &HazardEntity, active: bool) -> bool {
-    match qt_node.hazards().all_iter().find(|h| h.entity() == hz_entity) {
+    match qt_node.hazards().all_hazards().iter().find(|h| &h.entity == hz_entity) {
         Some(h) => {
-            if h.is_active() != active {
+            if h.active != active {
                 println!("Hazard entity activation inconsistent");
                 return false;
             }
@@ -244,11 +244,11 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             let hv1 = qn1.hazards();
             let hv2 = qn2.hazards();
 
-            //collect active hazards to hashsets
-            let active_haz_1 = hv1.active_iter()
+            //collect active hazard_filters to hashsets
+            let active_haz_1 = hv1.active_hazards().iter()
                 .collect::<HashSet<_>>();
 
-            let active_haz_2 = hv2.active_iter()
+            let active_haz_2 = hv2.active_hazards().iter()
                 .collect::<HashSet<_>>();
 
             let active_in_1_but_not_2 = active_haz_1.difference(&active_haz_2).collect::<HashSet<_>>();
@@ -258,19 +258,19 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
                 let from_1 = **active_in_1_but_not_2.iter().next().unwrap();
                 let from_2 = **active_in_2_but_not_1.iter().next().unwrap();
                 println!("{}", from_1 == from_2);
-                error!("Active hazards don't match {:?} vs {:?}", active_in_1_but_not_2, active_in_2_but_not_1);
+                error!("Active hazard_filters don't match {:?} vs {:?}", active_in_1_but_not_2, active_in_2_but_not_1);
                 return false;
             }
         }
         (Some(qn1), None) => {
-            if qn1.hazards().active_iter().next().is_some() {
-                error!("qn1 contains active hazards while other qn2 does not exist");
+            if qn1.hazards().active_hazards().iter().next().is_some() {
+                error!("qn1 contains active hazard_filters while other qn2 does not exist");
                 return false;
             }
         }
         (None, Some(qn2)) => {
-            if qn2.hazards().active_iter().next().is_some() {
-                error!("qn2 contains active hazards while other qn1 does not exist");
+            if qn2.hazards().active_hazards().iter().next().is_some() {
+                error!("qn2 contains active hazard_filters while other qn1 does not exist");
                 return false;
             }
         }
@@ -285,8 +285,8 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
                 qn1.map_or(
                     false,
                     |qn| {
-                        qn.hazards().active_iter()
-                            .any(|h| matches!(h.haz_presence(), QTHazPresence::Partial(_)))
+                        qn.hazards().active_hazards().iter()
+                            .any(|h| matches!(h.presence, QTHazPresence::Partial(_)))
                     },
                 );
             if qn1_has_partial_hazards {
@@ -302,8 +302,8 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             let qn2_has_partial_hazards =
                 qn2.map_or(
                     false,
-                    |qn| qn.hazards().active_iter()
-                        .any(|h| matches!(h.haz_presence(), QTHazPresence::Partial(_))),
+                    |qn| qn.hazards().active_hazards().iter()
+                        .any(|h| matches!(h.presence, QTHazPresence::Partial(_))),
                 );
             if qn2_has_partial_hazards {
                 for child in c2.as_ref() {
@@ -327,13 +327,13 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
 
 fn hazards_match(chv1: &[Hazard], chv2: &[Hazard]) -> bool {
     let chv1_active_hazards = chv1.iter()
-        .filter(|h| h.is_active())
-        .map(|h| h.entity())
+        .filter(|h| h.active)
+        .map(|h| &h.entity)
         .collect::<HashSet<_>>();
 
     let chv2_active_hazards = chv2.iter()
-        .filter(|h| h.is_active())
-        .map(|h| h.entity())
+        .filter(|h| h.active)
+        .map(|h| &h.entity)
         .collect::<HashSet<_>>();
 
     if chv1_active_hazards != chv2_active_hazards {

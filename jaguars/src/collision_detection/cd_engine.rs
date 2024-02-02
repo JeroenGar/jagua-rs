@@ -4,8 +4,8 @@ use tribool::Tribool;
 
 use crate::collision_detection::cde_snapshot::CDESnapshot;
 use crate::collision_detection::haz_prox_grid::hazard_proximity_grid::{HazardProximityGrid, PendingChangesErr};
-use crate::collision_detection::hazards::hazard::Hazard;
-use crate::collision_detection::hazards::hazard_entity::HazardEntity;
+use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
@@ -64,13 +64,13 @@ impl CDEngine {
     //UPDATE ---------------------------------------------------------------------------------------
 
     pub fn register_hazard(&mut self, hazard: Hazard) {
-        debug_assert!(self.dynamic_hazards.iter().find(|h| h.entity() == hazard.entity()).is_none(), "Hazard already registered");
-        let hazard_in_uncommitted_deregs = self.uncommited_deregisters.iter().position(|h| h.entity() == hazard.entity());
+        debug_assert!(self.dynamic_hazards.iter().find(|h| h.entity == hazard.entity).is_none(), "Hazard already registered");
+        let hazard_in_uncommitted_deregs = self.uncommited_deregisters.iter().position(|h| h.entity == hazard.entity);
 
         let hazard = match hazard_in_uncommitted_deregs {
             Some(index) => {
                 let unc_hazard = self.uncommited_deregisters.swap_remove(index);
-                self.quadtree.activate_hazard(unc_hazard.entity());
+                self.quadtree.activate_hazard(&unc_hazard.entity);
                 unc_hazard
             }
             None => {
@@ -85,7 +85,7 @@ impl CDEngine {
     }
 
     pub fn deregister_hazard(&mut self, hazard_entity: &HazardEntity, commit_instantly: bool) {
-        let haz_index = self.dynamic_hazards.iter().position(|h| h.entity() == hazard_entity).expect("Hazard not found");
+        let haz_index = self.dynamic_hazards.iter().position(|h| &h.entity == hazard_entity).expect("Hazard not found");
 
         let hazard = self.dynamic_hazards.swap_remove(haz_index);
 
@@ -112,34 +112,34 @@ impl CDEngine {
 
     pub fn restore(&mut self, snapshot: &CDESnapshot) {
         //Quadtree
-        let mut hazards_to_remove = self.dynamic_hazards.iter().map(|h| h.entity().clone()).collect::<IndexSet<HazardEntity>>();
+        let mut hazards_to_remove = self.dynamic_hazards.iter().map(|h| h.entity.clone()).collect::<IndexSet<HazardEntity>>();
         debug_assert!(hazards_to_remove.len() == self.dynamic_hazards.len());
         let mut hazards_to_add = vec![];
 
         for hazard in snapshot.dynamic_hazards().iter() {
-            let hazard_already_present = hazards_to_remove.swap_remove(hazard.entity());
+            let hazard_already_present = hazards_to_remove.swap_remove(&hazard.entity);
             if !hazard_already_present {
                 hazards_to_add.push(hazard.clone());
             }
         }
 
         //Hazards currently registered in the CDE, but not in the snapshot
-        for hazard in hazards_to_remove.iter() {
-            let haz_index = self.dynamic_hazards.iter().position(|h| h.entity() == hazard).expect("Hazard not found");
+        for haz_entity in hazards_to_remove.iter() {
+            let haz_index = self.dynamic_hazards.iter().position(|h| &h.entity == haz_entity).expect("Hazard not found");
             self.dynamic_hazards.swap_remove(haz_index);
-            self.quadtree.deregister_hazard(&hazard);
+            self.quadtree.deregister_hazard(&haz_entity);
         }
 
         //Some of the uncommitted deregisters might be in present in snapshot, if so we can just reactivate them
         for unc_haz in self.uncommited_deregisters.drain(..) {
-            if let Some(pos) = hazards_to_add.iter().position(|h| h.entity() == unc_haz.entity()) {
+            if let Some(pos) = hazards_to_add.iter().position(|h| &h.entity == &unc_haz.entity) {
                 //the uncommitted removed hazard needs to be activated again
-                self.quadtree.activate_hazard(unc_haz.entity());
+                self.quadtree.activate_hazard(&unc_haz.entity);
                 self.dynamic_hazards.push(unc_haz);
                 hazards_to_add.swap_remove(pos);
             } else {
                 //uncommitted deregister is not preset in the snapshot, delete it from the quadtree
-                self.quadtree.deregister_hazard(unc_haz.entity());
+                self.quadtree.deregister_hazard(&unc_haz.entity);
             }
         }
 
@@ -158,7 +158,7 @@ impl CDEngine {
 
     fn commit_deregisters(&mut self) {
         for uc_haz in self.uncommited_deregisters.drain(..) {
-            self.quadtree.deregister_hazard(uc_haz.entity());
+            self.quadtree.deregister_hazard(&uc_haz.entity);
         }
         self.haz_prox_grid.as_mut().map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
     }
@@ -286,9 +286,9 @@ impl CDEngine {
 
         if !circle_center_in_qt && colliding_entities.is_empty() {
             // The circle center is outside the quadtree
-            if !ignored_entities.contains(&&HazardEntity::BinOuter) {
+            if !ignored_entities.contains(&&HazardEntity::BinExterior) {
                 //Add the bin as a hazard, unless it is ignored
-                colliding_entities.push(HazardEntity::BinOuter);
+                colliding_entities.push(HazardEntity::BinExterior);
             }
         }
 
@@ -297,15 +297,15 @@ impl CDEngine {
 
     fn collision_by_containment(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool
     {
-        //collect all active and non-ignored hazards
+        //collect all active and non-ignored hazard_filters
         let mut relevant_hazards = self.all_hazards()
-            .filter(|h| h.is_active() && !ignored_entities.contains(h.entity()));
+            .filter(|h| h.active && !ignored_entities.contains(&h.entity));
 
         relevant_hazards.any(|haz| {
             //Due to possible fp issues, we check if the bboxes are "almost" related
             //"almost" meaning that, when edges are very close together, they are considered equal.
             //Some relations which would normally be seen as Intersecting are now being considered Enclosed/Surrounding
-            let haz_shape = haz.shape().as_ref();
+            let haz_shape = haz.shape.as_ref();
             let bbox_relation = haz_shape.bbox().almost_relation_to(&shape.bbox());
 
             let (s_mu, s_omega) = match bbox_relation {
@@ -313,7 +313,7 @@ impl CDEngine {
                 GeoRelation::Enclosed => (haz_shape, shape), //inclusion possible
                 GeoRelation::Disjoint | GeoRelation::Intersecting => {
                     //no inclusion is possible
-                    return match haz.entity().presence() {
+                    return match haz.entity.presence() {
                         GeoPosition::Interior => false,
                         GeoPosition::Exterior => true,
                     }
@@ -323,14 +323,14 @@ impl CDEngine {
             if std::ptr::eq(haz_shape, s_omega) {
                 //s_omega is registered in the quadtree.
                 //maybe the quadtree can help us.
-                match self.quadtree.point_definitely_collides_with(&s_mu.poi().center(), haz.entity()).try_into() {
+                match self.quadtree.point_definitely_collides_with(&s_mu.poi().center(), &haz.entity).try_into() {
                     Ok(collides) => return collides,
                     Err(_) => (), //no definitive answer
                 }
             }
             let inclusion = s_omega.collides_with(&s_mu.poi().center());
 
-            match haz.entity().presence() {
+            match haz.entity.presence() {
                 GeoPosition::Interior => inclusion,
                 GeoPosition::Exterior => !inclusion,
             }

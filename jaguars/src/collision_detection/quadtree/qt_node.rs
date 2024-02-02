@@ -1,8 +1,8 @@
 use tribool::Tribool;
 
-use crate::collision_detection::hazards::hazard_entity::HazardEntity;
+use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
-use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
+use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_partial_hazard::QTPartialHazard;
 use crate::geometry::geo_traits::CollidesWith;
@@ -51,10 +51,10 @@ impl QTNode {
         self.invalidate_cache();
 
         //If the hazard is of the partial type, and we are not at the max tree depth: generate children
-        if !self.has_children() && self.level > 0 && matches!(hazard.haz_presence(), QTHazPresence::Partial(_)) {
+        if !self.has_children() && self.level > 0 && matches!(hazard.presence, QTHazPresence::Partial(_)) {
             self.generate_children();
-            //register all existing hazards to the newly created children
-            for hazard in self.hazards.all_iter() {
+            //register all existing hazard_filters to the newly created children
+            for hazard in self.hazards.all_hazards() {
                 register_to_children(&mut self.children, hazard);
             }
         }
@@ -69,7 +69,7 @@ impl QTNode {
         let removed_ch = self.hazards.remove(hazard_entity);
 
         if removed_ch.is_some() && self.has_children() {
-            if self.hazards.is_empty() || self.hazards.all_iter().all(|h| matches!(h.haz_presence(), QTHazPresence::Entire)) {
+            if self.hazards.is_empty() || self.hazards.has_only_entire_hazards() {
                 //If there are no more inclusion, or only inclusion of type Entire, drop the children
                 self.drop_children();
             } else {
@@ -162,9 +162,9 @@ impl QTNode {
             None => None,
             Some(strongest_hazard) => match entity.collides_with(self.bbox()) {
                 false => None,
-                true => match strongest_hazard.haz_presence() {
+                true => match strongest_hazard.presence {
                     QTHazPresence::None => None,
-                    QTHazPresence::Entire => Some(strongest_hazard.entity()),
+                    QTHazPresence::Entire => Some(&strongest_hazard.entity),
                     QTHazPresence::Partial(_) => match self.children() {
                         Some(children) => {
                             //Search if any of the children intersect with the circle
@@ -174,14 +174,14 @@ impl QTNode {
                                 .flatten()
                         }
                         None => {
-                            for hz in self.hazards.active_iter() {
-                                match hz.haz_presence() {
+                            for hz in self.hazards.active_hazards() {
+                                match &hz.presence {
                                     QTHazPresence::Entire | QTHazPresence::None => {} //non-ignored Entire inclusion are caught by the previous match
                                     QTHazPresence::Partial(partial_hazard) => {
-                                        if !ignored_entities.contains(&hz.entity()) {
+                                        if !ignored_entities.contains(&hz.entity) {
                                             //do intersection test if this shape is not ignored
                                             if partial_hazard.collides_with(entity) {
-                                                return Some(hz.entity());
+                                                return Some(&hz.entity);
                                             }
                                         }
                                     }
@@ -201,7 +201,7 @@ impl QTNode {
     {
         match self.hazards.strongest(ignored_entities) {
             None => Tribool::False,
-            Some(hazard) => match (entity.collides_with(self.bbox()), hazard.haz_presence()) {
+            Some(hazard) => match (entity.collides_with(self.bbox()), &hazard.presence) {
                 (false, _) | (_, QTHazPresence::None) => Tribool::False,
                 (true, QTHazPresence::Entire) => Tribool::True,
                 (true, QTHazPresence::Partial(_)) => match self.children() {
@@ -229,7 +229,7 @@ impl QTNode {
             None => Tribool::False, //Node does not contain inclusion
             Some(hazard) => match self.bbox.collides_with(point) {
                 false => Tribool::False, //Hazard present, but the point is fully outside the node
-                true => match hazard.haz_presence() {
+                true => match hazard.presence {
                     QTHazPresence::None => Tribool::False, //The hazard is of type None, a collision is impossible
                     QTHazPresence::Entire => Tribool::True, //The hazard is of type Entire, a collision is guaranteed
                     QTHazPresence::Partial(_) => match &self.children {

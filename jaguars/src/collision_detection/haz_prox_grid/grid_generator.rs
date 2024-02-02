@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use crate::collision_detection::hazards::hazard::Hazard;
+use crate::collision_detection::hazard::Hazard;
 use crate::geometry::geo_traits::{DistanceFrom, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
@@ -72,8 +72,8 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
 
 fn distance_to_hazard<'a, I>(point: &Point, hazards: I) -> f64 where I: Iterator<Item=&'a Hazard> {
     hazards.map(|haz| {
-        let (pos, prox) = haz.shape().distance_from_border(point);
-        match pos == haz.entity().presence() {
+        let (pos, prox) = haz.shape.distance_from_border(point);
+        match pos == haz.entity.presence() {
             true => -prox, //cell in hazard, negative distance
             false => prox
         }

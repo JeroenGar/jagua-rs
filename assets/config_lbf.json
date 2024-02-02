@@ -1,7 +1,7 @@
 {
   "cde_config": {
     "quadtree": {
-      "FixedDepth": 4
+      "FixedDepth": 8
     },
     "haz_prox": {
       "Enabled": {
@@ -21,10 +21,10 @@
     }
   },
   "deterministic_mode": true,
-  "n_samples_per_item": 5000,
-  "ls_samples_fraction": 0.2,
+  "n_samples_per_item": 50000,
+  "ls_samples_fraction": 0.5,
   "svg_draw_options": {
-    "quadtree": false,
+    "quadtree": true,
     "haz_prox_grid": false,
     "surrogate": false
   }

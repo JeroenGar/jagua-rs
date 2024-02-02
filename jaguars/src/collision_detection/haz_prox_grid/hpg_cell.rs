@@ -3,8 +3,8 @@ use std::cmp::Ordering;
 use itertools::Itertools;
 
 use crate::collision_detection::haz_prox_grid::proximity::Proximity;
-use crate::collision_detection::hazards::hazard::Hazard;
-use crate::collision_detection::hazards::hazard_entity::HazardEntity;
+use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazard::HazardEntity;
 use crate::entities::item::Item;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{DistanceFrom, Shape};
@@ -18,11 +18,12 @@ pub struct HPGCell {
     bbox: AARectangle,
     centroid: Point,
     radius: f64,
+    ///Proximity of closest hazard which is universally applicable (bin or item)
     uni_haz_prox: (Proximity, HazardEntity),
-    //proximity of closest hazard which is universally applicable (bin or item)
+    ///Proximity of universal static hazard_filters
     static_uni_haz_prox: (Proximity, HazardEntity),
-    //proximity of universal static hazards
-    qz_haz_prox: [Proximity; N_QUALITIES], //proximity of closest quality zone for each quality
+    ///proximity of closest quality zone for each quality
+    qz_haz_prox: [Proximity; N_QUALITIES],
 }
 
 impl HPGCell {
@@ -32,19 +33,19 @@ impl HPGCell {
         let centroid = bbox.centroid();
         let radius = f64::sqrt(f64::powi(bbox.width() / 2.0, 2) + f64::powi(bbox.height() / 2.0, 2));
 
-        let mut static_uni_haz_prox = (Proximity::default(), HazardEntity::BinOuter);
+        let mut static_uni_haz_prox = (Proximity::default(), HazardEntity::BinExterior);
         let mut qz_haz_prox = [Proximity::default(); N_QUALITIES];
 
         for hazard in static_hazards {
-            let (pos, distance) = hazard.shape().distance_from_border(&centroid);
-            let prox = match pos == hazard.entity().presence() {
+            let (pos, distance) = hazard.shape.distance_from_border(&centroid);
+            let prox = match pos == hazard.entity.presence() {
                 true => Proximity::new(GeoPosition::Interior, distance), //cell in hazard, negative distance
                 false => Proximity::new(GeoPosition::Exterior, distance)
             };
-            match hazard.entity() {
-                HazardEntity::BinOuter | HazardEntity::BinHole { .. } => {
+            match &hazard.entity {
+                HazardEntity::BinExterior | HazardEntity::BinHole { .. } => {
                     if prox < static_uni_haz_prox.0 {
-                        static_uni_haz_prox = (prox, hazard.entity().clone());
+                        static_uni_haz_prox = (prox, hazard.entity.clone());
                     }
                 }
                 HazardEntity::QualityZoneInferior { quality, .. } => {
@@ -71,12 +72,12 @@ impl HPGCell {
         //negative distance if inside of circle.
         //This serves as an lowerbound for the distance to the item itself.
         let mut bounding_pole_distances: Vec<(&Hazard, Option<Proximity>)> = to_register
-            .filter(|haz| haz.is_active())
+            .filter(|haz| haz.active)
             .map(|haz| {
-                match haz.entity().presence() {
+                match haz.entity.presence() {
                     GeoPosition::Exterior => (haz, None), //bounding poles only applicable for hazard inside the shape
                     GeoPosition::Interior => {
-                        let pole_bounding_circle = haz.shape().surrogate().poles_bounding_circle();
+                        let pole_bounding_circle = haz.shape.surrogate().poles_bounding_circle();
                         let proximity = pole_bounding_circle.distance_from_border(&self.centroid);
                         let proximity = Proximity::new(proximity.0, proximity.1.abs());
                         (haz, Some(proximity))
@@ -111,32 +112,32 @@ impl HPGCell {
         }
     }
 
-    pub fn register_hazard(&mut self, to_register: &Hazard) -> HPCellUpdate {
+    pub fn register_hazard(&mut self, to_register: &Hazard) -> HPGCellUpdate {
         let current_prox = self.universal_hazard_proximity().0;
 
-        //For dynamic hazards, the surrogate poles are used to calculate the distance to the hazard (overestimation, but fast)
-        let haz_prox = match to_register.entity().presence() {
-            GeoPosition::Interior => distance_to_surrogate_poles_border(self, to_register.shape().surrogate().poles()),
+        //For dynamic hazard_filters, the surrogate poles are used to calculate the distance to the hazard (overestimation, but fast)
+        let haz_prox = match to_register.entity.presence() {
+            GeoPosition::Interior => distance_to_surrogate_poles_border(self, to_register.shape.surrogate().poles()),
             GeoPosition::Exterior => unreachable!("No implementation yet for dynamic exterior hazards")
         };
 
         match haz_prox.cmp(&current_prox) {
             Ordering::Less => {
                 //new hazard is closer
-                self.uni_haz_prox = (haz_prox, to_register.entity().clone());
-                HPCellUpdate::Affected
+                self.uni_haz_prox = (haz_prox, to_register.entity.clone());
+                HPGCellUpdate::Affected
             }
             _ => {
                 if haz_prox.distance_from_border > current_prox.distance_from_border + 2.0 * self.radius {
-                    HPCellUpdate::Boundary
+                    HPGCellUpdate::Boundary
                 } else {
-                    HPCellUpdate::Unaffected
+                    HPGCellUpdate::Unaffected
                 }
             }
         }
     }
 
-    pub fn deregister_hazards<'a, 'b, I, J>(&mut self, mut to_deregister: J, remaining: I) -> HPCellUpdate
+    pub fn deregister_hazards<'a, 'b, I, J>(&mut self, mut to_deregister: J, remaining: I) -> HPGCellUpdate
         where I: Iterator<Item=&'a Hazard>, J: Iterator<Item=&'b HazardEntity>
     {
         if to_deregister.contains(&self.uni_haz_prox.1) {
@@ -144,9 +145,9 @@ impl HPGCell {
             self.uni_haz_prox = self.static_uni_haz_prox.clone();
 
             self.register_hazards(remaining);
-            HPCellUpdate::Affected
+            HPGCellUpdate::Affected
         } else {
-            HPCellUpdate::Unaffected
+            HPGCellUpdate::Unaffected
         }
     }
 
@@ -206,8 +207,11 @@ pub fn distance_to_surrogate_poles_border(hp_cell: &HPGCell, poles: &[Circle]) -
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum HPCellUpdate {
+pub enum HPGCellUpdate {
+    ///Update affected the cell
     Affected,
+    ///Update did not affect the cell, but its neighbors can be affected
     Unaffected,
-    Boundary, //Unaffected and its neighbors are also guaranteed to be unaffected
+    ///Update did not affect the cell and its neighbors are also guaranteed to be unaffected
+    Boundary,
 }

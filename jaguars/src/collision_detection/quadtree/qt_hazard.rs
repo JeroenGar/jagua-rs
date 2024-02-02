@@ -1,6 +1,6 @@
-use crate::collision_detection::hazards::hazard::Hazard;
-use crate::collision_detection::hazards::hazard_entity::HazardEntity;
-use crate::collision_detection::quadtree::qt_hazard_type::QTHazPresence;
+use std::cmp::Ordering;
+use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_partial_hazard::{EdgeIndices, QTPartialHazard};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape};
@@ -9,15 +9,15 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 //Hazards in a QTNode
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct QTHazard {
-    entity: HazardEntity,
-    presence: QTHazPresence,
-    active: bool,
+    pub entity: HazardEntity,
+    pub presence: QTHazPresence,
+    pub active: bool,
 }
 
 impl From<&Hazard> for QTHazard {
     fn from(hazard: &Hazard) -> Self {
         Self {
-            entity: hazard.entity().clone(),
+            entity: hazard.entity.clone(),
             presence: QTHazPresence::Partial(hazard.into()),
             active: true,
         }
@@ -33,12 +33,6 @@ impl QTHazard {
     }
 
     pub fn constrict(&self, quadrants: [&AARectangle; 4]) -> [Option<Self>; 4] {
-        // QTNode children array layout:
-        // 0 -- 1
-        // |    |
-        // 2 -- 3
-        const CHILD_NEIGHBORS: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
-
         match &self.presence {
             QTHazPresence::None => [None, None, None, None],
             QTHazPresence::Entire => [Some(self.clone()), Some(self.clone()), Some(self.clone()), Some(self.clone())],
@@ -139,24 +133,36 @@ impl QTHazard {
             }
         }
     }
+}
 
-    pub fn entity(&self) -> &HazardEntity {
-        &self.entity
+// QTNode children array layout:
+// 0 | 1
+// -----
+// 2 | 3
+const CHILD_NEIGHBORS: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum QTHazPresence {
+    None,
+    Partial(QTPartialHazard),
+    Entire
+}
+
+impl PartialOrd for QTHazPresence {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        fn to_int(presence: &QTHazPresence) -> u8 {
+            match presence {
+                QTHazPresence::None => 0,
+                QTHazPresence::Partial(_) => 1,
+                QTHazPresence::Entire => 2,
+            }
+        }
+        Some(to_int(self).cmp(&to_int(other)))
     }
+}
 
-    pub fn haz_presence(&self) -> &QTHazPresence {
-        &self.presence
-    }
-
-    pub fn activate(&mut self) {
-        self.active = true;
-    }
-
-    pub fn deactivate(&mut self) {
-        self.active = false;
-    }
-
-    pub fn is_active(&self) -> bool {
-        self.active
+impl Ord for QTHazPresence {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
     }
 }

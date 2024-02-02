@@ -3,8 +3,8 @@ use std::sync::Arc;
 use itertools::Itertools;
 
 use crate::collision_detection::cd_engine::CDEngine;
-use crate::collision_detection::hazards::hazard::Hazard;
-use crate::collision_detection::hazards::hazard_entity::HazardEntity;
+use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazard::HazardEntity;
 use crate::entities::quality_zone::QualityZone;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
@@ -71,7 +71,7 @@ impl Bin {
     }
     fn generate_hazards(outer: &Arc<SimplePolygon>, holes: &[Arc<SimplePolygon>], quality_zones: &[Option<QualityZone>]) -> Vec<Hazard> {
         let mut hazards = vec![
-            Hazard::new(HazardEntity::BinOuter, outer.clone())
+            Hazard::new(HazardEntity::BinExterior, outer.clone())
         ];
         hazards.extend(
             holes.iter().enumerate()

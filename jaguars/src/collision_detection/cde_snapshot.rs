@@ -1,6 +1,6 @@
 use crate::collision_detection::haz_prox_grid::grid::Grid;
 use crate::collision_detection::haz_prox_grid::hpg_cell::HPGCell;
-use crate::collision_detection::hazards::hazard::Hazard;
+use crate::collision_detection::hazard::Hazard;
 
 //Snapshot of the CDE state at a given time.
 //Can be used to restore the CDE to a previous state.
