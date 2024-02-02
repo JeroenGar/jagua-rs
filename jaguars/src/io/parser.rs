@@ -151,29 +151,16 @@ impl Parser {
 
         let instance = Instance::new(items, packing_type.unwrap());
 
-        log!(Level::Info, "instance parsed: {} items ({} unique)",
-        instance.total_item_qty(),
-        instance.items().len()
-    );
-
         match instance.packing_type() {
             PackingType::StripPacking { height } => {
-                log!(Level::Info, "strip packing instance parsed: {} items ({} unique), {} strip height",
-                instance.total_item_qty(),
-                instance.items().len(),
-                height
-            );
+                log!(Level::Info, "Strip packing instance \"{}\" parsed: {} items ({} unique), {} strip height",json_instance.name,instance.total_item_qty(),instance.items().len(),height);
             }
             PackingType::BinPacking(bins) => {
-                log!(Level::Info, "bin packing, {} items ({} unique), {} bins ({} unique)",
-                instance.total_item_qty(),
-                instance.items().len(),
-                bins.iter().map(|(_,qty)| *qty).sum::<usize>(),
-                bins.len());
+                log!(Level::Info, "Bin packing instance \"{}\" parsed: {} items ({} unique), {} bins ({} unique)",json_instance.name, instance.total_item_qty(),instance.items().len(),bins.iter().map(|(_,qty)| *qty).sum::<usize>(),bins.len());
             }
-        };
+        }
 
-        log!(Level::Info, "total area of items: {}", instance.items().iter().map(|(item,qty)| item.shape().area() * *qty as f64).sum::<f64>());
+        log!(Level::Debug, "Total area of items: {}", instance.total_item_qty());
 
         instance
     }
@@ -318,7 +305,6 @@ pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: In
 }
 
 fn json_shape_to_simple_polygon(json_shape: &JsonPoly, center_polygon: bool, simpl_config: PolySimplConfig, simpl_mode: PolySimplMode) -> (SimplePolygon, Transformation) {
-
     let outer = SimplePolygon::new(json_simple_poly_to_points(&json_shape.outer));
     let inners = json_shape.inner.iter()
         .map(|jsp| {

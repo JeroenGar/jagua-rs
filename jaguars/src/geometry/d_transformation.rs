@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+use std::fmt::Display;
 use ordered_float::NotNan;
 
 use crate::geometry::transformation::Transformation;
@@ -45,5 +46,11 @@ impl DTransformation {
 impl<T> From<T> for DTransformation where T: Borrow<Transformation> {
     fn from(t: T) -> Self {
         t.borrow().decompose()
+    }
+}
+
+impl Display for DTransformation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "r: {:.3}°, t: ({:.3}, {:.3})", self.rotation.to_degrees(), self.translation.0.into_inner(), self.translation.1.into_inner())
     }
 }

@@ -156,7 +156,7 @@ pub fn simplify_shape(shape: &SimplePolygon, mode: PolySimplMode, max_area_delta
         }
     }
 
-    log!(Level::Info, "simplified from {} to {} edges ({:.3}% area difference)", shape.number_of_points(), ref_shape.number_of_points(), (ref_shape.area() - shape.area()) / shape.area() * 100.0);
+    log!(Level::Debug, "simplified from {} to {} edges ({:.3}% area difference)", shape.number_of_points(), ref_shape.number_of_points(), (ref_shape.area() - shape.area()) / shape.area() * 100.0);
 
     return ref_shape;
 }

@@ -33,7 +33,12 @@ pub struct JsonStrip {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct JsonItem {
+    /// Number of times this item should be produced
     pub demand: u64,
+    /// List of allowed orientations angles (in degrees).
+    /// If Some(), only the specified angles are allowed
+    /// If None, continuous rotation is allowed
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub allowed_orientations: Option<Vec<f64>>,
     pub shape: JsonPoly,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]

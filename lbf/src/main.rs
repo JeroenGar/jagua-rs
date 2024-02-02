@@ -25,12 +25,12 @@ fn main() {
     let args = Cli::parse();
     let config_file = File::open(args.config_file).expect("could not open config file");
     let config: Config = serde_json::from_reader(BufReader::new(config_file)).unwrap_or_else(|err| {
-        warn!("config file could not be parsed: {}", err);
-        warn!("falling back on default config");
+        warn!("Config file could not be parsed: {}", err);
+        warn!("Falling back on default config");
         Config::default()
     });
 
-    info!("config: {}", serde_json::to_string_pretty(&config).unwrap());
+    info!("Config: {}", serde_json::to_string(&config).unwrap());
 
 
     let json_instance = io::read_json_instance(args.input_file.as_path());

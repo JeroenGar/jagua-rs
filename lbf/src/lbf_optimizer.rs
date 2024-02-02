@@ -80,7 +80,7 @@ impl LBFOptimizer {
                 //find a position and insert it
                 match find_placement(&self.problem, item, &self.config, &mut self.rng) {
                     Some(i_opt) => {
-                        info!("inserting item {}", i_opt.item_id);
+                        info!("Inserting item {} at {}", i_opt.item_id, i_opt.d_transf);
                         self.problem.insert_item(&i_opt);
                         if self.problem.included_item_qtys().iter().sum::<usize>() >= ITEM_LIMIT {
                             break 'outer;
@@ -91,7 +91,7 @@ impl LBFOptimizer {
                             ProblemEnum::BPProblem(_) => break,
                             ProblemEnum::SPProblem(sp_problem) => {
                                 let new_width = sp_problem.strip_width() * 1.1;
-                                info!("extending the strip by 10%: {:.3}", new_width);
+                                info!("Extending the strip by 10%: {:.3}", new_width);
                                 sp_problem.modify_strip_width(new_width);
                             }
                         }
@@ -104,7 +104,7 @@ impl LBFOptimizer {
             ProblemEnum::BPProblem(_) => {}
             ProblemEnum::SPProblem(sp_problem) => {
                 sp_problem.fit_strip_width();
-                info!("final strip width: {:.3}", sp_problem.strip_width());
+                info!("Final strip width: {:.3}", sp_problem.strip_width());
             }
         }
 

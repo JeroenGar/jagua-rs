@@ -32,12 +32,12 @@ pub fn write_json_output(json_output: &JsonOutput, path: &Path) {
     serde_json::to_writer_pretty(writer, &json_output)
         .unwrap_or_else(|_| panic!("could not write solution file: {}", path.display()));
 
-    log!(Level::Info, "solution written to {:?}", fs::canonicalize(path).expect("could not canonicalize path"));
+    info!("Solution JSON written to {:?}", fs::canonicalize(path).expect("could not canonicalize path"));
 }
 
 pub fn write_svg(document: &Document, path: &Path) {
     svg::save(path, document).expect("failed to write svg file");
-    info!("svg written to {:?}", fs::canonicalize(&path).expect("could not canonicalize path"));
+    info!("Solution SVG written to {:?}", fs::canonicalize(&path).expect("could not canonicalize path"));
 }
 
 pub fn init_logger(level_filter: Option<LevelFilter>){
@@ -67,5 +67,5 @@ pub fn init_logger(level_filter: Option<LevelFilter>){
         .level(level_filter)
         .chain(std::io::stdout())
         .apply().expect("could not initialize logger");
-    log!(Level::Info, "time: {}", humantime::format_rfc3339_seconds(std::time::SystemTime::now()));
+    log!(Level::Info, "Epoch: {}", humantime::format_rfc3339_seconds(std::time::SystemTime::now()));
 }
