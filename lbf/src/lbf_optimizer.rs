@@ -149,7 +149,7 @@ pub fn sample_layout(problem: &ProblemEnum, layout_index: LayoutIndex, item: &It
 
     let shape = item.shape();
     let surrogate = item.shape().surrogate();
-    let mut buffer_shape = shape.clone_without_surrogate();
+    let mut buffer_shape = shape.clone_and_strip_surrogate();
 
     let mut best = None;
 

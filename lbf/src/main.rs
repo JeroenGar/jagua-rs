@@ -17,7 +17,7 @@ use lbf::{EPOCH, io};
 use lbf::lbf_optimizer::LBFOptimizer;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
-use lbf::io::layout_to_svg::layout_to_svg;
+use lbf::io::layout_to_svg::{s_layout_to_svg};
 
 fn main() {
     io::init_logger(Some(LevelFilter::Info));
@@ -64,6 +64,6 @@ fn main() {
 
     for (i,s_layout) in solution.layout_snapshots().iter().enumerate(){
         let svg_path = args.solution_folder.join(format!("sol_{}_{}.svg", input_file_stem, i));
-        io::write_svg(&layout_to_svg(s_layout, &instance, config.svg_draw_options), Path::new(&svg_path));
+        io::write_svg(&s_layout_to_svg(s_layout, &instance, config.svg_draw_options), Path::new(&svg_path));
     }
 }

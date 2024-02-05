@@ -1,3 +1,4 @@
+use std::ops::Range;
 use crate::geometry::convex_hull;
 use crate::geometry::fail_fast::{piers, poi};
 use crate::geometry::geo_traits::{Transformable, TransformableFrom};
@@ -9,11 +10,11 @@ use crate::util::config::SPSurrogateConfig;
 
 #[derive(Clone, Debug)]
 pub struct SPSurrogate {
-    config: SPSurrogateConfig,
-    convex_hull_indices: Vec<usize>,
-    poles: Vec<Circle>,
-    poles_bounding_circle: Circle,
-    piers: Vec<Edge>,
+    pub convex_hull_indices: Vec<usize>,
+    pub poles: Vec<Circle>,
+    pub poles_bounding_circle: Circle,
+    pub piers: Vec<Edge>,
+    pub ff_pole_range: Range<usize>,
 }
 
 impl SPSurrogate {
@@ -25,49 +26,32 @@ impl SPSurrogate {
 
         let relevant_poles_for_piers = &poles[0..config.n_ff_poles+1]; //poi + all poles that will be checked during fail fast are relevant for piers
         let piers = piers::generate(simple_poly, config.n_ff_piers, relevant_poles_for_piers);
+        let ff_poles = 1..config.n_ff_poles+1;
 
         Self {
-            config,
             convex_hull_indices,
             poles,
             piers,
             poles_bounding_circle,
+            ff_pole_range: ff_poles
         }
-    }
-
-    pub fn convex_hull_indices(&self) -> &Vec<usize> {
-        &self.convex_hull_indices
-    }
-
-    pub fn piers(&self) -> &[Edge] {
-        &self.piers
-    }
-
-    pub fn poles(&self) -> &[Circle] {
-        &self.poles
     }
 
     pub fn ff_poles(&self) -> &[Circle] {
-        if self.poles.is_empty() {
-            &[]
-        } else {
-            &self.poles[1..self.config.n_ff_poles + 1]
-        }
+        let range = self.ff_pole_range.clone();
+        &self.poles[range]
     }
 
-    pub fn poles_bounding_circle(&self) -> &Circle {
-        &self.poles_bounding_circle
+    pub fn ff_piers(&self) -> &[Edge] {
+        &self.piers
     }
 
-    pub fn config(&self) -> SPSurrogateConfig {
-        self.config
-    }
 }
 
 impl Transformable for SPSurrogate {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
         //destructuring pattern used to ensure that the code is updated when the struct changes
-        let Self { config: _, convex_hull_indices: _, poles, piers, poles_bounding_circle } = self;
+        let Self {convex_hull_indices: _, poles, poles_bounding_circle, piers, ff_pole_range: _} = self;
 
         //transform poles
         poles.iter_mut().for_each(|c| {
@@ -87,12 +71,11 @@ impl Transformable for SPSurrogate {
 
 impl TransformableFrom for SPSurrogate {
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self {
-        debug_assert!(self.config == reference.config);
-        debug_assert!(self.poles().len() == reference.poles().len());
-        debug_assert!(self.piers().len() == reference.piers().len());
+        debug_assert!(self.poles.len() == reference.poles.len());
+        debug_assert!(self.piers.len() == reference.piers.len());
 
         //destructuring pattern used to ensure that the code is updated when the struct changes
-        let Self { config: _, convex_hull_indices: _, poles, piers, poles_bounding_circle } = self;
+        let Self {convex_hull_indices: _, poles, poles_bounding_circle, piers, ff_pole_range: _} = self;
 
         for (pole, ref_pole) in poles.iter_mut().zip(reference.poles.iter()) {
             pole.transform_from(ref_pole, t);

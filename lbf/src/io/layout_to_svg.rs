@@ -9,8 +9,12 @@ use jaguars::geometry::primitives::circle::Circle;
 use crate::io::{svg_data_export, svg_util};
 use crate::io::svg_util::{SvgDrawOptions};
 
-pub fn layout_to_svg(s_layout: &LayoutSnapshot, instance: &Instance, options: SvgDrawOptions) -> Document {
+pub fn s_layout_to_svg(s_layout: &LayoutSnapshot, instance: &Instance, options: SvgDrawOptions) -> Document {
     let layout = Layout::new_from_stored(s_layout.id(), s_layout, &instance);
+    layout_to_svg(&layout, instance, options)
+}
+
+pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptions) -> Document {
     let bin = layout.bin();
 
     let vbox = bin.bbox().clone().scale(1.05);
@@ -134,11 +138,11 @@ pub fn layout_to_svg(s_layout: &LayoutSnapshot, instance: &Instance, options: Sv
                 ];
 
                 let transformed_surrogate = item.shape().surrogate().transform_clone(&pi.d_transformation().compose());
-                let poi = &transformed_surrogate.poles()[0];
+                let poi = &transformed_surrogate.poles[0];
                 let ff_poles = transformed_surrogate.ff_poles();
 
-                for i in 0..transformed_surrogate.poles().len() {
-                    let pole = &transformed_surrogate.poles()[i];
+                for i in 0..transformed_surrogate.poles.len() {
+                    let pole = &transformed_surrogate.poles[i];
                     if pole == poi {
                         group = group.add(svg_data_export::circle(pole, &poi_style));
                     }
@@ -148,7 +152,7 @@ pub fn layout_to_svg(s_layout: &LayoutSnapshot, instance: &Instance, options: Sv
                         group = group.add(svg_data_export::circle(pole, &no_ff_style));
                     }
                 }
-                for pier in transformed_surrogate.piers() {
+                for pier in &transformed_surrogate.piers {
                     group = group.add(svg_data_export::data_to_path(svg_data_export::edge_data(pier), &ff_style));
                 }
             }

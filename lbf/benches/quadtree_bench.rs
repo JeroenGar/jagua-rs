@@ -20,11 +20,13 @@ use jaguars::util::polygon_simplification::PolySimplConfig;
 use lbf::config::Config;
 use lbf::lbf_optimizer::LBFOptimizer;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
+use crate::util::SWIM_PATH;
 
 criterion_main!(benches);
 criterion_group!(benches, quadtree_query_update_1000_1, quadtree_query_bench, quadtree_update_bench);
 
-const SWIM_PATH: &str = "../assets/swim.json";
+mod util;
+
 const N_ITEMS_REMOVED: usize = 5;
 
 const QT_DEPTHS: [u8; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -108,8 +110,8 @@ fn quadtree_query_bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("quadtree_query");
     for depth in QT_DEPTHS {
         config.cde_config.quadtree = QuadTreeConfig::FixedDepth(depth);
-        let instance = create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
-        let mut problem = create_blf_problem(instance.clone(), config);
+        let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+        let mut problem = util::create_blf_problem(instance.clone(), config);
 
         let layout_index = LayoutIndex::Existing(0);
         let mut rng = SmallRng::seed_from_u64(0);
@@ -165,8 +167,8 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
     let mut group = c.benchmark_group("quadtree_query_update_1000_1");
     for depth in QT_DEPTHS {
         config.cde_config.quadtree = QuadTreeConfig::FixedDepth(depth);
-        let instance = create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
-        let mut problem = create_blf_problem(instance.clone(), config);
+        let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+        let mut problem = util::create_blf_problem(instance.clone(), config);
 
         let layout_index = LayoutIndex::Existing(0);
         let mut rng = SmallRng::seed_from_u64(0);
@@ -224,21 +226,4 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         });
     }
     group.finish();
-}
-
-fn create_instance(json_instance: &JsonInstance, cde_config: CDEConfig, poly_simpl_config: PolySimplConfig) -> Arc<Instance> {
-    let parser = Parser::new(poly_simpl_config, cde_config, true);
-    Arc::new(parser.parse(json_instance))
-}
-
-fn create_blf_problem(instance: Arc<Instance>, config: Config) -> SPProblem {
-    assert!(matches!(instance.packing_type(), PackingType::StripPacking {..}));
-    let rng = SmallRng::seed_from_u64(0);
-    let mut lbf_optimizer = LBFOptimizer::new(instance, config, rng);
-    lbf_optimizer.solve();
-
-    match lbf_optimizer.problem().clone() {
-        ProblemEnum::SPProblem(sp_problem) => sp_problem,
-        _ => panic!("Expected SPProblem")
-    }
 }

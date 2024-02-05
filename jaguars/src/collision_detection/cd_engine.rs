@@ -244,7 +244,7 @@ impl CDEngine {
                 return true;
             }
         }
-        for pier in base_surrogate.piers() {
+        for pier in base_surrogate.ff_piers() {
             let t_pier = pier.transform_clone(transform);
             if self.quadtree.collides(&t_pier, ignored_entities).is_some() {
                 return true;
