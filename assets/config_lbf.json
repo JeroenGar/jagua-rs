@@ -1,7 +1,7 @@
 {
   "cde_config": {
     "quadtree": {
-      "FixedDepth": 4
+      "FixedDepth": 5
     },
     "haz_prox": {
       "Enabled": {
@@ -12,7 +12,7 @@
       "pole_coverage_goal": 0.9,
       "max_poles": 10,
       "n_ff_poles": 1,
-      "n_ff_piers": 0
+      "n_ff_piers": 1
     }
   },
   "poly_simpl_config": {
@@ -21,11 +21,11 @@
     }
   },
   "deterministic_mode": true,
-  "n_samples_per_item": 50000,
-  "ls_samples_fraction": 0.5,
+  "n_samples_per_item": 5000,
+  "ls_samples_fraction": 0.2,
   "svg_draw_options": {
     "quadtree": true,
     "haz_prox_grid": false,
-    "surrogate": true
+    "surrogate": false
   }
 }

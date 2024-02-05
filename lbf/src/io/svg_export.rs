@@ -105,3 +105,12 @@ pub fn edge_data(edge: &Edge) -> Data {
         .move_to((edge.start().0, edge.start().1))
         .line_to((edge.end().0, edge.end().1))
 }
+
+pub fn aa_rect_data(rect: &geometry::primitives::aa_rectangle::AARectangle) -> Data {
+    Data::new()
+        .move_to((rect.x_min, rect.y_min))
+        .line_to((rect.x_max, rect.y_min))
+        .line_to((rect.x_max, rect.y_max))
+        .line_to((rect.x_min, rect.y_max))
+        .close()
+}

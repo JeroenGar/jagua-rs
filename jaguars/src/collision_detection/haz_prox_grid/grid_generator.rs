@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use log::{error, warn};
 
 use crate::collision_detection::hazard::Hazard;
 use crate::geometry::geo_traits::{DistanceFrom, Shape};
@@ -8,6 +9,7 @@ use crate::geometry::primitives::point::Point;
 pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) -> Vec<AARectangle> {
     //generates a grid of equal sized square cells in the shape.
     //the number of cells is approximately equal to target_n_cells, but can be slightly more or less
+    assert!(bbox.area() > 0.0, "bbox has zero area");
 
     let mut cells = vec![];
 
@@ -37,7 +39,7 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
             }
         }
         if n_iters >= 25 {
-            //warn!("grid generation is taking too long, aborting after 100 iterations ({} cells, instead of {})", cells.len(), target_n_cells);
+            warn!("grid generation is taking too long, aborting after 25 iterations ({} cells instead of target {})", cells.len(), target_n_cells);
             break;
         }
 

@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::sync::Arc;
 
 use enum_dispatch::enum_dispatch;
@@ -63,8 +64,8 @@ pub trait Problem: ProblemPrivate {
         self.bin_qtys()[bin_id] > 0
     }
 
-    fn get_layout(&self, index: &LayoutIndex) -> &Layout {
-        match index {
+    fn get_layout(&self, index: impl Borrow<LayoutIndex>) -> &Layout {
+        match index.borrow() {
             LayoutIndex::Existing(i) => &self.layouts()[*i],
             LayoutIndex::Empty(i) => &self.empty_layouts()[*i]
         }

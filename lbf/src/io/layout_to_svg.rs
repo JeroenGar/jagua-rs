@@ -6,7 +6,7 @@ use jaguars::entities::layout::LayoutSnapshot;
 use jaguars::geometry::geo_enums::GeoPosition;
 use jaguars::geometry::geo_traits::Transformable;
 use jaguars::geometry::primitives::circle::Circle;
-use crate::io::{svg_data_export, svg_util};
+use crate::io::{svg_export, svg_util};
 use crate::io::svg_util::{SvgDrawOptions};
 
 pub fn s_layout_to_svg(s_layout: &LayoutSnapshot, instance: &Instance, options: SvgDrawOptions) -> Document {
@@ -32,8 +32,8 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
 
         //outer
         group = group.add(
-            svg_data_export::data_to_path(
-                svg_data_export::simple_polygon_data(bin.outer()),
+            svg_export::data_to_path(
+                svg_export::simple_polygon_data(bin.outer()),
                 &[
                     ("fill", &*format!("{}", theme.bin_fill)),
                     ("stroke", "black"),
@@ -45,8 +45,8 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
         //holes
         for hole in bin.holes() {
             group = group.add(
-                svg_data_export::data_to_path(
-                    svg_data_export::simple_polygon_data(hole),
+                svg_export::data_to_path(
+                    svg_export::simple_polygon_data(hole),
                     &[
                         ("fill", &*format!("{}", theme.hole_fill)),
                         ("stroke", "black"),
@@ -67,8 +67,8 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
             let stroke_color = svg_util::change_brightness(color, 0.5);
             for qz_shape in qz.shapes().iter() {
                 group = group.add(
-                    svg_data_export::data_to_path(
-                        svg_data_export::simple_polygon_data(qz_shape),
+                    svg_export::data_to_path(
+                        svg_export::simple_polygon_data(qz_shape),
                         &[
                             ("fill", &*format!("{}", color)),
                             ("fill-opacity", "0.50"),
@@ -102,8 +102,8 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                     )
                 }
             };
-            group = group.add(svg_data_export::data_to_path(
-                svg_data_export::simple_polygon_data(&shape),
+            group = group.add(svg_export::data_to_path(
+                svg_export::simple_polygon_data(&shape),
                 &[
                     ("fill", &*format!("{}", color)),
                     ("stroke-width", &*format!("{}", stroke_width)),
@@ -144,16 +144,16 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 for i in 0..transformed_surrogate.poles.len() {
                     let pole = &transformed_surrogate.poles[i];
                     if pole == poi {
-                        group = group.add(svg_data_export::circle(pole, &poi_style));
+                        group = group.add(svg_export::circle(pole, &poi_style));
                     }
                     if ff_poles.contains(&pole) {
-                        group = group.add(svg_data_export::circle(pole, &ff_style));
+                        group = group.add(svg_export::circle(pole, &ff_style));
                     } else {
-                        group = group.add(svg_data_export::circle(pole, &no_ff_style));
+                        group = group.add(svg_export::circle(pole, &no_ff_style));
                     }
                 }
                 for pier in &transformed_surrogate.piers {
-                    group = group.add(svg_data_export::data_to_path(svg_data_export::edge_data(pier), &ff_style));
+                    group = group.add(svg_export::data_to_path(svg_export::edge_data(pier), &ff_style));
                 }
             }
             items_group = items_group.add(group);
@@ -164,8 +164,8 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
     let quadtree_group = {
         let mut group = Group::new();
         if options.quadtree {
-            let qt_data = svg_data_export::quad_tree_data(layout.cde().quadtree(), &[]);
-            group = group.add(svg_data_export::data_to_path(
+            let qt_data = svg_export::quad_tree_data(layout.cde().quadtree(), &[]);
+            group = group.add(svg_export::data_to_path(
                 qt_data.0,
                 &[
                     ("fill", "red"),
@@ -175,7 +175,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                     ("stroke", "black"),
                 ],
             ));
-            group = group.add(svg_data_export::data_to_path(
+            group = group.add(svg_export::data_to_path(
                 qt_data.1,
                 &[
                     ("fill", "none"),
@@ -185,7 +185,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                     ("stroke", "black"),
                 ],
             ));
-            group = group.add(svg_data_export::data_to_path(
+            group = group.add(svg_export::data_to_path(
                 qt_data.2,
                 &[
                     ("fill", "green"),
@@ -210,9 +210,15 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                     GeoPosition::Exterior => (prox.distance_from_border.into_inner(), "blue")
                 };
 
-                group = group.add(svg_data_export::point(center, Some(color), Some(stroke_width)));
+                group = group.add(svg_export::point(center, Some(color), Some(stroke_width)));
 
-                group = group.add(svg_data_export::circle(&Circle::new(center, radius), &[
+                group = group.add(svg_export::circle(&Circle::new(center, radius), &[
+                    ("fill", "none"),
+                    ("stroke", color),
+                    ("stroke-width", &*format!("{}", stroke_width)),
+                ]));
+
+                group = group.add(svg_export::data_to_path(svg_export::aa_rect_data(hp_cell.bbox()), &[
                     ("fill", "none"),
                     ("stroke", color),
                     ("stroke-width", &*format!("{}", stroke_width)),

@@ -1,6 +1,7 @@
 use std::f64::consts::PI;
 use rand::distributions::Uniform;
 use rand::prelude::{Distribution, SmallRng};
+use rand::Rng;
 use rand::seq::SliceRandom;
 use rand_distr::Normal;
 
@@ -8,7 +9,7 @@ use jaguars::entities::item::Item;
 use jaguars::geometry::geo_enums::AllowedRotation;
 
 pub trait RotationSampler {
-    fn sample(&self, rng: &mut SmallRng) -> f64;
+    fn sample(&self, rng: &mut impl Rng) -> f64;
 }
 
 pub enum UniformRotDistr {
@@ -33,7 +34,7 @@ impl UniformRotDistr {
         }
     }
 
-    pub fn sample(&self, rng: &mut SmallRng) -> f64 {
+    pub fn sample(&self, rng: &mut impl Rng) -> f64 {
         match self {
             UniformRotDistr::None => 0.0,
             UniformRotDistr::Range(u) => u.sample(rng),
@@ -72,7 +73,7 @@ impl NormalRotDistr {
         }
     }
 
-    pub fn sample(&self, rng: &mut SmallRng) -> f64 {
+    pub fn sample(&self, rng: &mut impl Rng) -> f64 {
         match self {
             NormalRotDistr::None => 0.0,
             NormalRotDistr::Range(n) => n.sample(rng),

@@ -14,19 +14,15 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 #[derive(Debug, Clone)]
 pub struct HazardProximityGrid {
     grid: Grid<HPGCell>,
-    cell_radius: f64,
-    pending_deregisters: Vec<HazardEntity>
+    pending_deregisters: Vec<HazardEntity>,
+    cell_radius : f64,
 }
 
 impl HazardProximityGrid {
     pub fn new(bbox: AARectangle, static_hazards: &[Hazard], n_cells: usize) -> Self {
+        assert!(n_cells > 0);
         let cells = grid_generator::generate(bbox, static_hazards, n_cells);
-
-        let cell_radius = {
-            let half_width = cells[0].width() / 2.0;
-            f64::sqrt(2.0 * half_width.powi(2))
-        };
-
+        let cell_radius = cells[0].diameter() / 2.0;
 
         let grid = {
             let elements = cells.into_iter()
@@ -40,8 +36,8 @@ impl HazardProximityGrid {
 
         HazardProximityGrid {
             grid,
-            cell_radius,
             pending_deregisters: vec![],
+            cell_radius
         }
     }
 

@@ -9,7 +9,7 @@ use crate::EPOCH;
 use crate::io::json_output::JsonOutput;
 
 pub mod json_output;
-mod svg_data_export;
+mod svg_export;
 pub mod svg_util;
 pub mod layout_to_svg;
 pub mod cli;

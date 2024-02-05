@@ -1,4 +1,5 @@
 use rand::distributions::{Distribution, Uniform};
+use rand::Rng;
 use rand::rngs::SmallRng;
 
 use jaguars::entities::item::Item;
@@ -20,7 +21,7 @@ impl UniformAARectSampler {
         }
     }
 
-    pub fn sample(&self, rng: &mut SmallRng) -> DTransformation {
+    pub fn sample(&self, rng: &mut impl Rng) -> DTransformation {
         let r_sample = self.uniform_r.sample(rng);
         let x_sample = Uniform::new(self.bbox.x_min, self.bbox.x_max).sample(rng);
         let y_sample = Uniform::new(self.bbox.y_min, self.bbox.y_max).sample(rng);
@@ -28,7 +29,7 @@ impl UniformAARectSampler {
         DTransformation::new(r_sample,(x_sample, y_sample))
     }
 
-    pub fn sample_x_bounded(&self, rng: &mut SmallRng, x_bound: f64) -> DTransformation {
+    pub fn sample_x_bounded(&self, rng: &mut impl Rng, x_bound: f64) -> DTransformation {
         let x_max = f64::min(self.bbox.x_max, x_bound);
         
         let r_sample = self.uniform_r.sample(rng);

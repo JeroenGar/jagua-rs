@@ -2,12 +2,14 @@ use itertools::Itertools;
 use log::{debug};
 
 use rand::prelude::{SliceRandom, SmallRng};
+use rand::Rng;
 
 use jaguars::entities::item::Item;
 use jaguars::entities::layout::Layout;
 
 
 use jaguars::geometry::geo_traits::{Shape};
+use jaguars::geometry::primitives::aa_rectangle::AARectangle;
 
 
 use jaguars::geometry::transformation::Transformation;
@@ -16,16 +18,17 @@ use crate::lbf_cost::LBFCost;
 use crate::samplers::uniform_rect_sampler::UniformAARectSampler;
 
 pub struct HPGSampler<'a> {
-    item: &'a Item,
-    cell_samplers: Vec<UniformAARectSampler>,
-    x_bound: f64,
-    pretransform: Transformation,
-    coverage_area: f64,
+    pub item: &'a Item,
+    pub cell_samplers: Vec<UniformAARectSampler>,
+    pub x_bound: f64,
+    pub pretransform: Transformation,
+    pub coverage_area: f64,
 }
 
 impl<'a> HPGSampler<'a> {
     pub fn new(item: &'a Item, layout: &Layout) -> Option<HPGSampler<'a>> {
         let poi = item.shape().poi();
+        let layout_bbox = layout.bin().bbox();
 
         let hpg = layout.cde().haz_prox_grid().expect("grid changes present");
 
@@ -38,8 +41,16 @@ impl<'a> HPGSampler<'a> {
         let cell_samplers = hpg_cells.iter()
             .flatten()
             .filter(|cell| cell.could_accommodate_item(item))
-            .map(|cell| UniformAARectSampler::new(cell.bbox().clone(), item))
-            .collect_vec();
+            .map(|cell| {
+                //in cases of low cell count, the cell might extend beyond the layout's bbox
+                let bbox = AARectangle::new(
+                    f64::max(cell.bbox().x_min, layout_bbox.x_min),
+                    f64::max(cell.bbox().y_min, layout_bbox.y_min),
+                    f64::min(cell.bbox().x_max, layout_bbox.x_max),
+                    f64::min(cell.bbox().y_max, layout_bbox.y_max),
+                );
+                UniformAARectSampler::new(bbox, item)
+            }).collect_vec();
 
         let coverage_area = cell_samplers.iter()
             .map(|s| s.bbox.area())
@@ -52,11 +63,7 @@ impl<'a> HPGSampler<'a> {
             false => Some(HPGSampler { item, cell_samplers, x_bound, pretransform, coverage_area })
         }
     }
-
-    pub fn coverage_area(&self) -> f64 {
-        self.coverage_area
-    }
-    pub fn sample(&self, rng: &mut SmallRng) -> Transformation {
+    pub fn sample(&self, rng: &mut impl Rng) -> Transformation {
         //first step: sample a cell
         let cell_sampler = self.cell_samplers.choose(rng).expect("no active samplers");
 

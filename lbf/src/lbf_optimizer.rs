@@ -7,6 +7,7 @@ use itertools::Itertools;
 use log::{debug, info};
 use ordered_float::NotNan;
 use rand::prelude::SmallRng;
+use rand::Rng;
 
 use jaguars::collision_detection::hazard_filters::hazard_filter;
 use jaguars::entities::instance::{Instance, PackingType};
@@ -42,6 +43,7 @@ pub struct LBFOptimizer {
 
 impl LBFOptimizer {
     pub fn new(instance: Arc<Instance>, config: Config, rng: SmallRng) -> Self {
+        assert!(config.n_samples_per_item > 0);
         let problem = match instance.packing_type() {
             PackingType::BinPacking(_) => BPProblem::new(instance.clone()).into(),
             PackingType::StripPacking { height } => {
@@ -126,7 +128,7 @@ impl LBFOptimizer {
     }
 }
 
-fn find_placement(problem: &ProblemEnum, item: &Item, config: &Config, rng: &mut SmallRng) -> Option<PlacingOption> {
+fn find_placement(problem: &ProblemEnum, item: &Item, config: &Config, rng: &mut impl Rng) -> Option<PlacingOption> {
     let layouts_to_sample =
         (0..problem.layouts().len()).map(|i| (LayoutIndex::Existing(i)))
             .chain((0..problem.empty_layouts().len())
@@ -141,7 +143,7 @@ fn find_placement(problem: &ProblemEnum, item: &Item, config: &Config, rng: &mut
     best_i_opt
 }
 
-pub fn sample_layout(problem: &ProblemEnum, layout_index: LayoutIndex, item: &Item, config: &Config, rng: &mut SmallRng) -> Option<PlacingOption> {
+pub fn sample_layout(problem: &ProblemEnum, layout_index: LayoutIndex, item: &Item, config: &Config, rng: &mut impl Rng) -> Option<PlacingOption> {
     let item_id = item.id();
     let layout: &Layout = problem.get_layout(&layout_index);
     let entities_to_ignore = item.hazard_filter()
