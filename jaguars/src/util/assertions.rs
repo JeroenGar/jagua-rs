@@ -246,12 +246,14 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             let hv1 = qn1.hazards();
             let hv2 = qn2.hazards();
 
-            //collect active hazard_filters to hashsets
+            //collect active hazards to hashsets
             let active_haz_1 = hv1.active_hazards().iter()
-                .collect::<HashSet<_>>();
+                .map(|h| (&h.entity, h.active, (&h.presence).into()))
+                .collect::<HashSet<(&HazardEntity, bool, u8)>>();
 
             let active_haz_2 = hv2.active_hazards().iter()
-                .collect::<HashSet<_>>();
+                .map(|h| (&h.entity, h.active, (&h.presence).into()))
+                .collect::<HashSet<(&HazardEntity, bool, u8)>>();
 
             let active_in_1_but_not_2 = active_haz_1.difference(&active_haz_2).collect::<HashSet<_>>();
             let active_in_2_but_not_1 = active_haz_2.difference(&active_haz_1).collect::<HashSet<_>>();

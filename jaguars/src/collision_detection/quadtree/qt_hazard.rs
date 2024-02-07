@@ -8,7 +8,7 @@ use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 
 //Hazards in a QTNode
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug)]
 pub struct QTHazard {
     pub entity: HazardEntity,
     pub presence: QTHazPresence,
@@ -67,8 +67,7 @@ impl QTHazard {
                                     QTHazPresence::Partial(
                                         QTPartialHazard::new(
                                             partial_haz.shape(),
-                                            partial_haz.position(),
-                                            EdgeIndices::Some(vec![]),
+                                            EdgeIndices::Some(vec![])
                                         )
                                     )
                                 );
@@ -111,7 +110,7 @@ impl QTHazard {
                                 }
                                 _ => {
                                     let point_to_test = quadrants[i].centroid();
-                                    match (partial_haz.position(), shape.collides_with(&point_to_test)) {
+                                    match (self.entity.position(), shape.collides_with(&point_to_test)) {
                                         (GeoPosition::Interior, true) => Some(QTHazPresence::Entire),
                                         (GeoPosition::Exterior, false) => Some(QTHazPresence::Entire),
                                         _ => Some(QTHazPresence::None),
@@ -142,28 +141,19 @@ impl QTHazard {
 // 2 | 3
 const CHILD_NEIGHBORS: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug)]
 pub enum QTHazPresence {
     None,
     Partial(QTPartialHazard),
     Entire
 }
 
-impl PartialOrd for QTHazPresence {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        fn to_int(presence: &QTHazPresence) -> u8 {
-            match presence {
-                QTHazPresence::None => 0,
-                QTHazPresence::Partial(_) => 1,
-                QTHazPresence::Entire => 2,
-            }
+impl Into<u8> for &QTHazPresence {
+    fn into(self) -> u8 {
+        match self {
+            QTHazPresence::None => 0,
+            QTHazPresence::Partial(_) => 1,
+            QTHazPresence::Entire => 2,
         }
-        Some(to_int(self).cmp(&to_int(other)))
-    }
-}
-
-impl Ord for QTHazPresence {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
     }
 }

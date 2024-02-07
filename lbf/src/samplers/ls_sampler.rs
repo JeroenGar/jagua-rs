@@ -1,5 +1,4 @@
 use rand::distributions::Distribution;
-use rand::prelude::SmallRng;
 use rand::Rng;
 use rand_distr::Normal;
 

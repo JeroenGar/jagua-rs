@@ -38,6 +38,7 @@ pub struct LBFOptimizer {
     instance: Arc<Instance>,
     problem: ProblemEnum,
     config: Config,
+    /// SmallRng is a fast, non-crypographic PRNG https://rust-random.github.io/book/guide-rngs.html
     rng: SmallRng,
 }
 

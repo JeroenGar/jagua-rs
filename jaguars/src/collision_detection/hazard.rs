@@ -33,7 +33,7 @@ pub enum HazardEntity {
 impl HazardEntity {
 
     /// Returns whether the entity induces an Interior or Exterior hazard
-    pub fn presence(&self) -> GeoPosition {
+    pub fn position(&self) -> GeoPosition {
         match self {
             HazardEntity::PlacedItem(_) => GeoPosition::Interior,
             HazardEntity::BinExterior => GeoPosition::Exterior,

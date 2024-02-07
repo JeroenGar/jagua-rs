@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use log::{error, warn};
+use log::{debug};
 
 use crate::collision_detection::hazard::Hazard;
 use crate::geometry::geo_traits::{DistanceFrom, Shape};
@@ -39,7 +39,7 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
             }
         }
         if n_iters >= 25 {
-            warn!("grid generation is taking too long, aborting after 25 iterations ({} cells instead of target {})", cells.len(), target_n_cells);
+            debug!("grid generation is taking too long, aborting after 25 iterations ({} cells instead of target {})", cells.len(), target_n_cells);
             break;
         }
 
@@ -75,7 +75,7 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
 fn distance_to_hazard<'a, I>(point: &Point, hazards: I) -> f64 where I: Iterator<Item=&'a Hazard> {
     hazards.map(|haz| {
         let (pos, prox) = haz.shape.distance_from_border(point);
-        match pos == haz.entity.presence() {
+        match pos == haz.entity.position() {
             true => -prox, //cell in hazard, negative distance
             false => prox
         }

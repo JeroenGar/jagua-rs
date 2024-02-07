@@ -21,9 +21,9 @@ use lbf::lbf_optimizer::LBFOptimizer;
 
 pub const SWIM_PATH: &str = "../assets/swim.json";
 pub const N_ITEMS_REMOVED: usize = 5;
-pub const N_SAMPLES: usize = 10000;
+pub const N_SAMPLES: usize = 10_000;
 
-pub const N_VALID_SAMPLES: usize = 10000;
+pub const N_VALID_SAMPLES: usize = 10_000;
 
 pub fn create_instance(json_instance: &JsonInstance, cde_config: CDEConfig, poly_simpl_config: PolySimplConfig) -> Arc<Instance> {
     let parser = Parser::new(poly_simpl_config, cde_config, true);
@@ -58,7 +58,7 @@ pub fn create_blf_problem(instance: Arc<Instance>, config: Config, n_items_remov
 
     {
         let draw_options = SvgDrawOptions{
-            quadtree: false,
+            quadtree: true,
             surrogate: false,
             haz_prox_grid: false,
             ..SvgDrawOptions::default()

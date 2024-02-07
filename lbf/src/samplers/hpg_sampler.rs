@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use log::{debug};
 
-use rand::prelude::{SliceRandom, SmallRng};
+use rand::prelude::{SliceRandom};
 use rand::Rng;
 
 use jaguars::entities::item::Item;

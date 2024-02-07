@@ -1,6 +1,5 @@
 use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
-use rand::rngs::SmallRng;
 
 use jaguars::entities::item::Item;
 use jaguars::geometry::d_transformation::DTransformation;

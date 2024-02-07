@@ -315,7 +315,7 @@ impl CDEngine {
                 GeoRelation::Enclosed => (haz_shape, shape), //inclusion possible
                 GeoRelation::Disjoint | GeoRelation::Intersecting => {
                     //no inclusion is possible
-                    return match haz.entity.presence() {
+                    return match haz.entity.position() {
                         GeoPosition::Interior => false,
                         GeoPosition::Exterior => true,
                     }
@@ -332,7 +332,7 @@ impl CDEngine {
             }
             let inclusion = s_omega.collides_with(&s_mu.poi().center);
 
-            match haz.entity.presence() {
+            match haz.entity.position() {
                 GeoPosition::Interior => inclusion,
                 GeoPosition::Exterior => !inclusion,
             }

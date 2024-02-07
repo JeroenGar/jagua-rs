@@ -106,12 +106,17 @@ impl QTHazardVec {
     }
 
     pub fn has_only_entire_hazards(&self) -> bool {
-        self.hazards.iter().all(|hz| &hz.presence == &QTHazPresence::Entire)
+        self.hazards.iter().all(|hz| matches!(hz.presence,QTHazPresence::Entire))
     }
 
     fn order_stronger(qth1: &QTHazard, qth2: &QTHazard) -> Ordering {
         //sort by active, then by presence, so that the active hazards are always in front of inactive hazards, and Entire hazards are always in front of Partial hazards
-        (qth1.active.cmp(&qth2.active).reverse())
-            .then(qth1.presence.cmp(&qth2.presence).reverse())
+        match qth1.active.cmp(&qth2.active).reverse() {
+            Ordering::Equal => {
+                let (p1,p2): (u8, u8) = ((&qth1.presence).into(),  (&qth2.presence).into());
+                p1.cmp(&p2).reverse()
+            },
+            other => other,
+        }
     }
 }

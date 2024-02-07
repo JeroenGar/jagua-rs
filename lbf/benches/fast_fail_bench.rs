@@ -27,6 +27,7 @@ use lbf::io;
 use lbf::io::layout_to_svg::layout_to_svg;
 use lbf::io::svg_util::SvgDrawOptions;
 use lbf::lbf_optimizer::LBFOptimizer;
+use lbf::samplers::hpg_sampler::HPGSampler;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
 use crate::util::{create_base_config, N_ITEMS_REMOVED, N_SAMPLES, SWIM_PATH};
 
@@ -77,10 +78,15 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         }).collect_vec();
 
         let layout = problem.get_layout(LayoutIndex::Existing(0));
-        let sampler = UniformAARectSampler::new(layout.bin().bbox(), instance.item(0));
-        let samples = (0..N_SAMPLES).map(
-            |_| sampler.sample(&mut rng).compose()
-        ).collect_vec();
+        let samples = (0..N_ITEMS_REMOVED)
+            .map(|i| selected_pi_uids[i].item_id)
+            .map(|item_id| {
+                let item = instance.item(item_id);
+                let sampler = HPGSampler::new(item, layout).unwrap();
+                (0..N_SAMPLES).map(
+                    |_| sampler.sample(&mut rng)
+                ).collect_vec()
+            }).collect_vec();
 
         let mut n_invalid: i64 = 0;
         let mut n_valid : i64 = 0;
@@ -92,7 +98,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
                     let item = instance.item(pi_uid.item_id);
                     let surrogate = &custom_surrogates[i];
                     let mut buffer_shape = item.shape().clone();
-                    for transf in &samples {
+                    for transf in samples[i].iter() {
                         let collides = match layout.cde().surrogate_collides(surrogate, transf, &[]) {
                             true => true,
                             false => {

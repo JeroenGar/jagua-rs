@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 use rand::distributions::Uniform;
-use rand::prelude::{Distribution, SmallRng};
+use rand::prelude::{Distribution};
 use rand::Rng;
 use rand::seq::SliceRandom;
 use rand_distr::Normal;

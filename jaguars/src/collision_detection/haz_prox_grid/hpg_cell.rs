@@ -38,7 +38,7 @@ impl HPGCell {
 
         for hazard in static_hazards {
             let (pos, distance) = hazard.shape.distance_from_border(&centroid);
-            let prox = match pos == hazard.entity.presence() {
+            let prox = match pos == hazard.entity.position() {
                 true => Proximity::new(GeoPosition::Interior, distance), //cell in hazard, negative distance
                 false => Proximity::new(GeoPosition::Exterior, distance)
             };
@@ -74,7 +74,7 @@ impl HPGCell {
         let mut bounding_pole_distances: Vec<(&Hazard, Option<Proximity>)> = to_register
             .filter(|haz| haz.active)
             .map(|haz| {
-                match haz.entity.presence() {
+                match haz.entity.position() {
                     GeoPosition::Exterior => (haz, None), //bounding poles only applicable for hazard inside the shape
                     GeoPosition::Interior => {
                         let pole_bounding_circle = &haz.shape.surrogate().poles_bounding_circle;
@@ -116,7 +116,7 @@ impl HPGCell {
         let current_prox = self.universal_hazard_proximity().0;
 
         //For dynamic hazard_filters, the surrogate poles are used to calculate the distance to the hazard (overestimation, but fast)
-        let haz_prox = match to_register.entity.presence() {
+        let haz_prox = match to_register.entity.position() {
             GeoPosition::Interior => distance_to_surrogate_poles_border(self, &to_register.shape.surrogate().poles),
             GeoPosition::Exterior => unreachable!("No implementation yet for dynamic exterior hazards")
         };

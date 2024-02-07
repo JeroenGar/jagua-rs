@@ -4,15 +4,16 @@ use std::sync::{Arc, Weak};
 
 use crate::collision_detection::hazard::Hazard;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::geo_traits::CollidesWith;
+use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
+
+/// QTPartialHazards define a set of edges from a hazard that cross the QTNode.
 #[derive(Clone, Debug)]
 pub struct QTPartialHazard {
     shape: Weak<SimplePolygon>,
-    position: GeoPosition,
     edge_indices: EdgeIndices,
 }
 
@@ -26,7 +27,6 @@ impl<T> From<T> for QTPartialHazard where T: Borrow<Hazard> {
     fn from(hazard: T) -> Self {
         Self {
             shape: Arc::downgrade(&hazard.borrow().shape),
-            position: hazard.borrow().entity.presence(),
             edge_indices: EdgeIndices::All,
         }
     }
@@ -34,10 +34,9 @@ impl<T> From<T> for QTPartialHazard where T: Borrow<Hazard> {
 
 impl QTPartialHazard {
 
-    pub fn new(shape: Arc<SimplePolygon>, presence: GeoPosition, edge_indices: EdgeIndices) -> Self {
+    pub fn new(shape: Arc<SimplePolygon>, edge_indices: EdgeIndices) -> Self {
         Self {
             shape: Arc::downgrade(&shape),
-            position: presence,
             edge_indices,
         }
     }
@@ -48,10 +47,6 @@ impl QTPartialHazard {
 
     pub fn shape(&self) -> Arc<SimplePolygon> {
         self.shape.upgrade().expect("polygon reference is not alive")
-    }
-
-    pub fn position(&self) -> GeoPosition {
-        self.position
     }
 
     pub fn edge_indices(&self) -> &EdgeIndices{
@@ -72,15 +67,17 @@ impl QTPartialHazard {
     }
 
 }
-
 impl CollidesWith<Edge> for QTPartialHazard {
     fn collides_with(&self, edge: &Edge) -> bool {
         let shape = self.shape.upgrade().expect("polygon reference is not alive");
         match self.edge_indices() {
             EdgeIndices::All => {
-                shape.edge_iter().any(|e| {
-                    edge.collides_with(&e)
-                })
+                match shape.bbox().collides_with(edge) {
+                    false => false,
+                    true => shape.edge_iter().any(|e| {
+                        edge.collides_with(&e)
+                    })
+                }
             },
             EdgeIndices::Some(indices) => {
                 indices.iter().any(|&i| {
@@ -96,9 +93,12 @@ impl CollidesWith<Circle> for QTPartialHazard {
         let shape = self.shape.upgrade().expect("polygon reference is not alive");
         match self.edge_indices() {
             EdgeIndices::All => {
-                shape.edge_iter().any(|e| {
-                    circle.collides_with(&e)
-                })
+                match circle.collides_with(&shape.bbox()) {
+                    false => false,
+                    true => shape.edge_iter().any(|e| {
+                        circle.collides_with(&e)
+                    })
+                }
             },
             EdgeIndices::Some(indices) => {
                 indices.iter().any(|&i| {
@@ -106,21 +106,5 @@ impl CollidesWith<Circle> for QTPartialHazard {
                 })
             }
         }
-    }
-}
-
-impl PartialEq for QTPartialHazard {
-    fn eq(&self, other: &Self) -> bool {
-        self.position == other.position &&
-            self.edge_indices == other.edge_indices
-    }
-}
-
-impl Eq for QTPartialHazard {}
-
-impl Hash for QTPartialHazard {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.position.hash(state);
-        self.edge_indices.hash(state);
     }
 }

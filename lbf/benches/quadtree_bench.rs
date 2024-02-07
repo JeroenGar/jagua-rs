@@ -24,7 +24,9 @@ use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
 use crate::util::{create_base_config, N_ITEMS_REMOVED, N_SAMPLES, SWIM_PATH};
 
 criterion_main!(benches);
-criterion_group!(benches, quadtree_query_update_1000_1, quadtree_query_bench, quadtree_update_bench);
+//criterion_group!(benches, quadtree_query_update_1000_1, quadtree_query_bench, quadtree_update_bench);
+criterion_group!(benches,quadtree_query_bench);
+
 
 mod util;
 
@@ -121,7 +123,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
                 }
             })
         });
-        println!("n_invalid: {}, n_valid: {}", n_invalid, n_valid);
+        println!("valid: {:.3}%", n_valid as f64 / (n_valid + n_invalid) as f64 * 100.0);
     }
     group.finish();
 }
