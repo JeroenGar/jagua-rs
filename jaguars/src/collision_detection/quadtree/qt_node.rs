@@ -5,7 +5,7 @@ use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_partial_hazard::QTPartialHazard;
-use crate::geometry::geo_traits::CollidesWith;
+use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
 
@@ -134,6 +134,8 @@ impl QTNode {
         &self.hazards
     }
 
+    /// Returns None if no collision between the entity and any hazard is detected,
+    /// otherwise returns the first encountered hazard that collides with the entity
     pub fn collides<T>(&self, entity: &T, ignored_entities: &[HazardEntity]) -> Option<&HazardEntity>
         where T: CollidesWith<AARectangle>, QTPartialHazard: CollidesWith<T>
     {
@@ -146,7 +148,7 @@ impl QTNode {
                     QTHazPresence::Entire => Some(&strongest_hazard.entity),
                     QTHazPresence::Partial(_) => match self.children() {
                         Some(children) => {
-                            //Search if any of the children intersect with the circle
+                            //Search if any of the children intersect with the entity
                             children.iter()
                                 .map(|child| child.collides(entity, ignored_entities))
                                 .find(|x| x.is_some())
@@ -173,7 +175,6 @@ impl QTNode {
             }
         }
     }
-
 
     pub fn definitely_collides<T>(&self, entity: &T, ignored_entities: &[HazardEntity]) -> Tribool
         where T: CollidesWith<AARectangle>

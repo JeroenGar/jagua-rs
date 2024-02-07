@@ -63,7 +63,7 @@ impl SPProblem {
             let transf = p_uid.d_transf.compose();
             if !self.layout.cde().surrogate_collides(shape.surrogate(), &transf, entities_to_ignore.as_slice()) {
                 let transformed_shape = shape.transform_clone(&transf);
-                if !self.layout.cde().poly_collides(&transformed_shape, entities_to_ignore.as_ref()) {
+                if !self.layout.cde().shape_collides(&transformed_shape, entities_to_ignore.as_ref()) {
                     let insert_opt = PlacingOption {
                         layout_index: LayoutIndex::Existing(0),
                         item_id: p_uid.item_id,

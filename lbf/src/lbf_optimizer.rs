@@ -173,7 +173,7 @@ pub fn sample_layout(problem: &ProblemEnum, layout_index: LayoutIndex, item: &It
                     let worth_testing = best.as_ref()
                         .map_or(true, |(_, best_cost)| cost.cmp(best_cost) == Ordering::Less);
 
-                    if worth_testing && !layout.cde().poly_collides(&buffer_shape, entities_to_ignore.as_ref()) {
+                    if worth_testing && !layout.cde().shape_collides(&buffer_shape, entities_to_ignore.as_ref()) {
                         //sample is a valid option
                         let d_transf = transf.decompose();
                         let i_opt = PlacingOption { layout_index, item_id, transf, d_transf };
@@ -214,7 +214,7 @@ pub fn sample_layout(problem: &ProblemEnum, layout_index: LayoutIndex, item: &It
                 let worth_testing = best.as_ref()
                     .map_or(true, |(_, best_cost)| cost.cmp(best_cost) == Ordering::Less);
 
-                if worth_testing && !layout.cde().poly_collides(&buffer_shape, entities_to_ignore.as_ref()) {
+                if worth_testing && !layout.cde().shape_collides(&buffer_shape, entities_to_ignore.as_ref()) {
                     //sample is a valid option
                     let d_transf = transf.decompose();
                     ls_sampler.set_mean(&d_transf);

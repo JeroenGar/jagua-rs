@@ -1,9 +1,8 @@
 use std::borrow::Borrow;
-use std::hash::{Hash, Hasher};
+use std::hash::{Hash};
 use std::sync::{Arc, Weak};
 
 use crate::collision_detection::hazard::Hazard;
-use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;

@@ -24,9 +24,7 @@ use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
 use crate::util::{create_base_config, N_ITEMS_REMOVED, N_SAMPLES, SWIM_PATH};
 
 criterion_main!(benches);
-//criterion_group!(benches, quadtree_query_update_1000_1, quadtree_query_bench, quadtree_update_bench);
-criterion_group!(benches,quadtree_query_bench);
-
+criterion_group!(benches, quadtree_query_update_1000_1, quadtree_query_bench, quadtree_update_bench);
 
 mod util;
 
@@ -40,6 +38,8 @@ fn quadtree_update_bench(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
+    //disable haz prox grid
+    config.cde_config.haz_prox = HazProxConfig::Enabled { n_cells: 1};
 
     let mut group = c.benchmark_group("quadtree_update");
     for depth in QT_DEPTHS {
@@ -62,6 +62,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
                     //println!("Removing item with id: {}\n", pi_uid.item_id);
                     problem.remove_item(layout_index, pi_uid);
                 }
+                problem.flush_changes();
 
                 // Insert 5 items back into the layout
                 for pi_uid in selected_pi_uids.into_iter().flatten() {
@@ -87,6 +88,8 @@ fn quadtree_query_bench(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
+    //disable haz prox grid
+    config.cde_config.haz_prox = HazProxConfig::Enabled { n_cells: 1};
 
     let mut group = c.benchmark_group("quadtree_query");
     for depth in QT_DEPTHS {
@@ -113,7 +116,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
                     let mut buffer_shape = item.shape().clone();
                     for transf in samples.iter() {
                         buffer_shape.transform_from(item.shape(), transf);
-                        let collides = layout.cde().poly_collides(&buffer_shape, &[]);
+                        let collides = layout.cde().shape_collides(&buffer_shape, &[]);
                         if collides {
                             n_invalid += 1;
                         } else {
@@ -134,6 +137,9 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
+    //disable haz prox grid
+    config.cde_config.haz_prox = HazProxConfig::Enabled { n_cells: 1};
+
 
     let mut group = c.benchmark_group("quadtree_query_update_1000_1");
     for depth in QT_DEPTHS {
@@ -166,7 +172,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                     for _ in 0..1000 {
                         let transf = sampler.sample(&mut rng);
                         buffer_shape.transform_from(item.shape(), &transf.compose());
-                        let collides = layout.cde().poly_collides(&buffer_shape, &[]);
+                        let collides = layout.cde().shape_collides(&buffer_shape, &[]);
                         criterion::black_box(collides); // prevent the compiler from optimizing the loop away
                     }
                 }

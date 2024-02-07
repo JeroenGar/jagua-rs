@@ -103,7 +103,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
                             true => true,
                             false => {
                                 buffer_shape.transform_from(item.shape(), transf);
-                                layout.cde().poly_collides(&buffer_shape, &[])
+                                layout.cde().shape_collides(&buffer_shape, &[])
                             }
                         };
                         match collides {

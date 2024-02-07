@@ -217,22 +217,13 @@ impl CDEngine {
     }
 
     //QUERY ----------------------------------------------------------------------------------------
-    pub fn poly_collides(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool {
+    pub fn shape_collides(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool {
         match self.bbox.relation_to(&shape.bbox()) {
-            GeoRelation::Disjoint | GeoRelation::Enclosed | GeoRelation::Intersecting => {
-                return true;
-            } //Not fully inside quadtree -> definite collision
+            //Not fully inside bbox => definite collision
+            GeoRelation::Disjoint | GeoRelation::Enclosed | GeoRelation::Intersecting => true,
             GeoRelation::Surrounding => {
-                //Intersection test
-                if shape.edge_iter().any(|e| self.quadtree.collides(&e, ignored_entities).is_some()) {
-                    return true;
-                }
-
-                //Containment test
-                if self.collision_by_containment(shape, ignored_entities) {
-                    return true;
-                }
-                return false;
+                self.collision_by_edge_intersection(shape, ignored_entities) ||
+                    self.collision_by_containment(shape, ignored_entities)
             }
         }
     }
@@ -295,6 +286,11 @@ impl CDEngine {
         }
 
         colliding_entities
+    }
+
+    fn collision_by_edge_intersection(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool {
+        shape.edge_iter()
+            .any(|e| self.quadtree.collides(&e, ignored_entities).is_some())
     }
 
     fn collision_by_containment(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool

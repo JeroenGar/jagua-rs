@@ -86,7 +86,7 @@ fn hpg_bench(c: &mut Criterion) {
                     let transf = sampler.sample(&mut rng);
                     if !layout.cde().surrogate_collides(surrogate, &transf, &[]) {
                         buffer_shape.transform_from(item.shape(), &transf);
-                        if !layout.cde().poly_collides(&buffer_shape, &[]) {
+                        if !layout.cde().shape_collides(&buffer_shape, &[]) {
                             n_valid_samples += 1;
                         }
                     }
