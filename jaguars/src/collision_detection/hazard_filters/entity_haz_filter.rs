@@ -1,14 +1,15 @@
 use crate::collision_detection::hazard_filters::hazard_filter::HazardFilter;
 use crate::collision_detection::hazard::HazardEntity;
 
+/// A filter that deems hazards induced by specific entities as irrelevant
 pub struct EntityHazardFilter {
     entities: Vec<HazardEntity>,
 }
 
 
 impl HazardFilter for EntityHazardFilter {
-    fn is_relevant(&self, entity: &HazardEntity) -> bool {
-        !self.entities.contains(entity)
+    fn is_irrelevant(&self, entity: &HazardEntity) -> bool {
+        self.entities.contains(entity)
     }
 }
 

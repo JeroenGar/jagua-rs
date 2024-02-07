@@ -22,7 +22,7 @@ impl Item {
                centering_transform: Transformation, base_quality: Option<usize>, surrogate_config: SPSurrogateConfig) -> Item {
         shape.generate_surrogate(surrogate_config);
         let shape = Arc::new(shape);
-        let hazard_filter = base_quality.map(|q| QZHazardFilter { base_quality: q });
+        let hazard_filter = base_quality.map(|q| QZHazardFilter { cutoff_quality: q });
         Item { id, shape, allowed_rotation, base_quality, value, centering_transform, hazard_filter }
     }
 

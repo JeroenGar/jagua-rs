@@ -106,7 +106,7 @@ pub fn item_to_place_does_not_collide(item: &Item, transformation: &Transformati
     let t_shape = shape.transform_clone(transformation);
 
     let entities_to_ignore = haz_filter
-        .map_or(vec![], |f| hazard_filter::ignored_entities(f, layout.cde().all_hazards()));
+        .map_or(vec![], |f| hazard_filter::get_irrelevant_hazard_entities(f, layout.cde().all_hazards()));
 
     if layout.cde().surrogate_collides(shape.surrogate(), transformation, &entities_to_ignore) ||
         layout.cde().shape_collides(&t_shape, &entities_to_ignore) {
@@ -122,7 +122,7 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
             None => CombinedHazardFilter::new().add(&hef),
             Some(hf) => CombinedHazardFilter::new().add(&hef).add(hf)
         };
-        let entities_to_ignore = hazard_filter::ignored_entities(&combo_filter,layout.cde().all_hazards());
+        let entities_to_ignore = hazard_filter::get_irrelevant_hazard_entities(&combo_filter, layout.cde().all_hazards());
 
         if layout.cde().shape_collides(pi.shape(), &entities_to_ignore) {
             println!("Collision detected for item {:.?}", pi.uid());
@@ -261,19 +261,19 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
                 let from_1 = **active_in_1_but_not_2.iter().next().unwrap();
                 let from_2 = **active_in_2_but_not_1.iter().next().unwrap();
                 println!("{}", from_1 == from_2);
-                error!("Active hazard_filters don't match {:?} vs {:?}", active_in_1_but_not_2, active_in_2_but_not_1);
+                error!("Active hazards don't match {:?} vs {:?}", active_in_1_but_not_2, active_in_2_but_not_1);
                 return false;
             }
         }
         (Some(qn1), None) => {
             if qn1.hazards().active_hazards().iter().next().is_some() {
-                error!("qn1 contains active hazard_filters while other qn2 does not exist");
+                error!("qn1 contains active hazards while other qn2 does not exist");
                 return false;
             }
         }
         (None, Some(qn2)) => {
             if qn2.hazards().active_hazards().iter().next().is_some() {
-                error!("qn2 contains active hazard_filters while other qn1 does not exist");
+                error!("qn2 contains active hazards while other qn1 does not exist");
                 return false;
             }
         }

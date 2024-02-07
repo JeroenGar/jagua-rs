@@ -5,10 +5,11 @@ use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 
 /// Vector of QTHazards, which always remains sorted by active, presence.
-/// This is a performance optimization to be able to quickly return the strongest hazard
+/// This is a performance optimization to be able to quickly return the "strongest" hazard
+/// Strongest meaning the first active hazard with the highest presence (Entire > Partial > None)
 #[derive(Clone, Debug)]
 pub struct QTHazardVec {
-    /// sorted by active, presence
+    /// Sorted in descending order by strongest
     hazards: Vec<QTHazard>,
     n_active: usize,
 }
@@ -23,7 +24,7 @@ impl QTHazardVec {
 
     pub fn add(&mut self, haz: QTHazard) {
         debug_assert!(self.hazards.iter().filter(|other| other.entity == haz.entity && matches!(haz.entity, HazardEntity::PlacedItem(_))).count() == 0, "More than one hazard from same item entity in the vector! (This should never happen!)");
-        match self.hazards.binary_search_by(|probe| QTHazardVec::order_stronger(probe, &haz)) {
+        match self.hazards.binary_search_by(|probe| order_by_descending_strength(probe, &haz)) {
             Ok(pos) | Err(pos) => {
                 self.n_active += haz.active as usize;
                 self.hazards.insert(pos, haz);
@@ -46,13 +47,16 @@ impl QTHazardVec {
     }
 
     #[inline(always)]
-    pub fn strongest(&self, ignored_entities: &[HazardEntity]) -> Option<&QTHazard> {
+    pub fn strongest(&self, irrelevant_hazards: &[HazardEntity]) -> Option<&QTHazard> {
         debug_assert!(self.hazards.iter().filter(|hz| hz.active).count() == self.n_active, "Active hazards count is not correct!");
-        debug_assert!(self.hazards.windows(2).all(|w| QTHazardVec::order_stronger(&w[0], &w[1]) != Ordering::Greater), "Hazards are not sorted correctly!");
-        match (self.n_active, ignored_entities) {
-            (0, _) => None, //no active hazards
-            (_, []) => Some(&self.hazards[0]), //no ignored entities and at least one active hazard
-            (_, _) => self.hazards[0..self.n_active].iter().find(|hz| !ignored_entities.contains(&hz.entity)), //at least one active hazard and some ignored entities
+        debug_assert!(self.hazards.windows(2).all(|w| order_by_descending_strength(&w[0], &w[1]) != Ordering::Greater), "Hazards are not sorted correctly!");
+        match (self.n_active, irrelevant_hazards) {
+            //no active hazards
+            (0, _) => None,
+            //no ignored entities
+            (_, []) => Some(&self.hazards[0]),
+            //Some ignored entities
+            (_, _) => self.hazards[0..self.n_active].iter().find(|hz| !irrelevant_hazards.contains(&hz.entity)),
         }
     }
 
@@ -108,15 +112,15 @@ impl QTHazardVec {
     pub fn has_only_entire_hazards(&self) -> bool {
         self.hazards.iter().all(|hz| matches!(hz.presence,QTHazPresence::Entire))
     }
+}
 
-    fn order_stronger(qth1: &QTHazard, qth2: &QTHazard) -> Ordering {
-        //sort by active, then by presence, so that the active hazards are always in front of inactive hazards, and Entire hazards are always in front of Partial hazards
-        match qth1.active.cmp(&qth2.active).reverse() {
-            Ordering::Equal => {
-                let (p1,p2): (u8, u8) = ((&qth1.presence).into(),  (&qth2.presence).into());
-                p1.cmp(&p2).reverse()
-            },
-            other => other,
+fn order_by_descending_strength(qth1: &QTHazard, qth2: &QTHazard) -> Ordering {
+//sort in descending order of active (true > false) then by presence (Entire > Partial > None)
+    match qth1.active.cmp(&qth2.active).reverse() {
+        Ordering::Equal => {
+            let (p1, p2): (u8, u8) = ((&qth1.presence).into(), (&qth2.presence).into());
+            p1.cmp(&p2).reverse()
         }
+        other => other,
     }
 }

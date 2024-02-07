@@ -4,11 +4,11 @@ use crate::collision_detection::haz_prox_grid::circling_iterator::CirclingIterat
 use crate::collision_detection::haz_prox_grid::grid::Grid;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 
-//Boundary Fill algorithm
-//1. Queue all cells within the seed bounding box
-//2. Visit the cells in the queue, once a seed is found, dequeue all cells and queue all its neighbors
-//3. Explore and queue unvisited neighbors until queue is empty
-
+///Boundary Fill type of algorithm.
+///Iteratively visits cells within a grid.
+///While unseeded, the struct will visit cells from the seed_bbox, from the inside out.
+///When a cell's neighbors are queued, the struct is considered seeded, and will from then on visit cells from the queue.
+///The "Fill" finished when there are no more cells to visit, i.e. the seed_iterator runs out (unseeded) or the queue is empty (seeded)
 #[derive(Debug, Clone)]
 pub struct BoundaryFillGrid {
     state: Vec<CellState>,
@@ -19,7 +19,9 @@ pub struct BoundaryFillGrid {
 }
 
 impl BoundaryFillGrid {
-    pub fn new<T>(seed_bbox: AARectangle, grid: &Grid<T>) -> Self {
+
+    /// Creates a new BoundaryFillGrid, add all cells inside the seed_bbox to the queue
+    pub fn new<T>(grid: &Grid<T>, seed_bbox: AARectangle) -> Self {
         let state = vec![CellState::new(); grid.n_rows() * grid.n_cols()];
 
         //Find the range of rows and columns which reside inside the seed_bbox
@@ -41,6 +43,8 @@ impl BoundaryFillGrid {
         }
     }
 
+    /// Returns the next cell to visit and pops it from the queue,
+    /// if there are no more cells to visit return None
     pub fn pop<T>(&mut self, grid: &Grid<T>) -> Option<usize> {
         match self.seeded {
             false => {
@@ -69,6 +73,8 @@ impl BoundaryFillGrid {
         }
     }
 
+    /// Adds all unvisited neighbors of the cell at index to the queue
+    /// Also marks the grid as seeded
     pub fn queue_neighbors<T>(&mut self, index: usize, grid: &Grid<T>) {
         self.seeded = true;
 

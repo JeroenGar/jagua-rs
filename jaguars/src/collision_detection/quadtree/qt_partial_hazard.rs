@@ -9,7 +9,7 @@ use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
 
-/// QTPartialHazards define a set of edges from a hazard that cross the QTNode.
+/// QTPartialHazards define a set of edges from a hazard that is partially active in the QTNode.
 #[derive(Clone, Debug)]
 pub struct QTPartialHazard {
     shape: Weak<SimplePolygon>,
@@ -68,7 +68,7 @@ impl QTPartialHazard {
 }
 impl CollidesWith<Edge> for QTPartialHazard {
     fn collides_with(&self, edge: &Edge) -> bool {
-        let shape = self.shape.upgrade().expect("polygon reference is not alive");
+        let shape = self.shape.upgrade().expect("polygon reference should be alive");
         match self.edge_indices() {
             EdgeIndices::All => {
                 match shape.bbox().collides_with(edge) {

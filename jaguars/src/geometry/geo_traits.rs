@@ -23,7 +23,7 @@ pub trait DistanceFrom<T> {
     fn sq_distance_from_border(&self, other: &T) -> (GeoPosition, f64);
 }
 
-/// Trait for types that can be transformed
+/// Trait for types that can be transformed by a Transformation
 pub trait Transformable: Clone {
     fn transform(&mut self, t: &Transformation) -> &mut Self;
 
@@ -34,7 +34,7 @@ pub trait Transformable: Clone {
     }
 }
 
-/// Trait for types that can be transformed based on a reference object
+/// Trait for types that can be transformed based on a reference object with a Transformation applied
 pub trait TransformableFrom: Transformable {
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self;
 }

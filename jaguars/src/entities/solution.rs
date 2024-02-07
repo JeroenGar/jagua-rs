@@ -6,6 +6,7 @@ use crate::entities::instance::{Instance, PackingType};
 use crate::entities::layout::LayoutSnapshot;
 use crate::geometry::geo_traits::Shape;
 
+//TODO: clean this up properly
 #[derive(Debug, Clone)]
 pub struct Solution {
     id: usize,

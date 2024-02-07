@@ -3,10 +3,10 @@ use std::ops::RangeInclusive;
 
 use itertools::Itertools;
 use ordered_float::NotNan;
+use crate::geometry::primitives::point::Point;
 
-//abstract representation of a grid of elements at specific coordinates
-//divided into rows and columns
-
+/// Representation of a grid of optional elements of type T
+/// Divided into rows and columns, where each row and column has a unique coordinate
 #[derive(Clone, Debug)]
 pub struct Grid<T> {
     cells: Vec<Option<T>>,
@@ -17,14 +17,16 @@ pub struct Grid<T> {
 }
 
 impl<T> Grid<T> {
-    pub fn new(elements: Vec<(T, (f64, f64))>) -> Self {
+
+    /// Creates a new grid from a vector of values of type T and their coordinates
+    pub fn new(elements: Vec<(T, Point)>) -> Self {
         //find all unique rows and columns from the element's coordinates
         let rows = elements.iter()
-            .map(|(_e, (_x, y))| NotNan::new(*y).unwrap())
+            .map(|(_e, Point(_x, y))| NotNan::new(*y).unwrap())
             .unique().sorted().collect::<Vec<NotNan<f64>>>();
 
         let cols = elements.iter()
-            .map(|(_e, (x, _y))| NotNan::new(*x).unwrap())
+            .map(|(_e, Point(x, _y))| NotNan::new(*x).unwrap())
             .unique().sorted().collect::<Vec<NotNan<f64>>>();
 
         let n_rows = rows.len();
@@ -33,7 +35,7 @@ impl<T> Grid<T> {
         //create a vector of cells, with the correct size
         let mut cells = (0..n_rows * n_cols).map(|_| None).collect_vec();
 
-        for (element, (x, y)) in elements {
+        for (element, Point(x, y)) in elements {
             //search correct row and col for the cell
             let row = match rows.binary_search(&NotNan::new(y).unwrap()) {
                 Ok(row) => row,
@@ -91,13 +93,14 @@ impl<T> Grid<T> {
         start_col..=end_col
     }
 
+    ///Returns the indices of the 8 directly neighboring cells.
+    ///If the cell is on the edge, the index of the cell itself is returned instead for neighbors out of bounds
     pub fn get_neighbors(&self, idx: usize) -> [usize; 8] {
-        //returns the indices of the 8 directly neighboring cells. If the cell is on the edge, the index of the cell itself is returned
         let mut neighbors = [0; 8];
         let (row, col) = (idx / self.n_cols, idx % self.n_cols);
         let (n_cols, n_rows) = (self.n_cols, self.n_rows);
 
-        //ugly but fast
+        //ugly, but seems to be the fastest way of doing it
         neighbors[0] = if row > 0 && col > 0 { idx - n_cols - 1 } else { idx };
         neighbors[1] = if row > 0 { idx - n_cols } else { idx };
         neighbors[2] = if row > 0 && col < n_cols - 1 { idx - n_cols + 1 } else { idx };
@@ -116,7 +119,7 @@ impl<T> Grid<T> {
 
     fn calculate_index(row: usize, col: usize, n_rows: usize, n_cols: usize) -> Option<usize> {
         match (row.cmp(&n_rows), col.cmp(&n_cols)) {
-            (Ordering::Less, Ordering::Less) => Some(row * n_cols + col), //out of bounds
+            (Ordering::Less, Ordering::Less) => Some(row * n_cols + col),
             _ => None //out of bounds
         }
     }

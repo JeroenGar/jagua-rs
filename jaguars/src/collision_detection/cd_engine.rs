@@ -20,6 +20,10 @@ use crate::geometry::transformation::Transformation;
 use crate::util::assertions;
 use crate::util::config::{CDEConfig, HazProxConfig, QuadTreeConfig};
 
+
+/// The Collision Detection Engine (CDE) is responsible for validating potential placements of items in a Layout.
+/// It can be queried to check if a given shape or surrogate collides with any hazards in the layout.
+/// It is updated by the Layout, when its state changes.
 #[derive(Clone, Debug)]
 pub struct CDEngine {
     quadtree: QTNode,
@@ -29,6 +33,15 @@ pub struct CDEngine {
     config: CDEConfig,
     bbox: AARectangle,
     uncommited_deregisters: Vec<Hazard>,
+}
+
+
+/// Snapshot of the state of CDE at a given time.
+/// The CDE can take snapshots of itself at any time, and use them to restore to that state later.
+#[derive(Clone, Debug)]
+pub struct CDESnapshot {
+    dynamic_hazards: Vec<Hazard>,
+    grid: Option<Grid<HPGCell>>
 }
 
 impl CDEngine {
@@ -217,27 +230,27 @@ impl CDEngine {
     }
 
     //QUERY ----------------------------------------------------------------------------------------
-    pub fn shape_collides(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool {
+    pub fn shape_collides(&self, shape: &SimplePolygon, irrelevant_hazards: &[HazardEntity]) -> bool {
         match self.bbox.relation_to(&shape.bbox()) {
             //Not fully inside bbox => definite collision
             GeoRelation::Disjoint | GeoRelation::Enclosed | GeoRelation::Intersecting => true,
             GeoRelation::Surrounding => {
-                self.collision_by_edge_intersection(shape, ignored_entities) ||
-                    self.collision_by_containment(shape, ignored_entities)
+                self.collision_by_edge_intersection(shape, irrelevant_hazards) ||
+                    self.collision_by_containment(shape, irrelevant_hazards)
             }
         }
     }
 
-    pub fn surrogate_collides(&self, base_surrogate: &SPSurrogate, transform: &Transformation, ignored_entities: &[HazardEntity]) -> bool {
+    pub fn surrogate_collides(&self, base_surrogate: &SPSurrogate, transform: &Transformation, irrelevant_hazards: &[HazardEntity]) -> bool {
         for pole in base_surrogate.ff_poles() {
             let t_pole = pole.transform_clone(transform);
-            if self.quadtree.collides(&t_pole, ignored_entities).is_some() {
+            if self.quadtree.collides(&t_pole, irrelevant_hazards).is_some() {
                 return true;
             }
         }
         for pier in base_surrogate.ff_piers() {
             let t_pier = pier.transform_clone(transform);
-            if self.quadtree.collides(&t_pier, ignored_entities).is_some() {
+            if self.quadtree.collides(&t_pier, irrelevant_hazards).is_some() {
                 return true;
             }
         }
@@ -251,35 +264,35 @@ impl CDEngine {
         }
     }
 
-    pub fn edge_definitely_collides(&self, edge: &Edge, ignored_entities: &[HazardEntity]) -> Tribool {
+    pub fn edge_definitely_collides(&self, edge: &Edge, irrelevant_hazards: &[HazardEntity]) -> Tribool {
         match !self.bbox.collides_with(&edge.start()) || !self.bbox.collides_with(&edge.end()) {
             true => Tribool::True, //if either the start or end of the edge is outside the quadtree, it definitely collides
-            false => self.quadtree.definitely_collides(edge, ignored_entities)
+            false => self.quadtree.definitely_collides(edge, irrelevant_hazards)
         }
     }
 
-    pub fn circle_definitely_collides(&self, circle: &Circle, ignored_entities: &[HazardEntity]) -> Tribool {
+    pub fn circle_definitely_collides(&self, circle: &Circle, irrelevant_hazards: &[HazardEntity]) -> Tribool {
         match self.bbox.collides_with(&circle.center) {
             false => Tribool::True, //outside the quadtree, so definitely collides
-            true => self.quadtree.definitely_collides(circle, ignored_entities)
+            true => self.quadtree.definitely_collides(circle, irrelevant_hazards)
         }
     }
 
-    pub fn entities_in_circle(&self, circle: &Circle, ignored_entities: &[HazardEntity]) -> Vec<HazardEntity> {
+    pub fn entities_in_circle(&self, circle: &Circle, irrelevant_hazards: &[HazardEntity]) -> Vec<HazardEntity> {
         let mut colliding_entities = vec![];
-        let mut ignored_entities = ignored_entities.iter().cloned().collect_vec();
+        let mut irrelevant_hazards = irrelevant_hazards.iter().cloned().collect_vec();
 
         //Keep testing the quadtree for intersections until no (non-ignored) entities collide
-        while let Some(haz_entity) = self.quadtree.collides(circle, &ignored_entities) {
+        while let Some(haz_entity) = self.quadtree.collides(circle, &irrelevant_hazards) {
             colliding_entities.push(haz_entity.clone());
-            ignored_entities.push(haz_entity.clone());
+            irrelevant_hazards.push(haz_entity.clone());
         }
 
         let circle_center_in_qt = self.bbox.collides_with(&circle.center);
 
         if !circle_center_in_qt && colliding_entities.is_empty() {
             // The circle center is outside the quadtree
-            if !ignored_entities.contains(&&HazardEntity::BinExterior) {
+            if !irrelevant_hazards.contains(&&HazardEntity::BinExterior) {
                 //Add the bin as a hazard, unless it is ignored
                 colliding_entities.push(HazardEntity::BinExterior);
             }
@@ -288,16 +301,16 @@ impl CDEngine {
         colliding_entities
     }
 
-    fn collision_by_edge_intersection(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool {
+    fn collision_by_edge_intersection(&self, shape: &SimplePolygon, irrelevant_hazards: &[HazardEntity]) -> bool {
         shape.edge_iter()
-            .any(|e| self.quadtree.collides(&e, ignored_entities).is_some())
+            .any(|e| self.quadtree.collides(&e, irrelevant_hazards).is_some())
     }
 
-    fn collision_by_containment(&self, shape: &SimplePolygon, ignored_entities: &[HazardEntity]) -> bool
+    fn collision_by_containment(&self, shape: &SimplePolygon, irrelevant_hazards: &[HazardEntity]) -> bool
     {
-        //collect all active and non-ignored hazard_filters
+        //collect all active and non-ignored hazards
         let mut relevant_hazards = self.all_hazards()
-            .filter(|h| h.active && !ignored_entities.contains(&h.entity));
+            .filter(|h| h.active && !irrelevant_hazards.contains(&h.entity));
 
         relevant_hazards.any(|haz| {
             //Due to possible fp issues, we check if the bboxes are "almost" related
@@ -334,12 +347,4 @@ impl CDEngine {
             }
         })
     }
-}
-
-//Snapshot of the CDE state at a given time.
-//Can be used to restore the CDE to a previous state.
-#[derive(Clone, Debug)]
-pub struct CDESnapshot {
-    dynamic_hazards: Vec<Hazard>,
-    grid: Option<Grid<HPGCell>>
 }

@@ -69,50 +69,44 @@ impl AARectangle {
         ]
     }
 
-    pub fn relation_to(&self, rect: &AARectangle) -> GeoRelation {
-        if self.collides_with(rect) {
-            if self.x_min <= rect.x_min
-                && self.y_min <= rect.y_min
-                && self.x_max >= rect.x_max
-                && self.y_max >= rect.y_max
-            {
-                return GeoRelation::Surrounding;
-            } else if self.x_min >= rect.x_min
-                && self.y_min >= rect.y_min
-                && self.x_max <= rect.x_max
-                && self.y_max <= rect.y_max
-            {
-                return GeoRelation::Enclosed;
-            } else {
-                return GeoRelation::Intersecting;
-            }
-        }
-
-        GeoRelation::Disjoint
-    }
-
-    pub fn almost_relation_to(&self, rect: &AARectangle) -> GeoRelation {
-        if self.almost_collides_with(rect) {
-            //rectangles have a relation
-            return if F64A::from(self.x_min) <= F64A::from(rect.x_min)
-                && F64A::from(self.y_min) <= F64A::from(rect.y_min)
-                && F64A::from(self.x_max) >= F64A::from(rect.x_max)
-                && F64A::from(self.y_max) >= F64A::from(rect.y_max)
-            {
+    pub fn relation_to(&self, other: &AARectangle) -> GeoRelation {
+        if self.collides_with(other) {
+            if self.x_min <= other.x_min && self.y_min <= other.y_min && 
+                self.x_max >= other.x_max && self.y_max >= other.y_max {
                 GeoRelation::Surrounding
-            } else if F64A::from(self.x_min) >= F64A::from(rect.x_min)
-                && F64A::from(self.y_min) >= F64A::from(rect.y_min)
-                && F64A::from(self.x_max) <= F64A::from(rect.x_max)
-                && F64A::from(self.y_max) <= F64A::from(rect.y_max)
-            {
+            } 
+            else if self.x_min >= other.x_min && self.y_min >= other.y_min && 
+                self.x_max <= other.x_max && self.y_max <= other.y_max {
                 GeoRelation::Enclosed
-            } else {
+            } 
+            else {
                 GeoRelation::Intersecting
             }
+        } else {
+            GeoRelation::Disjoint
         }
-        GeoRelation::Disjoint
     }
 
+    pub fn almost_relation_to(&self, other: &AARectangle) -> GeoRelation {
+        if self.almost_collides_with(other) {
+            if F64A::from(self.x_min) <= F64A::from(other.x_min) && F64A::from(self.y_min) <= F64A::from(other.y_min) && 
+                F64A::from(self.x_max) >= F64A::from(other.x_max) && F64A::from(self.y_max) >= F64A::from(other.y_max) {
+                GeoRelation::Surrounding
+            } 
+            else if F64A::from(self.x_min) >= F64A::from(other.x_min) && F64A::from(self.y_min) >= F64A::from(other.y_min) && 
+                F64A::from(self.x_max) <= F64A::from(other.x_max) && F64A::from(self.y_max) <= F64A::from(other.y_max) {
+                GeoRelation::Enclosed
+            } 
+            else {
+                GeoRelation::Intersecting
+            }
+        } 
+        else{
+            GeoRelation::Disjoint
+        }
+    }
+
+    /// Returns the rectangle that is the result of inflating the smallest dimension of the rectangle to match the largest dimension
     pub fn inflate_to_square(&self) -> AARectangle {
         let width = self.x_max - self.x_min;
         let height = self.y_max - self.y_min;
@@ -142,10 +136,11 @@ impl AARectangle {
         self
     }
 
+    //array quadrant layout: [nw, ne, sw, se]
+    //e.g. cell with index 0 is neighbored by cells 1 and 2
+    pub const QUADRANT_NEIGHBOR_LAYOUT: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
+
     pub fn quadrants(&self) -> [Self; 4] {
-        // nw|ne    0|1
-        // -----    ---
-        // sw|se    2|3
 
         let Point(x_mid, y_mid) = self.centroid();
         let (x_min, y_min, x_max, y_max) = (self.x_min.into(), self.y_min.into(), self.x_max.into(), self.y_max.into());

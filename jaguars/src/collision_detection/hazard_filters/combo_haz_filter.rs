@@ -1,13 +1,15 @@
 use crate::collision_detection::hazard_filters::hazard_filter::HazardFilter;
 use crate::collision_detection::hazard::HazardEntity;
 
+/// A filter that combines multiple hazard filters into one
 pub struct CombinedHazardFilter<'a> {
     pub filters: Vec<Box<&'a dyn HazardFilter>>,
 }
 
 impl<'a> HazardFilter for CombinedHazardFilter<'a> {
-    fn is_relevant(&self, entity: &HazardEntity) -> bool {
-        self.filters.iter().all(|f| f.is_relevant(entity))
+    fn is_irrelevant(&self, entity: &HazardEntity) -> bool {
+        self.filters.iter()
+            .any(|f| f.is_irrelevant(entity))
     }
 }
 

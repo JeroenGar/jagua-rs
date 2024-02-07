@@ -28,9 +28,10 @@ impl HazardProximityGrid {
             let elements = cells.into_iter()
                 .map(|bbox| HPGCell::new(bbox, static_hazards))
                 .map(|cell| {
-                    let centroid = cell.centroid();
-                    (cell, centroid.into())
-                }).collect_vec();
+                    let pos = cell.centroid();
+                    (cell, pos)
+                })
+                .collect_vec();
             Grid::new(elements)
         };
 
@@ -58,7 +59,7 @@ impl HazardProximityGrid {
             )
         };
 
-        let mut b_fill = BoundaryFillGrid::new(seed_bbox, &self.grid);
+        let mut b_fill = BoundaryFillGrid::new(&self.grid, seed_bbox);
 
         while let Some(next_dot_index) = b_fill.pop(&self.grid) {
             let cell = self.grid.elements_mut()[next_dot_index].as_mut();
@@ -75,6 +76,7 @@ impl HazardProximityGrid {
             }
         }
 
+        //TODO: move this to an assertion check
         debug_assert!(
             {
                 let old_cells = self.grid.elements().clone();

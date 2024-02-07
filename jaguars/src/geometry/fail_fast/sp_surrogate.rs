@@ -50,7 +50,7 @@ impl SPSurrogate {
 
 impl Transformable for SPSurrogate {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
-        //destructuring pattern used to ensure that the code is updated when the struct changes
+        //destructuring pattern used to ensure that the code is updated accordingly when the struct changes
         let Self {convex_hull_indices: _, poles, poles_bounding_circle, piers, ff_pole_range: _} = self;
 
         //transform poles
@@ -74,7 +74,7 @@ impl TransformableFrom for SPSurrogate {
         debug_assert!(self.poles.len() == reference.poles.len());
         debug_assert!(self.piers.len() == reference.piers.len());
 
-        //destructuring pattern used to ensure that the code is updated when the struct changes
+        //destructuring pattern used to ensure that the code is updated accordingly when the struct changes
         let Self {convex_hull_indices: _, poles, poles_bounding_circle, piers, ff_pole_range: _} = self;
 
         for (pole, ref_pole) in poles.iter_mut().zip(reference.poles.iter()) {

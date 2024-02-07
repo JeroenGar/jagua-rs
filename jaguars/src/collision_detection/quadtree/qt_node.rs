@@ -5,15 +5,19 @@ use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_partial_hazard::QTPartialHazard;
-use crate::geometry::geo_traits::{CollidesWith, Shape};
+use crate::geometry::geo_traits::{CollidesWith};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
 
+
+/// A node in the quadtree
 #[derive(Clone, Debug)]
 pub struct QTNode {
+    /// The level of the node in the tree, 0 being the bottom-most level
     level: u8,
     bbox: AARectangle,
     children: Option<Box<[QTNode; 4]>>,
+    /// The hazards present in the node
     hazards: QTHazardVec,
 }
 
@@ -51,7 +55,7 @@ impl QTNode {
         //If the hazard is of the partial type, and we are not at the max tree depth: generate children
         if !self.has_children() && self.level > 0 && matches!(hazard.presence, QTHazPresence::Partial(_)) {
             self.generate_children();
-            //register all existing hazard_filters to the newly created children
+            //register all existing hazards to the newly created children
             for hazard in self.hazards.all_hazards() {
                 register_to_children(&mut self.children, hazard);
             }
@@ -136,10 +140,10 @@ impl QTNode {
 
     /// Returns None if no collision between the entity and any hazard is detected,
     /// otherwise returns the first encountered hazard that collides with the entity
-    pub fn collides<T>(&self, entity: &T, ignored_entities: &[HazardEntity]) -> Option<&HazardEntity>
+    pub fn collides<T>(&self, entity: &T, irrelevant_hazards: &[HazardEntity]) -> Option<&HazardEntity>
         where T: CollidesWith<AARectangle>, QTPartialHazard: CollidesWith<T>
     {
-        match self.hazards.strongest(ignored_entities) {
+        match self.hazards.strongest(irrelevant_hazards) {
             None => None,
             Some(strongest_hazard) => match entity.collides_with(self.bbox()) {
                 false => None,
@@ -150,7 +154,7 @@ impl QTNode {
                         Some(children) => {
                             //Search if any of the children intersect with the entity
                             children.iter()
-                                .map(|child| child.collides(entity, ignored_entities))
+                                .map(|child| child.collides(entity, irrelevant_hazards))
                                 .find(|x| x.is_some())
                                 .flatten()
                         }
@@ -159,7 +163,7 @@ impl QTNode {
                                 match &hz.presence {
                                     QTHazPresence::Entire | QTHazPresence::None => {} //non-ignored Entire inclusion are caught by the previous match
                                     QTHazPresence::Partial(partial_hazard) => {
-                                        if !ignored_entities.contains(&hz.entity) {
+                                        if !irrelevant_hazards.contains(&hz.entity) {
                                             //do intersection test if this shape is not ignored
                                             if partial_hazard.collides_with(entity) {
                                                 return Some(&hz.entity);
@@ -176,10 +180,10 @@ impl QTNode {
         }
     }
 
-    pub fn definitely_collides<T>(&self, entity: &T, ignored_entities: &[HazardEntity]) -> Tribool
+    pub fn definitely_collides<T>(&self, entity: &T, irrelevant_hazards: &[HazardEntity]) -> Tribool
         where T: CollidesWith<AARectangle>
     {
-        match self.hazards.strongest(ignored_entities) {
+        match self.hazards.strongest(irrelevant_hazards) {
             None => Tribool::False,
             Some(hazard) => match (entity.collides_with(self.bbox()), &hazard.presence) {
                 (false, _) | (_, QTHazPresence::None) => Tribool::False,
@@ -190,7 +194,7 @@ impl QTNode {
                         let mut result = Tribool::False; //Assume no collision
                         for i in 0..4 {
                             let child = &children[i];
-                            match child.definitely_collides(entity, ignored_entities) {
+                            match child.definitely_collides(entity, irrelevant_hazards) {
                                 Tribool::True => return Tribool::True, //If a child for sure collides, we can immediately return Yes
                                 Tribool::Indeterminate => result = Tribool::Indeterminate, //If a child might collide, switch from to Maybe
                                 Tribool::False => {} //If child does not collide, do nothing

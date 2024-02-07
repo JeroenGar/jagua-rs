@@ -13,8 +13,6 @@ use crate::geometry::transformation::Transformation;
 use crate::N_QUALITIES;
 use crate::util::config::CDEConfig;
 
-//TODO: Add base quality to bins
-
 #[derive(Clone, Debug)]
 pub struct Bin {
     id: usize,
@@ -63,7 +61,6 @@ impl Bin {
     }
 
     pub fn from_strip(id: usize, width: f64, height: f64, cde_config: CDEConfig) -> Self {
-        //TODO: move this out of here
         let poly = SimplePolygon::from(AARectangle::new(0.0, 0.0, width, height));
         let value = poly.area() as u64;
 

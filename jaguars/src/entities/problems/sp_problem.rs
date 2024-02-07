@@ -58,7 +58,7 @@ impl SPProblem {
 
         for p_uid in old_p_uids {
             let item = self.instance.item(p_uid.item_id);
-            let entities_to_ignore = item.hazard_filter().map_or(vec![], |f| hazard_filter::ignored_entities(f, self.layout.cde().all_hazards()));
+            let entities_to_ignore = item.hazard_filter().map_or(vec![], |f| hazard_filter::get_irrelevant_hazard_entities(f, self.layout.cde().all_hazards()));
             let shape = item.shape();
             let transf = p_uid.d_transf.compose();
             if !self.layout.cde().surrogate_collides(shape.surrogate(), &transf, entities_to_ignore.as_slice()) {

@@ -1,5 +1,4 @@
 use std::borrow::Borrow;
-use std::cmp::Ordering;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_partial_hazard::{EdgeIndices, QTPartialHazard};
@@ -7,13 +6,21 @@ use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 
-//Hazards in a QTNode
+/// Represents the manifestation of a hazard in a QTNode
 #[derive(Clone, Debug)]
 pub struct QTHazard {
     pub entity: HazardEntity,
     pub presence: QTHazPresence,
     pub active: bool,
 }
+
+#[derive(Clone, Debug)]
+pub enum QTHazPresence {
+    None,
+    Partial(QTPartialHazard),
+    Entire
+}
+
 
 impl<T> From<T> for QTHazard where T: Borrow<Hazard> {
     fn from(hazard: T) -> Self {
@@ -100,7 +107,7 @@ impl QTHazard {
                             //check if a neighbor is already resolved
                             // Because nodes with Entire and None are never neighboring (they are always separated by a node with Partial),
                             // if a neighbor is either Entire or None, this quadrant is also Entire or None
-                            let [n_0, n_1] = CHILD_NEIGHBORS[i];
+                            let [n_0, n_1] = AARectangle::QUADRANT_NEIGHBOR_LAYOUT[i];
                             constricted_presence[i] = match (&constricted_presence[n_0], &constricted_presence[n_1]) {
                                 (Some(QTHazPresence::Entire), _) | (_, Some(QTHazPresence::Entire)) => {
                                     Some(QTHazPresence::Entire)
@@ -133,19 +140,6 @@ impl QTHazard {
             }
         }
     }
-}
-
-// QTNode children array layout:
-// 0 | 1
-// -----
-// 2 | 3
-const CHILD_NEIGHBORS: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
-
-#[derive(Clone, Debug)]
-pub enum QTHazPresence {
-    None,
-    Partial(QTPartialHazard),
-    Entire
 }
 
 impl Into<u8> for &QTHazPresence {

@@ -13,6 +13,8 @@ use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::point::Point;
 use crate::N_QUALITIES;
 
+
+/// Represents a cell in the Hazard Proximity Grid
 #[derive(Clone, Debug)]
 pub struct HPGCell {
     bbox: AARectangle,
@@ -20,7 +22,7 @@ pub struct HPGCell {
     radius: f64,
     ///Proximity of closest hazard which is universally applicable (bin or item)
     uni_haz_prox: (Proximity, HazardEntity),
-    ///Proximity of universal static hazard_filters
+    ///Proximity of universal static hazards
     static_uni_haz_prox: (Proximity, HazardEntity),
     ///proximity of closest quality zone for each quality
     qz_haz_prox: [Proximity; N_QUALITIES],
@@ -115,7 +117,7 @@ impl HPGCell {
     pub fn register_hazard(&mut self, to_register: &Hazard) -> HPGCellUpdate {
         let current_prox = self.universal_hazard_proximity().0;
 
-        //For dynamic hazard_filters, the surrogate poles are used to calculate the distance to the hazard (overestimation, but fast)
+        //For dynamic hazards, the surrogate poles are used to calculate the distance to the hazard (overestimation, but fast)
         let haz_prox = match to_register.entity.position() {
             GeoPosition::Interior => distance_to_surrogate_poles_border(self, &to_register.shape.surrogate().poles),
             GeoPosition::Exterior => unreachable!("No implementation yet for dynamic exterior hazards")

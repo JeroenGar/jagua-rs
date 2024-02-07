@@ -2,6 +2,8 @@ use std::ops::RangeInclusive;
 
 use crate::collision_detection::haz_prox_grid::outward_iterator::OutwardIterator;
 
+/// 2D version of OutwardIterator
+/// Iterates over a 2D range from the center outwards
 #[derive(Debug, Clone)]
 pub struct CirclingIterator {
     original_col_iter: OutwardIterator,

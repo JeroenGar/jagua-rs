@@ -88,9 +88,7 @@ impl CollidesWith<AARectangle> for Circle {
     #[inline(always)]
     fn collides_with(&self, rect: &AARectangle) -> bool {
         //Based on: https://yal.cc/rectangle-circle-intersection-test/
-
-        //TODO: benchmark this against approach which first checks only center
-
+        
         let Point(c_x, c_y) = self.center;
 
         let nearest_x = f64::max(rect.x_min, f64::min(c_x, rect.x_max));

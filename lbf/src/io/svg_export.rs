@@ -22,8 +22,8 @@ pub fn simple_polygon_data(s_poly: &SimplePolygon) -> Data {
     data.close()
 }
 
-pub fn quad_tree_data(qt_root: &QTNode, ignored_entities: &[HazardEntity]) -> (Data, Data, Data) {
-    qt_node_data(qt_root, Data::new(), Data::new(), Data::new(), ignored_entities)
+pub fn quad_tree_data(qt_root: &QTNode, irrelevant_hazards: &[HazardEntity]) -> (Data, Data, Data) {
+    qt_node_data(qt_root, Data::new(), Data::new(), Data::new(), irrelevant_hazards)
 }
 
 fn qt_node_data(
@@ -31,15 +31,15 @@ fn qt_node_data(
     mut data_eh: Data, //entire inclusion data
     mut data_ph: Data, //partial inclusion data
     mut data_nh: Data, //no inclusion data
-    ignored_entities: &[HazardEntity],
+    irrelevant_hazards: &[HazardEntity],
 ) -> (Data, Data, Data) {
     //Only draw qt_nodes that do not have a child
 
-    match (qt_node.has_children(), qt_node.hazards().strongest(ignored_entities)) {
+    match (qt_node.has_children(), qt_node.hazards().strongest(irrelevant_hazards)) {
         (true, Some(_)) => {
             //not a leaf node, go to children
             for child in qt_node.children().as_ref().unwrap().iter() {
-                let data = qt_node_data(child, data_eh, data_ph, data_nh, ignored_entities);
+                let data = qt_node_data(child, data_eh, data_ph, data_nh, irrelevant_hazards);
                 data_eh = data.0;
                 data_ph = data.1;
                 data_nh = data.2;
@@ -57,7 +57,7 @@ fn qt_node_data(
                     .close()
             };
 
-            match qt_node.hazards().strongest(ignored_entities) {
+            match qt_node.hazards().strongest(irrelevant_hazards) {
                 Some(ch) => {
                     match ch.presence {
                         QTHazPresence::Entire => data_eh = draw(data_eh),

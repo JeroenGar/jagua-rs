@@ -6,9 +6,9 @@ use crate::geometry::geo_traits::{DistanceFrom, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
 
+/// Generates a grid of equal sized square rectangles within a shape.
+/// The number of cells is approximately equal to target_n_cells, but can be slightly more or less
 pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) -> Vec<AARectangle> {
-    //generates a grid of equal sized square cells in the shape.
-    //the number of cells is approximately equal to target_n_cells, but can be slightly more or less
     assert!(bbox.area() > 0.0, "bbox has zero area");
 
     let mut cells = vec![];
@@ -39,7 +39,7 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
             }
         }
         if n_iters >= 25 {
-            debug!("grid generation is taking too long, aborting after 25 iterations ({} cells instead of target {})", cells.len(), target_n_cells);
+            debug!("grid generation is taking too long, stopping after 25 iterations ({} cells instead of target {})", cells.len(), target_n_cells);
             break;
         }
 
@@ -51,15 +51,14 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
         }
 
         match attempt {
-            Ordering::Equal => {
-                //just right
-                break;
-            }
+            //Close enough
+            Ordering::Equal => break,
+            //not enough cells, decrease their size
             Ordering::Less => {
-                //not enough cells, decrease their size
                 correction_factor -= step_size;
                 cells.clear();
             }
+            //too many cells, increase their size
             Ordering::Greater => {
                 correction_factor += step_size;
                 cells.clear();

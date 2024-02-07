@@ -37,7 +37,7 @@ criterion_group!(benches, fast_fail_query_bench);
 mod util;
 
 const FF_POLE_RANGE: RangeInclusive<usize> = 0..=4;
-const FF_PIER_RANGE: RangeInclusive<usize> = 0..=4;
+const FF_PIER_RANGE: RangeInclusive<usize> = 0..=0;
 
 /// Benchmark the query operation of the quadtree for different depths
 /// We validate 1000 sampled transformations for each of the 5 removed items
