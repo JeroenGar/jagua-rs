@@ -8,7 +8,7 @@ use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::util::f64a::F64A;
 
-//Axis-aligned Rectangle
+///Geometric primitive representing an axis-aligned rectangle
 #[derive(Clone, Debug, PartialEq)]
 pub struct AARectangle {
     pub x_min: f64,
@@ -69,6 +69,7 @@ impl AARectangle {
         ]
     }
 
+    /// Returns the relation between self and another AARectangle
     pub fn relation_to(&self, other: &AARectangle) -> GeoRelation {
         if self.collides_with(other) {
             if self.x_min <= other.x_min && self.y_min <= other.y_min && 
@@ -87,6 +88,8 @@ impl AARectangle {
         }
     }
 
+    /// Returns the relation between self and another AARectangle, with a tolerance for floating point precision.
+    /// Leaning towards `Surrounding` and `Enclosed` instead of `Intersecting` in edge cases.
     pub fn almost_relation_to(&self, other: &AARectangle) -> GeoRelation {
         if self.almost_collides_with(other) {
             if F64A::from(self.x_min) <= F64A::from(other.x_min) && F64A::from(self.y_min) <= F64A::from(other.y_min) && 
@@ -136,10 +139,10 @@ impl AARectangle {
         self
     }
 
-    //array quadrant layout: [nw, ne, sw, se]
-    //e.g. cell with index 0 is neighbored by cells 1 and 2
+    /// For all quadrants, contains indices of the two neighbors of the quadrant at that index
     pub const QUADRANT_NEIGHBOR_LAYOUT: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
 
+    /// Returns the 4 quadrants of the rectangle, in the order NW, NE, SW, SE
     pub fn quadrants(&self) -> [Self; 4] {
 
         let Point(x_mid, y_mid) = self.centroid();

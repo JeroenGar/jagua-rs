@@ -3,6 +3,7 @@ use std::hash::{Hash, Hasher};
 use crate::geometry::geo_traits::{CollidesWith, Transformable, TransformableFrom};
 use crate::geometry::transformation::Transformation;
 
+/// Geometric primitive representing a point
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Point(pub f64, pub f64);
 

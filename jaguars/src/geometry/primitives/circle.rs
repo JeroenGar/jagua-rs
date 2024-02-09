@@ -7,7 +7,7 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::transformation::Transformation;
-
+/// Geometric primitive representing a circle
 #[derive(Clone, Debug, PartialEq)]
 pub struct Circle {
     pub center: Point,

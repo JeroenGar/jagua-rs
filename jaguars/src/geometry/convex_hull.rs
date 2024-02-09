@@ -1,6 +1,8 @@
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
+///<https://en.wikipedia.org/wiki/Convex_hull>
 
+/// Returns the indices of the points in the SimplePolygon that form the convex hull
 pub fn convex_hull_indices(shape: &SimplePolygon) -> Vec<usize> {
     let c_hull = convex_hull_from_points(shape.points().clone());
     let mut indices = vec![];
@@ -10,9 +12,9 @@ pub fn convex_hull_indices(shape: &SimplePolygon) -> Vec<usize> {
     indices
 }
 
+/// Returns the points that form the convex hull of the input points
+/// Uses the Monotone chain algorithm : <https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain>
 pub fn convex_hull_from_points(mut points: Vec<Point>) -> Vec<Point> {
-    // Monotone chain algorithm:
-    // https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
 
     //sort the points by x coordinate
     points.sort_by(|a, b| {

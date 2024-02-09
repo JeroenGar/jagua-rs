@@ -11,12 +11,11 @@ use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 
-pub static RAYS_PER_ANGLE: usize = if cfg!(debug_assertions) { 10 } else { 200 };
-pub static N_ANGLES: usize = if cfg!(debug_assertions) { 4 } else { 90 };
-pub static N_POINTS_PER_DIMENSION: usize = if cfg!(debug_assertions) { 10 } else { 100 };
-
-pub static CLIPPING_TRIM: f64 = 0.999;
-pub static ACTION_RADIUS_RATIO: f64 = 0.10;
+static RAYS_PER_ANGLE: usize = if cfg!(debug_assertions) { 10 } else { 200 };
+static N_ANGLES: usize = if cfg!(debug_assertions) { 4 } else { 90 };
+static N_POINTS_PER_DIMENSION: usize = if cfg!(debug_assertions) { 10 } else { 100 };
+static CLIPPING_TRIM: f64 = 0.999;
+static ACTION_RADIUS_RATIO: f64 = 0.10;
 
 pub fn generate(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> {
     if n == 0 {

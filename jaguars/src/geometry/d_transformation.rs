@@ -5,7 +5,7 @@ use ordered_float::NotNan;
 use crate::geometry::transformation::Transformation;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-///A proper rigid transformation, decomposed into a rotation followed by a translation
+/// A proper rigid transformation, decomposed into a rotation followed by a translation.
 pub struct DTransformation {
     pub rotation: NotNan<f64>,
     pub translation: (NotNan<f64>, NotNan<f64>),

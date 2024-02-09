@@ -18,8 +18,7 @@ use crate::geometry::transformation::Transformation;
 use crate::util::config::SPSurrogateConfig;
 use crate::util::f64a::F64A;
 
-//https://en.wikipedia.org/wiki/Simple_polygon
-
+/// Geometric primitive representing a simple polygon: <https://en.wikipedia.org/wiki/Simple_polygon>
 #[derive(Clone, Debug)]
 pub struct SimplePolygon {
     points: Vec<Point>,

@@ -4,6 +4,7 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::transformation::Transformation;
 
+/// Geometric primitive representing a line segment
 #[derive(Clone, Debug, PartialEq)]
 pub struct Edge {
     pub start: Point,

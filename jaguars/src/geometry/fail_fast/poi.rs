@@ -7,9 +7,10 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
-//Based on Mapbox's "Polylabel" algorithm: https://github.com/mapbox/polylabel
 
-//Generates the Pole of Inaccessibility, with a twist that poles are also seen as exterior.
+/// Generates the Pole of Inaccessibility (PoI)
+/// The interior is defined as the interior of the shape minus the interior of the poles
+/// Based on Mapbox's "Polylabel" algorithm: <https://github.com/mapbox/polylabel>
 pub fn generate_next_pole(shape: &SimplePolygon, poles: &[Circle]) -> Circle {
     let square_bbox = shape.bbox().inflate_to_square();
     let root = POINode::new(square_bbox, MAX_POI_TREE_DEPTH, shape, &poles);
@@ -33,7 +34,7 @@ pub fn generate_next_pole(shape: &SimplePolygon, poles: &[Circle]) -> Circle {
     best.expect("no pole present")
 }
 
-//Creates a set of the largest possible non-overlapping circles in poly shape
+///Generates additional poles for a shape alongside the PoI
 pub fn generate_additional_surrogate_poles(shape: &SimplePolygon, max_poles: usize, coverage_goal: f64) -> Vec<Circle> {
     let mut all_poles = vec![shape.poi().clone()];
     let pole_area_goal = shape.area() * coverage_goal;

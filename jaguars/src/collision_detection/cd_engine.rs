@@ -10,7 +10,7 @@ use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
-use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable};
+use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable, TransformableFrom};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
@@ -230,6 +230,18 @@ impl CDEngine {
     }
 
     //QUERY ----------------------------------------------------------------------------------------
+    pub fn surrogate_or_shape_collides(&self, reference_shape: &SimplePolygon, buffer_shape : &mut SimplePolygon, transform: &Transformation, irrelevant_hazards: &[HazardEntity]) -> bool {
+        //Begin with checking the surrogate for collisions
+        match self.surrogate_collides(reference_shape.surrogate(), transform, irrelevant_hazards){
+            true => true,
+            false => {
+                //Transform the reference_shape and store the result in the buffer_shape
+                buffer_shape.transform_from(reference_shape, transform);
+                self.shape_collides(buffer_shape, irrelevant_hazards)
+            }
+        }
+    }
+
     pub fn shape_collides(&self, shape: &SimplePolygon, irrelevant_hazards: &[HazardEntity]) -> bool {
         match self.bbox.relation_to(&shape.bbox()) {
             //Not fully inside bbox => definite collision
