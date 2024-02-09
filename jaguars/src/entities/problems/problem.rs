@@ -8,30 +8,45 @@ use crate::entities::placing_option::PlacingOption;
 use crate::entities::instance::Instance;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
-use crate::entities::problems::bp_problem::BPProblem;
+use crate::entities::problems::bin_packing::BPProblem;
 use crate::entities::problems::problem::private::ProblemPrivate;
-use crate::entities::problems::sp_problem::SPProblem;
+use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::solution::Solution;
 
-#[enum_dispatch]
+/// Enum which contains all the different types implementing the Problem trait.
+/// Uses the enum_dispatch crate to have performant polymorphism for different problem types, see
+/// <https://docs.rs/enum_dispatch/latest/enum_dispatch/> for more information on enum_dispatch
 #[derive(Clone)]
-pub enum ProblemEnum {
-    BPProblem, //Bin Packing Problem
-    SPProblem, //Strip Packing Problem
+#[enum_dispatch]
+pub enum ProblemType {
+    /// Bin Packing Problem
+    BP(BPProblem),
+    /// Strip Packing Problem
+    SP(SPProblem),
 }
 
-#[enum_dispatch(ProblemEnum)]
+/// Trait for public shared functionality of all problem types.
+/// A `Problem` represents a problem instance in a modifiable state.
+/// It can insert or remove items, create a snapshot from the current state called a `Solution`,
+/// and restore its state to a previous `Solution`.
+#[enum_dispatch(ProblemType)]
 pub trait Problem: ProblemPrivate {
-    fn insert_item(&mut self, i_opt: &PlacingOption);
 
+    /// Places an item into the problem instance according to the given `PlacingOption`.
+    fn place_item(&mut self, i_opt: &PlacingOption);
+
+    /// Removes an item with a specific `PlacedItemUID` from a specific `Layout`
     fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID);
 
+    /// Saves the current state into a `Solution`.
     fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution;
 
+    /// Restores the state of the problem to a previous `Solution`.
     fn restore_to_solution(&mut self, solution: &Solution);
 
     fn instance(&self) -> &Arc<Instance>;
 
+    /// Returns the layouts of the problem instance, with at least one item placed in them.
     fn layouts(&self) -> &[Layout];
 
     fn layouts_mut(&mut self) -> &mut [Layout];
@@ -91,9 +106,10 @@ pub trait Problem: ProblemPrivate {
 
 pub(super) mod private {
     use enum_dispatch::enum_dispatch;
-    use crate::entities::problems::problem::ProblemEnum;
+    use crate::entities::problems::problem::ProblemType;
 
-    #[enum_dispatch(ProblemEnum)]
+    /// Trait for shared functionality of all problem types, but not exposed to the public.
+    #[enum_dispatch(ProblemType)]
     pub trait ProblemPrivate : Clone {
         fn next_solution_id(&mut self) -> usize;
 
@@ -111,7 +127,10 @@ pub(super) mod private {
 
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+/// Unique identifier for a layout in a problem instance.
 pub enum LayoutIndex {
+    /// Existing layout (at least one item) and its index in the `Problem`'s `layouts` vector.
     Existing(usize),
+    /// Empty layout (no items) and its index in the `Problem`'s `empty_layouts` vector.
     Empty(usize),
 }

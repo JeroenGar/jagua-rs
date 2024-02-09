@@ -11,7 +11,7 @@ use jaguars::entities::layout::Layout;
 
 use jaguars::entities::placing_option::PlacingOption;
 use jaguars::entities::problems::problem::{LayoutIndex, Problem};
-use jaguars::entities::problems::sp_problem::SPProblem;
+use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::geometry::geo_traits::{Shape, TransformableFrom};
 use jaguars::io::json_instance::JsonInstance;
 use jaguars::util::config::HazProxConfig;
@@ -48,7 +48,7 @@ fn hpg_bench(c: &mut Criterion) {
         let mut problem = SPProblem::new(instance.clone(), base_problem.strip_width(), config.cde_config);
         // Place the items in exactly the same way as the base problem
         for pi_uid in base_pi_uids.iter() {
-            problem.insert_item(&PlacingOption {
+            problem.place_item(&PlacingOption {
                 layout_index: LayoutIndex::Existing(0),
                 item_id: pi_uid.item_id,
                 transf: pi_uid.d_transf.compose(),

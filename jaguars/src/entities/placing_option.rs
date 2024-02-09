@@ -3,7 +3,7 @@ use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::transformation::Transformation;
 
 #[derive(Clone, Debug)]
-/// Represents a (valid) configuration of placing an item in a layout
+/// Contains information about how an `Item` with a `Transformation` applied can be placed in a `Layout`
 pub struct PlacingOption {
     pub layout_index: LayoutIndex,
     pub item_id: usize,

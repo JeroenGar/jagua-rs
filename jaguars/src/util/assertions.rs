@@ -50,7 +50,7 @@ pub fn instance_item_bin_ids_correct(items: &Vec<(Item, usize)>, packing_type: &
 
 pub fn problem_matches_solution<P: Problem>(problem: &P, solution: &Solution) -> bool {
     for l in problem.layouts() {
-        let sl = solution.layout_snapshots().iter().find(|sl| sl.id() == l.id()).unwrap();
+        let sl = solution.layout_snapshots.iter().find(|sl| sl.id() == l.id()).unwrap();
         match layouts_match(l, sl) {
             true => continue,
             false => return false,

@@ -62,7 +62,7 @@ fn main() {
     let solution_path = args.solution_folder.join(format!("sol_{}.json", input_file_stem));
     io::write_json_output(&json_output, Path::new(&solution_path));
 
-    for (i,s_layout) in solution.layout_snapshots().iter().enumerate(){
+    for (i,s_layout) in solution.layout_snapshots.iter().enumerate(){
         let svg_path = args.solution_folder.join(format!("sol_{}_{}.svg", input_file_stem, i));
         io::write_svg(&s_layout_to_svg(s_layout, &instance, config.svg_draw_options), Path::new(&svg_path));
     }

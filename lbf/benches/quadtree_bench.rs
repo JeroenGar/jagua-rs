@@ -11,8 +11,8 @@ use rand::seq::IteratorRandom;
 use jaguars::entities::instance::{Instance, PackingType};
 use jaguars::entities::placed_item::PlacedItemUID;
 use jaguars::entities::placing_option::PlacingOption;
-use jaguars::entities::problems::problem::{LayoutIndex, Problem, ProblemEnum};
-use jaguars::entities::problems::sp_problem::SPProblem;
+use jaguars::entities::problems::problem::{LayoutIndex, Problem, ProblemType};
+use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::geometry::geo_traits::TransformableFrom;
 use jaguars::io::json_instance::JsonInstance;
 use jaguars::io::parser::Parser;
@@ -67,7 +67,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
                 // Insert 5 items back into the layout
                 for pi_uid in selected_pi_uids.into_iter().flatten() {
                     //println!("Inserting item with id: {}\n", pi_uid.item_id);
-                    problem.insert_item(&PlacingOption {
+                    problem.place_item(&PlacingOption {
                         layout_index,
                         item_id: pi_uid.item_id,
                         transf: pi_uid.d_transf.compose(),
@@ -180,7 +180,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 // Insert 5 items back into the layout
                 for pi_uid in selected_pi_uids.into_iter().flatten() {
                     //println!("Inserting item with id: {}\n", pi_uid.item_id);
-                    problem.insert_item(&PlacingOption {
+                    problem.place_item(&PlacingOption {
                         layout_index: LayoutIndex::Existing(0),
                         item_id: pi_uid.item_id,
                         transf: pi_uid.d_transf.compose(),

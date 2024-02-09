@@ -8,10 +8,13 @@ use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
+/// Represents an `Item` that has been placed in a `Layout`
 #[derive(Clone, Debug)]
 pub struct PlacedItem {
+    /// Unique identifier for the placed item
     pi_uid: PlacedItemUID,
     qz_haz_filter: Option<QZHazardFilter>,
+    /// The shape of the `Item` after it has been transformed and placed in a `Layout`
     shape: Arc<SimplePolygon>,
 }
 

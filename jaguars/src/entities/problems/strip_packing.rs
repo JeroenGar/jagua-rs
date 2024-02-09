@@ -17,6 +17,7 @@ use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
 
+/// Strip Packing Problem
 #[derive(Clone)]
 pub struct SPProblem {
     instance: Arc<Instance>,
@@ -70,7 +71,7 @@ impl SPProblem {
                         transf,
                         d_transf: p_uid.d_transf.clone(),
                     };
-                    self.insert_item(&insert_opt);
+                    self.place_item(&insert_opt);
                 }
             }
         }
@@ -103,7 +104,7 @@ impl SPProblem {
 }
 
 impl Problem for SPProblem {
-    fn insert_item(&mut self, i_opt: &PlacingOption) {
+    fn place_item(&mut self, i_opt: &PlacingOption) {
         assert_eq!(i_opt.layout_index, LayoutIndex::Existing(0), "strip packing problems only have a single layout");
         let item_id = i_opt.item_id;
         let item = self.instance.item(item_id);
@@ -133,10 +134,10 @@ impl Problem for SPProblem {
     }
 
     fn restore_to_solution(&mut self, solution: &Solution) {
-        debug_assert!(solution.layout_snapshots().len() == 1);
-        self.layout.restore(&solution.layout_snapshots()[0], &self.instance);
+        debug_assert!(solution.layout_snapshots.len() == 1);
+        self.layout.restore(&solution.layout_snapshots[0], &self.instance);
         self.missing_item_qtys.iter_mut().enumerate().for_each(|(i, qty)| {
-            *qty = (self.instance.item_qty(i) - solution.placed_item_qtys()[i]) as isize
+            *qty = (self.instance.item_qty(i) - solution.placed_item_qtys[i]) as isize
         });
 
         debug_assert!(assertions::problem_matches_solution(self, solution));

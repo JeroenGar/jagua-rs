@@ -7,7 +7,9 @@ use crate::geometry::transformation::Transformation;
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// A proper rigid transformation, decomposed into a rotation followed by a translation.
 pub struct DTransformation {
+    /// The rotation in radians
     pub rotation: NotNan<f64>,
+    /// The translation in the x and y-axis
     pub translation: (NotNan<f64>, NotNan<f64>),
 }
 

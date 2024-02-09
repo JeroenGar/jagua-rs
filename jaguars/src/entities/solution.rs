@@ -6,16 +6,24 @@ use crate::entities::instance::{Instance, PackingType};
 use crate::entities::layout::LayoutSnapshot;
 use crate::geometry::geo_traits::Shape;
 
-//TODO: clean this up properly
+/// Represents a snapshot of a `Problem` at a specific moment.
+/// Solutions can be used to restore the state of a `Problem` to a previous state.
 #[derive(Debug, Clone)]
 pub struct Solution {
-    id: usize,
-    layout_snapshots: Vec<LayoutSnapshot>,
-    usage: f64,
-    placed_item_qtys: Vec<usize>,
-    target_item_qtys: Vec<usize>,
-    bin_qtys: Vec<usize>,
-    time_stamp: Instant,
+    /// Unique identifier for the solution
+    pub id: usize,
+    /// Snapshots of all `Layout`s in the `Problem` at the moment the solution was created
+    pub layout_snapshots: Vec<LayoutSnapshot>,
+    /// Average usage of bins in the solution
+    pub usage: f64,
+    /// Quantity of placed items for each `Item` in the solution
+    pub placed_item_qtys: Vec<usize>,
+    /// Target quantity of each `Item` in the solution
+    pub target_item_qtys: Vec<usize>,
+    /// Quantity of bins used for each type of bin
+    pub bin_qtys: Vec<usize>,
+    /// Instant the solution was created
+    pub time_stamp: Instant,
 }
 
 impl Solution {
@@ -29,10 +37,6 @@ impl Solution {
             bin_qtys,
             time_stamp: Instant::now(),
         }
-    }
-
-    pub fn layout_snapshots(&self) -> &Vec<LayoutSnapshot> {
-        &self.layout_snapshots
     }
 
     pub fn is_complete(&self, instance: &Instance) -> bool {
@@ -49,14 +53,6 @@ impl Solution {
         completeness
     }
 
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
-    pub fn placed_item_qtys(&self) -> &Vec<usize> {
-        &self.placed_item_qtys
-    }
-
     pub fn missing_item_qtys(&self, instance: &Instance) -> Vec<isize> {
         debug_assert!(instance.items().len() == self.placed_item_qtys.len());
         self.placed_item_qtys.iter().enumerate()
@@ -64,18 +60,7 @@ impl Solution {
             .collect_vec()
     }
 
-    pub fn bin_qtys(&self) -> &Vec<usize> {
-        &self.bin_qtys
-    }
-
-    pub fn usage(&self) -> f64 {
-        self.usage
-    }
-
-    pub fn target_item_qtys(&self) -> &Vec<usize> {
-        &self.target_item_qtys
-    }
-
+    //TODO: clean this up properly
     pub fn is_best_possible(&self, instance: &Instance) -> bool {
         match instance.packing_type() {
             PackingType::StripPacking { .. } => false,
@@ -90,10 +75,6 @@ impl Solution {
                 }
             }
         }
-    }
-
-    pub fn time_stamp(&self) -> Instant {
-        self.time_stamp
     }
 
     pub fn n_items_placed(&self) -> usize {

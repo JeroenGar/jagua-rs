@@ -8,9 +8,9 @@ use crate::entities::bin::Bin;
 use crate::entities::instance::{Instance, PackingType};
 use crate::entities::item::Item;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::bp_problem::BPProblem;
-use crate::entities::problems::problem::{LayoutIndex, Problem, ProblemEnum};
-use crate::entities::problems::sp_problem::SPProblem;
+use crate::entities::problems::bin_packing::BPProblem;
+use crate::entities::problems::problem::{LayoutIndex, ProblemType, Problem};
+use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::quality_zone::QualityZone;
 use crate::entities::solution::Solution;
 use crate::geometry::d_transformation::DTransformation;
@@ -174,14 +174,14 @@ impl Parser {
 }
 
 fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>, cde_config: CDEConfig) -> Solution {
-    let mut problem: ProblemEnum = match instance.packing_type() {
-        PackingType::BinPacking(_) => ProblemEnum::BPProblem(BPProblem::new(instance.clone())),
+    let mut problem: ProblemType = match instance.packing_type() {
+        PackingType::BinPacking(_) => ProblemType::BP(BPProblem::new(instance.clone())),
         PackingType::StripPacking { .. } => {
             assert_eq!(json_layouts.len(), 1);
             match json_layouts[0].object_type {
                 JsonObjectType::Object { .. } => panic!("Strip packing solution should not contain layouts with references to an Object"),
                 JsonObjectType::Strip { width, height: _ } => {
-                    ProblemEnum::SPProblem(SPProblem::new(instance.clone(), width, cde_config))
+                    ProblemType::SP(SPProblem::new(instance.clone(), width, cde_config))
                 }
             }
         }
@@ -218,7 +218,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
             transf,
             d_transf,
         };
-        problem.insert_item(&initial_insert_opt);
+        problem.place_item(&initial_insert_opt);
         problem.flush_changes();
 
         //TODO: assuming layouts are always added to the back of the vector is not very robust
@@ -241,7 +241,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
                 transf,
                 d_transf,
             };
-            problem.insert_item(&insert_opt);
+            problem.place_item(&insert_opt);
             problem.flush_changes();
         }
     }
@@ -250,7 +250,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
 }
 
 pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: Instant) -> JsonSolution {
-    let layouts = solution.layout_snapshots().iter()
+    let layouts = solution.layout_snapshots.iter()
         .map(|sl| {
             let object_type = match instance.packing_type() {
                 PackingType::BinPacking(..) => JsonObjectType::Object { id: sl.bin().id() },
@@ -299,8 +299,8 @@ pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: In
 
     JsonSolution {
         layouts,
-        usage: solution.usage(),
-        run_time_sec: solution.time_stamp().duration_since(epoch).as_secs(),
+        usage: solution.usage,
+        run_time_sec: solution.time_stamp.duration_since(epoch).as_secs(),
     }
 }
 

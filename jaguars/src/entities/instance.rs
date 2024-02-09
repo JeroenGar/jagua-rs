@@ -3,6 +3,7 @@ use crate::entities::item::Item;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 
+/// Static representation of a problem instance.
 #[derive(Debug)]
 pub struct Instance {
     items: Vec<(Item, usize)>,
@@ -51,6 +52,8 @@ impl Instance {
     }
 }
 
+
+//TODO: clean this up
 #[derive(Debug, Clone)]
 pub enum PackingType {
     BinPacking(Vec<(Bin, usize)>),

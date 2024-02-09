@@ -14,9 +14,9 @@ use jaguars::entities::instance::{Instance, PackingType};
 use jaguars::entities::item::Item;
 use jaguars::entities::layout::Layout;
 use jaguars::entities::placing_option::PlacingOption;
-use jaguars::entities::problems::bp_problem::BPProblem;
-use jaguars::entities::problems::problem::{LayoutIndex, Problem, ProblemEnum};
-use jaguars::entities::problems::sp_problem::SPProblem;
+use jaguars::entities::problems::bin_packing::BPProblem;
+use jaguars::entities::problems::problem::{LayoutIndex, Problem, ProblemType};
+use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::entities::solution::Solution;
 use jaguars::geometry::convex_hull::convex_hull_from_points;
 use jaguars::geometry::geo_traits::{Shape, TransformableFrom};
@@ -36,7 +36,7 @@ pub const ITEM_LIMIT: usize = 1000;
 
 pub struct LBFOptimizer {
     instance: Arc<Instance>,
-    problem: ProblemEnum,
+    problem: ProblemType,
     config: Config,
     /// SmallRng is a fast, non-cryptographic PRNG <https://rust-random.github.io/book/guide-rngs.html>
     rng: SmallRng,
@@ -84,15 +84,15 @@ impl LBFOptimizer {
                 match find_placement(&self.problem, item, &self.config, &mut self.rng) {
                     Some(i_opt) => {
                         info!("Inserting item {} at {}", i_opt.item_id, i_opt.d_transf);
-                        self.problem.insert_item(&i_opt);
+                        self.problem.place_item(&i_opt);
                         if self.problem.included_item_qtys().iter().sum::<usize>() >= ITEM_LIMIT {
                             break 'outer;
                         }
                     }
                     None => {
                         match &mut self.problem {
-                            ProblemEnum::BPProblem(_) => break,
-                            ProblemEnum::SPProblem(sp_problem) => {
+                            ProblemType::BP(_) => break,
+                            ProblemType::SP(sp_problem) => {
                                 let new_width = sp_problem.strip_width() * 1.1;
                                 info!("Extending the strip by 10%: {:.3}", new_width);
                                 sp_problem.modify_strip_width(new_width);
@@ -104,8 +104,8 @@ impl LBFOptimizer {
         }
 
         match &mut self.problem {
-            ProblemEnum::BPProblem(_) => {}
-            ProblemEnum::SPProblem(sp_problem) => {
+            ProblemType::BP(_) => {}
+            ProblemType::SP(sp_problem) => {
                 sp_problem.fit_strip_width();
                 info!("Final strip width: {:.3}", sp_problem.strip_width());
             }
@@ -113,7 +113,7 @@ impl LBFOptimizer {
 
         let solution: Solution = self.problem.create_solution(&None);
 
-        info!("BLFOptimizer finished, {} items placed in {}ms, usage: {:.3}%", solution.n_items_placed(), start.elapsed().as_millis(), solution.usage() * 100.0);
+        info!("BLFOptimizer finished, {} items placed in {}ms, usage: {:.3}%", solution.n_items_placed(), start.elapsed().as_millis(), solution.usage * 100.0);
         solution
     }
 
@@ -121,7 +121,7 @@ impl LBFOptimizer {
     pub fn instance(&self) -> &Arc<Instance> {
         &self.instance
     }
-    pub fn problem(&self) -> &ProblemEnum {
+    pub fn problem(&self) -> &ProblemType {
         &self.problem
     }
     pub fn config(&self) -> &Config {
@@ -129,7 +129,7 @@ impl LBFOptimizer {
     }
 }
 
-fn find_placement(problem: &ProblemEnum, item: &Item, config: &Config, rng: &mut impl Rng) -> Option<PlacingOption> {
+fn find_placement(problem: &ProblemType, item: &Item, config: &Config, rng: &mut impl Rng) -> Option<PlacingOption> {
     let layouts_to_sample =
         (0..problem.layouts().len()).map(|i| (LayoutIndex::Existing(i)))
             .chain((0..problem.empty_layouts().len())
@@ -144,7 +144,7 @@ fn find_placement(problem: &ProblemEnum, item: &Item, config: &Config, rng: &mut
     best_i_opt
 }
 
-pub fn sample_layout(problem: &ProblemEnum, layout_index: LayoutIndex, item: &Item, config: &Config, rng: &mut impl Rng) -> Option<PlacingOption> {
+pub fn sample_layout(problem: &ProblemType, layout_index: LayoutIndex, item: &Item, config: &Config, rng: &mut impl Rng) -> Option<PlacingOption> {
     let item_id = item.id();
     let layout: &Layout = problem.get_layout(&layout_index);
     let entities_to_ignore = item.hazard_filter()

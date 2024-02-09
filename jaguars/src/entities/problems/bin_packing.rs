@@ -12,6 +12,7 @@ use crate::entities::problems::problem::private::ProblemPrivate;
 use crate::entities::solution::Solution;
 use crate::util::assertions;
 
+/// Bin Packing Problem
 #[derive(Clone)]
 pub struct BPProblem {
     instance: Arc<Instance>,
@@ -114,7 +115,7 @@ impl BPProblem {
 }
 
 impl Problem for BPProblem {
-    fn insert_item(&mut self, i_opt: &PlacingOption) {
+    fn place_item(&mut self, i_opt: &PlacingOption) {
         let item_id = i_opt.item_id;
         let layout = match &i_opt.layout_index {
             LayoutIndex::Existing(i) => {
@@ -158,10 +159,10 @@ impl Problem for BPProblem {
         let bin_qtys = self.bin_qtys().to_vec();
         let layout_snapshots = match old_solution {
             Some(old_solution) => {
-                assert_eq!(old_solution.id(), self.unchanged_layouts_solution_id.unwrap());
+                assert_eq!(old_solution.id, self.unchanged_layouts_solution_id.unwrap());
                 self.layouts.iter_mut().map(|l| {
                     match self.unchanged_layouts.contains(&l.id()) {
-                        true => old_solution.layout_snapshots().iter().find(|sl| sl.id() == l.id()).unwrap().clone(),
+                        true => old_solution.layout_snapshots.iter().find(|sl| sl.id() == l.id()).unwrap().clone(),
                         false => l.create_layout_snapshot()
                     }
                 }).collect()
@@ -176,13 +177,13 @@ impl Problem for BPProblem {
         let solution = Solution::new(id, layout_snapshots, self.usage(), included_item_qtys, target_item_qtys, bin_qtys);
 
         debug_assert!(assertions::problem_matches_solution(self, &solution));
-        self.reset_unchanged_layouts(solution.id());
+        self.reset_unchanged_layouts(solution.id);
 
         solution
     }
 
     fn restore_to_solution(&mut self, solution: &Solution) {
-        match self.unchanged_layouts_solution_id == Some(solution.id()) {
+        match self.unchanged_layouts_solution_id == Some(solution.id) {
             true => {
                 //A partial restore is possible.
                 //TODO: hashset here is probably slower than just using a (sorted) vector
@@ -190,7 +191,7 @@ impl Problem for BPProblem {
                 let mut layout_ids_not_in_solution = vec![];
                 for layout in self.layouts.iter_mut() {
                     //For all layouts in the problem, check which ones occur in the solution
-                    match solution.layout_snapshots().iter().position(|sl| sl.id() == layout.id()) {
+                    match solution.layout_snapshots.iter().position(|sl| sl.id() == layout.id()) {
                         Some(i) => {
                             //layout is present in the solution
                             match self.unchanged_layouts.contains(&layout.id()) {
@@ -199,7 +200,7 @@ impl Problem for BPProblem {
                                 }
                                 false => {
                                     //layout was changed, needs to be restored
-                                    layout.restore(&solution.layout_snapshots()[i], &self.instance);
+                                    layout.restore(&solution.layout_snapshots[i], &self.instance);
                                 }
                             }
                             layout_ids_in_problem.insert(layout.id());
@@ -213,7 +214,7 @@ impl Problem for BPProblem {
                 layout_ids_not_in_solution.iter().for_each(|id| { self.layouts.retain(|l| l.id() != *id); });
 
                 //Some layouts are present in the solution, but not in the problem
-                for sl in solution.layout_snapshots().iter() {
+                for sl in solution.layout_snapshots.iter() {
                     if !layout_ids_in_problem.contains(&sl.id()) {
                         //It is possible they are in the uncommitted_removed_layouts
                         match self.uncommitted_removed_layouts.iter().position(|l| l.id() == sl.id()) {
@@ -235,7 +236,7 @@ impl Problem for BPProblem {
             false => {
                 //The id of the solution does not match unchanged_layouts_solution_id, a partial restore is not possible
                 self.layouts.clear();
-                for sl in solution.layout_snapshots().iter() {
+                for sl in solution.layout_snapshots.iter() {
                     let layout = Layout::new_from_stored(sl.id(), sl, &self.instance());
                     self.layouts.push(layout);
                 }
@@ -243,12 +244,12 @@ impl Problem for BPProblem {
         }
 
         self.missing_item_qtys.iter_mut().enumerate().for_each(|(i, qty)| {
-            *qty = (self.instance.item_qty(i) - solution.placed_item_qtys()[i]) as isize
+            *qty = (self.instance.item_qty(i) - solution.placed_item_qtys[i]) as isize
         });
-        self.bin_qtys.clone_from_slice(solution.bin_qtys());
+        self.bin_qtys.clone_from_slice(&solution.bin_qtys);
         self.uncommitted_removed_layouts.clear();
 
-        self.reset_unchanged_layouts(solution.id());
+        self.reset_unchanged_layouts(solution.id);
 
         debug_assert!(assertions::problem_matches_solution(self, solution));
     }

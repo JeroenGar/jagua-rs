@@ -1,3 +1,3 @@
 pub mod problem;
-pub mod bp_problem;
-pub mod sp_problem;
+pub mod bin_packing;
+pub mod strip_packing;
