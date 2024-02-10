@@ -6,6 +6,7 @@ use itertools::Itertools;
 
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::instance::Instance;
+use crate::entities::instance::InstanceVariant;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::problems::bin_packing::BPProblem;
@@ -45,8 +46,6 @@ pub trait ProblemVariant: ProblemVariantPrivate {
     /// Restores the state of the problem to a previous `Solution`.
     fn restore_to_solution(&mut self, solution: &Solution);
 
-    fn instance(&self) -> &Arc<Instance>;
-
     /// Returns the layouts of the problem instance, with at least one item placed in them.
     fn layouts(&self) -> &[Layout];
 
@@ -74,11 +73,7 @@ pub trait ProblemVariant: ProblemVariantPrivate {
         self.layouts().iter().map(|l| l.bin().value()).sum()
     }
 
-    fn included_item_qtys(&self) -> Vec<usize> {
-        (0..self.missing_item_qtys().len())
-            .map(|i| (self.instance().item_qty(i) as isize - self.missing_item_qtys()[i]) as usize)
-            .collect_vec()
-    }
+    fn included_item_qtys(&self) -> Vec<usize>;
 
     fn empty_layout_has_stock(&self, index: usize) -> bool {
         let bin_id = self.empty_layouts()[index].bin().id();

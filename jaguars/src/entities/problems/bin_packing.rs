@@ -3,10 +3,11 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 
-use crate::entities::placing_option::PlacingOption;
-use crate::entities::instance::{Instance, PackingType};
+use crate::entities::instance::{BPInstance, Instance};
+use crate::entities::instance::InstanceVariant;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
+use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::problem::{LayoutIndex, ProblemVariant};
 use crate::entities::problems::problem::private::ProblemVariantPrivate;
 use crate::entities::solution::Solution;
@@ -15,7 +16,7 @@ use crate::util::assertions;
 /// Bin Packing Problem
 #[derive(Clone)]
 pub struct BPProblem {
-    instance: Arc<Instance>,
+    instance: BPInstance,
     layouts: Vec<Layout>,
     empty_layouts: Vec<Layout>,
     missing_item_qtys: Vec<isize>,
@@ -28,34 +29,29 @@ pub struct BPProblem {
 }
 
 impl BPProblem {
-    pub fn new(instance: Arc<Instance>) -> Self {
-        match instance.packing_type() {
-            PackingType::StripPacking { .. } => panic!("cannot create BinPackingProblem from strip packing instance"),
-            PackingType::BinPacking(bins) => {
-                let missing_item_qtys = instance.items().iter().map(|(_, qty)| *qty as isize).collect_vec();
-                let bin_qtys = bins.iter().map(|(_, qty)| *qty).collect_vec();
-                let layouts = vec![];
-                let empty_layouts = bins.iter().enumerate().map(|(i, (bin, _))| {
-                    Layout::new(i, bin.clone())
-                }).collect_vec();
-                let layout_id_counter = empty_layouts.len();
-                let unchanged_layouts = vec![];
-                let unchanged_layouts_solution_id = None;
-                let uncommitted_removed_layouts = vec![];
+    pub fn new(instance: BPInstance) -> Self {
+        let missing_item_qtys = instance.items.iter().map(|(_, qty)| *qty as isize).collect_vec();
+        let bin_qtys =  instance.bins.iter().map(|(_, qty)| *qty).collect_vec();
+        let layouts = vec![];
+        let empty_layouts =  instance.bins.iter().enumerate().map(|(i, (bin, _))| {
+            Layout::new(i, bin.clone())
+        }).collect_vec();
+        let layout_id_counter = empty_layouts.len();
+        let unchanged_layouts = vec![];
+        let unchanged_layouts_solution_id = None;
+        let uncommitted_removed_layouts = vec![];
 
-                Self {
-                    instance,
-                    layouts,
-                    empty_layouts,
-                    missing_item_qtys,
-                    bin_qtys,
-                    layout_id_counter,
-                    solution_id_counter: 0,
-                    unchanged_layouts,
-                    unchanged_layouts_solution_id,
-                    uncommitted_removed_layouts,
-                }
-            }
+        Self {
+            instance,
+            layouts,
+            empty_layouts,
+            missing_item_qtys,
+            bin_qtys,
+            layout_id_counter,
+            solution_id_counter: 0,
+            unchanged_layouts,
+            unchanged_layouts_solution_id,
+            uncommitted_removed_layouts,
         }
     }
 
@@ -111,6 +107,10 @@ impl BPProblem {
         if let Some(index) = index {
             self.unchanged_layouts.remove(index);
         }
+    }
+
+    fn instance(&self) -> &BPInstance {
+        &self.instance
     }
 }
 
@@ -200,7 +200,7 @@ impl ProblemVariant for BPProblem {
                                 }
                                 false => {
                                     //layout was changed, needs to be restored
-                                    layout.restore(&solution.layout_snapshots[i], &self.instance);
+                                    layout.restore(&solution.layout_snapshots[i]);
                                 }
                             }
                             layout_ids_in_problem.insert(layout.id());
@@ -221,12 +221,12 @@ impl ProblemVariant for BPProblem {
                             Some(i) => {
                                 //original layout is still present, restore it and add it to the problem
                                 let mut layout = self.uncommitted_removed_layouts.swap_remove(i);
-                                layout.restore(sl, &self.instance());
+                                layout.restore(sl);
                                 self.layouts.push(layout);
                             }
                             None => {
                                 //If not, the layout will have to be rebuilt from scratch
-                                let layout = Layout::new_from_stored(sl.id(), sl, &self.instance());
+                                let layout = Layout::new_from_stored(sl.id(), sl);
                                 self.layouts.push(layout);
                             }
                         }
@@ -237,7 +237,7 @@ impl ProblemVariant for BPProblem {
                 //The id of the solution does not match unchanged_layouts_solution_id, a partial restore is not possible
                 self.layouts.clear();
                 for sl in solution.layout_snapshots.iter() {
-                    let layout = Layout::new_from_stored(sl.id(), sl, &self.instance());
+                    let layout = Layout::new_from_stored(sl.id(), sl);
                     self.layouts.push(layout);
                 }
             }
@@ -254,10 +254,6 @@ impl ProblemVariant for BPProblem {
         debug_assert!(assertions::problem_matches_solution(self, solution));
     }
 
-    fn instance(&self) -> &Arc<Instance> {
-        &self.instance
-    }
-
     fn layouts(&self) -> &[Layout] {
         &self.layouts
     }
@@ -272,6 +268,12 @@ impl ProblemVariant for BPProblem {
 
     fn missing_item_qtys(&self) -> &[isize] {
         &self.missing_item_qtys
+    }
+
+    fn included_item_qtys(&self) -> Vec<usize> {
+        (0..self.missing_item_qtys().len())
+            .map(|i| (self.instance.item_qty(i) as isize - self.missing_item_qtys()[i]) as usize)
+            .collect_vec()
     }
 
     fn bin_qtys(&self) -> &[usize] {

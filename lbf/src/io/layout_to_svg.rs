@@ -1,6 +1,7 @@
 use svg::Document;
 use svg::node::element::Group;
 use jaguars::entities::instance::Instance;
+use jaguars::entities::instance::InstanceVariant;
 use jaguars::entities::layout::Layout;
 use jaguars::entities::layout::LayoutSnapshot;
 use jaguars::geometry::geo_enums::GeoPosition;
@@ -10,7 +11,7 @@ use crate::io::{svg_export, svg_util};
 use crate::io::svg_util::{SvgDrawOptions};
 
 pub fn s_layout_to_svg(s_layout: &LayoutSnapshot, instance: &Instance, options: SvgDrawOptions) -> Document {
-    let layout = Layout::new_from_stored(s_layout.id(), s_layout, &instance);
+    let layout = Layout::new_from_stored(s_layout.id(), s_layout);
     layout_to_svg(&layout, instance, options)
 }
 

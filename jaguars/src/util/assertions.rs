@@ -13,7 +13,7 @@ use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::entities::bin::Bin;
-use crate::entities::instance::PackingType;
+use crate::entities::instance;
 use crate::entities::item::Item;
 use crate::entities::layout::Layout;
 use crate::entities::problems::problem::ProblemVariant;
@@ -25,7 +25,7 @@ use crate::util;
 
 ///
 
-pub fn instance_item_bin_ids_correct(items: &Vec<(Item, usize)>, packing_type: &PackingType) -> bool {
+pub fn instance_item_bin_ids_correct(items: &Vec<(Item, usize)>, bins: &Vec<(Bin, usize)>) -> bool {
     let mut id = 0;
     for (parttype, _qty) in items {
         if parttype.id() != id {
@@ -33,19 +33,14 @@ pub fn instance_item_bin_ids_correct(items: &Vec<(Item, usize)>, packing_type: &
         }
         id += 1;
     }
-    return match packing_type {
-        PackingType::StripPacking { .. } => true,
-        PackingType::BinPacking(bins) => {
-            let mut id = 0;
-            for (bin, _qty) in bins {
-                if bin.id() != id {
-                    return false;
-                }
-                id += 1;
-            }
-            true
+    let mut id = 0;
+    for (bin, _qty) in bins {
+        if bin.id() != id {
+            return false;
         }
-    };
+        id += 1;
+    }
+    true
 }
 
 pub fn problem_matches_solution<P: ProblemVariant>(problem: &P, solution: &Solution) -> bool {

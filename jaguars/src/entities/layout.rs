@@ -27,9 +27,9 @@ impl Layout {
         }
     }
 
-    pub fn new_from_stored(id: usize, layout_snapshot: &LayoutSnapshot, instance: &Instance) -> Self {
+    pub fn new_from_stored(id: usize, layout_snapshot: &LayoutSnapshot) -> Self {
         let mut layout = Layout::new(id, layout_snapshot.bin.clone());
-        layout.restore(&layout_snapshot, instance);
+        layout.restore(&layout_snapshot);
         layout
     }
 
@@ -45,7 +45,7 @@ impl Layout {
         }
     }
 
-    pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot, _instance: &Instance) {
+    pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
         assert_eq!(self.bin.id(), layout_snapshot.bin.id());
 
         self.placed_items = layout_snapshot.placed_items.clone();

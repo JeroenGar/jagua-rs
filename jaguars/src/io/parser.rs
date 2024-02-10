@@ -5,7 +5,7 @@ use itertools::Itertools;
 use log::{Level, log, warn};
 
 use crate::entities::bin::Bin;
-use crate::entities::instance::{Instance, PackingType};
+use crate::entities::instance::{BPInstance, Instance, InstanceVariant, SPInstance};
 use crate::entities::item::Item;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
@@ -39,7 +39,7 @@ impl Parser {
 
     pub fn parse(&self, json_instance: &JsonInstance) -> Instance {
         let mut items: Vec<(Item, usize)> = vec![];
-        let mut packing_type = None;
+        let mut instance = None;
 
         crossbeam::thread::scope(|s| {
             let mut item_join_handles = vec![];
@@ -77,7 +77,7 @@ impl Parser {
                 items.push(join_handle.join().unwrap());
             }
 
-            match (json_instance.bins.as_ref(), json_instance.strip.as_ref()) {
+            instance = match (json_instance.bins.as_ref(), json_instance.strip.as_ref()) {
                 (Some(json_bins), None) => {
                     let mut bins: Vec<(Bin, usize)> = vec![];
                     let mut bin_join_handles = vec![];
@@ -139,29 +139,28 @@ impl Parser {
                     for join_handle in bin_join_handles {
                         bins.push(join_handle.join().unwrap());
                     }
-                    packing_type = Some(PackingType::BinPacking(bins));
+                    Some(Instance::BP(BPInstance::new(items, bins)))
                 }
                 (None, Some(json_strip)) => {
-                    packing_type = Some(PackingType::StripPacking { height: json_strip.height });
+                    Some(Instance::SP(SPInstance::new(items, json_strip.height)))
                 }
                 (Some(_), Some(_)) => panic!("Both bins and strip packing specified"),
                 (None, None) => panic!("No bins or strip packing specified")
-            }
+            };
         }).unwrap();
 
-        let instance = Instance::new(items, packing_type.unwrap());
+        let instance = instance.expect("Instance not parsed");
 
-        match instance.packing_type() {
-            PackingType::StripPacking { height } => {
-                log!(Level::Info, "Strip packing instance \"{}\" parsed: {} items ({} unique), {} strip height",json_instance.name,instance.total_item_qty(),instance.items().len(),height);
+        match &instance {
+            Instance::SP(spi) => {
+                log!(Level::Info, "Strip packing instance \"{}\" parsed: {} items ({} unique), {} strip height",json_instance.name,spi.total_item_qty(),spi.items.len(),spi.strip_height);
             }
-            PackingType::BinPacking(bins) => {
-                log!(Level::Info, "Bin packing instance \"{}\" parsed: {} items ({} unique), {} bins ({} unique)",json_instance.name, instance.total_item_qty(),instance.items().len(),bins.iter().map(|(_,qty)| *qty).sum::<usize>(),bins.len());
+            Instance::BP(bpi) => {
+                log!(Level::Info, "Bin packing instance \"{}\" parsed: {} items ({} unique), {} bins ({} unique)",json_instance.name, bpi.total_item_qty(),bpi.items.len(),bpi.bins.iter().map(|(_,qty)| *qty).sum::<usize>(),bpi.bins.len());
             }
         }
 
         log!(Level::Debug, "Total area of items: {}", instance.total_item_qty());
-
         instance
     }
 
@@ -174,27 +173,29 @@ impl Parser {
 }
 
 fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>, cde_config: CDEConfig) -> Solution {
-    let mut problem: Problem = match instance.packing_type() {
-        PackingType::BinPacking(_) => Problem::BP(BPProblem::new(instance.clone())),
-        PackingType::StripPacking { .. } => {
+    let mut problem: Problem = match instance.as_ref() {
+        Instance::BP(bp_i) => Problem::BP(BPProblem::new(bp_i.clone())),
+        Instance::SP(sp_i) => {
             assert_eq!(json_layouts.len(), 1);
             match json_layouts[0].object_type {
                 JsonObjectType::Object { .. } => panic!("Strip packing solution should not contain layouts with references to an Object"),
                 JsonObjectType::Strip { width, height: _ } => {
-                    Problem::SP(SPProblem::new(instance.clone(), width, cde_config))
+                    Problem::SP(SPProblem::new(sp_i.clone(), width, cde_config))
                 }
             }
         }
     };
 
     for json_layout in json_layouts {
-        let bin = match (instance.packing_type(), &json_layout.object_type) {
-            (PackingType::BinPacking(bins), JsonObjectType::Object { id }) => Some(&bins[*id].0),
-            (PackingType::StripPacking { .. }, JsonObjectType::Strip { .. }) => None,
+        let bin = match (instance.as_ref(), &json_layout.object_type) {
+            (Instance::BP(bpi), JsonObjectType::Object { id }) => Some(&bpi.bins[*id].0),
+            (Instance::SP(spi), JsonObjectType::Strip { .. }) => None,
             _ => panic!("Layout object type does not match packing type")
         };
         //Create the layout by inserting the first item
-        let (empty_layout_index, _empty_layout) = problem.empty_layouts().iter().enumerate()
+
+        //Find the empty layout matching the bin id in the JSON solution, 0 if strip packing instance.
+        let (empty_layout_index, _) = problem.empty_layouts().iter().enumerate()
             .find(|(_, layout)| layout.bin().id() == bin.map_or(0, |b| b.id())).unwrap();
 
         let bin_centering = bin.map_or(DTransformation::empty(), |b| DTransformation::from(b.centering_transform())).translation();
@@ -202,13 +203,15 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
         let json_first_item = json_layout.placed_items.get(0).unwrap();
         let first_item = instance.item(json_first_item.item_index);
 
+        //all items have a centering transformation applied during parsing.
+        //However, the transformation described in the JSON solution is relative to the item's original position, not the one after the centering transformation
         let first_item_centering_correction = first_item.centering_transform().clone().inverse().decompose().translation();
 
         let transf = Transformation::empty()
-            .translate(first_item_centering_correction)
-            .rotate(json_first_item.transformation.rotation)
-            .translate(json_first_item.transformation.translation)
-            .translate(bin_centering);
+            .translate(first_item_centering_correction) //undo the item centering transformation
+            .rotate(json_first_item.transformation.rotation) //apply the rotation from the JSON solution
+            .translate(json_first_item.transformation.translation) //apply the translation from the JSON solution
+            .translate(bin_centering); //correct for the bin centering transformation
 
         let d_transf = transf.decompose();
 
@@ -224,6 +227,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
         //TODO: assuming layouts are always added to the back of the vector is not very robust
         let layout_index = problem.layouts().len() - 1;
 
+        //Insert the rest of the items
         for json_item in json_layout.placed_items.iter().skip(1) {
             let item = instance.item(json_item.item_index);
             let item_centering_correction = item.centering_transform().clone().inverse().decompose().translation();
@@ -252,13 +256,17 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
 pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: Instant) -> JsonSolution {
     let layouts = solution.layout_snapshots.iter()
         .map(|sl| {
-            let object_type = match instance.packing_type() {
-                PackingType::BinPacking(..) => JsonObjectType::Object { id: sl.bin().id() },
-                PackingType::StripPacking { height } => JsonObjectType::Strip { width: sl.bin().bbox().width(), height: *height },
+            let object_type = match &instance {
+                Instance::BP(bpi)=> JsonObjectType::Object { id: sl.bin().id() },
+                Instance::SP(spi) => JsonObjectType::Strip { width: sl.bin().bbox().width(), height: spi.strip_height },
             };
-            let bin_centering_correction = match instance.packing_type() {
-                PackingType::StripPacking { .. } => (0.0, 0.0),
-                PackingType::BinPacking(bins) => bins[sl.bin().id()].0.centering_transform().clone().inverse().decompose().translation(),
+            //JSON solution should have their bins back in their original position, so we need to correct for the centering transformation
+            let bin_centering_correction = match &instance {
+                Instance::BP(bpi) => {
+                    let bin = &bpi.bins[sl.bin().id()].0;
+                    bin.centering_transform().clone().inverse().decompose().translation()
+                },
+                Instance::SP(_) => (0.0, 0.0), //no bin, no correction
             };
 
             let placed_items = sl.placed_items().iter()

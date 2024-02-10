@@ -4,7 +4,7 @@ use criterion::Criterion;
 use log::{info, Level, LevelFilter};
 use rand::prelude::{IteratorRandom, SmallRng};
 use rand::SeedableRng;
-use jaguars::entities::instance::{Instance, PackingType};
+use jaguars::entities::instance::{Instance, Containers};
 use jaguars::entities::placed_item::PlacedItemUID;
 use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant, Problem};
 use jaguars::entities::problems::strip_packing::SPProblem;
@@ -34,7 +34,7 @@ pub fn create_instance(json_instance: &JsonInstance, cde_config: CDEConfig, poly
 /// Returns the problem and the removed items
 /// Simulates a common scenario in iterative optimization algorithms: dense packing with a few items removed
 pub fn create_blf_problem(instance: Arc<Instance>, config: Config, n_items_removed: usize) -> (SPProblem, Vec<PlacedItemUID>) {
-    assert!(matches!(instance.packing_type(), PackingType::StripPacking {..}));
+    assert!(matches!(instance.containers(), Containers::Strip {..}));
     let mut lbf_optimizer = LBFOptimizer::new(instance.clone(), config, SmallRng::seed_from_u64(0));
     lbf_optimizer.solve();
 

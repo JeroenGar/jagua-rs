@@ -128,7 +128,7 @@ fn modify_instance(instance: &Instance, multiplier: usize, config: Config) -> In
         (modified_item, *qty)
     }).collect_vec();
 
-    Instance::new(modified_items, instance.packing_type().clone())
+    Instance::new(modified_items, instance.containers().clone())
 }
 fn multiply_edge_count(shape: &SimplePolygon, multiplier: usize) -> SimplePolygon{
     let mut new_points = vec![];

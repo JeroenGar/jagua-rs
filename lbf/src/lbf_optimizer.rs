@@ -10,7 +10,8 @@ use rand::prelude::SmallRng;
 use rand::Rng;
 
 use jaguars::collision_detection::hazard_filters::hazard_filter;
-use jaguars::entities::instance::{Instance, PackingType};
+use jaguars::entities::instance::Instance;
+use jaguars::entities::instance::InstanceVariant;
 use jaguars::entities::item::Item;
 use jaguars::entities::layout::Layout;
 use jaguars::entities::placing_option::PlacingOption;
@@ -45,11 +46,11 @@ pub struct LBFOptimizer {
 impl LBFOptimizer {
     pub fn new(instance: Arc<Instance>, config: Config, rng: SmallRng) -> Self {
         assert!(config.n_samples_per_item > 0);
-        let problem = match instance.packing_type() {
-            PackingType::BinPacking(_) => BPProblem::new(instance.clone()).into(),
-            PackingType::StripPacking { height } => {
-                let strip_width = instance.item_area() * 2.0 / height; //initiate with usage 50%
-                SPProblem::new(instance.clone(), strip_width, config.cde_config).into()
+        let problem = match instance.as_ref() {
+            Instance::BP(bpi) => BPProblem::new(bpi.clone()).into(),
+            Instance::SP(spi) => {
+                let strip_width = instance.item_area() * 2.0 / spi.strip_height; //initiate with usage 50%
+                SPProblem::new(spi.clone(), strip_width, config.cde_config).into()
             }
         };
 

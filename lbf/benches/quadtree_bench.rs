@@ -8,7 +8,7 @@ use rand::prelude::SmallRng;
 use rand::SeedableRng;
 use rand::seq::IteratorRandom;
 
-use jaguars::entities::instance::{Instance, PackingType};
+use jaguars::entities::instance::{Instance, Containers};
 use jaguars::entities::placed_item::PlacedItemUID;
 use jaguars::entities::placing_option::PlacingOption;
 use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant, Problem};

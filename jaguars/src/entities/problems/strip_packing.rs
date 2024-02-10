@@ -7,7 +7,8 @@ use ordered_float::NotNan;
 use crate::collision_detection::hazard_filters::hazard_filter;
 use crate::entities::bin::Bin;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::instance::{Instance, PackingType};
+use crate::entities::instance::{BPInstance, Instance, SPInstance};
+use crate::entities::instance::InstanceVariant;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::problems::problem::{LayoutIndex, ProblemVariant};
@@ -20,7 +21,7 @@ use crate::util::config::CDEConfig;
 /// Strip Packing Problem
 #[derive(Clone)]
 pub struct SPProblem {
-    instance: Arc<Instance>,
+    instance: SPInstance,
     layout: Layout,
     strip_height: f64,
     strip_width: f64,
@@ -29,24 +30,20 @@ pub struct SPProblem {
 }
 
 impl SPProblem {
-    pub fn new(instance: Arc<Instance>, strip_width: f64, cde_config: CDEConfig) -> Self {
-        match instance.packing_type() {
-            PackingType::BinPacking(_) => panic!("cannot create StripPackingProblem from bin packing instance"),
-            PackingType::StripPacking { height } => {
-                let missing_item_qtys = instance.items().iter().map(|(_, qty)| *qty as isize).collect_vec();
-                let strip_bin = Bin::from_strip(0, strip_width, *height, cde_config);
-                let strip_height = *height;
-                let layout = Layout::new(0, strip_bin);
+    pub fn new(instance: SPInstance, strip_width: f64, cde_config: CDEConfig) -> Self {
+        let height = instance.strip_height;
+        let missing_item_qtys = instance.items.iter().map(|(_, qty)| *qty as isize).collect_vec();
+        let strip_bin = Bin::from_strip(0, strip_width, height, cde_config);
+        let strip_height = height;
+        let layout = Layout::new(0, strip_bin);
 
-                Self {
-                    instance,
-                    layout,
-                    strip_height,
-                    strip_width,
-                    missing_item_qtys,
-                    solution_id_counter: 0,
-                }
-            }
+        Self {
+            instance,
+            layout,
+            strip_height,
+            strip_width,
+            missing_item_qtys,
+            solution_id_counter: 0,
         }
     }
 
@@ -92,14 +89,15 @@ impl SPProblem {
     }
 
     pub fn strip_height(&self) -> f64 {
-        match self.instance.packing_type() {
-            PackingType::BinPacking(_) => panic!("cannot get strip height from bin packing instance"),
-            PackingType::StripPacking { height } => *height,
-        }
+        self.strip_height
     }
 
     pub fn strip_width(&self) -> f64 {
         self.strip_width
+    }
+
+    fn instance(&self) -> &SPInstance {
+        &self.instance
     }
 }
 
@@ -124,7 +122,7 @@ impl ProblemVariant for SPProblem {
         let included_item_qtys = self.included_item_qtys();
         let bin_qtys = self.bin_qtys().to_vec();
         let layout_snapshots = vec![self.layout.create_layout_snapshot()];
-        let target_item_qtys = self.instance().items().iter().map(|(_, qty)| *qty).collect_vec();
+        let target_item_qtys = self.instance.items.iter().map(|(_, qty)| *qty).collect_vec();
 
         let solution = Solution::new(id, layout_snapshots, self.usage(), included_item_qtys, target_item_qtys, bin_qtys);
 
@@ -135,16 +133,12 @@ impl ProblemVariant for SPProblem {
 
     fn restore_to_solution(&mut self, solution: &Solution) {
         debug_assert!(solution.layout_snapshots.len() == 1);
-        self.layout.restore(&solution.layout_snapshots[0], &self.instance);
+        self.layout.restore(&solution.layout_snapshots[0]);
         self.missing_item_qtys.iter_mut().enumerate().for_each(|(i, qty)| {
             *qty = (self.instance.item_qty(i) - solution.placed_item_qtys[i]) as isize
         });
 
         debug_assert!(assertions::problem_matches_solution(self, solution));
-    }
-
-    fn instance(&self) -> &Arc<Instance> {
-        &self.instance
     }
 
     fn layouts(&self) -> &[Layout] {
@@ -161,6 +155,12 @@ impl ProblemVariant for SPProblem {
 
     fn missing_item_qtys(&self) -> &[isize] {
         &self.missing_item_qtys
+    }
+
+    fn included_item_qtys(&self) -> Vec<usize> {
+        (0..self.missing_item_qtys().len())
+            .map(|i| (self.instance.item_qty(i) as isize - self.missing_item_qtys()[i]) as usize)
+            .collect_vec()
     }
 
     fn empty_layout_has_stock(&self, _index: usize) -> bool {
