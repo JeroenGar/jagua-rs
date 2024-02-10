@@ -7,8 +7,8 @@ use crate::entities::placing_option::PlacingOption;
 use crate::entities::instance::{Instance, PackingType};
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
-use crate::entities::problems::problem::{LayoutIndex, Problem};
-use crate::entities::problems::problem::private::ProblemPrivate;
+use crate::entities::problems::problem::{LayoutIndex, ProblemVariant};
+use crate::entities::problems::problem::private::ProblemVariantPrivate;
 use crate::entities::solution::Solution;
 use crate::util::assertions;
 
@@ -114,7 +114,7 @@ impl BPProblem {
     }
 }
 
-impl Problem for BPProblem {
+impl ProblemVariant for BPProblem {
     fn place_item(&mut self, i_opt: &PlacingOption) {
         let item_id = i_opt.item_id;
         let layout = match &i_opt.layout_index {
@@ -280,7 +280,7 @@ impl Problem for BPProblem {
 }
 
 
-impl ProblemPrivate for BPProblem {
+impl ProblemVariantPrivate for BPProblem {
     fn next_solution_id(&mut self) -> usize {
         self.solution_id_counter += 1;
         self.solution_id_counter

@@ -10,7 +10,7 @@ use rand::SeedableRng;
 use jaguars::entities::layout::Layout;
 
 use jaguars::entities::placing_option::PlacingOption;
-use jaguars::entities::problems::problem::{LayoutIndex, Problem};
+use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant};
 use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::geometry::geo_traits::{Shape, TransformableFrom};
 use jaguars::io::json_instance::JsonInstance;

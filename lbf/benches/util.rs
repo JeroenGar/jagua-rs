@@ -6,7 +6,7 @@ use rand::prelude::{IteratorRandom, SmallRng};
 use rand::SeedableRng;
 use jaguars::entities::instance::{Instance, PackingType};
 use jaguars::entities::placed_item::PlacedItemUID;
-use jaguars::entities::problems::problem::{LayoutIndex, Problem, ProblemType};
+use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant, Problem};
 use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::io::json_instance::JsonInstance;
 use jaguars::io::parser::Parser;
@@ -39,7 +39,7 @@ pub fn create_blf_problem(instance: Arc<Instance>, config: Config, n_items_remov
     lbf_optimizer.solve();
 
     let mut problem = match lbf_optimizer.problem().clone() {
-        ProblemType::SP(sp_problem) => sp_problem,
+        Problem::SP(sp_problem) => sp_problem,
         _ => panic!("Expected SPProblem")
     };
 

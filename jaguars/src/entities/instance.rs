@@ -6,7 +6,9 @@ use crate::util::assertions;
 /// Static representation of a problem instance.
 #[derive(Debug)]
 pub struct Instance {
+    /// Items to be packed in the instance, along with their requested quantities
     items: Vec<(Item, usize)>,
+    /// Total area of all items in the instance
     item_area: f64,
     packing_type: PackingType,
 }

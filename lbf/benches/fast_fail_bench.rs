@@ -13,7 +13,7 @@ use tribool::Tribool;
 use jaguars::entities::instance::{Instance, PackingType};
 use jaguars::entities::placed_item::PlacedItemUID;
 use jaguars::entities::placing_option::PlacingOption;
-use jaguars::entities::problems::problem::{LayoutIndex, Problem, ProblemType};
+use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant, Problem};
 use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use jaguars::geometry::geo_traits::TransformableFrom;

@@ -9,7 +9,7 @@ use crate::entities::instance::{Instance, PackingType};
 use crate::entities::item::Item;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem::{LayoutIndex, ProblemType, Problem};
+use crate::entities::problems::problem::{LayoutIndex, Problem, ProblemVariant};
 use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::quality_zone::QualityZone;
 use crate::entities::solution::Solution;
@@ -174,14 +174,14 @@ impl Parser {
 }
 
 fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>, cde_config: CDEConfig) -> Solution {
-    let mut problem: ProblemType = match instance.packing_type() {
-        PackingType::BinPacking(_) => ProblemType::BP(BPProblem::new(instance.clone())),
+    let mut problem: Problem = match instance.packing_type() {
+        PackingType::BinPacking(_) => Problem::BP(BPProblem::new(instance.clone())),
         PackingType::StripPacking { .. } => {
             assert_eq!(json_layouts.len(), 1);
             match json_layouts[0].object_type {
                 JsonObjectType::Object { .. } => panic!("Strip packing solution should not contain layouts with references to an Object"),
                 JsonObjectType::Strip { width, height: _ } => {
-                    ProblemType::SP(SPProblem::new(instance.clone(), width, cde_config))
+                    Problem::SP(SPProblem::new(instance.clone(), width, cde_config))
                 }
             }
         }

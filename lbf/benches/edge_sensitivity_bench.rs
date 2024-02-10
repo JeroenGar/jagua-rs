@@ -9,7 +9,7 @@ use rand::prelude::{IteratorRandom, SmallRng};
 use rand::SeedableRng;
 use jaguars::entities::instance::Instance;
 use jaguars::entities::item::Item;
-use jaguars::entities::problems::problem::{LayoutIndex, Problem};
+use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant};
 use jaguars::geometry::geo_traits::{Shape, TransformableFrom};
 use jaguars::geometry::primitives::point::Point;
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
