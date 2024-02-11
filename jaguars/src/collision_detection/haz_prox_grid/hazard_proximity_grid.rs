@@ -11,6 +11,8 @@ use crate::collision_detection::hazard::HazardEntity;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 
+/// Grid of cells which store information about hazards in their vicinity.
+/// The grid is a part of the `CDEngine` and is thus automatically updated when hazards are registered or deregistered.
 #[derive(Debug, Clone)]
 pub struct HazardProximityGrid {
     grid: Grid<HPGCell>,
@@ -157,5 +159,8 @@ impl HazardProximityGrid {
 
 }
 
+
+/// Error type for when the `HazardProximityGrid` cannot be accessed due to pending changes.
+/// To avoid this error, ensure all changes are flushed before requesting the grid.
 #[derive(Debug)]
 pub struct PendingChangesErr;

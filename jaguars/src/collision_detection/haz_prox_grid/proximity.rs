@@ -5,9 +5,12 @@ use ordered_float::NotNan;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_enums::GeoPosition::{Exterior, Interior};
 
+/// Represents the proximity to another entity.
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct Proximity {
+    /// Whether we are inside or outside the other entity
     pub position: GeoPosition,
+    /// Distance from the border of the other entity
     pub distance_from_border: NotNan<f64>,
 }
 

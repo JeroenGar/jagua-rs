@@ -9,7 +9,7 @@ use ordered_float::NotNan;
 use rand::prelude::SmallRng;
 use rand::Rng;
 
-use jaguars::collision_detection::hazard_filters::hazard_filter;
+use jaguars::collision_detection::hazard_filter;
 use jaguars::entities::instance::Instance;
 use jaguars::entities::instance::InstanceGeneric;
 use jaguars::entities::item::Item;

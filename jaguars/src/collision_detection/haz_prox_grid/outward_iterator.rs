@@ -1,8 +1,8 @@
 use std::iter::Rev;
 use std::ops::RangeInclusive;
 
-//Iterator that iterates over a range from the center outwards
-// eg. 0..=10 -> 5, 6, 4, 7, 3, 8, 2, 9, 1, 10, 0
+///Iterator that iterates over a range from the center outwards
+/// eg. 0..=10 -> 5, 6, 4, 7, 3, 8, 2, 9, 1, 10, 0
 #[derive(Debug, Clone)]
 pub struct OutwardIterator {
     left_iterator: Rev<RangeInclusive<usize>>,

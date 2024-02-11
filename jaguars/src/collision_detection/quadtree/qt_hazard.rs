@@ -6,7 +6,7 @@ use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 
-/// Represents the manifestation of a hazard in a QTNode
+/// Represents the manifestation of a `Hazard` in a `QTNode`
 #[derive(Clone, Debug)]
 pub struct QTHazard {
     pub entity: HazardEntity,

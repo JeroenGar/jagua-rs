@@ -189,7 +189,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
     for json_layout in json_layouts {
         let bin = match (instance.as_ref(), &json_layout.object_type) {
             (Instance::BP(bpi), JsonObjectType::Object { id }) => Some(&bpi.bins[*id].0),
-            (Instance::SP(spi), JsonObjectType::Strip { .. }) => None,
+            (Instance::SP(_spi), JsonObjectType::Strip { .. }) => None,
             _ => panic!("Layout object type does not match packing type")
         };
         //Create the layout by inserting the first item
@@ -257,7 +257,7 @@ pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: In
     let layouts = solution.layout_snapshots.iter()
         .map(|sl| {
             let object_type = match &instance {
-                Instance::BP(bpi)=> JsonObjectType::Object { id: sl.bin.id() },
+                Instance::BP(_bpi)=> JsonObjectType::Object { id: sl.bin.id() },
                 Instance::SP(spi) => JsonObjectType::Strip { width: sl.bin.bbox().width(), height: spi.strip_height },
             };
             //JSON solution should have their bins back in their original position, so we need to correct for the centering transformation

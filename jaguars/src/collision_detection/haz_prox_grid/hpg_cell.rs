@@ -207,6 +207,7 @@ pub fn distance_to_surrogate_poles_border(hp_cell: &HPGCell, poles: &[Circle]) -
         .min().unwrap()
 }
 
+///All possible results of an update on a cell in the `HazardProximityGrid`
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum HPGCellUpdate {
     ///Update affected the cell

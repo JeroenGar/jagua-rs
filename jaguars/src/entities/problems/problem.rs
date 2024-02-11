@@ -1,12 +1,12 @@
 use std::borrow::Borrow;
-use std::sync::Arc;
+
 
 use enum_dispatch::enum_dispatch;
-use itertools::Itertools;
+
 
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::instance::Instance;
-use crate::entities::instance::InstanceGeneric;
+
+
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::problems::bin_packing::BPProblem;

@@ -1,13 +1,13 @@
 use std::slice;
-use std::sync::Arc;
+
 
 use itertools::Itertools;
 use ordered_float::NotNan;
 
-use crate::collision_detection::hazard_filters::hazard_filter;
+use crate::collision_detection::hazard_filter;
 use crate::entities::bin::Bin;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::instance::{BPInstance, Instance, SPInstance};
+use crate::entities::instance::{SPInstance};
 use crate::entities::instance::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;

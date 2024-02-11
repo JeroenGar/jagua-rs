@@ -4,16 +4,16 @@ use itertools::Itertools;
 use log::error;
 
 use crate::collision_detection::cd_engine::CDEngine;
-use crate::collision_detection::hazard_filters::combo_haz_filter::CombinedHazardFilter;
-use crate::collision_detection::hazard_filters::entity_haz_filter::EntityHazardFilter;
-use crate::collision_detection::hazard_filters::hazard_filter;
+use crate::collision_detection::hazard_filter::CombinedHazardFilter;
+use crate::collision_detection::hazard_filter::EntityHazardFilter;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
+use crate::collision_detection::hazard_filter;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::entities::bin::Bin;
-use crate::entities::instance;
+
 use crate::entities::item::Item;
 use crate::entities::layout::Layout;
 use crate::entities::problems::problem::ProblemGeneric;
@@ -112,10 +112,14 @@ pub fn item_to_place_does_not_collide(item: &Item, transformation: &Transformati
 
 pub fn layout_is_collision_free(layout: &Layout) -> bool {
     for pi in layout.placed_items() {
-        let hef = EntityHazardFilter::new().add(pi.into());
+        let ehf = EntityHazardFilter { entities: vec![pi.into()] };
         let combo_filter = match pi.haz_filter() {
-            None => CombinedHazardFilter::new().add(&hef),
-            Some(hf) => CombinedHazardFilter::new().add(&hef).add(hf)
+            None => CombinedHazardFilter {
+                filters: vec![Box::new(&ehf)]
+            },
+            Some(hf) => CombinedHazardFilter {
+                filters: vec![Box::new(&ehf), Box::new(hf)]
+            }
         };
         let entities_to_ignore = hazard_filter::get_irrelevant_hazard_entities(&combo_filter, layout.cde().all_hazards());
 

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::collision_detection::hazard_filters::qz_haz_filter::QZHazardFilter;
+use crate::collision_detection::hazard_filter::QZHazardFilter;
 use crate::geometry::geo_enums::AllowedRotation;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;

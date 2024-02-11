@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
-use crate::collision_detection::hazard_filters::qz_haz_filter::QZHazardFilter;
+use crate::collision_detection::hazard_filter::QZHazardFilter;
 use crate::entities::item::Item;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Transformable;

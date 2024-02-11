@@ -1,9 +1,9 @@
 use std::collections::HashSet;
-use std::sync::Arc;
+
 
 use itertools::Itertools;
 
-use crate::entities::instance::{BPInstance, Instance};
+use crate::entities::instance::{BPInstance};
 use crate::entities::instance::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;

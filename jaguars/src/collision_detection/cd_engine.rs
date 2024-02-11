@@ -21,9 +21,9 @@ use crate::util::assertions;
 use crate::util::config::{CDEConfig, HazProxConfig, QuadTreeConfig};
 
 
-/// The Collision Detection Engine (CDE) is responsible for validating potential placements of items in a Layout.
-/// It can be queried to check if a given shape or surrogate collides with any hazards in the layout.
-/// It is updated by the Layout, when its state changes.
+/// The Collision Detection Engine (CDE) is responsible for validating potential placements of items in a `Layout`.
+/// It can be queried to check if a given shape or surrogate collides with any `Hazard`s in the `Layout`.
+/// Every `Layout` contains a `CDEngine` and is responsible for updating its state when items are placed or removed.
 #[derive(Clone, Debug)]
 pub struct CDEngine {
     quadtree: QTNode,

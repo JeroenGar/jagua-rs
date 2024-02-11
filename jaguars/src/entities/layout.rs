@@ -1,6 +1,6 @@
 use crate::collision_detection::cd_engine::{CDEngine, CDESnapshot};
 use crate::entities::bin::Bin;
-use crate::entities::instance::Instance;
+
 use crate::entities::item::Item;
 use crate::entities::placed_item::PlacedItem;
 use crate::entities::placed_item::PlacedItemUID;
