@@ -4,7 +4,9 @@ use crate::entities::item::Item;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 
-/// Static representation of a problem instance.
+/// An `Instance` is the static (unmodifiable) representation of a problem instance.
+/// This enum contains all variants of an instance.
+/// See [`crate::entities::problems::problem::Problem`] for more information about the choice to represent variants as enums.
 #[derive(Debug, Clone)]
 #[enum_dispatch]
 pub enum Instance {
@@ -12,8 +14,10 @@ pub enum Instance {
     BP(BPInstance),
 }
 
+
+/// Trait for shared functionality of all instance variants.
 #[enum_dispatch(Instance)]
-pub trait InstanceVariant {
+pub trait InstanceGeneric {
     fn items(&self) -> &[(Item, usize)];
     fn item_qty(&self, id: usize) -> usize{
         self.items()[id].1
@@ -29,6 +33,8 @@ pub trait InstanceVariant {
 }
 
 
+/// Bin-packing problem instance: a set of items to be packed into a set of bins.
+/// The items are to be packed in such a way that the total cost of the bins used is minimized.
 #[derive(Debug, Clone)]
 pub struct BPInstance {
     /// Items to be packed in the instance, along with their requested quantities
@@ -39,6 +45,8 @@ pub struct BPInstance {
     pub bins: Vec<(Bin, usize)>,
 }
 
+/// Strip-packing problem instance: a set of items to be packed into a single strip.
+/// The items are to be packed in such a way that the total width of the strip used is minimized.
 #[derive(Debug, Clone)]
 pub struct SPInstance {
     pub items: Vec<(Item, usize)>,
@@ -64,7 +72,7 @@ impl SPInstance {
     }
 }
 
-impl InstanceVariant for BPInstance {
+impl InstanceGeneric for BPInstance {
     fn items(&self) -> &[(Item, usize)] {
         &self.items
     }
@@ -74,7 +82,7 @@ impl InstanceVariant for BPInstance {
     }
 }
 
-impl InstanceVariant for SPInstance {
+impl InstanceGeneric for SPInstance {
     fn items(&self) -> &[(Item, usize)] {
         &self.items
     }

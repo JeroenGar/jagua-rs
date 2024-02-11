@@ -8,6 +8,8 @@ use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 
+///A `Layout` represents a configuration of one or more `Item`s placed in a `Bin`.
+///It is a mutable representation, and can be modified by placing or removing items.
 #[derive(Clone)]
 pub struct Layout {
     id: usize,
@@ -102,8 +104,7 @@ impl Layout {
     pub fn id(&self) -> usize {
         self.id
     }
-
-
+    
     pub fn cde(&self) -> &CDEngine {
         &self.cde
     }
@@ -113,29 +114,14 @@ impl Layout {
     }
 }
 
+
+/// A `LayoutSnapshot` is an immutable representation of a `Layout` at a certain point in time.
+/// `Layout`s can create `LayoutSnapshot`s, and restore themselves to a previous state using them.
 #[derive(Clone, Debug)]
 pub struct LayoutSnapshot {
-    id: usize,
-    bin: Bin,
-    placed_items: Vec<PlacedItem>,
-    cde_snapshot: CDESnapshot,
-    usage: f64,
-}
-
-impl LayoutSnapshot {
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
-    pub fn bin(&self) -> &Bin {
-        &self.bin
-    }
-
-    pub fn placed_items(&self) -> &Vec<PlacedItem> {
-        &self.placed_items
-    }
-
-    pub fn usage(&self) -> f64 {
-        self.usage
-    }
+    pub id: usize,
+    pub bin: Bin,
+    pub placed_items: Vec<PlacedItem>,
+    pub cde_snapshot: CDESnapshot,
+    pub usage: f64,
 }

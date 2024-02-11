@@ -7,9 +7,9 @@ use criterion::measurement::WallTime;
 use itertools::Itertools;
 use rand::prelude::{IteratorRandom, SmallRng};
 use rand::SeedableRng;
-use jaguars::entities::instance::Instance;
+use jaguars::entities::instance::{BPInstance, Instance, SPInstance, InstanceGeneric};
 use jaguars::entities::item::Item;
-use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant};
+use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric};
 use jaguars::geometry::geo_traits::{Shape, TransformableFrom};
 use jaguars::geometry::primitives::point::Point;
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
@@ -50,7 +50,7 @@ fn edge_sensitivity_bench(config: Config, mut g: BenchmarkGroup<WallTime>) {
     for edge_multiplier in EDGE_MULTIPLIERS {
         let instance = {
             let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
-            Arc::new(modify_instance(&instance, edge_multiplier as usize, config))
+            modify_instance(&instance, edge_multiplier as usize, config)
         };
 
         let (mut problem,selected_pi_uids) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
@@ -128,7 +128,10 @@ fn modify_instance(instance: &Instance, multiplier: usize, config: Config) -> In
         (modified_item, *qty)
     }).collect_vec();
 
-    Instance::new(modified_items, instance.containers().clone())
+    match instance {
+        Instance::SP(spi) => Instance::SP(SPInstance::new(modified_items, spi.strip_height)),
+        Instance::BP(bpi) => Instance::BP(BPInstance::new(modified_items, bpi.bins.clone()))
+    }
 }
 fn multiply_edge_count(shape: &SimplePolygon, multiplier: usize) -> SimplePolygon{
     let mut new_points = vec![];

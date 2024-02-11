@@ -5,11 +5,11 @@ use itertools::Itertools;
 use log::{Level, log, warn};
 
 use crate::entities::bin::Bin;
-use crate::entities::instance::{BPInstance, Instance, InstanceVariant, SPInstance};
+use crate::entities::instance::{BPInstance, Instance, InstanceGeneric, SPInstance};
 use crate::entities::item::Item;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem::{LayoutIndex, Problem, ProblemVariant};
+use crate::entities::problems::problem::{LayoutIndex, Problem, ProblemGeneric};
 use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::quality_zone::QualityZone;
 use crate::entities::solution::Solution;
@@ -21,7 +21,7 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::io::json_instance::{JsonInstance, JsonPoly, JsonSimplePoly};
 use crate::io::json_solution::{JsonLayout, JsonLayoutStats, JsonObjectType, JsonPlacedItem, JsonSolution, JsonTransformation};
-use crate::N_QUALITIES;
+use crate::entities::quality_zone::N_QUALITIES;
 use crate::util::config::CDEConfig;
 use crate::util::polygon_simplification;
 use crate::util::polygon_simplification::{PolySimplConfig, PolySimplMode};
@@ -257,19 +257,19 @@ pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: In
     let layouts = solution.layout_snapshots.iter()
         .map(|sl| {
             let object_type = match &instance {
-                Instance::BP(bpi)=> JsonObjectType::Object { id: sl.bin().id() },
-                Instance::SP(spi) => JsonObjectType::Strip { width: sl.bin().bbox().width(), height: spi.strip_height },
+                Instance::BP(bpi)=> JsonObjectType::Object { id: sl.bin.id() },
+                Instance::SP(spi) => JsonObjectType::Strip { width: sl.bin.bbox().width(), height: spi.strip_height },
             };
             //JSON solution should have their bins back in their original position, so we need to correct for the centering transformation
             let bin_centering_correction = match &instance {
                 Instance::BP(bpi) => {
-                    let bin = &bpi.bins[sl.bin().id()].0;
+                    let bin = &bpi.bins[sl.bin.id()].0;
                     bin.centering_transform().clone().inverse().decompose().translation()
                 },
                 Instance::SP(_) => (0.0, 0.0), //no bin, no correction
             };
 
-            let placed_items = sl.placed_items().iter()
+            let placed_items = sl.placed_items.iter()
                 .map(|pl| {
                     let item_index = pl.item_id();
                     let item = instance.item(item_index);
@@ -296,7 +296,7 @@ pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: In
                     }
                 }).collect::<Vec<JsonPlacedItem>>();
             let statistics = JsonLayoutStats {
-                usage: sl.usage(),
+                usage: sl.usage,
             };
             JsonLayout {
                 object_type,

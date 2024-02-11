@@ -11,8 +11,7 @@ use crate::geometry::geo_traits::{DistanceFrom, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::point::Point;
-use crate::N_QUALITIES;
-
+use crate::entities::quality_zone::N_QUALITIES;
 
 /// Represents a cell in the Hazard Proximity Grid
 #[derive(Clone, Debug)]

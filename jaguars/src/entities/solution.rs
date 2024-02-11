@@ -3,7 +3,7 @@ use std::time::Instant;
 use itertools::Itertools;
 
 use crate::entities::instance::Instance;
-use crate::entities::instance::InstanceVariant;
+use crate::entities::instance::InstanceGeneric;
 use crate::entities::layout::LayoutSnapshot;
 use crate::geometry::geo_traits::Shape;
 
@@ -71,7 +71,7 @@ impl Solution {
                     1 => {
                         let bins = &bp_instance.bins;
                         let cheapest_bin = &bins.iter().min_by(|(b1, _), (b2, _)| b1.value().cmp(&b2.value())).unwrap().0;
-                        self.layout_snapshots[0].bin().id() == cheapest_bin.id()
+                        self.layout_snapshots[0].bin.id() == cheapest_bin.id()
                     }
                     _ => false
                 }

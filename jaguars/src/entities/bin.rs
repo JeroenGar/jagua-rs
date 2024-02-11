@@ -10,9 +10,11 @@ use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
-use crate::N_QUALITIES;
+use crate::entities::quality_zone::N_QUALITIES;
 use crate::util::config::CDEConfig;
 
+/// A `Bin` is a container in which items can be placed.
+/// Its interior is defined by an outer polygon and zero or more holes.
 #[derive(Clone, Debug)]
 pub struct Bin {
     id: usize,
@@ -29,12 +31,12 @@ impl Bin {
     pub fn new(id: usize, outer: SimplePolygon, value: u64, centering_transform: Transformation, holes: Vec<SimplePolygon>, quality_zones: Vec<QualityZone>, cde_config: CDEConfig) -> Self {
         let outer = Arc::new(outer);
         let holes = holes.into_iter().map(|z| Arc::new(z)).collect_vec();
-        assert_eq!(quality_zones.len(), quality_zones.iter().map(|qz| qz.quality()).unique().count(), "Quality zones must have unique qualities");
-        assert!(quality_zones.iter().map(|qz| qz.quality()).all(|q| q < N_QUALITIES), "All quality zones must be below N_QUALITIES");
+        assert_eq!(quality_zones.len(), quality_zones.iter().map(|qz| qz.quality).unique().count(), "Quality zones must have unique qualities");
+        assert!(quality_zones.iter().map(|qz| qz.quality).all(|q| q < N_QUALITIES), "All quality zones must be below N_QUALITIES");
         let quality_zones = {
             let mut qz = <[_; N_QUALITIES]>::default();
             for q in quality_zones {
-                let quality = q.quality();
+                let quality = q.quality;
                 qz[quality] = Some(q);
             }
             qz
@@ -81,9 +83,9 @@ impl Bin {
         hazards.extend(
             quality_zones.iter().flatten().map(
                 |q_zone| {
-                    q_zone.shapes().iter().enumerate().map(|(id, shape)| {
+                    q_zone.zones.iter().enumerate().map(|(id, shape)| {
                         let haz_entity = HazardEntity::QualityZoneInferior {
-                            quality: q_zone.quality(),
+                            quality: q_zone.quality,
                             id,
                         };
                         Hazard::new(haz_entity, shape.clone())

@@ -1,26 +1,23 @@
 use std::sync::Arc;
 
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::N_QUALITIES;
 
+/// Maximum number of qualities that can be used
+pub const N_QUALITIES: usize = 10;
+
+/// Represents a zone of certain quality in the `Bin`
 #[derive(Clone, Debug)]
 pub struct QualityZone {
     /// Higher quality is better
-    quality: usize,
-    shapes: Vec<Arc<SimplePolygon>>,
+    pub quality: usize,
+    /// The outer shapes of all zones of this quality
+    pub zones: Vec<Arc<SimplePolygon>>,
 }
 
 impl QualityZone {
     pub fn new(quality: usize, shapes: Vec<SimplePolygon>) -> Self {
         assert!(quality < N_QUALITIES, "Quality must be less than N_QUALITIES");
-        let shapes = shapes.into_iter().map(|z| Arc::new(z)).collect();
-        Self { quality, shapes }
-    }
-    pub fn quality(&self) -> usize {
-        self.quality
-    }
-
-    pub fn shapes(&self) -> &Vec<Arc<SimplePolygon>> {
-        &self.shapes
+        let zones = shapes.into_iter().map(|z| Arc::new(z)).collect();
+        Self { quality, zones }
     }
 }

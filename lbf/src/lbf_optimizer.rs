@@ -11,12 +11,12 @@ use rand::Rng;
 
 use jaguars::collision_detection::hazard_filters::hazard_filter;
 use jaguars::entities::instance::Instance;
-use jaguars::entities::instance::InstanceVariant;
+use jaguars::entities::instance::InstanceGeneric;
 use jaguars::entities::item::Item;
 use jaguars::entities::layout::Layout;
 use jaguars::entities::placing_option::PlacingOption;
 use jaguars::entities::problems::bin_packing::BPProblem;
-use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant, Problem};
+use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric, Problem};
 use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::entities::solution::Solution;
 use jaguars::geometry::convex_hull::convex_hull_from_points;
@@ -36,7 +36,7 @@ pub const STDDEV_ROT_END_FRAC: f64 = 0.5 * (PI / 180.0);
 pub const ITEM_LIMIT: usize = 1000;
 
 pub struct LBFOptimizer {
-    instance: Arc<Instance>,
+    instance: Instance,
     problem: Problem,
     config: Config,
     /// SmallRng is a fast, non-cryptographic PRNG <https://rust-random.github.io/book/guide-rngs.html>
@@ -44,9 +44,9 @@ pub struct LBFOptimizer {
 }
 
 impl LBFOptimizer {
-    pub fn new(instance: Arc<Instance>, config: Config, rng: SmallRng) -> Self {
+    pub fn new(instance: Instance, config: Config, rng: SmallRng) -> Self {
         assert!(config.n_samples_per_item > 0);
-        let problem = match instance.as_ref() {
+        let problem = match instance.clone() {
             Instance::BP(bpi) => BPProblem::new(bpi.clone()).into(),
             Instance::SP(spi) => {
                 let strip_width = instance.item_area() * 2.0 / spi.strip_height; //initiate with usage 50%
@@ -119,7 +119,7 @@ impl LBFOptimizer {
     }
 
 
-    pub fn instance(&self) -> &Arc<Instance> {
+    pub fn instance(&self) -> &Instance {
         &self.instance
     }
     pub fn problem(&self) -> &Problem {

@@ -1,7 +1,7 @@
 use svg::Document;
 use svg::node::element::Group;
 use jaguars::entities::instance::Instance;
-use jaguars::entities::instance::InstanceVariant;
+use jaguars::entities::instance::InstanceGeneric;
 use jaguars::entities::layout::Layout;
 use jaguars::entities::layout::LayoutSnapshot;
 use jaguars::geometry::geo_enums::GeoPosition;
@@ -11,7 +11,7 @@ use crate::io::{svg_export, svg_util};
 use crate::io::svg_util::{SvgDrawOptions};
 
 pub fn s_layout_to_svg(s_layout: &LayoutSnapshot, instance: &Instance, options: SvgDrawOptions) -> Document {
-    let layout = Layout::new_from_stored(s_layout.id(), s_layout);
+    let layout = Layout::new_from_stored(s_layout.id, s_layout);
     layout_to_svg(&layout, instance, options)
 }
 
@@ -64,9 +64,9 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
 
         //quality zones
         for qz in bin.quality_zones().iter().rev().flatten() {
-            let color = theme.qz_fill[qz.quality()];
+            let color = theme.qz_fill[qz.quality];
             let stroke_color = svg_util::change_brightness(color, 0.5);
-            for qz_shape in qz.shapes().iter() {
+            for qz_shape in qz.zones.iter() {
                 group = group.add(
                     svg_export::data_to_path(
                         svg_export::simple_polygon_data(qz_shape),

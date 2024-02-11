@@ -9,10 +9,12 @@ use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use jaguars::entities::layout::Layout;
 
+use jaguars::entities::instance::{Instance, InstanceGeneric};
 use jaguars::entities::placing_option::PlacingOption;
-use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant};
+use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric};
 use jaguars::entities::problems::strip_packing::SPProblem;
-use jaguars::geometry::geo_traits::{Shape, TransformableFrom};
+use jaguars::geometry::geo_traits::Shape;
+use jaguars::geometry::geo_traits::TransformableFrom;
 use jaguars::io::json_instance::JsonInstance;
 use jaguars::util::config::HazProxConfig;
 use lbf::io;
@@ -45,7 +47,10 @@ fn hpg_bench(c: &mut Criterion) {
         config.cde_config.haz_prox = HazProxConfig::Enabled { n_cells: n_hpg_cells };
         //create the instance and problem with the specific HPG config
         let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
-        let mut problem = SPProblem::new(instance.clone(), base_problem.strip_width(), config.cde_config);
+        let mut problem = match instance.clone() {
+            Instance::BP(_) => panic!("Expected SPInstance"),
+            Instance::SP(instance) => SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
+        };
         // Place the items in exactly the same way as the base problem
         for pi_uid in base_pi_uids.iter() {
             problem.place_item(&PlacingOption {

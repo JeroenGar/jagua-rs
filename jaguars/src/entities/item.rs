@@ -6,6 +6,7 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::config::SPSurrogateConfig;
 
+/// An `Item` can be placed in a `Bin`.
 #[derive(Clone, Debug)]
 pub struct Item {
     id: usize,

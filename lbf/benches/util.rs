@@ -4,9 +4,10 @@ use criterion::Criterion;
 use log::{info, Level, LevelFilter};
 use rand::prelude::{IteratorRandom, SmallRng};
 use rand::SeedableRng;
-use jaguars::entities::instance::{Instance, Containers};
+use jaguars::entities::instance::Instance;
+use jaguars::entities::instance::InstanceGeneric;
 use jaguars::entities::placed_item::PlacedItemUID;
-use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant, Problem};
+use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric, Problem};
 use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::io::json_instance::JsonInstance;
 use jaguars::io::parser::Parser;
@@ -25,16 +26,16 @@ pub const N_SAMPLES: usize = 10_000;
 
 pub const N_VALID_SAMPLES: usize = 10_000;
 
-pub fn create_instance(json_instance: &JsonInstance, cde_config: CDEConfig, poly_simpl_config: PolySimplConfig) -> Arc<Instance> {
+pub fn create_instance(json_instance: &JsonInstance, cde_config: CDEConfig, poly_simpl_config: PolySimplConfig) -> Instance {
     let parser = Parser::new(poly_simpl_config, cde_config, true);
-    Arc::new(parser.parse(json_instance))
+    parser.parse(json_instance)
 }
 
 /// Creates a Strip Packing Problem, fill the layout using with the LBF Optimizer and removes some items from the layout
 /// Returns the problem and the removed items
 /// Simulates a common scenario in iterative optimization algorithms: dense packing with a few items removed
-pub fn create_blf_problem(instance: Arc<Instance>, config: Config, n_items_removed: usize) -> (SPProblem, Vec<PlacedItemUID>) {
-    assert!(matches!(instance.containers(), Containers::Strip {..}));
+pub fn create_blf_problem(instance: Instance, config: Config, n_items_removed: usize) -> (SPProblem, Vec<PlacedItemUID>) {
+    assert!(matches!(&instance, &Instance::SP(_)));
     let mut lbf_optimizer = LBFOptimizer::new(instance.clone(), config, SmallRng::seed_from_u64(0));
     lbf_optimizer.solve();
 

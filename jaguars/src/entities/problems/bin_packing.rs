@@ -4,12 +4,12 @@ use std::sync::Arc;
 use itertools::Itertools;
 
 use crate::entities::instance::{BPInstance, Instance};
-use crate::entities::instance::InstanceVariant;
+use crate::entities::instance::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem::{LayoutIndex, ProblemVariant};
-use crate::entities::problems::problem::private::ProblemVariantPrivate;
+use crate::entities::problems::problem::{LayoutIndex, ProblemGeneric};
+use crate::entities::problems::problem::private::ProblemGenericPrivate;
 use crate::entities::solution::Solution;
 use crate::util::assertions;
 
@@ -114,7 +114,7 @@ impl BPProblem {
     }
 }
 
-impl ProblemVariant for BPProblem {
+impl ProblemGeneric for BPProblem {
     fn place_item(&mut self, i_opt: &PlacingOption) {
         let item_id = i_opt.item_id;
         let layout = match &i_opt.layout_index {
@@ -162,7 +162,7 @@ impl ProblemVariant for BPProblem {
                 assert_eq!(old_solution.id, self.unchanged_layouts_solution_id.unwrap());
                 self.layouts.iter_mut().map(|l| {
                     match self.unchanged_layouts.contains(&l.id()) {
-                        true => old_solution.layout_snapshots.iter().find(|sl| sl.id() == l.id()).unwrap().clone(),
+                        true => old_solution.layout_snapshots.iter().find(|sl| sl.id == l.id()).unwrap().clone(),
                         false => l.create_layout_snapshot()
                     }
                 }).collect()
@@ -191,7 +191,7 @@ impl ProblemVariant for BPProblem {
                 let mut layout_ids_not_in_solution = vec![];
                 for layout in self.layouts.iter_mut() {
                     //For all layouts in the problem, check which ones occur in the solution
-                    match solution.layout_snapshots.iter().position(|sl| sl.id() == layout.id()) {
+                    match solution.layout_snapshots.iter().position(|sl| sl.id == layout.id()) {
                         Some(i) => {
                             //layout is present in the solution
                             match self.unchanged_layouts.contains(&layout.id()) {
@@ -215,9 +215,9 @@ impl ProblemVariant for BPProblem {
 
                 //Some layouts are present in the solution, but not in the problem
                 for sl in solution.layout_snapshots.iter() {
-                    if !layout_ids_in_problem.contains(&sl.id()) {
+                    if !layout_ids_in_problem.contains(&sl.id) {
                         //It is possible they are in the uncommitted_removed_layouts
-                        match self.uncommitted_removed_layouts.iter().position(|l| l.id() == sl.id()) {
+                        match self.uncommitted_removed_layouts.iter().position(|l| l.id() == sl.id) {
                             Some(i) => {
                                 //original layout is still present, restore it and add it to the problem
                                 let mut layout = self.uncommitted_removed_layouts.swap_remove(i);
@@ -226,7 +226,7 @@ impl ProblemVariant for BPProblem {
                             }
                             None => {
                                 //If not, the layout will have to be rebuilt from scratch
-                                let layout = Layout::new_from_stored(sl.id(), sl);
+                                let layout = Layout::new_from_stored(sl.id, sl);
                                 self.layouts.push(layout);
                             }
                         }
@@ -237,7 +237,7 @@ impl ProblemVariant for BPProblem {
                 //The id of the solution does not match unchanged_layouts_solution_id, a partial restore is not possible
                 self.layouts.clear();
                 for sl in solution.layout_snapshots.iter() {
-                    let layout = Layout::new_from_stored(sl.id(), sl);
+                    let layout = Layout::new_from_stored(sl.id, sl);
                     self.layouts.push(layout);
                 }
             }
@@ -282,7 +282,7 @@ impl ProblemVariant for BPProblem {
 }
 
 
-impl ProblemVariantPrivate for BPProblem {
+impl ProblemGenericPrivate for BPProblem {
     fn next_solution_id(&mut self) -> usize {
         self.solution_id_counter += 1;
         self.solution_id_counter

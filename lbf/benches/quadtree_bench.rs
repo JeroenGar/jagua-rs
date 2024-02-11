@@ -8,10 +8,11 @@ use rand::prelude::SmallRng;
 use rand::SeedableRng;
 use rand::seq::IteratorRandom;
 
-use jaguars::entities::instance::{Instance, Containers};
+use jaguars::entities::instance::Instance;
+use jaguars::entities::instance::InstanceGeneric;
 use jaguars::entities::placed_item::PlacedItemUID;
 use jaguars::entities::placing_option::PlacingOption;
-use jaguars::entities::problems::problem::{LayoutIndex, ProblemVariant, Problem};
+use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric, Problem};
 use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::geometry::geo_traits::TransformableFrom;
 use jaguars::io::json_instance::JsonInstance;

@@ -8,11 +8,11 @@ use crate::collision_detection::hazard_filters::hazard_filter;
 use crate::entities::bin::Bin;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::instance::{BPInstance, Instance, SPInstance};
-use crate::entities::instance::InstanceVariant;
+use crate::entities::instance::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
-use crate::entities::problems::problem::{LayoutIndex, ProblemVariant};
-use crate::entities::problems::problem::private::ProblemVariantPrivate;
+use crate::entities::problems::problem::{LayoutIndex, ProblemGeneric};
+use crate::entities::problems::problem::private::ProblemGenericPrivate;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::util::assertions;
@@ -101,7 +101,7 @@ impl SPProblem {
     }
 }
 
-impl ProblemVariant for SPProblem {
+impl ProblemGeneric for SPProblem {
     fn place_item(&mut self, i_opt: &PlacingOption) {
         assert_eq!(i_opt.layout_index, LayoutIndex::Existing(0), "strip packing problems only have a single layout");
         let item_id = i_opt.item_id;
@@ -173,7 +173,7 @@ impl ProblemVariant for SPProblem {
 }
 
 
-impl ProblemVariantPrivate for SPProblem {
+impl ProblemGenericPrivate for SPProblem {
     fn next_solution_id(&mut self) -> usize {
         self.solution_id_counter += 1;
         self.solution_id_counter

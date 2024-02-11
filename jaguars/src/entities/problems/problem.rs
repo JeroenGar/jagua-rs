@@ -6,21 +6,23 @@ use itertools::Itertools;
 
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::instance::Instance;
-use crate::entities::instance::InstanceVariant;
+use crate::entities::instance::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem::private::ProblemVariantPrivate;
+use crate::entities::problems::problem::private::ProblemGenericPrivate;
 use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::solution::Solution;
 
-/// Enum which contains all the different types implementing the `ProblemVariant` trait.
+/// Enum which contains all the different problem types.
 /// A `Problem` represents a problem instance in a modifiable state.
-///  It can insert or remove items, create a snapshot from the current state called a `Solution`,
+/// It can insert or remove items, create a snapshot from the current state called a `Solution`,
 /// and restore its state to a previous `Solution`.
 /// <br>
-/// Uses the enum_dispatch crate to have performant polymorphism for different problem types, see
-/// <https://docs.rs/enum_dispatch/latest/enum_dispatch/> for more information on enum_dispatch
+/// Uses the `enum_dispatch` crate to have polymorphism with static dispatch, see
+/// <https://docs.rs/enum_dispatch/latest/enum_dispatch/> for more information on enum_dispatch.
+/// Also enables use match statements on the `Problem` enum when variant-specific behavior is required,
+/// When a new variant is added, compile errors will be generated everywhere specific behaviour is required.
 #[derive(Clone)]
 #[enum_dispatch]
 pub enum Problem {
@@ -32,7 +34,7 @@ pub enum Problem {
 
 /// Trait for public shared functionality of all problem variants.
 #[enum_dispatch(Problem)]
-pub trait ProblemVariant: ProblemVariantPrivate {
+pub trait ProblemGeneric: ProblemGenericPrivate {
 
     /// Places an item into the problem instance according to the given `PlacingOption`.
     fn place_item(&mut self, i_opt: &PlacingOption);
@@ -111,7 +113,7 @@ pub(super) mod private {
 
     /// Trait for shared functionality of all problem variants, but not exposed to the public.
     #[enum_dispatch(Problem)]
-    pub trait ProblemVariantPrivate: Clone {
+    pub trait ProblemGenericPrivate: Clone {
         fn next_solution_id(&mut self) -> usize;
 
         fn missing_item_qtys_mut(&mut self) -> &mut [isize];

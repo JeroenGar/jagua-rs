@@ -16,7 +16,7 @@ use crate::entities::bin::Bin;
 use crate::entities::instance;
 use crate::entities::item::Item;
 use crate::entities::layout::Layout;
-use crate::entities::problems::problem::ProblemVariant;
+use crate::entities::problems::problem::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::entities::layout::LayoutSnapshot;
 use crate::geometry::geo_traits::{Shape, Transformable};
@@ -43,9 +43,9 @@ pub fn instance_item_bin_ids_correct(items: &Vec<(Item, usize)>, bins: &Vec<(Bin
     true
 }
 
-pub fn problem_matches_solution<P: ProblemVariant>(problem: &P, solution: &Solution) -> bool {
+pub fn problem_matches_solution<P: ProblemGeneric>(problem: &P, solution: &Solution) -> bool {
     for l in problem.layouts() {
-        let sl = solution.layout_snapshots.iter().find(|sl| sl.id() == l.id()).unwrap();
+        let sl = solution.layout_snapshots.iter().find(|sl| sl.id == l.id()).unwrap();
         match layouts_match(l, sl) {
             true => continue,
             false => return false,
@@ -55,10 +55,10 @@ pub fn problem_matches_solution<P: ProblemVariant>(problem: &P, solution: &Solut
 }
 
 pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool {
-    if layout.bin().id() != layout_snapshot.bin().id() {
+    if layout.bin().id() != layout_snapshot.bin.id() {
         return false;
     }
-    for sp_item in layout_snapshot.placed_items().iter() {
+    for sp_item in layout_snapshot.placed_items.iter() {
         if layout.placed_items().iter().find(|sp| sp.uid() == sp_item.uid()).is_none() {
             return false;
         }

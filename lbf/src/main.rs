@@ -35,7 +35,7 @@ fn main() {
 
     let json_instance = io::read_json_instance(args.input_file.as_path());
     let parser = Parser::new(config.poly_simpl_config, config.cde_config, true);
-    let instance = Arc::new(parser.parse(&json_instance));
+    let instance = parser.parse(&json_instance);
 
     let rng = match config.deterministic_mode {
         true => SmallRng::seed_from_u64(0),
