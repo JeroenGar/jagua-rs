@@ -66,6 +66,8 @@ impl QTPartialHazard {
     }
 
 }
+
+pub const BBOX_CHECK_THRESHOLD: usize = 4;
 impl CollidesWith<Edge> for QTPartialHazard {
     fn collides_with(&self, edge: &Edge) -> bool {
         let shape = self.shape.upgrade().expect("polygon reference should be alive");
@@ -79,9 +81,16 @@ impl CollidesWith<Edge> for QTPartialHazard {
                 }
             },
             EdgeIndices::Some(indices) => {
-                indices.iter().any(|&i| {
-                    edge.collides_with(&shape.get_edge(i))
-                })
+                match indices.len(){
+                    0 => unreachable!("edge indices should not be empty"),
+                    1..=BBOX_CHECK_THRESHOLD => indices.iter().any(|&i| edge.collides_with(&shape.get_edge(i))),
+                    BBOX_CHECK_THRESHOLD.. => {
+                        match shape.bbox().collides_with(edge) {
+                            false => false,
+                            true => indices.iter().any(|&i| edge.collides_with(&shape.get_edge(i)))
+                        }
+                    }
+                }
             }
         }
     }
@@ -100,9 +109,16 @@ impl CollidesWith<Circle> for QTPartialHazard {
                 }
             },
             EdgeIndices::Some(indices) => {
-                indices.iter().any(|&i| {
-                    circle.collides_with(&shape.get_edge(i))
-                })
+                match indices.len(){
+                    0 => unreachable!("edge indices should not be empty"),
+                    1..=BBOX_CHECK_THRESHOLD => indices.iter().any(|&i| circle.collides_with(&shape.get_edge(i))),
+                    BBOX_CHECK_THRESHOLD.. => {
+                        match circle.collides_with(&shape.bbox()) {
+                            false => false,
+                            true => indices.iter().any(|&i| circle.collides_with(&shape.get_edge(i)))
+                        }
+                    }
+                }
             }
         }
     }
