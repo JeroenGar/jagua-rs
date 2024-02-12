@@ -22,9 +22,9 @@
   },
   "deterministic_mode": true,
   "n_samples_per_item": 5000,
-  "ls_samples_fraction": 0.2,
+  "ls_samples_fraction": 0.5,
   "svg_draw_options": {
-    "quadtree": true,
+    "quadtree": false,
     "haz_prox_grid": false,
     "surrogate": false
   }

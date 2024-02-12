@@ -33,7 +33,8 @@ pub const STDDEV_TRANSL_END_FRAC: f64 = 0.001;
 pub const STDDEV_ROT_START_FRAC: f64 = 2.0 * (PI / 180.0);
 pub const STDDEV_ROT_END_FRAC: f64 = 0.5 * (PI / 180.0);
 
-pub const ITEM_LIMIT: usize = 1000;
+//limits the number of items to be placed, for debugging purposes
+pub const ITEM_LIMIT: usize = usize::MAX;
 
 pub struct LBFOptimizer {
     instance: Instance,
