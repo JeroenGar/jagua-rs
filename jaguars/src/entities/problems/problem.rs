@@ -40,7 +40,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     fn place_item(&mut self, i_opt: &PlacingOption);
 
     /// Removes an item with a specific `PlacedItemUID` from a specific `Layout`
-    fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID);
+    fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool);
 
     /// Saves the current state into a `Solution`.
     fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution;

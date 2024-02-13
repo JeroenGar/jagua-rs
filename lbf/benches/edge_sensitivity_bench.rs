@@ -20,7 +20,7 @@ use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
 use lbf::samplers::hpg_sampler::HPGSampler;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
-use crate::util::{N_ITEMS_REMOVED, N_SAMPLES, SWIM_PATH};
+use crate::util::{N_ITEMS_REMOVED, N_SAMPLES_PER_ITER, N_TOTAL_SAMPLES, SWIM_PATH};
 
 criterion_main!(benches);
 criterion_group!(benches, edge_sensitivity_bench_no_ff, edge_sensitivity_bench_with_ff);
@@ -77,10 +77,12 @@ fn edge_sensitivity_bench(config: Config, mut g: BenchmarkGroup<WallTime>) {
 
         let samples = {
             let hpg_sampler = HPGSampler::new(instance.item(0), layout).expect("should be able to create HPGSampler");
-            (0..N_SAMPLES).map(
+            (0..N_TOTAL_SAMPLES).map(
                 |_| hpg_sampler.sample(&mut rng)
             ).collect_vec()
         };
+
+        let mut samples_cycler = samples.chunks(N_SAMPLES_PER_ITER).cycle();
 
         let mut n_invalid: i64 = 0;
         let mut n_valid: i64 = 0;
@@ -91,7 +93,7 @@ fn edge_sensitivity_bench(config: Config, mut g: BenchmarkGroup<WallTime>) {
                     let pi_uid = &selected_pi_uids[i];
                     let item = instance.item(pi_uid.item_id);
                     let mut buffer_shape = item.shape().clone();
-                    for transf in &samples {
+                    for transf in samples_cycler.next().unwrap() {
                         let collides = match layout.cde().surrogate_collides(item.shape().surrogate(), transf, &[]) {
                             true => true,
                             false => {

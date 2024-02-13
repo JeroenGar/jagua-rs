@@ -22,9 +22,11 @@ use lbf::lbf_optimizer::LBFOptimizer;
 
 pub const SWIM_PATH: &str = "../assets/swim.json";
 pub const N_ITEMS_REMOVED: usize = 5;
-pub const N_SAMPLES: usize = 10_000;
+pub const N_TOTAL_SAMPLES: usize = 100_000;
 
-pub const N_VALID_SAMPLES: usize = 10_000;
+pub const N_SAMPLES_PER_ITER: usize = 1000;
+
+pub const N_VALID_SAMPLES: usize = 1000;
 
 pub fn create_instance(json_instance: &JsonInstance, cde_config: CDEConfig, poly_simpl_config: PolySimplConfig) -> Instance {
     let parser = Parser::new(poly_simpl_config, cde_config, true);
@@ -52,7 +54,7 @@ pub fn create_blf_problem(instance: Instance, config: Config, n_items_removed: u
         .choose_multiple(&mut rng, n_items_removed);
 
     for pi_uid in removed_pi_uids.iter() {
-        problem.remove_item(layout_index, pi_uid);
+        problem.remove_item(layout_index, pi_uid, true);
         info!("Removed item: {} with {} edges", pi_uid.item_id, lbf_optimizer.instance().item(pi_uid.item_id).shape().number_of_points());
     }
     problem.flush_changes();
@@ -74,13 +76,13 @@ pub fn create_blf_problem(instance: Instance, config: Config, n_items_removed: u
 pub fn create_base_config() -> Config {
     Config {
         cde_config: CDEConfig {
-            quadtree: FixedDepth(6),
+            quadtree: FixedDepth(5),
             haz_prox: HazProxConfig::Enabled {n_cells: 5000},
             item_surrogate_config: SPSurrogateConfig {
                 pole_coverage_goal: 0.9,
                 max_poles: 10,
                 n_ff_poles: 2,
-                n_ff_piers: 1,
+                n_ff_piers: 0,
             },
         },
         poly_simpl_config: PolySimplConfig::Disabled,

@@ -35,9 +35,9 @@ harness = false
 name = "fast_fail_bench"
 harness = false
 
-[[bench]]
-name = "edge_sensitivity_bench"
-harness = false
+#[[bench]]
+#name = "edge_sensitivity_bench"
+#harness = false
 
 [[bench]]
 name = "hpg_bench"

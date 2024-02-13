@@ -137,12 +137,12 @@ impl ProblemGeneric for BPProblem {
         self.layout_has_changed(layout_id);
     }
 
-    fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID) {
+    fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool) {
         match layout_index {
             LayoutIndex::Existing(i) => {
                 self.layout_has_changed(self.layouts[i].id());
                 let layout = &mut self.layouts[i];
-                layout.remove_item(pi_uid, false);
+                layout.remove_item(pi_uid, commit_instantly);
                 if layout.is_empty() {
                     //if layout is empty, remove it
                     self.unregister_layout(layout_index);

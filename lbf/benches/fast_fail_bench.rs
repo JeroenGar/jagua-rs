@@ -30,7 +30,7 @@ use lbf::io::svg_util::SvgDrawOptions;
 use lbf::lbf_optimizer::LBFOptimizer;
 use lbf::samplers::hpg_sampler::HPGSampler;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
-use crate::util::{create_base_config, N_ITEMS_REMOVED, N_SAMPLES, SWIM_PATH};
+use crate::util::{create_base_config, N_ITEMS_REMOVED, N_SAMPLES_PER_ITER, N_TOTAL_SAMPLES, SWIM_PATH};
 
 criterion_main!(benches);
 criterion_group!(benches, fast_fail_query_bench);
@@ -38,7 +38,7 @@ criterion_group!(benches, fast_fail_query_bench);
 mod util;
 
 const FF_POLE_RANGE: RangeInclusive<usize> = 0..=4;
-const FF_PIER_RANGE: RangeInclusive<usize> = 0..=0;
+const FF_PIER_RANGE: RangeInclusive<usize> = 0..=4;
 
 /// Benchmark the query operation of the quadtree for different depths
 /// We validate 1000 sampled transformations for each of the 5 removed items
@@ -84,33 +84,36 @@ fn fast_fail_query_bench(c: &mut Criterion) {
             .map(|item_id| {
                 let item = instance.item(item_id);
                 let sampler = HPGSampler::new(item, layout).unwrap();
-                (0..N_SAMPLES).map(
+                (0..N_TOTAL_SAMPLES).map(
                     |_| sampler.sample(&mut rng)
                 ).collect_vec()
             }).collect_vec();
 
+        let mut samples_cycler = samples.iter().map(|s| s.chunks(N_SAMPLES_PER_ITER).cycle()).collect_vec();
+
         let mut n_invalid: i64 = 0;
         let mut n_valid : i64 = 0;
 
+        let mut i_cycler = (0..N_ITEMS_REMOVED).cycle();
+
         group.bench_function(BenchmarkId::from_parameter(format!("{n_ff_poles}_poles_{n_ff_piers}_piers")), |b| {
             b.iter(|| {
-                for i in 0..N_ITEMS_REMOVED {
-                    let pi_uid = &selected_pi_uids[i];
-                    let item = instance.item(pi_uid.item_id);
-                    let surrogate = &custom_surrogates[i];
-                    let mut buffer_shape = item.shape().clone();
-                    for transf in samples[i].iter() {
-                        let collides = match layout.cde().surrogate_collides(surrogate, transf, &[]) {
-                            true => true,
-                            false => {
-                                buffer_shape.transform_from(item.shape(), transf);
-                                layout.cde().shape_collides(&buffer_shape, &[])
-                            }
-                        };
-                        match collides {
-                            true => n_invalid += 1,
-                            false => n_valid += 1
+                let i = i_cycler.next().unwrap();
+                let pi_uid = &selected_pi_uids[i];
+                let item = instance.item(pi_uid.item_id);
+                let surrogate = &custom_surrogates[i];
+                let mut buffer_shape = item.shape().clone();
+                for transf in samples_cycler[i].next().unwrap() {
+                    let collides = match layout.cde().surrogate_collides(surrogate, transf, &[]) {
+                        true => true,
+                        false => {
+                            buffer_shape.transform_from(item.shape(), transf);
+                            layout.cde().shape_collides(&buffer_shape, &[])
                         }
+                    };
+                    match collides {
+                        true => n_invalid += 1,
+                        false => n_valid += 1
                     }
                 }
             })
