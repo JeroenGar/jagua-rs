@@ -8,6 +8,7 @@ use crate::geometry::primitives::point::Point;
 
 /// Generates a grid of equal sized square rectangles within a shape.
 /// The number of cells is approximately equal to target_n_cells, but can be slightly more or less
+/// This is due to the fact that the cells are always remain square, so we cannot guarantee an exact number of cells
 pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) -> Vec<AARectangle> {
     assert!(bbox.area() > 0.0, "bbox has zero area");
 

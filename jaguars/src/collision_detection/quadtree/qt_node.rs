@@ -5,10 +5,9 @@ use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_partial_hazard::QTPartialHazard;
-use crate::geometry::geo_traits::{CollidesWith};
+use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
-
 
 /// A node in the quadtree
 #[derive(Clone, Debug)]
@@ -140,6 +139,7 @@ impl QTNode {
 
     /// Returns None if no collision between the entity and any hazard is detected,
     /// otherwise returns the first encountered hazard that collides with the entity
+    /// In practice T is usually an `Edge` or `Circle`
     pub fn collides<T>(&self, entity: &T, irrelevant_hazards: &[HazardEntity]) -> Option<&HazardEntity>
         where T: CollidesWith<AARectangle>, QTPartialHazard: CollidesWith<T>
     {
@@ -152,27 +152,24 @@ impl QTNode {
                     QTHazPresence::Entire => Some(&strongest_hazard.entity),
                     QTHazPresence::Partial(_) => match self.children() {
                         Some(children) => {
-                            //Search if any of the children intersect with the entity
+                            //Check if any of the children intersect with the entity
                             children.iter()
                                 .map(|child| child.collides(entity, irrelevant_hazards))
                                 .find(|x| x.is_some())
                                 .flatten()
                         }
                         None => {
-                            for hz in self.hazards.active_hazards() {
+                            //Check if any of the partially present (and active) hazards collide with the entity
+                            self.hazards.active_hazards().iter().find(|hz| {
                                 match &hz.presence {
-                                    QTHazPresence::Entire | QTHazPresence::None => {} //non-ignored Entire inclusion are caught by the previous match
-                                    QTHazPresence::Partial(partial_hazard) => {
-                                        if !irrelevant_hazards.contains(&hz.entity) {
-                                            //do intersection test if this shape is not ignored
-                                            if partial_hazard.collides_with(entity) {
-                                                return Some(&hz.entity);
-                                            }
-                                        }
+                                    QTHazPresence::None => false,
+                                    QTHazPresence::Entire => unreachable!("should have been handled above"),
+                                    QTHazPresence::Partial(p_haz) => {
+                                        !irrelevant_hazards.contains(&hz.entity) &&
+                                            p_haz.collides_with(entity)
                                     }
                                 }
-                            }
-                            None
+                            }).map(|hz| &hz.entity)
                         }
                     }
                 }
@@ -195,9 +192,9 @@ impl QTNode {
                         for i in 0..4 {
                             let child = &children[i];
                             match child.definitely_collides(entity, irrelevant_hazards) {
-                                Tribool::True => return Tribool::True, //If a child for sure collides, we can immediately return Yes
-                                Tribool::Indeterminate => result = Tribool::Indeterminate, //If a child might collide, switch from to Maybe
-                                Tribool::False => {} //If child does not collide, do nothing
+                                Tribool::True => return Tribool::True,
+                                Tribool::Indeterminate => result = Tribool::Indeterminate,
+                                Tribool::False => {}
                             }
                         }
                         result

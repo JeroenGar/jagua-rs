@@ -26,14 +26,14 @@ impl SPSurrogate {
 
         let relevant_poles_for_piers = &poles[0..config.n_ff_poles+1]; //poi + all poles that will be checked during fail fast are relevant for piers
         let piers = piers::generate(simple_poly, config.n_ff_piers, relevant_poles_for_piers);
-        let ff_poles = 1..config.n_ff_poles+1;
+        let ff_pole_range = 1..config.n_ff_poles+1;
 
         Self {
             convex_hull_indices,
             poles,
             piers,
             poles_bounding_circle,
-            ff_pole_range: ff_poles
+            ff_pole_range
         }
     }
 
