@@ -161,7 +161,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(item.shape(), &transf);
                     let collides = layout.cde().shape_collides(&buffer_shape, &[]);
-                    criterion::black_box(collides); // prevent the compiler from optimizing the loop away
+                    criterion::black_box(collides); //prevent the compiler from optimizing the loop away
                 }
 
                 problem.place_item(&PlacingOption {

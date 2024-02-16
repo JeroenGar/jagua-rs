@@ -14,32 +14,31 @@ pub struct SPSurrogate {
     pub poles: Vec<Circle>,
     pub poles_bounding_circle: Circle,
     pub piers: Vec<Edge>,
-    pub ff_pole_range: Range<usize>,
+    pub n_ff_poles: usize,
 }
 
 impl SPSurrogate {
     pub fn new(simple_poly: &SimplePolygon, config: SPSurrogateConfig) -> Self {
         let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
         let mut poles = vec![simple_poly.poi().clone()];
-        poles.extend(poi::generate_additional_surrogate_poles(simple_poly, config.max_poles, config.pole_coverage_goal));
+        poles.extend(poi::generate_additional_surrogate_poles(simple_poly, config.max_poles.saturating_sub(1), config.pole_coverage_goal));
         let poles_bounding_circle = Circle::bounding_circle(&poles);
 
-        let relevant_poles_for_piers = &poles[0..config.n_ff_poles+1]; //poi + all poles that will be checked during fail fast are relevant for piers
+        let n_ff_poles = usize::min(config.n_ff_poles, poles.len());
+        let relevant_poles_for_piers = &poles[0..n_ff_poles]; //poi + all poles that will be checked during fail fast are relevant for piers
         let piers = piers::generate(simple_poly, config.n_ff_piers, relevant_poles_for_piers);
-        let ff_pole_range = 1..config.n_ff_poles+1;
 
         Self {
             convex_hull_indices,
             poles,
             piers,
             poles_bounding_circle,
-            ff_pole_range
+            n_ff_poles
         }
     }
 
     pub fn ff_poles(&self) -> &[Circle] {
-        let range = self.ff_pole_range.clone();
-        &self.poles[range]
+        &self.poles[0..self.n_ff_poles]
     }
 
     pub fn ff_piers(&self) -> &[Edge] {
@@ -51,7 +50,7 @@ impl SPSurrogate {
 impl Transformable for SPSurrogate {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
         //destructuring pattern used to ensure that the code is updated accordingly when the struct changes
-        let Self {convex_hull_indices: _, poles, poles_bounding_circle, piers, ff_pole_range: _} = self;
+        let Self {convex_hull_indices: _, poles, poles_bounding_circle, piers, n_ff_poles: _} = self;
 
         //transform poles
         poles.iter_mut().for_each(|c| {
@@ -75,7 +74,7 @@ impl TransformableFrom for SPSurrogate {
         debug_assert!(self.piers.len() == reference.piers.len());
 
         //destructuring pattern used to ensure that the code is updated accordingly when the struct changes
-        let Self {convex_hull_indices: _, poles, poles_bounding_circle, piers, ff_pole_range: _} = self;
+        let Self {convex_hull_indices: _, poles, poles_bounding_circle, piers, n_ff_poles: _} = self;
 
         for (pole, ref_pole) in poles.iter_mut().zip(reference.poles.iter()) {
             pole.transform_from(ref_pole, t);

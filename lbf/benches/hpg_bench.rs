@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::BufReader;
+use std::ops::RangeInclusive;
 use std::path::Path;
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
@@ -24,13 +25,13 @@ use lbf::samplers::hpg_sampler::HPGSampler;
 use crate::util::{create_base_config, N_ITEMS_REMOVED, N_VALID_SAMPLES, SWIM_PATH};
 
 criterion_main!(benches);
-criterion_group!(benches, hpg_update_bench, hpg_query_bench);
+criterion_group!(benches,hpg_query_bench, hpg_update_bench);
 
 mod util;
 
 //pub const N_HPG_CELLS: [usize; 8] = [1, 50, 100, 500, 1000, 5000, 10000, 20000];
 
-pub const N_HPG_CELLS: [usize; 6] = [100, 500, 1000, 5000, 10000, 20000];
+pub const N_HPG_CELLS: [usize; 6] = [100, 500, 1000, 2000, 5000, 10000];
 pub const SELECTED_ITEM_ID: usize = 1; // relatively small and "round" item, guaranteed to find valid samples even without HPG
 
 fn hpg_query_bench(c: &mut Criterion) {
@@ -61,7 +62,7 @@ fn hpg_query_bench(c: &mut Criterion) {
             });
         }
 
-        {
+        /*{
             let draw_options = SvgDrawOptions {
                 quadtree: false,
                 surrogate: false,
@@ -70,7 +71,7 @@ fn hpg_query_bench(c: &mut Criterion) {
             };
             let svg = io::layout_to_svg::layout_to_svg(problem.get_layout(LayoutIndex::Existing(0)), &instance, draw_options);
             io::write_svg(&svg, Path::new(&format!("removed_items_{n_hpg_cells}.svg")));
-        }
+        }*/
 
 
         let mut rng = SmallRng::seed_from_u64(0);
@@ -132,7 +133,7 @@ fn hpg_update_bench(c: &mut Criterion) {
             });
         }
 
-        {
+        /*{
             let draw_options = SvgDrawOptions {
                 quadtree: false,
                 surrogate: false,
@@ -141,7 +142,7 @@ fn hpg_update_bench(c: &mut Criterion) {
             };
             let svg = io::layout_to_svg::layout_to_svg(problem.get_layout(LayoutIndex::Existing(0)), &instance, draw_options);
             io::write_svg(&svg, Path::new(&format!("removed_items_{n_hpg_cells}.svg")));
-        }
+        }*/
 
         let mut rng = SmallRng::seed_from_u64(0);
 

@@ -62,7 +62,7 @@ pub fn create_blf_problem(instance: Instance, config: Config, n_items_removed: u
     {
         let draw_options = SvgDrawOptions{
             quadtree: true,
-            surrogate: false,
+            surrogate: true,
             haz_prox_grid: false,
             ..SvgDrawOptions::default()
         };
@@ -81,7 +81,7 @@ pub fn create_base_config() -> Config {
             item_surrogate_config: SPSurrogateConfig {
                 pole_coverage_goal: 0.9,
                 max_poles: 10,
-                n_ff_poles: 2,
+                n_ff_poles: 4,
                 n_ff_piers: 0,
             },
         },
