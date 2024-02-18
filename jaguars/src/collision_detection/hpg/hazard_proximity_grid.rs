@@ -2,10 +2,10 @@ use std::iter;
 
 use itertools::Itertools;
 
-use crate::collision_detection::haz_prox_grid::boundary_fill::BoundaryFillGrid;
-use crate::collision_detection::haz_prox_grid::grid::Grid;
-use crate::collision_detection::haz_prox_grid::grid_generator;
-use crate::collision_detection::haz_prox_grid::hpg_cell::{HPGCellUpdate, HPGCell};
+use crate::collision_detection::hpg::boundary_fill::BoundaryFillGrid;
+use crate::collision_detection::hpg::grid::Grid;
+use crate::collision_detection::hpg::grid_generator;
+use crate::collision_detection::hpg::hpg_cell::{HPGCellUpdate, HPGCell};
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::geometry::geo_traits::Shape;

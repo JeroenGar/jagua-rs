@@ -29,8 +29,6 @@ criterion_group!(benches,hpg_query_bench, hpg_update_bench);
 
 mod util;
 
-//pub const N_HPG_CELLS: [usize; 8] = [1, 50, 100, 500, 1000, 5000, 10000, 20000];
-
 pub const N_HPG_CELLS: [usize; 6] = [100, 500, 1000, 2000, 5000, 10000];
 pub const SELECTED_ITEM_ID: usize = 1; // relatively small and "round" item, guaranteed to find valid samples even without HPG
 
@@ -66,7 +64,7 @@ fn hpg_query_bench(c: &mut Criterion) {
             let draw_options = SvgDrawOptions {
                 quadtree: false,
                 surrogate: false,
-                haz_prox_grid: true,
+                hpg: true,
                 ..SvgDrawOptions::default()
             };
             let svg = io::layout_to_svg::layout_to_svg(problem.get_layout(LayoutIndex::Existing(0)), &instance, draw_options);

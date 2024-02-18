@@ -2,9 +2,9 @@ use indexmap::IndexSet;
 use itertools::Itertools;
 use tribool::Tribool;
 
-use crate::collision_detection::haz_prox_grid::grid::Grid;
-use crate::collision_detection::haz_prox_grid::hazard_proximity_grid::{HazardProximityGrid, PendingChangesErr};
-use crate::collision_detection::haz_prox_grid::hpg_cell::HPGCell;
+use crate::collision_detection::hpg::grid::Grid;
+use crate::collision_detection::hpg::hazard_proximity_grid::{HazardProximityGrid, PendingChangesErr};
+use crate::collision_detection::hpg::hpg_cell::HPGCell;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_node::QTNode;

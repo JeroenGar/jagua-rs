@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
-use crate::collision_detection::haz_prox_grid::circling_iterator::CirclingIterator;
-use crate::collision_detection::haz_prox_grid::grid::Grid;
+use crate::collision_detection::hpg::circling_iterator::CirclingIterator;
+use crate::collision_detection::hpg::grid::Grid;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 
 ///Boundary Fill type of algorithm.

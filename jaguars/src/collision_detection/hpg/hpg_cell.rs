@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use itertools::Itertools;
 
-use crate::collision_detection::haz_prox_grid::proximity::Proximity;
+use crate::collision_detection::hpg::proximity::Proximity;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::entities::item::Item;

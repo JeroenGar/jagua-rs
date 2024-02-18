@@ -2,7 +2,7 @@
 name = "lbf"
 version = "0.1.0"
 edition = "2021"
-license = "GPLv3"
+license = "Mozilla Public License 2.0"
 repository = "https://github.com/JeroenGar/jagua-rs"
 authors = ["Jeroen Gardeyn"]
 
