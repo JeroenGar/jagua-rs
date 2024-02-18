@@ -4,21 +4,20 @@ use itertools::Itertools;
 use log::error;
 
 use crate::collision_detection::cd_engine::CDEngine;
-use crate::collision_detection::hazard_filter::CombinedHazardFilter;
-use crate::collision_detection::hazard_filter::EntityHazardFilter;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::hazard_filter;
+use crate::collision_detection::hazard_filter::CombinedHazardFilter;
+use crate::collision_detection::hazard_filter::EntityHazardFilter;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::entities::bin::Bin;
-
 use crate::entities::item::Item;
 use crate::entities::layout::Layout;
+use crate::entities::layout::LayoutSnapshot;
 use crate::entities::problems::problem::ProblemGeneric;
 use crate::entities::solution::Solution;
-use crate::entities::layout::LayoutSnapshot;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::transformation::Transformation;
 use crate::util;
@@ -28,14 +27,14 @@ use crate::util;
 pub fn instance_item_bin_ids_correct(items: &Vec<(Item, usize)>, bins: &Vec<(Bin, usize)>) -> bool {
     let mut id = 0;
     for (parttype, _qty) in items {
-        if parttype.id() != id {
+        if parttype.id != id {
             return false;
         }
         id += 1;
     }
     let mut id = 0;
     for (bin, _qty) in bins {
-        if bin.id() != id {
+        if bin.id != id {
             return false;
         }
         id += 1;
@@ -55,11 +54,11 @@ pub fn problem_matches_solution<P: ProblemGeneric>(problem: &P, solution: &Solut
 }
 
 pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool {
-    if layout.bin().id() != layout_snapshot.bin.id() {
+    if layout.bin().id != layout_snapshot.bin.id {
         return false;
     }
     for sp_item in layout_snapshot.placed_items.iter() {
-        if layout.placed_items().iter().find(|sp| sp.uid() == sp_item.uid()).is_none() {
+        if layout.placed_items().iter().find(|sp| sp.uid == sp_item.uid).is_none() {
             return false;
         }
     }
@@ -89,18 +88,18 @@ pub fn collision_hazards_sorted_correctly(hazards: &Vec<QTHazard>) -> bool {
 }
 
 pub fn all_bins_and_items_centered(items: &Vec<(Item, usize)>, bins: &Vec<(Bin, usize)>) -> bool {
-    items.iter().map(|(i, _)| i.shape().centroid())
-        .chain(bins.iter().map(|(b, _)| b.outer().centroid()))
+    items.iter().map(|(i, _)| i.shape.centroid())
+        .chain(bins.iter().map(|(b, _)| b.outer.centroid()))
         .all(|c| almost::zero(c.0) && almost::zero(c.1))
 }
 
 pub fn item_to_place_does_not_collide(item: &Item, transformation: &Transformation, layout: &Layout) -> bool {
-    let haz_filter = item.hazard_filter();
+    let haz_filter = &item.hazard_filter;
 
-    let shape = item.shape();
+    let shape = item.shape.as_ref();
     let t_shape = shape.transform_clone(transformation);
 
-    let entities_to_ignore = haz_filter
+    let entities_to_ignore = haz_filter.as_ref()
         .map_or(vec![], |f| hazard_filter::get_irrelevant_hazard_entities(f, layout.cde().all_hazards()));
 
     if layout.cde().surrogate_collides(shape.surrogate(), transformation, &entities_to_ignore) ||
@@ -113,7 +112,7 @@ pub fn item_to_place_does_not_collide(item: &Item, transformation: &Transformati
 pub fn layout_is_collision_free(layout: &Layout) -> bool {
     for pi in layout.placed_items() {
         let ehf = EntityHazardFilter { entities: vec![pi.into()] };
-        let combo_filter = match pi.haz_filter() {
+        let combo_filter = match &pi.qz_haz_filter {
             None => CombinedHazardFilter {
                 filters: vec![Box::new(&ehf)]
             },
@@ -123,8 +122,8 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
         };
         let entities_to_ignore = hazard_filter::get_irrelevant_hazard_entities(&combo_filter, layout.cde().all_hazards());
 
-        if layout.cde().shape_collides(pi.shape(), &entities_to_ignore) {
-            println!("Collision detected for item {:.?}", pi.uid());
+        if layout.cde().shape_collides(&pi.shape, &entities_to_ignore) {
+            println!("Collision detected for item {:.?}", pi.uid);
             util::print_layout(layout);
             return false;
         }
@@ -134,14 +133,14 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
 
 pub fn qt_node_contains_no_deactivated_hazards<'a>(node: &'a QTNode, mut stacktrace: Vec<&'a QTNode>) -> (bool, Vec<&'a QTNode>) {
     stacktrace.push(node);
-    let deactivated_hazard = node.hazards().all_hazards().iter().find(|h| !h.active);
+    let deactivated_hazard = node.hazards.all_hazards().iter().find(|h| !h.active);
     if deactivated_hazard.is_some() {
         println!("Deactivated hazard found");
         dbg!(&stacktrace);
         return (false, stacktrace);
     }
 
-    match node.children() {
+    match &node.children {
         Some(children) => {
             for child in children.as_ref() {
                 let result = qt_node_contains_no_deactivated_hazards(child, stacktrace);
@@ -160,7 +159,7 @@ pub fn qt_node_contains_no_deactivated_hazards<'a>(node: &'a QTNode, mut stacktr
 }
 
 pub fn qt_contains_no_dangling_hazards(cde: &CDEngine) -> bool {
-    if let Some(children) = cde.quadtree().children() {
+    if let Some(children) = &cde.quadtree().children {
         for child in children.as_ref() {
             if !qt_node_contains_no_dangling_hazards(child, cde.quadtree()) {
                 return false;
@@ -171,15 +170,15 @@ pub fn qt_contains_no_dangling_hazards(cde: &CDEngine) -> bool {
 }
 
 fn qt_node_contains_no_dangling_hazards(node: &QTNode, parent: &QTNode) -> bool {
-    let parent_h_entities = parent.hazards().all_hazards().iter().map(|h| &h.entity).unique().collect_vec();
+    let parent_h_entities = parent.hazards.all_hazards().iter().map(|h| &h.entity).unique().collect_vec();
 
-    let dangling_hazards = node.hazards().all_hazards().iter().any(|h| !parent_h_entities.contains(&&h.entity));
+    let dangling_hazards = node.hazards.all_hazards().iter().any(|h| !parent_h_entities.contains(&&h.entity));
     if dangling_hazards {
         println!("Node contains dangling hazard");
         return false;
     }
 
-    match node.children() {
+    match &node.children {
         Some(children) => {
             for child in children.as_ref() {
                 if !qt_node_contains_no_dangling_hazards(child, node) {
@@ -194,7 +193,7 @@ fn qt_node_contains_no_dangling_hazards(node: &QTNode, parent: &QTNode) -> bool 
 }
 
 pub fn qt_hz_entity_activation_consistent(cde: &CDEngine) -> bool {
-    for (active, hz_entity) in cde.quadtree().hazards().all_hazards().iter().map(|h| (h.active, &h.entity)).unique() {
+    for (active, hz_entity) in cde.quadtree().hazards.all_hazards().iter().map(|h| (h.active, &h.entity)).unique() {
         if !hz_entity_same_everywhere(cde.quadtree(), &hz_entity, active) {
             return false;
         }
@@ -203,7 +202,7 @@ pub fn qt_hz_entity_activation_consistent(cde: &CDEngine) -> bool {
 }
 
 pub fn hz_entity_same_everywhere(qt_node: &QTNode, hz_entity: &HazardEntity, active: bool) -> bool {
-    match qt_node.hazards().all_hazards().iter().find(|h| &h.entity == hz_entity) {
+    match qt_node.hazards.all_hazards().iter().find(|h| &h.entity == hz_entity) {
         Some(h) => {
             if h.active != active {
                 println!("Hazard entity activation inconsistent");
@@ -212,7 +211,7 @@ pub fn hz_entity_same_everywhere(qt_node: &QTNode, hz_entity: &HazardEntity, act
         }
         None => {}
     }
-    if let Some(children) = qt_node.children() {
+    if let Some(children) = &qt_node.children {
         for child in children.as_ref() {
             if !hz_entity_same_everywhere(child, hz_entity, active) {
                 return false;
@@ -228,7 +227,7 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
 
     //rebuild the quadtree
     let bin = layout.bin();
-    let mut fresh_cde = bin.base_cde().clone();
+    let mut fresh_cde = bin.base_cde.as_ref().clone();
     for pi in layout.placed_items() {
         fresh_cde.register_hazard(pi.into());
     }
@@ -241,8 +240,8 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
     match (qn1, qn2) {
         (Some(qn1), Some(qn2)) => {
             //if both nodes exist
-            let hv1 = qn1.hazards();
-            let hv2 = qn2.hazards();
+            let hv1 = &qn1.hazards;
+            let hv2 = &qn2.hazards;
 
             //collect active hazards to hashsets
             let active_haz_1 = hv1.active_hazards().iter()
@@ -265,13 +264,13 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             }
         }
         (Some(qn1), None) => {
-            if qn1.hazards().active_hazards().iter().next().is_some() {
+            if qn1.hazards.active_hazards().iter().next().is_some() {
                 error!("qn1 contains active hazards while other qn2 does not exist");
                 return false;
             }
         }
         (None, Some(qn2)) => {
-            if qn2.hazards().active_hazards().iter().next().is_some() {
+            if qn2.hazards.active_hazards().iter().next().is_some() {
                 error!("qn2 contains active hazards while other qn1 does not exist");
                 return false;
             }
@@ -280,14 +279,14 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
     }
 
     //Check children
-    match (qn1.map_or(&None, |qn| qn.children()), qn2.map_or(&None, |qn| qn.children())) {
+    match (qn1.map_or(&None, |qn| &qn.children), qn2.map_or(&None, |qn| &qn.children)) {
         (None, None) => true,
         (Some(c1), None) => {
             let qn1_has_partial_hazards =
                 qn1.map_or(
                     false,
                     |qn| {
-                        qn.hazards().active_hazards().iter()
+                        qn.hazards.active_hazards().iter()
                             .any(|h| matches!(h.presence, QTHazPresence::Partial(_)))
                     },
                 );
@@ -304,7 +303,7 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             let qn2_has_partial_hazards =
                 qn2.map_or(
                     false,
-                    |qn| qn.hazards().active_hazards().iter()
+                    |qn| qn.hazards.active_hazards().iter()
                         .any(|h| matches!(h.presence, QTHazPresence::Partial(_))),
                 );
             if qn2_has_partial_hazards {

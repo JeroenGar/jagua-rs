@@ -1,20 +1,15 @@
 use itertools::Itertools;
-use log::{debug};
-
-use rand::prelude::{SliceRandom};
+use log::debug;
+use rand::prelude::SliceRandom;
 use rand::Rng;
 
 use jaguars::entities::item::Item;
 use jaguars::entities::layout::Layout;
-
-
-use jaguars::geometry::geo_traits::{Shape};
+use jaguars::geometry::geo_traits::Shape;
 use jaguars::geometry::primitives::aa_rectangle::AARectangle;
-
-
 use jaguars::geometry::transformation::Transformation;
-use crate::lbf_cost::LBFCost;
 
+use crate::lbf_cost::LBFCost;
 use crate::samplers::uniform_rect_sampler::UniformAARectSampler;
 
 pub struct HPGSampler<'a> {
@@ -27,12 +22,12 @@ pub struct HPGSampler<'a> {
 
 impl<'a> HPGSampler<'a> {
     pub fn new(item: &'a Item, layout: &Layout) -> Option<HPGSampler<'a>> {
-        let poi = item.shape().poi();
+        let poi = &item.shape.poi;
         let layout_bbox = layout.bin().bbox();
 
         let hpg = layout.cde().haz_prox_grid().expect("grid changes present");
 
-        let hpg_cells = hpg.cells();
+        let hpg_cells = &hpg.grid.cells;
 
         //center the shape's POI to the origin
         let pretransform = Transformation::from_translation((-poi.center.0, -poi.center.1));
@@ -74,7 +69,7 @@ impl<'a> HPGSampler<'a> {
     }
 
     pub fn tighten_x_bound(&mut self, best: &LBFCost){
-        let poi_rad = self.item.shape().poi().radius;
+        let poi_rad = self.item.shape.poi.radius;
         let new_x_bound = *best.x_max - poi_rad; //we need at least one POI radius of space to the left of the best solution
 
         if new_x_bound < self.x_bound {

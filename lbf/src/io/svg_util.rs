@@ -2,7 +2,9 @@ use std::convert::Into;
 use std::fmt::{Display, Formatter};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
 use jaguars::entities::quality_zone::N_QUALITIES;
+
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
 pub struct SvgDrawOptions {
     #[serde(default)]

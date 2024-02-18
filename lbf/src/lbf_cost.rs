@@ -1,6 +1,8 @@
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
+
 use ordered_float::NotNan;
+
 use jaguars::geometry::geo_traits::Shape;
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
 

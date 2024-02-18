@@ -1,6 +1,5 @@
 use std::cmp::{Ordering, Reverse};
 use std::f64::consts::PI;
-use std::sync::Arc;
 use std::time::Instant;
 
 use itertools::Itertools;
@@ -16,7 +15,7 @@ use jaguars::entities::item::Item;
 use jaguars::entities::layout::Layout;
 use jaguars::entities::placing_option::PlacingOption;
 use jaguars::entities::problems::bin_packing::BPProblem;
-use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric, Problem};
+use jaguars::entities::problems::problem::{LayoutIndex, Problem, ProblemGeneric};
 use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::entities::solution::Solution;
 use jaguars::geometry::convex_hull::convex_hull_from_points;
@@ -69,7 +68,7 @@ impl LBFOptimizer {
             .sorted_by_cached_key(|i| {
                 let item = &self.instance.items()[*i].0;
                 let ch = SimplePolygon::new(
-                    convex_hull_from_points(item.shape().points().clone())
+                    convex_hull_from_points(item.shape.points.clone())
                 );
                 let ch_diam = NotNan::new(ch.diameter()).expect("convex hull diameter is NaN");
                 Reverse(ch_diam)
@@ -147,13 +146,13 @@ fn find_placement(problem: &Problem, item: &Item, config: &Config, rng: &mut imp
 }
 
 pub fn sample_layout(problem: &Problem, layout_index: LayoutIndex, item: &Item, config: &Config, rng: &mut impl Rng) -> Option<PlacingOption> {
-    let item_id = item.id();
+    let item_id = item.id;
     let layout: &Layout = problem.get_layout(&layout_index);
-    let entities_to_ignore = item.hazard_filter()
+    let entities_to_ignore = item.hazard_filter.as_ref()
         .map_or(vec![], |hf| hazard_filter::get_irrelevant_hazard_entities(hf, layout.cde().all_hazards()));
 
-    let shape = item.shape();
-    let surrogate = item.shape().surrogate();
+    let shape = &item.shape;
+    let surrogate = item.shape.surrogate();
     let mut buffer_shape = shape.clone_and_strip_surrogate();
 
     let mut best = None;

@@ -1,9 +1,8 @@
 use std::collections::HashSet;
 
-
 use itertools::Itertools;
 
-use crate::entities::instance::{BPInstance};
+use crate::entities::instance::BPInstance;
 use crate::entities::instance::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
@@ -16,7 +15,7 @@ use crate::util::assertions;
 /// Bin Packing Problem
 #[derive(Clone)]
 pub struct BPProblem {
-    instance: BPInstance,
+    pub instance: BPInstance,
     layouts: Vec<Layout>,
     empty_layouts: Vec<Layout>,
     missing_item_qtys: Vec<isize>,
@@ -60,7 +59,7 @@ impl BPProblem {
     }
 
     pub fn register_layout(&mut self, layout: Layout) {
-        self.register_bin(layout.bin().id());
+        self.register_bin(layout.bin().id);
         layout.placed_items().iter().for_each(
             |p_i| {
                 self.register_included_item(p_i.item_id())
@@ -74,7 +73,7 @@ impl BPProblem {
             LayoutIndex::Existing(i) => {
                 let layout = self.layouts.remove(i);
                 self.layout_has_changed(layout.id());
-                self.unregister_bin(layout.bin().id());
+                self.unregister_bin(layout.bin().id);
                 layout.placed_items().iter().for_each(
                     |v| { self.unregister_included_item(v.item_id()) });
                 self.uncommitted_removed_layouts.push(layout);
@@ -107,10 +106,6 @@ impl BPProblem {
         if let Some(index) = index {
             self.unchanged_layouts.remove(index);
         }
-    }
-
-    fn instance(&self) -> &BPInstance {
-        &self.instance
     }
 }
 
@@ -172,7 +167,7 @@ impl ProblemGeneric for BPProblem {
             }
         };
 
-        let target_item_qtys = self.instance().items().iter().map(|(_, qty)| *qty).collect_vec();
+        let target_item_qtys = self.instance.items().iter().map(|(_, qty)| *qty).collect_vec();
 
         let solution = Solution::new(id, layout_snapshots, self.usage(), included_item_qtys, target_item_qtys, bin_qtys);
 

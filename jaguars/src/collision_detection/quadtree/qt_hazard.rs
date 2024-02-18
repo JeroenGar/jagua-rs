@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_partial_hazard::{EdgeIndices, QTPartialHazard};
@@ -46,7 +47,7 @@ impl QTHazard {
             QTHazPresence::Entire => [Some(self.clone()), Some(self.clone()), Some(self.clone()), Some(self.clone())],
             QTHazPresence::Partial(partial_haz) => {
                 //check the bbox of the hazard with the bboxes of the quadrants
-                let haz_bbox = partial_haz.shape().bbox();
+                let haz_bbox = partial_haz.shape_arc().bbox();
                 let haz_quad_relations = [
                     haz_bbox.relation_to(&quadrants[0]),
                     haz_bbox.relation_to(&quadrants[1]),
@@ -64,7 +65,7 @@ impl QTHazard {
                     constricted_presence[quad_index] = Some(self.presence.clone());
                 } else {
                     //the hazard is partially active in multiple quadrants, find them
-                    let shape = partial_haz.shape();
+                    let shape = partial_haz.shape_arc();
                     let mut check_collisions_with_quadrants = |edge_index: usize| {
                         let edge = shape.get_edge(edge_index);
                         for quad_index in 0..4 {
@@ -73,7 +74,7 @@ impl QTHazard {
                                 let constricted_haz_presence = constricted_presence[quad_index].get_or_insert(
                                     QTHazPresence::Partial(
                                         QTPartialHazard::new(
-                                            partial_haz.shape(),
+                                            partial_haz.shape_arc(),
                                             EdgeIndices::Some(vec![])
                                         )
                                     )
@@ -88,7 +89,7 @@ impl QTHazard {
                         }
                     };
 
-                    match partial_haz.edge_indices() {
+                    match &partial_haz.edge_indices {
                         EdgeIndices::All => {
                             for edge_index in 0..shape.number_of_points() {
                                 check_collisions_with_quadrants(edge_index);

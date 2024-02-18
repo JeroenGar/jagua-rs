@@ -9,13 +9,13 @@ use crate::util::config::SPSurrogateConfig;
 /// An `Item` can be placed in a `Bin`.
 #[derive(Clone, Debug)]
 pub struct Item {
-    id: usize,
-    shape: Arc<SimplePolygon>,
-    allowed_rotation: AllowedRotation,
-    base_quality: Option<usize>,
-    value: u64,
-    centering_transform: Transformation,
-    hazard_filter: Option<QZHazardFilter>,
+    pub id: usize,
+    pub shape: Arc<SimplePolygon>,
+    pub allowed_rotation: AllowedRotation,
+    pub base_quality: Option<usize>,
+    pub value: u64,
+    pub centering_transform: Transformation,
+    pub hazard_filter: Option<QZHazardFilter>,
 }
 
 impl Item {
@@ -32,33 +32,5 @@ impl Item {
             id,
             ..self.clone()
         }
-    }
-
-    pub fn shape(&self) -> &SimplePolygon {
-        &self.shape
-    }
-
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
-    pub fn value(&self) -> u64 {
-        self.value
-    }
-
-    pub fn centering_transform(&self) -> &Transformation {
-        &self.centering_transform
-    }
-
-    pub fn base_quality(&self) -> Option<usize> {
-        self.base_quality
-    }
-
-    pub fn hazard_filter(&self) -> Option<&QZHazardFilter> {
-        self.hazard_filter.as_ref()
-    }
-
-    pub fn allowed_rotation(&self) -> &AllowedRotation {
-        &self.allowed_rotation
     }
 }

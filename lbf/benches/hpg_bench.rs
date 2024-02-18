@@ -1,11 +1,8 @@
 use std::fs::File;
 use std::io::BufReader;
-use std::ops::RangeInclusive;
-use std::path::Path;
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use rand::prelude::IteratorRandom;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 
@@ -17,33 +14,32 @@ use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::geometry::geo_traits::Shape;
 use jaguars::geometry::geo_traits::TransformableFrom;
 use jaguars::io::json_instance::JsonInstance;
-use jaguars::util::config::HazProxConfig;
-use lbf::io;
-use lbf::io::svg_util::SvgDrawOptions;
 use lbf::samplers::hpg_sampler::HPGSampler;
 
-use crate::util::{create_base_config, N_ITEMS_REMOVED, N_VALID_SAMPLES, SWIM_PATH};
+use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};
 
 criterion_main!(benches);
 criterion_group!(benches,hpg_query_bench, hpg_update_bench);
 
 mod util;
 
-pub const N_HPG_CELLS: [usize; 6] = [100, 500, 1000, 2000, 5000, 10000];
-pub const SELECTED_ITEM_ID: usize = 1; // relatively small and "round" item, guaranteed to find valid samples even without HPG
+const N_HPG_CELLS: [usize; 6] = [100, 500, 1000, 2000, 5000, 10000];
+const SELECTED_ITEM_ID: usize = 1; // relatively small and "round" item, guaranteed to find valid samples even without HPG
+
+const N_VALID_SAMPLES: usize = 1000;
 
 fn hpg_query_bench(c: &mut Criterion) {
-    ///HPG density has side effects on the LBF optimize, so we create a single problem instance and create a solution from it.
+    //HPG density has side effects on the LBF optimize, so we create a single problem instance and create a solution from it.
     let json_instance: JsonInstance = serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
-    let mut base_config = create_base_config();
+    let base_config = create_base_config();
     let base_instance = util::create_instance(&json_instance, base_config.cde_config, base_config.poly_simpl_config);
-    let (mut base_problem, removed_items) = util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
-    let base_pi_uids = base_problem.get_layout(LayoutIndex::Existing(0)).placed_items().iter().map(|pi| pi.uid().clone()).collect_vec();
+    let (base_problem, _) = util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
+    let base_pi_uids = base_problem.get_layout(LayoutIndex::Existing(0)).placed_items().iter().map(|pi| pi.uid.clone()).collect_vec();
 
     let mut group = c.benchmark_group("hpg_bench_query");
     for n_hpg_cells in N_HPG_CELLS {
         let mut config = base_config;
-        config.cde_config.haz_prox = HazProxConfig::Enabled { n_cells: n_hpg_cells };
+        config.cde_config.hpg_n_cells = n_hpg_cells;
         //create the instance and problem with the specific HPG config
         let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
         let mut problem = match instance.clone() {
@@ -77,26 +73,23 @@ fn hpg_query_bench(c: &mut Criterion) {
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
         let layout = problem.get_layout(LayoutIndex::Existing(0));
-        let surrogate = item.shape().surrogate();
-        let mut buffer_shape = item.shape().clone();
+        let surrogate = item.shape.surrogate();
+        let mut buffer_shape = item.shape.as_ref().clone();
         let sampler = HPGSampler::new(item, layout).unwrap();
         println!("[{}] sampler coverage: {:.3}% with {} samplers", n_hpg_cells, sampler.coverage_area / layout.bin().bbox().area() * 100.0, sampler.cell_samplers.len());
 
         group.bench_function(BenchmarkId::from_parameter(n_hpg_cells), |b| {
             b.iter(|| {
                 let mut n_valid_samples = 0;
-                let mut n_samples = 0;
                 while n_valid_samples < N_VALID_SAMPLES {
                     let transf = sampler.sample(&mut rng);
                     if !layout.cde().surrogate_collides(surrogate, &transf, &[]) {
-                        buffer_shape.transform_from(item.shape(), &transf);
+                        buffer_shape.transform_from(&item.shape, &transf);
                         if !layout.cde().shape_collides(&buffer_shape, &[]) {
                             n_valid_samples += 1;
                         }
                     }
-                    n_samples += 1;
                 }
-                //println!("n_samples: {}", n_samples);
             })
         });
     }
@@ -104,17 +97,17 @@ fn hpg_query_bench(c: &mut Criterion) {
 }
 
 fn hpg_update_bench(c: &mut Criterion) {
-    ///HPG density has side effects on the LBF optimize, so we create a single problem instance and create a solution from it.
+    //HPG density has side effects on the LBF optimize, so we create a single problem instance and create a solution from it.
     let json_instance: JsonInstance = serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
-    let mut base_config = create_base_config();
+    let base_config = create_base_config();
     let base_instance = util::create_instance(&json_instance, base_config.cde_config, base_config.poly_simpl_config);
-    let (mut base_problem, removed_items) = util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
-    let base_pi_uids = base_problem.get_layout(LayoutIndex::Existing(0)).placed_items().iter().map(|pi| pi.uid().clone()).collect_vec();
+    let (base_problem, _) = util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
+    let base_pi_uids = base_problem.get_layout(LayoutIndex::Existing(0)).placed_items().iter().map(|pi| pi.uid.clone()).collect_vec();
 
     let mut group = c.benchmark_group("hpg_bench_update");
     for n_hpg_cells in N_HPG_CELLS {
         let mut config = base_config;
-        config.cde_config.haz_prox = HazProxConfig::Enabled { n_cells: n_hpg_cells };
+        config.cde_config.hpg_n_cells = n_hpg_cells;
         //create the instance and problem with the specific HPG config
         let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
         let mut problem = match instance.clone() {
@@ -147,8 +140,8 @@ fn hpg_update_bench(c: &mut Criterion) {
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
         let layout = problem.get_layout(LayoutIndex::Existing(0));
-        let surrogate = item.shape().surrogate();
-        let mut buffer_shape = item.shape().clone();
+        let surrogate = item.shape.surrogate();
+        let mut buffer_shape = item.shape.as_ref().clone();
         let sampler = HPGSampler::new(item, layout).unwrap();
         println!("[{}] sampler coverage: {:.3}% with {} samplers", n_hpg_cells, sampler.coverage_area / layout.bin().bbox().area() * 100.0, sampler.cell_samplers.len());
 
@@ -157,7 +150,7 @@ fn hpg_update_bench(c: &mut Criterion) {
         while valid_placements.len() < N_VALID_SAMPLES {
             let transf = sampler.sample(&mut rng);
             if !layout.cde().surrogate_collides(surrogate, &transf, &[]) {
-                buffer_shape.transform_from(item.shape(), &transf);
+                buffer_shape.transform_from(&item.shape, &transf);
                 if !layout.cde().shape_collides(&buffer_shape, &[]) {
                     let d_transf = transf.decompose();
                     valid_placements.push(PlacingOption {

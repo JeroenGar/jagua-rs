@@ -5,26 +5,26 @@ use itertools::Itertools;
 use crate::collision_detection::cd_engine::CDEngine;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
+use crate::entities::quality_zone::N_QUALITIES;
 use crate::entities::quality_zone::QualityZone;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
-use crate::entities::quality_zone::N_QUALITIES;
 use crate::util::config::CDEConfig;
 
 /// A `Bin` is a container in which items can be placed.
 /// Its interior is defined by an outer polygon and zero or more holes.
 #[derive(Clone, Debug)]
 pub struct Bin {
-    id: usize,
-    outer: Arc<SimplePolygon>,
-    value: u64,
-    centering_transform: Transformation,
-    holes: Vec<Arc<SimplePolygon>>,
-    quality_zones: [Option<QualityZone>; N_QUALITIES],
-    base_cde: Arc<CDEngine>,
-    area: f64,
+    pub id: usize,
+    pub outer: Arc<SimplePolygon>,
+    pub value: u64,
+    pub centering_transform: Transformation,
+    pub holes: Vec<Arc<SimplePolygon>>,
+    pub quality_zones: [Option<QualityZone>; N_QUALITIES],
+    pub base_cde: Arc<CDEngine>,
+    pub area: f64,
 }
 
 impl Bin {
@@ -97,39 +97,7 @@ impl Bin {
         hazards
     }
 
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
-    pub fn outer(&self) -> &Arc<SimplePolygon> {
-        &self.outer
-    }
-
-    pub fn holes(&self) -> &Vec<Arc<SimplePolygon>> {
-        &self.holes
-    }
-
     pub fn bbox(&self) -> AARectangle {
         self.outer.bbox()
-    }
-
-    pub fn value(&self) -> u64 {
-        self.value
-    }
-
-    pub fn centering_transform(&self) -> &Transformation {
-        &self.centering_transform
-    }
-
-    pub fn quality_zones(&self) -> &[Option<QualityZone>; N_QUALITIES] {
-        &self.quality_zones
-    }
-
-    pub fn base_cde(&self) -> &CDEngine {
-        &self.base_cde
-    }
-
-    pub fn area(&self) -> f64 {
-        self.area
     }
 }

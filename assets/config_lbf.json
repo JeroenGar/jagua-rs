@@ -1,13 +1,7 @@
 {
   "cde_config": {
-    "quadtree": {
-      "FixedDepth": 5
-    },
-    "haz_prox": {
-      "Enabled": {
-        "n_cells": 10000
-      }
-    },
+    "quadtree_depth": 5,
+    "hpg_n_cells": 2000,
     "item_surrogate_config": {
       "pole_coverage_goal": 0.9,
       "max_poles": 10,
@@ -16,14 +10,34 @@
     }
   },
   "poly_simpl_config": {
-    "Enabled": {
+    "mode": "enabled",
+    "params": {
       "tolerance": 0.001
     }
   },
-  "deterministic_mode": true,
+  "deterministic_mode": false,
   "n_samples_per_item": 5000,
-  "ls_samples_fraction": 0.5,
+  "ls_samples_fraction": 0.2,
   "svg_draw_options": {
+    "theme": {
+      "stroke_width_multiplier": 2.0,
+      "bin_fill": "#CC824A",
+      "item_fill": "#FFC879",
+      "hole_fill": "#2D2D2D",
+      "qz_fill": [
+        "#000000",
+        "#FF0000",
+        "#FF5E00",
+        "#FFA500",
+        "#FFAD00",
+        "#FFFF00",
+        "#CBFF00",
+        "#CBFF00",
+        "#CBFF00",
+        "#CBFF00"
+      ],
+      "qz_stroke_opac": 0.5
+    },
     "quadtree": false,
     "haz_prox_grid": false,
     "surrogate": false

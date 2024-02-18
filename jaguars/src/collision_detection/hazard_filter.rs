@@ -3,7 +3,6 @@ use itertools::Itertools;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 
-
 /// Trait that allows for filtering out irrelevant hazards depending on the context.
 /// Enables ignoring certain hazards when querying the CDE.
 pub trait HazardFilter {

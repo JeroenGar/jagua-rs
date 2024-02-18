@@ -1,13 +1,14 @@
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
+
 ///<https://en.wikipedia.org/wiki/Convex_hull>
 
 /// Returns the indices of the points in the SimplePolygon that form the convex hull
 pub fn convex_hull_indices(shape: &SimplePolygon) -> Vec<usize> {
-    let c_hull = convex_hull_from_points(shape.points().clone());
+    let c_hull = convex_hull_from_points(shape.points.clone());
     let mut indices = vec![];
     for p in c_hull.iter() {
-        indices.push(shape.points().iter().position(|x| x == p).unwrap());
+        indices.push(shape.points.iter().position(|x| x == p).unwrap());
     }
     indices
 }

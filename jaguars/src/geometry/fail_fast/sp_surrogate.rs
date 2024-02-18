@@ -1,4 +1,3 @@
-use std::ops::Range;
 use crate::geometry::convex_hull;
 use crate::geometry::fail_fast::{piers, poi};
 use crate::geometry::geo_traits::{Transformable, TransformableFrom};
@@ -20,7 +19,7 @@ pub struct SPSurrogate {
 impl SPSurrogate {
     pub fn new(simple_poly: &SimplePolygon, config: SPSurrogateConfig) -> Self {
         let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
-        let mut poles = vec![simple_poly.poi().clone()];
+        let mut poles = vec![simple_poly.poi.clone()];
         poles.extend(poi::generate_additional_surrogate_poles(simple_poly, config.max_poles.saturating_sub(1), config.pole_coverage_goal));
         let poles_bounding_circle = Circle::bounding_circle(&poles);
 

@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
-use log::{debug};
+
+use log::debug;
 
 use crate::collision_detection::hazard::Hazard;
 use crate::geometry::geo_traits::{DistanceFrom, Shape};

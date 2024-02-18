@@ -1,18 +1,13 @@
 use svg::node::element::{Circle, Path};
 use svg::node::element::path::Data;
-use jaguars::collision_detection::hazard::HazardEntity;
 
+use jaguars::collision_detection::hazard::HazardEntity;
 use jaguars::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use jaguars::collision_detection::quadtree::qt_node::QTNode;
-
-
-
 use jaguars::geometry;
 use jaguars::geometry::primitives::edge::Edge;
-
 use jaguars::geometry::primitives::point::Point;
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
-
 
 pub fn simple_polygon_data(s_poly: &SimplePolygon) -> Data {
     let mut data = Data::new().move_to::<(f64, f64)>(s_poly.get_point(0).into());
@@ -35,10 +30,10 @@ fn qt_node_data(
 ) -> (Data, Data, Data) {
     //Only draw qt_nodes that do not have a child
 
-    match (qt_node.has_children(), qt_node.hazards().strongest(irrelevant_hazards)) {
+    match (qt_node.has_children(), qt_node.hazards.strongest(irrelevant_hazards)) {
         (true, Some(_)) => {
             //not a leaf node, go to children
-            for child in qt_node.children().as_ref().unwrap().iter() {
+            for child in qt_node.children.as_ref().unwrap().iter() {
                 let data = qt_node_data(child, data_eh, data_ph, data_nh, irrelevant_hazards);
                 data_eh = data.0;
                 data_ph = data.1;
@@ -47,7 +42,7 @@ fn qt_node_data(
         }
         (true, None) | (false, _) => {
             //leaf node, draw it
-            let rect = qt_node.bbox();
+            let rect = &qt_node.bbox;
             let draw = |data: Data| -> Data {
                 data
                     .move_to((rect.x_min, rect.y_min))
@@ -57,7 +52,7 @@ fn qt_node_data(
                     .close()
             };
 
-            match qt_node.hazards().strongest(irrelevant_hazards) {
+            match qt_node.hazards.strongest(irrelevant_hazards) {
                 Some(ch) => {
                     match ch.presence {
                         QTHazPresence::Entire => data_eh = draw(data_eh),

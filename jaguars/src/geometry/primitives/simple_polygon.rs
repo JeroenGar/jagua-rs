@@ -21,12 +21,12 @@ use crate::util::f64a::F64A;
 /// Geometric primitive representing a simple polygon: <https://en.wikipedia.org/wiki/Simple_polygon>
 #[derive(Clone, Debug)]
 pub struct SimplePolygon {
-    points: Vec<Point>,
-    bbox: AARectangle,
-    area: f64,
-    diameter: f64,
-    poi: Circle,
-    surrogate: Option<SPSurrogate>,
+    pub points: Vec<Point>,
+    pub bbox: AARectangle,
+    pub area: f64,
+    pub diameter: f64,
+    pub poi: Circle,
+    pub surrogate: Option<SPSurrogate>,
 }
 
 impl SimplePolygon {
@@ -88,16 +88,8 @@ impl SimplePolygon {
         (0..self.number_of_points()).map(move |i| self.get_edge(i))
     }
 
-    pub fn points(&self) -> &Vec<Point> {
-        &self.points
-    }
-
     pub fn number_of_points(&self) -> usize {
         self.points.len()
-    }
-
-    pub fn poi(&self) -> &Circle {
-        &self.poi
     }
 
     pub fn surrogate(&self) -> &SPSurrogate {
@@ -248,7 +240,7 @@ impl TransformableFrom for SimplePolygon {
             p.transform_from(ref_p, t);
         }
 
-        poi.transform_from(reference.poi(), t);
+        poi.transform_from(&reference.poi, t);
 
         //transform the surrogate
         if let Some(surrogate) = surrogate.as_mut() {

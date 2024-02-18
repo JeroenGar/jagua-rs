@@ -1,14 +1,10 @@
 use std::borrow::Borrow;
 
-
 use enum_dispatch::enum_dispatch;
-
-
-use crate::entities::placing_option::PlacingOption;
-
 
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
+use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
 use crate::entities::problems::problem::private::ProblemGenericPrivate;
 use crate::entities::problems::strip_packing::SPProblem;
@@ -64,7 +60,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
 
     fn usage(&mut self) -> f64 {
         let (total_bin_area, total_used_area) = self.layouts_mut().iter_mut().fold((0.0, 0.0), |acc, l| {
-            let bin_area = l.bin().area();
+            let bin_area = l.bin().area;
             let used_area = bin_area * l.usage();
             (acc.0 + bin_area, acc.1 + used_area)
         });
@@ -72,13 +68,13 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     }
 
     fn used_bin_value(&self) -> u64 {
-        self.layouts().iter().map(|l| l.bin().value()).sum()
+        self.layouts().iter().map(|l| l.bin().value).sum()
     }
 
     fn included_item_qtys(&self) -> Vec<usize>;
 
     fn empty_layout_has_stock(&self, index: usize) -> bool {
-        let bin_id = self.empty_layouts()[index].bin().id();
+        let bin_id = self.empty_layouts()[index].bin().id;
         self.bin_qtys()[bin_id] > 0
     }
 

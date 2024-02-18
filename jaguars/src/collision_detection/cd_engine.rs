@@ -2,11 +2,11 @@ use indexmap::IndexSet;
 use itertools::Itertools;
 use tribool::Tribool;
 
+use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::hpg::grid::Grid;
 use crate::collision_detection::hpg::hazard_proximity_grid::{HazardProximityGrid, PendingChangesErr};
 use crate::collision_detection::hpg::hpg_cell::HPGCell;
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
@@ -18,8 +18,7 @@ use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::assertions;
-use crate::util::config::{CDEConfig, HazProxConfig, QuadTreeConfig};
-
+use crate::util::config::CDEConfig;
 
 /// The Collision Detection Engine (CDE) is responsible for validating potential placements of items in a `Layout`.
 /// It can be queried to check if a given shape or surrogate collides with any `Hazard`s in the `Layout`.
@@ -46,19 +45,12 @@ pub struct CDESnapshot {
 
 impl CDEngine {
     pub fn new(bbox: AARectangle, static_hazards: Vec<Hazard>, config: CDEConfig) -> CDEngine {
-        let qt_depth = match config.quadtree {
-            QuadTreeConfig::FixedDepth(depth) => depth,
-            QuadTreeConfig::Auto => panic!("not implemented, quadtree depth must be specified"),
+        let haz_prox_grid = match config.hpg_n_cells {
+            0 => None,
+            hpg_n_cells => Some(HazardProximityGrid::new(bbox.clone(), &static_hazards, hpg_n_cells))
         };
 
-        let haz_prox_grid = match config.haz_prox {
-            HazProxConfig::Disabled => None,
-            HazProxConfig::Enabled { n_cells } => {
-                Some(HazardProximityGrid::new(bbox.clone(), &static_hazards, n_cells))
-            }
-        };
-
-        let mut qt_root = QTNode::new(qt_depth, bbox.clone(), None);
+        let mut qt_root = QTNode::new(config.quadtree_depth, bbox.clone(), None);
 
         for haz in static_hazards.iter() {
             qt_root.register_hazard(haz.into());
@@ -120,7 +112,7 @@ impl CDEngine {
         assert!(!self.haz_prox_grid.as_ref().map_or(false, |hpg| hpg.has_pending_deregisters()));
         CDESnapshot {
             dynamic_hazards: self.dynamic_hazards.clone(),
-            grid: self.haz_prox_grid.as_ref().map(|hpg| hpg.grid().clone())
+            grid: self.haz_prox_grid.as_ref().map(|hpg| hpg.grid.clone())
         }
     }
 
@@ -190,8 +182,8 @@ impl CDEngine {
     }
 
     pub fn smallest_qt_node_dimension(&self) -> f64 {
-        let bbox = self.quadtree.bbox();
-        let level = self.quadtree.level();
+        let bbox = &self.quadtree.bbox;
+        let level = self.quadtree.level;
         //every level, the dimension is halved
         bbox.width() / 2.0_f64.powi(level as i32)
     }
@@ -346,12 +338,12 @@ impl CDEngine {
             if std::ptr::eq(haz_shape, s_omega) {
                 //s_omega is registered in the quadtree.
                 //maybe the quadtree can help us.
-                match self.quadtree.point_definitely_collides_with(&s_mu.poi().center, &haz.entity).try_into() {
+                match self.quadtree.point_definitely_collides_with(&s_mu.poi.center, &haz.entity).try_into() {
                     Ok(collides) => return collides,
                     Err(_) => (), //no definitive answer
                 }
             }
-            let inclusion = s_omega.collides_with(&s_mu.poi().center);
+            let inclusion = s_omega.collides_with(&s_mu.poi.center);
 
             match haz.entity.position() {
                 GeoPosition::Interior => inclusion,

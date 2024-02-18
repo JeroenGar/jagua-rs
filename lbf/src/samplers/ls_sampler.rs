@@ -5,6 +5,7 @@ use rand_distr::Normal;
 use jaguars::entities::item::Item;
 use jaguars::geometry::d_transformation::DTransformation;
 use jaguars::geometry::transformation::Transformation;
+
 use crate::samplers::rotation_distr::NormalRotDistr;
 
 pub struct LSSampler {

@@ -1,4 +1,5 @@
 use enum_dispatch::enum_dispatch;
+
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::geometry::geo_traits::Shape;
@@ -58,7 +59,7 @@ impl BPInstance {
     pub fn new(items: Vec<(Item, usize)>, bins: Vec<(Bin, usize)>) -> Self {
         assert!(assertions::instance_item_bin_ids_correct(&items, &bins));
 
-        let item_area = items.iter().map(|(item, qty)| item.shape().area() * *qty as f64).sum();
+        let item_area = items.iter().map(|(item, qty)| item.shape.area() * *qty as f64).sum();
 
         Self { items, item_area, bins }
     }
@@ -66,7 +67,7 @@ impl BPInstance {
 
 impl SPInstance {
     pub fn new(items: Vec<(Item, usize)>, strip_height: f64) -> Self {
-        let item_area = items.iter().map(|(item, qty)| item.shape().area() * *qty as f64).sum();
+        let item_area = items.iter().map(|(item, qty)| item.shape.area() * *qty as f64).sum();
 
         Self { items, item_area, strip_height }
     }

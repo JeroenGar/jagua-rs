@@ -4,6 +4,7 @@ use rand::Rng;
 use jaguars::entities::item::Item;
 use jaguars::geometry::d_transformation::DTransformation;
 use jaguars::geometry::primitives::aa_rectangle::AARectangle;
+
 use crate::samplers::rotation_distr::UniformRotDistr;
 
 pub struct UniformAARectSampler {

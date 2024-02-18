@@ -1,37 +1,44 @@
-use std::{fs};
+use std::fs;
 use std::fs::File;
-use std::io::{BufReader};
-use std::path::{Path};
-use std::sync::Arc;
+use std::io::BufReader;
+use std::path::Path;
 
 use clap::Parser as ClapParser;
-use log::{info, LevelFilter, warn};
+use log::{error, LevelFilter, warn};
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
 
 use jaguars::io::parser;
 use jaguars::io::parser::Parser;
-
-use lbf::config::Config;
 use lbf::{EPOCH, io};
-use lbf::lbf_optimizer::LBFOptimizer;
+use lbf::config::Config;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
-use lbf::io::layout_to_svg::{s_layout_to_svg};
+use lbf::io::layout_to_svg::s_layout_to_svg;
+use lbf::lbf_optimizer::LBFOptimizer;
 
 fn main() {
     io::init_logger(Some(LevelFilter::Info));
 
     let args = Cli::parse();
-    let config_file = File::open(args.config_file).expect("could not open config file");
-    let config: Config = serde_json::from_reader(BufReader::new(config_file)).unwrap_or_else(|err| {
-        warn!("Config file could not be parsed: {}", err);
-        warn!("Falling back on default config");
-        Config::default()
-    });
-
-    info!("Config: {}", serde_json::to_string(&config).unwrap());
-
+    let config = match args.config_file {
+        None => {
+            warn!("No config file provided, use --config-file to provide a custom config");
+            warn!("Falling back default config:\n{}", serde_json::to_string(&Config::default()).unwrap());
+            Config::default()
+        }
+        Some(config_file) => {
+            let file = File::open(config_file).unwrap_or_else(|err| {
+                panic!("Config file could not be opened: {}", err);
+            });
+            let reader = BufReader::new(file);
+            serde_json::from_reader(reader).unwrap_or_else(|err| {
+                error!("Config file could not be parsed: {}", err);
+                error!("Omit the --config-file argument to use the default config");
+                panic!();
+            })
+        }
+    };
 
     let json_instance = io::read_json_instance(args.input_file.as_path());
     let parser = Parser::new(config.poly_simpl_config, config.cde_config, true);

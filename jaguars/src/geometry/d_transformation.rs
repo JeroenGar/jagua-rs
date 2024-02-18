@@ -1,5 +1,6 @@
 use std::borrow::Borrow;
 use std::fmt::Display;
+
 use ordered_float::NotNan;
 
 use crate::geometry::transformation::Transformation;

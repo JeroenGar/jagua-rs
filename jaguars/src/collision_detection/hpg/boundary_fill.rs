@@ -22,7 +22,7 @@ impl BoundaryFillGrid {
 
     /// Creates a new BoundaryFillGrid, add all cells inside the seed_bbox to the queue
     pub fn new<T>(grid: &Grid<T>, seed_bbox: AARectangle) -> Self {
-        let state = vec![CellState::new(); grid.n_rows() * grid.n_cols()];
+        let state = vec![CellState::new(); grid.n_rows * grid.n_cols];
 
         //Find the range of rows and columns which reside inside the seed_bbox
         let row_range = grid.rows_in_range(seed_bbox.y_min..=seed_bbox.y_max);
@@ -50,7 +50,7 @@ impl BoundaryFillGrid {
             false => {
                 match self.seed_iterator.next() {
                     Some((row, col)) => {
-                        let cell = grid.get_index(row, col);
+                        let cell = grid.to_index(row, col);
                         if let Some(cell) = cell {
                             self.state[cell].visit();
                             self.n_visited += 1;

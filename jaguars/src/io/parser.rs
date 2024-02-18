@@ -11,6 +11,7 @@ use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
 use crate::entities::problems::problem::{LayoutIndex, Problem, ProblemGeneric};
 use crate::entities::problems::strip_packing::SPProblem;
+use crate::entities::quality_zone::N_QUALITIES;
 use crate::entities::quality_zone::QualityZone;
 use crate::entities::solution::Solution;
 use crate::geometry::d_transformation::DTransformation;
@@ -21,7 +22,6 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::io::json_instance::{JsonInstance, JsonPoly, JsonSimplePoly};
 use crate::io::json_solution::{JsonLayout, JsonLayoutStats, JsonObjectType, JsonPlacedItem, JsonSolution, JsonTransformation};
-use crate::entities::quality_zone::N_QUALITIES;
 use crate::util::config::CDEConfig;
 use crate::util::polygon_simplification;
 use crate::util::polygon_simplification::{PolySimplConfig, PolySimplMode};
@@ -196,16 +196,16 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
 
         //Find the empty layout matching the bin id in the JSON solution, 0 if strip packing instance.
         let (empty_layout_index, _) = problem.empty_layouts().iter().enumerate()
-            .find(|(_, layout)| layout.bin().id() == bin.map_or(0, |b| b.id())).unwrap();
+            .find(|(_, layout)| layout.bin().id == bin.map_or(0, |b| b.id)).unwrap();
 
-        let bin_centering = bin.map_or(DTransformation::empty(), |b| DTransformation::from(b.centering_transform())).translation();
+        let bin_centering = bin.map_or(DTransformation::empty(), |b| DTransformation::from(&b.centering_transform)).translation();
 
         let json_first_item = json_layout.placed_items.get(0).unwrap();
         let first_item = instance.item(json_first_item.item_index);
 
         //all items have a centering transformation applied during parsing.
         //However, the transformation described in the JSON solution is relative to the item's original position, not the one after the centering transformation
-        let first_item_centering_correction = first_item.centering_transform().clone().inverse().decompose().translation();
+        let first_item_centering_correction = first_item.centering_transform.clone().inverse().decompose().translation();
 
         let transf = Transformation::empty()
             .translate(first_item_centering_correction) //undo the item centering transformation
@@ -217,7 +217,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
 
         let initial_insert_opt = PlacingOption {
             layout_index: LayoutIndex::Empty(empty_layout_index),
-            item_id: first_item.id(),
+            item_id: first_item.id,
             transf,
             d_transf,
         };
@@ -230,7 +230,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
         //Insert the rest of the items
         for json_item in json_layout.placed_items.iter().skip(1) {
             let item = instance.item(json_item.item_index);
-            let item_centering_correction = item.centering_transform().clone().inverse().decompose().translation();
+            let item_centering_correction = item.centering_transform.clone().inverse().decompose().translation();
             let transf = Transformation::empty()
                 .translate(item_centering_correction)
                 .rotate(json_item.transformation.rotation)
@@ -241,7 +241,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
 
             let insert_opt = PlacingOption {
                 layout_index: LayoutIndex::Existing(layout_index),
-                item_id: item.id(),
+                item_id: item.id,
                 transf,
                 d_transf,
             };
@@ -257,14 +257,14 @@ pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: In
     let layouts = solution.layout_snapshots.iter()
         .map(|sl| {
             let object_type = match &instance {
-                Instance::BP(_bpi)=> JsonObjectType::Object { id: sl.bin.id() },
+                Instance::BP(_bpi)=> JsonObjectType::Object { id: sl.bin.id },
                 Instance::SP(spi) => JsonObjectType::Strip { width: sl.bin.bbox().width(), height: spi.strip_height },
             };
             //JSON solution should have their bins back in their original position, so we need to correct for the centering transformation
             let bin_centering_correction = match &instance {
                 Instance::BP(bpi) => {
-                    let bin = &bpi.bins[sl.bin.id()].0;
-                    bin.centering_transform().clone().inverse().decompose().translation()
+                    let bin = &bpi.bins[sl.bin.id].0;
+                    bin.centering_transform.clone().inverse().decompose().translation()
                 },
                 Instance::SP(_) => (0.0, 0.0), //no bin, no correction
             };
@@ -273,7 +273,7 @@ pub fn compose_json_solution(solution: &Solution, instance: &Instance, epoch: In
                 .map(|pl| {
                     let item_index = pl.item_id();
                     let item = instance.item(item_index);
-                    let item_centering = item.centering_transform().decompose().translation();
+                    let item_centering = item.centering_transform.decompose().translation();
 
                     let pl_decomp_transf = pl.d_transformation();
 

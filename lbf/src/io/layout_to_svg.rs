@@ -1,5 +1,6 @@
 use svg::Document;
 use svg::node::element::Group;
+
 use jaguars::entities::instance::Instance;
 use jaguars::entities::instance::InstanceGeneric;
 use jaguars::entities::layout::Layout;
@@ -7,8 +8,9 @@ use jaguars::entities::layout::LayoutSnapshot;
 use jaguars::geometry::geo_enums::GeoPosition;
 use jaguars::geometry::geo_traits::Transformable;
 use jaguars::geometry::primitives::circle::Circle;
+
 use crate::io::{svg_export, svg_util};
-use crate::io::svg_util::{SvgDrawOptions};
+use crate::io::svg_util::SvgDrawOptions;
 
 pub fn s_layout_to_svg(s_layout: &LayoutSnapshot, instance: &Instance, options: SvgDrawOptions) -> Document {
     let layout = Layout::new_from_stored(s_layout.id, s_layout);
@@ -34,7 +36,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
         //outer
         group = group.add(
             svg_export::data_to_path(
-                svg_export::simple_polygon_data(bin.outer()),
+                svg_export::simple_polygon_data(&bin.outer),
                 &[
                     ("fill", &*format!("{}", theme.bin_fill)),
                     ("stroke", "black"),
@@ -44,7 +46,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
         );
 
         //holes
-        for hole in bin.holes() {
+        for hole in &bin.holes {
             group = group.add(
                 svg_export::data_to_path(
                     svg_export::simple_polygon_data(hole),
@@ -63,7 +65,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
         let mut group = Group::new();
 
         //quality zones
-        for qz in bin.quality_zones().iter().rev().flatten() {
+        for qz in bin.quality_zones.iter().rev().flatten() {
             let color = theme.qz_fill[qz.quality];
             let stroke_color = svg_util::change_brightness(color, 0.5);
             for qz_shape in qz.zones.iter() {
@@ -93,8 +95,8 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
         for pi in layout.placed_items() {
             let mut group = Group::new();
             let item = instance.item(pi.item_id());
-            let shape = pi.shape();
-            let color = match item.base_quality() {
+            let shape = &pi.shape;
+            let color = match item.base_quality {
                 None => theme.item_fill.to_owned(),
                 Some(q) => {
                     svg_util::blend_colors(
@@ -138,7 +140,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                     ("stroke-linejoin", "round")
                 ];
 
-                let transformed_surrogate = item.shape().surrogate().transform_clone(&pi.d_transformation().compose());
+                let transformed_surrogate = item.shape.surrogate().transform_clone(&pi.d_transformation().compose());
                 let poi = &transformed_surrogate.poles[0];
                 let ff_poles = transformed_surrogate.ff_poles();
 
@@ -202,7 +204,8 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
     let haz_prox_grid_group = {
         let mut group = Group::new();
         if options.haz_prox_grid {
-            for hp_cell in layout.cde().haz_prox_grid().unwrap().cells().iter().flatten() {
+            let hpg = layout.cde().haz_prox_grid().unwrap();
+            for hp_cell in hpg.grid.cells.iter().flatten() {
                 let center = hp_cell.centroid();
                 let prox = hp_cell.hazard_proximity(None);
 

@@ -48,7 +48,7 @@ impl Solution {
         //ratio of included item area vs total instance item area
         let total_item_area = instance.item_area();
         let included_item_area = self.placed_item_qtys.iter().enumerate()
-            .map(|(i, qty)| instance.item(i).shape().area() * *qty as f64)
+            .map(|(i, qty)| instance.item(i).shape.area() * *qty as f64)
             .sum::<f64>();
         let completeness = included_item_area / total_item_area;
         completeness
@@ -70,8 +70,8 @@ impl Solution {
                     0 => panic!("No stored layouts in solution"),
                     1 => {
                         let bins = &bp_instance.bins;
-                        let cheapest_bin = &bins.iter().min_by(|(b1, _), (b2, _)| b1.value().cmp(&b2.value())).unwrap().0;
-                        self.layout_snapshots[0].bin.id() == cheapest_bin.id()
+                        let cheapest_bin = &bins.iter().min_by(|(b1, _), (b2, _)| b1.value.cmp(&b2.value)).unwrap().0;
+                        self.layout_snapshots[0].bin.id == cheapest_bin.id
                     }
                     _ => false
                 }

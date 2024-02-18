@@ -2,9 +2,12 @@ use std::fs;
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
+
 use log::{info, Level, LevelFilter, log};
 use svg::Document;
+
 use jaguars::io::json_instance::JsonInstance;
+
 use crate::EPOCH;
 use crate::io::json_output::JsonOutput;
 

@@ -13,11 +13,11 @@ use crate::geometry::primitives::point::Point;
 #[derive(Clone, Debug)]
 pub struct QTNode {
     /// The level of the node in the tree, 0 being the bottom-most level
-    level: u8,
-    bbox: AARectangle,
-    children: Option<Box<[QTNode; 4]>>,
+    pub level: u8,
+    pub bbox: AARectangle,
+    pub children: Option<Box<[QTNode; 4]>>,
     /// The hazards present in the node
-    hazards: QTHazardVec,
+    pub hazards: QTHazardVec,
 }
 
 impl QTNode {
@@ -35,10 +35,10 @@ impl QTNode {
         fn register_to_children(children: &mut Option<Box<[QTNode; 4]>>, hazard: &QTHazard) {
             if let Some(children) = children.as_mut() {
                 let child_bboxes = [
-                    children[0].bbox(),
-                    children[1].bbox(),
-                    children[2].bbox(),
-                    children[3].bbox(),
+                    &children[0].bbox,
+                    &children[1].bbox,
+                    &children[2].bbox,
+                    &children[3].bbox,
                 ];
 
                 let constricted_hazards = hazard.constrict(child_bboxes);
@@ -121,22 +121,6 @@ impl QTNode {
         self.children.is_some()
     }
 
-    pub fn level(&self) -> u8 {
-        self.level
-    }
-
-    pub fn bbox(&self) -> &AARectangle {
-        &self.bbox
-    }
-
-    pub fn children(&self) -> &Option<Box<[QTNode; 4]>> {
-        &self.children
-    }
-
-    pub fn hazards(&self) -> &QTHazardVec {
-        &self.hazards
-    }
-
     /// Returns None if no collision between the entity and any hazard is detected,
     /// otherwise returns the first encountered hazard that collides with the entity
     /// In practice T is usually an `Edge` or `Circle`
@@ -145,12 +129,12 @@ impl QTNode {
     {
         match self.hazards.strongest(irrelevant_hazards) {
             None => None,
-            Some(strongest_hazard) => match entity.collides_with(self.bbox()) {
+            Some(strongest_hazard) => match entity.collides_with(&self.bbox) {
                 false => None,
                 true => match strongest_hazard.presence {
                     QTHazPresence::None => None,
                     QTHazPresence::Entire => Some(&strongest_hazard.entity),
-                    QTHazPresence::Partial(_) => match self.children() {
+                    QTHazPresence::Partial(_) => match &self.children {
                         Some(children) => {
                             //Check if any of the children intersect with the entity
                             children.iter()
@@ -182,10 +166,10 @@ impl QTNode {
     {
         match self.hazards.strongest(irrelevant_hazards) {
             None => Tribool::False,
-            Some(hazard) => match (entity.collides_with(self.bbox()), &hazard.presence) {
+            Some(hazard) => match (entity.collides_with(&self.bbox), &hazard.presence) {
                 (false, _) | (_, QTHazPresence::None) => Tribool::False,
                 (true, QTHazPresence::Entire) => Tribool::True,
-                (true, QTHazPresence::Partial(_)) => match self.children() {
+                (true, QTHazPresence::Partial(_)) => match &self.children {
                     Some(children) => {
                         //There is a partial hazard and the node has children, check all children
                         let mut result = Tribool::False; //Assume no collision

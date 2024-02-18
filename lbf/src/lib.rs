@@ -1,4 +1,5 @@
 use std::time::Instant;
+
 use mimalloc::MiMalloc;
 use once_cell::sync::Lazy;
 

@@ -8,15 +8,13 @@ use rand::SeedableRng;
 use rand::seq::IteratorRandom;
 
 use jaguars::entities::instance::InstanceGeneric;
-use jaguars::entities::placed_item::PlacedItemUID;
 use jaguars::entities::placing_option::PlacingOption;
 use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric};
 use jaguars::geometry::geo_traits::TransformableFrom;
 use jaguars::io::json_instance::JsonInstance;
-use jaguars::util::config::{HazProxConfig, QuadTreeConfig};
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
 
-use crate::util::{create_base_config, N_ITEMS_REMOVED, N_SAMPLES_PER_ITER, N_TOTAL_SAMPLES, SWIM_PATH};
+use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};
 
 criterion_main!(benches);
 criterion_group!(benches, quadtree_query_update_1000_1, quadtree_query_bench, quadtree_update_bench);
@@ -24,6 +22,9 @@ criterion_group!(benches, quadtree_query_update_1000_1, quadtree_query_bench, qu
 mod util;
 
 const QT_DEPTHS: [u8; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+
+const N_TOTAL_SAMPLES: usize = 100_000;
+const N_SAMPLES_PER_ITER: usize = 1000;
 
 /// Benchmark the update operation of the quadtree for different depths
 /// From a solution, created by the LBF optimizer, 5 items are removed and then inserted back again
@@ -34,11 +35,11 @@ fn quadtree_update_bench(c: &mut Criterion) {
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
     //disable haz prox grid
-    config.cde_config.haz_prox = HazProxConfig::Enabled { n_cells: 1 };
+    config.cde_config.hpg_n_cells = 1;
 
     let mut group = c.benchmark_group("quadtree_update");
     for depth in QT_DEPTHS {
-        config.cde_config.quadtree = QuadTreeConfig::FixedDepth(depth);
+        config.cde_config.quadtree_depth = depth;
         let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
         let (mut problem, _) = util::create_blf_problem(instance.clone(), config, 0);
 
@@ -49,7 +50,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
             b.iter(|| {
                 // Remove an item from the layout
                 let pi_uid = problem.get_layout(&layout_index).placed_items().iter()
-                    .map(|p_i| p_i.uid().clone())
+                    .map(|p_i| p_i.uid.clone())
                     .choose(&mut rng).expect("No items in layout");
 
                 //println!("Removing item with id: {}\n", pi_uid.item_id);
@@ -78,13 +79,13 @@ fn quadtree_query_bench(c: &mut Criterion) {
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
     //disable haz prox grid
-    config.cde_config.haz_prox = HazProxConfig::Enabled { n_cells: 1 };
+    config.cde_config.hpg_n_cells = 1;
 
     let mut group = c.benchmark_group("quadtree_query");
     for depth in QT_DEPTHS {
-        config.cde_config.quadtree = QuadTreeConfig::FixedDepth(depth);
+        config.cde_config.quadtree_depth = depth;
         let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
-        let (mut problem, selected_pi_uids) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
+        let (problem, selected_pi_uids) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = problem.get_layout(LayoutIndex::Existing(0));
         let sampler = UniformAARectSampler::new(layout.bin().bbox(), instance.item(0));
@@ -104,9 +105,9 @@ fn quadtree_query_bench(c: &mut Criterion) {
                 let item_id = item_id_cycler.next().unwrap();
                 let item = instance.item(item_id);
                 let layout = problem.get_layout(LayoutIndex::Existing(0));
-                let mut buffer_shape = item.shape().clone();
+                let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
-                    buffer_shape.transform_from(item.shape(), transf);
+                    buffer_shape.transform_from(&item.shape, transf);
                     let collides = layout.cde().shape_collides(&buffer_shape, &[]);
                     if collides {
                         n_invalid += 1;
@@ -128,14 +129,14 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
     //disable haz prox grid
-    config.cde_config.haz_prox = HazProxConfig::Enabled { n_cells: 1 };
+    config.cde_config.hpg_n_cells = 1;
 
 
     let mut group = c.benchmark_group("quadtree_query_update_1000_1");
     for depth in QT_DEPTHS {
-        config.cde_config.quadtree = QuadTreeConfig::FixedDepth(depth);
+        config.cde_config.quadtree_depth = depth;
         let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
-        let (mut problem, selected_pi_uids) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
+        let (mut problem, _) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = problem.get_layout(LayoutIndex::Existing(0));
         let sampler = UniformAARectSampler::new(layout.bin().bbox(), instance.item(0));
@@ -148,7 +149,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
                 let pi_uid = problem.get_layout(LayoutIndex::Existing(0)).placed_items().iter()
-                    .map(|p_i| p_i.uid().clone())
+                    .map(|p_i| p_i.uid.clone())
                     .choose(&mut rng).expect("No items in layout");
 
                 problem.remove_item(LayoutIndex::Existing(0), &pi_uid, true);
@@ -157,9 +158,9 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 let item_id = pi_uid.item_id;
                 let item = instance.item(item_id);
                 let layout = problem.get_layout(LayoutIndex::Existing(0));
-                let mut buffer_shape = item.shape().clone();
+                let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
-                    buffer_shape.transform_from(item.shape(), &transf);
+                    buffer_shape.transform_from(&item.shape, &transf);
                     let collides = layout.cde().shape_collides(&buffer_shape, &[]);
                     criterion::black_box(collides); //prevent the compiler from optimizing the loop away
                 }

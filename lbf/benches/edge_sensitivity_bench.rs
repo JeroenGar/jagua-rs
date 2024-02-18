@@ -1,13 +1,14 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
-use std::sync::Arc;
+
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
 use criterion::measurement::WallTime;
 use itertools::Itertools;
-use rand::prelude::{IteratorRandom, SmallRng};
+use rand::prelude::SmallRng;
 use rand::SeedableRng;
-use jaguars::entities::instance::{BPInstance, Instance, SPInstance, InstanceGeneric};
+
+use jaguars::entities::instance::{BPInstance, Instance, InstanceGeneric, SPInstance};
 use jaguars::entities::item::Item;
 use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric};
 use jaguars::geometry::geo_traits::{Shape, TransformableFrom};
@@ -15,12 +16,11 @@ use jaguars::geometry::primitives::point::Point;
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
 use jaguars::io::json_instance::JsonInstance;
 use lbf::config::Config;
-
 use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
 use lbf::samplers::hpg_sampler::HPGSampler;
-use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
-use crate::util::{N_ITEMS_REMOVED, N_SAMPLES_PER_ITER, N_TOTAL_SAMPLES, SWIM_PATH};
+
+use crate::util::{N_ITEMS_REMOVED, SWIM_PATH};
 
 criterion_main!(benches);
 criterion_group!(benches, edge_sensitivity_bench_no_ff, edge_sensitivity_bench_with_ff);
@@ -28,6 +28,9 @@ criterion_group!(benches, edge_sensitivity_bench_no_ff, edge_sensitivity_bench_w
 mod util;
 
 const EDGE_MULTIPLIERS: [u8; 5] = [1, 2, 4, 8, 16];
+
+const N_TOTAL_SAMPLES: usize = 100_000;
+const N_SAMPLES_PER_ITER: usize = 1000;
 
 fn edge_sensitivity_bench_no_ff(c: &mut Criterion){
     let mut config = util::create_base_config();
@@ -53,7 +56,7 @@ fn edge_sensitivity_bench(config: Config, mut g: BenchmarkGroup<WallTime>) {
             modify_instance(&instance, edge_multiplier as usize, config)
         };
 
-        let (mut problem,selected_pi_uids) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
+        let (problem,selected_pi_uids) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         {
             let draw_options = SvgDrawOptions{
@@ -92,12 +95,12 @@ fn edge_sensitivity_bench(config: Config, mut g: BenchmarkGroup<WallTime>) {
                 for i in 0..N_ITEMS_REMOVED {
                     let pi_uid = &selected_pi_uids[i];
                     let item = instance.item(pi_uid.item_id);
-                    let mut buffer_shape = item.shape().clone();
+                    let mut buffer_shape = item.shape.as_ref().clone();
                     for transf in samples_cycler.next().unwrap() {
-                        let collides = match layout.cde().surrogate_collides(item.shape().surrogate(), transf, &[]) {
+                        let collides = match layout.cde().surrogate_collides(item.shape.surrogate(), transf, &[]) {
                             true => true,
                             false => {
-                                buffer_shape.transform_from(item.shape(), transf);
+                                buffer_shape.transform_from(&item.shape, transf);
                                 layout.cde().shape_collides(&buffer_shape, &[])
                             }
                         };
@@ -116,15 +119,15 @@ fn edge_sensitivity_bench(config: Config, mut g: BenchmarkGroup<WallTime>) {
 
 fn modify_instance(instance: &Instance, multiplier: usize, config: Config) -> Instance {
     let modified_items = instance.items().iter().map(|(item, qty)| {
-        let modified_shape = multiply_edge_count(item.shape(), multiplier);
+        let modified_shape = multiply_edge_count(&item.shape, multiplier);
 
         let modified_item = Item::new(
-            item.id(),
+            item.id,
             modified_shape,
-            item.value(),
-            item.allowed_rotation().clone(),
-            item.centering_transform().clone(),
-            item.base_quality(),
+            item.value,
+            item.allowed_rotation.clone(),
+            item.centering_transform.clone(),
+            item.base_quality,
             config.cde_config.item_surrogate_config
         );
         (modified_item, *qty)
@@ -149,7 +152,7 @@ fn multiply_edge_count(shape: &SimplePolygon, multiplier: usize) -> SimplePolygo
         }
 
     }
-    let mut new_polygon = SimplePolygon::new(new_points);
+    let new_polygon = SimplePolygon::new(new_points);
     assert!(almost::equal(shape.area(), new_polygon.area()));
     new_polygon
 }

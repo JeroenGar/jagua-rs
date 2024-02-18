@@ -1,6 +1,7 @@
 use std::f64::consts::PI;
+
 use rand::distributions::Uniform;
-use rand::prelude::{Distribution};
+use rand::prelude::Distribution;
 use rand::Rng;
 use rand::seq::SliceRandom;
 use rand_distr::Normal;
@@ -26,7 +27,7 @@ pub enum NormalRotDistr {
 
 impl UniformRotDistr {
     pub fn from_item(item: &Item) -> Self {
-        match item.allowed_rotation() {
+        match &item.allowed_rotation {
             AllowedRotation::None  => UniformRotDistr::None,
             AllowedRotation::Continuous => UniformRotDistr::Range(Uniform::new(0.0, 2.0 * PI)),
             AllowedRotation::Discrete(a_o) => UniformRotDistr::Discrete(a_o.clone())
@@ -47,7 +48,7 @@ impl UniformRotDistr {
 
 impl NormalRotDistr {
     pub fn from_item(item: &Item, r_ref: f64, stddev: f64) -> Self {
-        match item.allowed_rotation() {
+        match &item.allowed_rotation {
             AllowedRotation::None  => NormalRotDistr::None,
             AllowedRotation::Continuous => NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap()),
             AllowedRotation::Discrete(_) => NormalRotDistr::Discrete(r_ref)

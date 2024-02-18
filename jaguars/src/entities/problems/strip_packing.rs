@@ -1,16 +1,15 @@
 use std::slice;
 
-
 use itertools::Itertools;
 use ordered_float::NotNan;
 
 use crate::collision_detection::hazard_filter;
 use crate::entities::bin::Bin;
-use crate::entities::placing_option::PlacingOption;
-use crate::entities::instance::{SPInstance};
 use crate::entities::instance::InstanceGeneric;
+use crate::entities::instance::SPInstance;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
+use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::problem::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::problem::private::ProblemGenericPrivate;
 use crate::entities::solution::Solution;
@@ -21,7 +20,7 @@ use crate::util::config::CDEConfig;
 /// Strip Packing Problem
 #[derive(Clone)]
 pub struct SPProblem {
-    instance: SPInstance,
+    pub instance: SPInstance,
     layout: Layout,
     strip_height: f64,
     strip_width: f64,
@@ -48,16 +47,16 @@ impl SPProblem {
     }
 
     pub fn modify_strip_width(&mut self, new_width: f64) {
-        let old_p_uids = self.layout.placed_items().iter().map(|p_i| p_i.uid().clone()).collect_vec();
+        let old_p_uids = self.layout.placed_items().iter().map(|p_i| p_i.uid.clone()).collect_vec();
         self.missing_item_qtys.iter_mut().enumerate().for_each(|(i, qty)| *qty = self.instance.item_qty(i) as isize);
         let next_id = self.layout.id() + 1;
-        self.layout = Layout::new(next_id, Bin::from_strip(next_id, new_width, self.strip_height, self.layout.bin().base_cde().config().clone()));
+        self.layout = Layout::new(next_id, Bin::from_strip(next_id, new_width, self.strip_height, self.layout.bin().base_cde.config().clone()));
         self.strip_width = new_width;
 
         for p_uid in old_p_uids {
             let item = self.instance.item(p_uid.item_id);
-            let entities_to_ignore = item.hazard_filter().map_or(vec![], |f| hazard_filter::get_irrelevant_hazard_entities(f, self.layout.cde().all_hazards()));
-            let shape = item.shape();
+            let entities_to_ignore = item.hazard_filter.as_ref().map_or(vec![], |f| hazard_filter::get_irrelevant_hazard_entities(f, self.layout.cde().all_hazards()));
+            let shape = &item.shape;
             let transf = p_uid.d_transf.compose();
             if !self.layout.cde().surrogate_collides(shape.surrogate(), &transf, entities_to_ignore.as_slice()) {
                 let transformed_shape = shape.transform_clone(&transf);
@@ -76,7 +75,7 @@ impl SPProblem {
 
     pub fn fit_strip_width(&mut self) {
         let max_x = self.layout.placed_items().iter()
-            .map(|pi| pi.shape().bbox().x_max)
+            .map(|pi| pi.shape.bbox().x_max)
             .map(|x| NotNan::new(x).unwrap())
             .max().map_or(0.0, |x| x.into_inner());
 
@@ -94,10 +93,6 @@ impl SPProblem {
 
     pub fn strip_width(&self) -> f64 {
         self.strip_width
-    }
-
-    fn instance(&self) -> &SPInstance {
-        &self.instance
     }
 }
 

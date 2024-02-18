@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+
 use itertools::Itertools;
 use log::{Level, log};
 use serde::{Deserialize, Serialize};
@@ -9,8 +10,11 @@ use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[serde(tag = "mode", content = "params")]
 pub enum PolySimplConfig {
+    #[serde(rename = "disabled")]
     Disabled,
+    #[serde(rename = "enabled")]
     Enabled {
         tolerance: f64, //max deviation from the original polygon area (in %)
     },
@@ -111,9 +115,9 @@ pub fn simplify_shape(shape: &SimplePolygon, mode: PolySimplMode, max_area_delta
         }
 
         let mut prev_corner = corners.last().expect("corners is empty");
-        let mut prev_corner_type = CornerType::from(prev_corner.to_points(ref_shape.points()));
+        let mut prev_corner_type = CornerType::from(prev_corner.to_points(&ref_shape.points));
         for corner in corners.iter() {
-            let corner_type = CornerType::from(corner.to_points(ref_shape.points()));
+            let corner_type = CornerType::from(corner.to_points(&ref_shape.points));
 
             //Generate a removal candidate (or not)
             let candidate = match (&corner_type, &prev_corner_type) {
@@ -225,7 +229,7 @@ fn candidate_is_valid(shape: &SimplePolygon, candidate: &Candidate) -> bool {
 }
 
 fn execute_candidate(shape: &SimplePolygon, candidate: &Candidate) -> SimplePolygon {
-    let mut points = shape.points().clone();
+    let mut points = shape.points.clone();
     match candidate {
         Candidate::Collinear(c) => { points.remove(c.1); }
         Candidate::Concave(c) => { points.remove(c.1); }

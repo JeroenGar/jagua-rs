@@ -1,32 +1,25 @@
 use std::path::Path;
-use std::sync::Arc;
-use criterion::Criterion;
-use log::{info, Level, LevelFilter};
+
+use log::info;
 use rand::prelude::{IteratorRandom, SmallRng};
 use rand::SeedableRng;
+
 use jaguars::entities::instance::Instance;
 use jaguars::entities::instance::InstanceGeneric;
 use jaguars::entities::placed_item::PlacedItemUID;
-use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric, Problem};
+use jaguars::entities::problems::problem::{LayoutIndex, Problem, ProblemGeneric};
 use jaguars::entities::problems::strip_packing::SPProblem;
 use jaguars::io::json_instance::JsonInstance;
 use jaguars::io::parser::Parser;
-use jaguars::util::config::{CDEConfig, HazProxConfig, SPSurrogateConfig};
-use jaguars::util::config::QuadTreeConfig::FixedDepth;
+use jaguars::util::config::{CDEConfig, SPSurrogateConfig};
 use jaguars::util::polygon_simplification::PolySimplConfig;
 use lbf::config::Config;
 use lbf::io;
-use lbf::io::init_logger;
 use lbf::io::svg_util::SvgDrawOptions;
 use lbf::lbf_optimizer::LBFOptimizer;
 
 pub const SWIM_PATH: &str = "../assets/swim.json";
 pub const N_ITEMS_REMOVED: usize = 5;
-pub const N_TOTAL_SAMPLES: usize = 100_000;
-
-pub const N_SAMPLES_PER_ITER: usize = 1000;
-
-pub const N_VALID_SAMPLES: usize = 1000;
 
 pub fn create_instance(json_instance: &JsonInstance, cde_config: CDEConfig, poly_simpl_config: PolySimplConfig) -> Instance {
     let parser = Parser::new(poly_simpl_config, cde_config, true);
@@ -50,12 +43,12 @@ pub fn create_blf_problem(instance: Instance, config: Config, n_items_removed: u
     let layout_index = LayoutIndex::Existing(0);
     // Remove some items from the layout
     let removed_pi_uids = problem.get_layout(&layout_index).placed_items().iter()
-        .map(|p_i| p_i.uid().clone())
+        .map(|p_i| p_i.uid.clone())
         .choose_multiple(&mut rng, n_items_removed);
 
     for pi_uid in removed_pi_uids.iter() {
         problem.remove_item(layout_index, pi_uid, true);
-        info!("Removed item: {} with {} edges", pi_uid.item_id, lbf_optimizer.instance().item(pi_uid.item_id).shape().number_of_points());
+        info!("Removed item: {} with {} edges", pi_uid.item_id, lbf_optimizer.instance().item(pi_uid.item_id).shape.number_of_points());
     }
     problem.flush_changes();
 
@@ -76,8 +69,8 @@ pub fn create_blf_problem(instance: Instance, config: Config, n_items_removed: u
 pub fn create_base_config() -> Config {
     Config {
         cde_config: CDEConfig {
-            quadtree: FixedDepth(5),
-            haz_prox: HazProxConfig::Enabled {n_cells: 5000},
+            quadtree_depth: 5,
+            hpg_n_cells: 2000,
             item_surrogate_config: SPSurrogateConfig {
                 pole_coverage_goal: 0.9,
                 max_poles: 10,

@@ -2,16 +2,16 @@ use std::cmp::Ordering;
 
 use itertools::Itertools;
 
-use crate::collision_detection::hpg::proximity::Proximity;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
+use crate::collision_detection::hpg::proximity::Proximity;
 use crate::entities::item::Item;
+use crate::entities::quality_zone::N_QUALITIES;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{DistanceFrom, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::point::Point;
-use crate::entities::quality_zone::N_QUALITIES;
 
 /// Represents a cell in the Hazard Proximity Grid
 #[derive(Clone, Debug)]
@@ -165,8 +165,8 @@ impl HPGCell {
     }
 
     pub fn could_accommodate_item(&self, item: &Item) -> bool {
-        let haz_prox : f64 = (&self.hazard_proximity(item.base_quality())).into();
-        let item_poi_radius = item.shape().poi().radius;
+        let haz_prox : f64 = (&self.hazard_proximity(item.base_quality)).into();
+        let item_poi_radius = item.shape.poi.radius;
 
         item_poi_radius < haz_prox + self.radius
     }

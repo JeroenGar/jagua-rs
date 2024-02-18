@@ -2,21 +2,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct CDEConfig {
-    pub quadtree: QuadTreeConfig,
-    pub haz_prox: HazProxConfig,
+    pub quadtree_depth: u8,
+    pub hpg_n_cells: usize,
     pub item_surrogate_config: SPSurrogateConfig,
-}
-
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
-pub enum QuadTreeConfig {
-    FixedDepth(u8),
-    Auto,
-}
-
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
-pub enum HazProxConfig {
-    Disabled,
-    Enabled { n_cells: usize },
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]

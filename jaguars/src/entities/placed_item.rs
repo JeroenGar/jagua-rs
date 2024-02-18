@@ -12,10 +12,10 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 #[derive(Clone, Debug)]
 pub struct PlacedItem {
     /// Unique identifier for the placed item
-    pi_uid: PlacedItemUID,
-    qz_haz_filter: Option<QZHazardFilter>,
+    pub uid: PlacedItemUID,
+    pub qz_haz_filter: Option<QZHazardFilter>,
     /// The shape of the `Item` after it has been transformed and placed in a `Layout`
-    shape: Arc<SimplePolygon>,
+    pub shape: Arc<SimplePolygon>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -28,35 +28,22 @@ pub struct PlacedItemUID {
 impl PlacedItem {
     pub fn new(item: &Item, d_transf: DTransformation) -> Self {
         let transf = d_transf.compose();
-        let shape = Arc::new(item.shape().transform_clone(&transf));
-        let qz_haz_filter = item.hazard_filter().cloned();
-        let pi_uid = PlacedItemUID { item_id: item.id(), d_transf };
+        let shape = Arc::new(item.shape.transform_clone(&transf));
+        let qz_haz_filter = item.hazard_filter.clone();
+        let pi_uid = PlacedItemUID { item_id: item.id, d_transf };
         PlacedItem {
-            pi_uid,
+            uid: pi_uid,
             shape,
             qz_haz_filter,
         }
     }
 
     pub fn item_id(&self) -> usize {
-        self.pi_uid.item_id
+        self.uid.item_id
     }
 
     pub fn d_transformation(&self) -> &DTransformation {
-        &self.pi_uid.d_transf
-    }
-
-    pub fn shape(&self) -> &Arc<SimplePolygon> {
-        &self.shape
-    }
-
-    pub fn uid(&self) -> &PlacedItemUID {
-        &self.pi_uid
-    }
-
-
-    pub fn haz_filter(&self) -> &Option<QZHazardFilter> {
-        &self.qz_haz_filter
+        &self.uid.d_transf
     }
 }
 
@@ -68,6 +55,6 @@ impl Into<Hazard> for &PlacedItem {
 
 impl Into<HazardEntity> for &PlacedItem {
     fn into(self) -> HazardEntity {
-        HazardEntity::PlacedItem(self.pi_uid.clone())
+        HazardEntity::PlacedItem(self.uid.clone())
     }
 }

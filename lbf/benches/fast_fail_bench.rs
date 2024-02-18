@@ -1,12 +1,10 @@
 use std::fs::File;
 use std::io::BufReader;
-use std::ops::RangeInclusive;
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use rand::prelude::{IteratorRandom, SmallRng};
+use rand::prelude::SmallRng;
 use rand::SeedableRng;
-use rand_distr::num_traits::real::Real;
 
 use jaguars::entities::instance::InstanceGeneric;
 use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric};
@@ -17,22 +15,22 @@ use jaguars::geometry::geo_traits::TransformableFrom;
 use jaguars::geometry::primitives::circle::Circle;
 use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
 use jaguars::io::json_instance::JsonInstance;
-use jaguars::util::config::HazProxConfig;
 use lbf::samplers::hpg_sampler::HPGSampler;
 
-use crate::util::{create_base_config, N_ITEMS_REMOVED, N_SAMPLES_PER_ITER, N_TOTAL_SAMPLES, SWIM_PATH};
+use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};
 
 criterion_main!(benches);
 criterion_group!(benches, fast_fail_query_bench);
 
 mod util;
 
-//const FF_POLE_RANGE: &[usize] = &[0,1,2,3,4];
-//const FF_PIER_RANGE: &[usize] = &[0,1,2,3,4];
+const FF_POLE_RANGE: &[usize] = &[0,1,2,3,4];
+const FF_PIER_RANGE: &[usize] = &[0,1,2,3,4];
 
-const FF_POLE_RANGE: &[usize] = &[5,6,7,8,9,10];
-const FF_PIER_RANGE: &[usize] = &[0];
 const ITEMS_ID_TO_TEST: &[usize] = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+const N_TOTAL_SAMPLES: usize = 100_000;
+const N_SAMPLES_PER_ITER: usize = 1000;
 
 /// Benchmark the query operation of the quadtree for different depths
 /// We validate 1000 sampled transformations for each of the 5 removed items
@@ -46,12 +44,13 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         .flatten().collect_vec();
 
     let mut config = create_base_config();
-    config.cde_config.haz_prox = HazProxConfig::Enabled { n_cells: 5000};
+    config.cde_config.quadtree_depth = 5;
+    config.cde_config.hpg_n_cells = 2000;
 
     let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
-    let (mut problem, _) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
+    let (problem, _) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-    println!("avg number of edges per item: {}", ITEMS_ID_TO_TEST.iter().map(|&item_id| instance.item(item_id).shape().number_of_points()).sum::<usize>() as f64 / ITEMS_ID_TO_TEST.len() as f64);
+    println!("avg number of edges per item: {}", ITEMS_ID_TO_TEST.iter().map(|&item_id| instance.item(item_id).shape.number_of_points()).sum::<usize>() as f64 / ITEMS_ID_TO_TEST.len() as f64);
 
     let mut rng = SmallRng::seed_from_u64(0);
     let layout = problem.get_layout(LayoutIndex::Existing(0));
@@ -65,7 +64,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         let (n_ff_poles, n_ff_piers) = ff_surr_config;
 
         let custom_surrogates = ITEMS_ID_TO_TEST.iter()
-            .map(|&item_id| create_custom_surrogate(instance.item(item_id).shape(), n_ff_poles, n_ff_piers))
+            .map(|&item_id| create_custom_surrogate(&instance.item(item_id).shape, n_ff_poles, n_ff_piers))
             .collect_vec();
 
         let mut samples_cyclers = samples.iter()
@@ -79,7 +78,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
 
         let mut buffer_shapes = ITEMS_ID_TO_TEST.iter()
             .map(|&item_id| instance.item(item_id))
-            .map(|item| item.shape().clone_and_strip_surrogate())
+            .map(|item| item.shape.clone_and_strip_surrogate())
             .collect_vec();
 
         group.bench_function(BenchmarkId::from_parameter(format!("{n_ff_poles}_poles_{n_ff_piers}_piers")), |b| {
@@ -92,7 +91,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
                     let collides = match layout.cde().surrogate_collides(surrogate, transf, &[]) {
                         true => true,
                         false => {
-                            buffer_shape.transform_from(item.shape(), transf);
+                            buffer_shape.transform_from(&item.shape, transf);
                             layout.cde().shape_collides(&buffer_shape, &[])
                         }
                     };
@@ -110,7 +109,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
 
 pub fn create_custom_surrogate(simple_poly: &SimplePolygon, n_poles: usize, n_piers: usize) -> SPSurrogate {
     let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
-    let mut poles = vec![simple_poly.poi().clone()];
+    let mut poles = vec![simple_poly.poi.clone()];
     poles.extend(poi::generate_additional_surrogate_poles(simple_poly, n_poles.saturating_sub(1), 0.9));
     let poles_bounding_circle = Circle::bounding_circle(&poles);
 

@@ -5,7 +5,6 @@ use ordered_float::NotNan;
 
 use crate::geometry::d_transformation::DTransformation;
 
-
 #[derive(Clone, Debug)]
 ///Proper rigid transformation in matrix form
 pub struct Transformation {

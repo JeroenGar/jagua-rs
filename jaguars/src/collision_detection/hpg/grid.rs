@@ -3,17 +3,18 @@ use std::ops::RangeInclusive;
 
 use itertools::Itertools;
 use ordered_float::NotNan;
+
 use crate::geometry::primitives::point::Point;
 
 /// Representation of a grid of optional elements of type T
 /// Divided into rows and columns, where each row and column has a unique coordinate
 #[derive(Clone, Debug)]
 pub struct Grid<T> {
-    cells: Vec<Option<T>>,
-    rows: Vec<NotNan<f64>>,
-    cols: Vec<NotNan<f64>>,
-    n_rows: usize,
-    n_cols: usize,
+    pub cells: Vec<Option<T>>,
+    pub rows: Vec<NotNan<f64>>,
+    pub cols: Vec<NotNan<f64>>,
+    pub n_rows: usize,
+    pub n_cols: usize,
 }
 
 impl<T> Grid<T> {
@@ -113,7 +114,7 @@ impl<T> Grid<T> {
         neighbors
     }
 
-    pub fn get_index(&self, row: usize, col: usize) -> Option<usize> {
+    pub fn to_index(&self, row: usize, col: usize) -> Option<usize> {
         Self::calculate_index(row, col, self.n_rows, self.n_cols)
     }
 
@@ -124,7 +125,7 @@ impl<T> Grid<T> {
         }
     }
 
-    pub fn get_row_col(&self, index: usize) -> Option<(usize, usize)> {
+    pub fn to_row_col(&self, index: usize) -> Option<(usize, usize)> {
         match index.cmp(&(self.n_rows * self.n_cols)) {
             Ordering::Less => {
                 let row = index / self.n_cols;
@@ -133,21 +134,5 @@ impl<T> Grid<T> {
             }
             _ => None //out of bounds
         }
-    }
-
-    pub fn n_rows(&self) -> usize {
-        self.n_rows
-    }
-
-    pub fn n_cols(&self) -> usize {
-        self.n_cols
-    }
-
-    pub fn elements(&self) -> &Vec<Option<T>> {
-        &self.cells
-    }
-
-    pub fn elements_mut(&mut self) -> &mut Vec<Option<T>> {
-        &mut self.cells
     }
 }

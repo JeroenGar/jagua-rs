@@ -1,6 +1,5 @@
 use crate::collision_detection::cd_engine::{CDEngine, CDESnapshot};
 use crate::entities::bin::Bin;
-
 use crate::entities::item::Item;
 use crate::entities::placed_item::PlacedItem;
 use crate::entities::placed_item::PlacedItemUID;
@@ -20,7 +19,7 @@ pub struct Layout {
 
 impl Layout {
     pub fn new(id: usize, bin: Bin) -> Self {
-        let cde = bin.base_cde().clone();
+        let cde = bin.base_cde.as_ref().clone();
         Layout {
             id,
             bin,
@@ -48,7 +47,7 @@ impl Layout {
     }
 
     pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
-        assert_eq!(self.bin.id(), layout_snapshot.bin.id());
+        assert_eq!(self.bin.id, layout_snapshot.bin.id);
 
         self.placed_items = layout_snapshot.placed_items.clone();
         self.cde.restore(&layout_snapshot.cde_snapshot);
@@ -75,9 +74,9 @@ impl Layout {
 
     pub fn remove_item(&mut self, pi_uid: &PlacedItemUID, commit_instantly: bool) {
 
-        let pos = self.placed_items.iter().position(|pi| pi.uid() == pi_uid).expect("item not found");
+        let pos = self.placed_items.iter().position(|pi| &pi.uid == pi_uid).expect("item not found");
         let placed_item = self.placed_items.swap_remove(pos);
-        self.cde.deregister_hazard(&placed_item.uid().clone().into(), commit_instantly);
+        self.cde.deregister_hazard(&placed_item.uid.clone().into(), commit_instantly);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
     }
@@ -95,8 +94,8 @@ impl Layout {
     }
 
     pub fn usage(&self) -> f64 {
-        let bin_area = self.bin().area();
-        let item_area = self.placed_items.iter().map(|p_i| p_i.shape().area()).sum::<f64>();
+        let bin_area = self.bin().area;
+        let item_area = self.placed_items.iter().map(|p_i| p_i.shape.area()).sum::<f64>();
 
         item_area / bin_area
     }
