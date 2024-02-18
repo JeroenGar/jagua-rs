@@ -24,8 +24,8 @@ criterion_group!(benches, fast_fail_query_bench);
 
 mod util;
 
-const FF_POLE_RANGE: &[usize] = &[0,1,2,3,4];
-const FF_PIER_RANGE: &[usize] = &[0,1,2,3,4];
+const FF_POLES: &[usize] = &[0,1,2,3,4];
+const FF_PIERS: &[usize] = &[0,1,2,3,4];
 
 const ITEMS_ID_TO_TEST: &[usize] = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -39,8 +39,8 @@ fn fast_fail_query_bench(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("fast_fail_query_bench");
 
-    let config_combos = FF_POLE_RANGE.iter().map(|n_ff_poles|
-        FF_PIER_RANGE.iter().map(|n_ff_piers| (*n_ff_poles, *n_ff_piers)).collect_vec())
+    let config_combos = FF_POLES.iter().map(|n_ff_poles|
+        FF_PIERS.iter().map(|n_ff_piers| (*n_ff_poles, *n_ff_piers)).collect_vec())
         .flatten().collect_vec();
 
     let mut config = create_base_config();
