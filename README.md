@@ -15,7 +15,7 @@ These problems typically contain two challenges:
 This allows for the separation of concerns and the development of optimization algorithms that can focus on the combinatorial challenge, while `jagua-rs` handles the geometric challenge.
 Thereby, lowering the barrier to entry for researchers and practitioners to develop and test new optimization algorithms and enable independent improvements in the geometric challenge.
 
-## Contents of the repository
+## Contents
 
 ### Jagua-rs
 The **[`jagua-rs`](jaguars)** crate contains everything necessary to solve 2D irregular cutting and packing problems without the combinatorial decision-making (i.e. which items to place where). It provides all necessary entities and components to create a dynamic model of a 2D irregular C&P instance and provide a collision detection engine to check the feasibility of a placement.
