@@ -74,6 +74,6 @@ The configuration file is a JSON file with the following structure:
 Due to `lbf` being a one-pass constructive heuristic, the final solution quality is extremely *chaotic*. \
 Meaning that small changes in the sorting of the items, configuration, prng seed, etc can lead to solutions with drastically different quality. \
 Seemingly superior configurations (such as increased `n_samples_per_item`) can result in worse solutions and vice versa. \
-Testing with `deterministic_mode: false` will demonstrate this spread in solution quality. \
+Testing with `deterministic_mode: false` will demonstrate this spread in solution quality.
 
 Once again, this heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as an actual optimization algorithm.
