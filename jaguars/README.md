@@ -23,7 +23,7 @@ In summary, `jaguars` can be used to model 2D irregular C\&P problems
 
 It cannot be used on its own, but is designed to be used in combination with an overlying optimization algorithm to solve 2D irregular cutting and packing problems.
 
-## Docs
+## Documentation
 
 The code is documented using rustdoc. 
 The docs can be build using `cargo doc --open` from the root of the repository.
