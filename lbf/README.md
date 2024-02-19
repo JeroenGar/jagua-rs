@@ -1,13 +1,13 @@
 # LBF
-A left-bottom-fill heuristic for 2D irregular cutting and packing problems using the `jaguars` collision detection engine.
+A left-bottom-fill heuristic for 2D irregular cutting and packing problems using the `jagua-rs` collision detection engine.
 
-This heuristic serves as a reference implementation of how to use the collision detection engine.
-It is a very simple constructive heuristic that places items one-by-one in the bin each time at the left-bottom most position.
+This heuristic serves as a reference implementation of how to use the collision detection engine. \
+It is a very simple constructive heuristic that places items one by one in the bin each time at the left-bottom most position.
 
 ## How to run
 General usage:
 ```bash
-    cargo run --release \
+    cargo run --release -- \
       -i <input file> \
       -c <config file (optional)> \
       -s <solution folder>
@@ -15,7 +15,7 @@ General usage:
 
 Concrete example:
 ```bash
-    cargo run --release \
+    cargo run --release -- \
       -i ../assets/swim.json \
       -c ../assets/config_lbf.json \
       -s ../solutions
@@ -72,8 +72,8 @@ The configuration file is a JSON file with the following structure:
 ## Notes
 
 Due to `lbf` being a one-pass constructive heuristic, the final solution quality is extremely *chaotic*. \
-Meaning that small changes in the sorting of the items, configuration, prng seed, etc can lead to solutions with drastically different quality. \
-Seemingly superior configurations (such as increased `n_samples_per_item`) can result in worse solutions and vice versa. \
-Testing with `deterministic_mode: false` will demonstrate this spread in solution quality.
+Meaning that minute changes in the flow (sorting of the items, configuration, prng seed...) lead to solutions with drastically different quality. \
+Seemingly superior configurations (such as increased `n_samples_per_item`), for example, can result in worse solutions and vice versa. \
+Testing with `deterministic_mode` set to `false` will demonstrate this spread in solution quality.
 
-Once again, this heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as an actual optimization algorithm.
+**Once again, this heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as a reliable optimization algorithm for any real-world problems.**

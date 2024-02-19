@@ -1,32 +1,29 @@
 # Jagua-rs ![workflow](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg)
 **An open-source collision detection engine for 2D irregular cutting and packing problems written in Rust 🦀.**
 
-<img src="assets/jaguars_logo.svg" width="50%" alt="Jaguars logo">
+**🏗️ 🚧 Under construction 🚧 🏗️**
 
-# 🚧 Under construction 🚧
+<img src="assets/jaguars_logo.svg" width="50%" alt="Jaguars logo">
 
 ## Introduction
 2D irregular cutting and packing (C&P) problems are a class of optimization problems that involve placing irregular shaped items into containers in an efficient way.
 These problems typically contain two challenges:
- * **Combinatorial** challenge: deciding which items to place where to minimize some objective function.
- * **Geometric** challenge: can we place an item at a certain position without colliding with other items? (feasibility check)
+ * **Combinatorial challenge**: deciding which items to place in which configuration in order to optimize some objective function.
+ * **Geometric challenge**: determining if it is possible to place an item at a certain position feasibly? (without colliding with other items, the bin or anything else)
 
-`Jagua-rs` aims to decouple these two challenges by developing a Collision Detection Engine (CDE) that can be used to efficiently deal with the geometric challenges at hand.
+`jagua-rs` aims to decouple these two challenges by developing a Collision Detection Engine (CDE) that can be used to efficiently deal with the geometric challenges at hand.
+This allows for the separation of concerns and the development of optimization algorithms that can focus on the combinatorial challenge, while `jagua-rs` handles the geometric challenge.
+Thereby, lowering the barrier to entry for researchers and practitioners to develop and test new optimization algorithms and enable independent improvements in the geometric challenge.
 
+## Contents of the repository
 
-## Contents
-
-### Jaguars
-The `jaguars` crate contains all required logic for representing 2D irregular C&P problems and also contains the collision detection engine.
-
-**See [jaguars](jaguars) for more information.**
+### Jagua-rs
+The **[`jagua-rs`](jaguars)** crate contains everything necessary to solve 2D irregular cutting and packing problems without the combinatorial decision-making (i.e. which items to place where). It provides all necessary entities and components to create a dynamic model of a 2D irregular C&P instance and provide a collision detection engine to check the feasibility of a placement.
 
 ## LBF
-The `lbf` crate contains a reference implementation of an optimization algorithm using `jaguars`. \
+The **[`lbf`](lbf)** crate contains a reference implementation of an optimization algorithm using `jagua-rs`.
 It is a simple left-bottom-fill heuristic, which places the items one-by-one in the bin each time at the left-bottom most position.
-It should provide a good starting point for anyone looking to create a more advanced optimization algorithm using ``jaguars``.
-
-**See [lbf](lbf) for more information.**
+It should provide a good starting point for anyone looking to create a more advanced optimization algorithm using ``jagua-rs``.
 
 ## Assets
 
