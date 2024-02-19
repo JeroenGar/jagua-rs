@@ -25,8 +25,8 @@ impl Default for Config {
                 item_surrogate_config: SPSurrogateConfig{
                     pole_coverage_goal: 0.9,
                     max_poles: 10,
-                    n_ff_poles: 1,
-                    n_ff_piers: 1,
+                    n_ff_poles: 2,
+                    n_ff_piers: 0,
                 }
             },
             poly_simpl_config: PolySimplConfig::Enabled {
