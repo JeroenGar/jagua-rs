@@ -35,7 +35,7 @@ In the solution folder, for every layout in the solution, and SVG file will be c
 
 ## Config JSON
 
-```json
+```javascript
 {
   "cde_config": { // Collision detection engine configuration
     "quadtree_depth": 5, // Maximum depth of the quadtree is 5
