@@ -1,8 +1,8 @@
 # LBF
-A left-bottom-fill heuristic for 2D irregular cutting and packing problems using the `jagua-rs` library.
+A left-bottom-fill heuristic for 2D irregular cutting and packing problems using the `jaguars` collision detection engine.
 
 This heuristic serves as a reference implementation of how to use the collision detection engine.
-It is a very simple constructive heuristic that places items in the bin from left to right and bottom to top.
+It is a very simple constructive heuristic that places items one-by-one in the bin each time at the left-bottom most position.
 
 ## How to run
 General usage:
@@ -21,20 +21,30 @@ Concrete example:
       -s ../solutions
 ```
 
-## Input JSON
+## Input
 
-TODO
+The [assets](../assets) folder contains a set of input files from the academic literature that were converted to the 
+same JSON structure.
 
-## Output JSON
+*TODO* 
 
-TODO
+## Solution 
 
-## Output SVG
+Two types of files are written in the solution folder: the solution in JSON format and an SVG file per layout to visualize the solution.
 
-In the solution folder, for every layout in the solution, and SVG file will be created to visualize the layout.
+### JSON
+
+*TODO*
+
+### SVG
+
+*TODO*
 
 ## Config JSON
 
+If no config file is provided, the default configuration is used.
+
+The configuration file is a JSON file with the following structure:
 ```javascript
 {
   "cde_config": { // Collision detection engine configuration
@@ -48,7 +58,7 @@ In the solution folder, for every layout in the solution, and SVG file will be c
     }
   },
   "poly_simpl_config": { // Polygon simplification configuration
-    "mode": "enabled", // [enabled, disabled]
+    "mode": "enabled", // enabled or disabled
     "params": {
       "tolerance": 0.001 // The polygons will be simplified until they deviate at most 0.1% from their original area.
     }
@@ -59,3 +69,11 @@ In the solution folder, for every layout in the solution, and SVG file will be c
 }
 ```
 
+## Notes
+
+Due to `lbf` being a one-pass constructive heuristic, the final solution quality is extremely *chaotic*. \
+Meaning that small changes in the sorting of the items, configuration, prng seed, etc can lead to solutions with drastically different quality. \
+Seemingly superior configurations (such as increased `n_samples_per_item`) can result in worse solutions and vice versa. \
+Testing with `deterministic_mode: false` will demonstrate this spread in solution quality. \
+
+Once again, this heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as an actual optimization algorithm.

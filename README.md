@@ -17,13 +17,13 @@ These problems typically contain two challenges:
 ## Contents
 
 ### Jaguars
-The `jaguars` crate all required logic for modeling 2D irregular cutting and packing problems in addition to the CDE.
+The `jaguars` crate contains all required logic for representing 2D irregular C&P problems and also contains the collision detection engine.
 
 **See [jaguars](jaguars) for more information.**
 
 ## LBF
-In addition, a reference implementation of an optimization algorithm which uses the CDE is also provided. \
-`lbf` is a simple left-bottom-fill heuristic, which places the items one-by-one in the bin each time at the left-bottom most position.
+The `lbf` crate contains a reference implementation of an optimization algorithm using `jaguars`. \
+It is a simple left-bottom-fill heuristic, which places the items one-by-one in the bin each time at the left-bottom most position.
 It should provide a good starting point for anyone looking to create a more advanced optimization algorithm using ``jaguars``.
 
 **See [lbf](lbf) for more information.**
