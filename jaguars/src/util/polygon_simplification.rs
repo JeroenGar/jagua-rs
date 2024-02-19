@@ -16,13 +16,16 @@ pub enum PolySimplConfig {
     Disabled,
     #[serde(rename = "enabled")]
     Enabled {
-        tolerance: f64, //max deviation from the original polygon area (in %)
+        /// max deviation from the original polygon area as a fraction of the original area
+        tolerance: f64, 
     },
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PolySimplMode {
+    /// Simplify the polygon to be strictly larger than the original
     Inflate,
+    /// Simplify the polygon to be strictly smaller than the original
     Deflate,
 }
 
@@ -82,8 +85,8 @@ impl CornerType {
     }
 }
 
-//Simplifies a poly (removing vertices) until the area is inflated by a given factor or there are only 3 vertices left.
-//SimplePolygons with positive area (counterclockwise vertices) will be fully enclosed by the simplified shape, while those with negative area (clockwise vertices) will fully enclose the simplified shape.
+/// Simplifies a shape (removing vertices) strictly inflating or deflating based on the mode.
+/// The number of edges is reduced by one at a time, until either the change in area would exceed the max_area_delta or the number of edges would become less than 3.
 pub fn simplify_shape(shape: &SimplePolygon, mode: PolySimplMode, max_area_delta: f64) -> SimplePolygon {
     let original_area = shape.area();
 
