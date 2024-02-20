@@ -6,8 +6,8 @@ use rand::Rng;
 use rand::seq::SliceRandom;
 use rand_distr::Normal;
 
-use jaguars::entities::item::Item;
-use jaguars::geometry::geo_enums::AllowedRotation;
+use jagua_rs::entities::item::Item;
+use jagua_rs::geometry::geo_enums::AllowedRotation;
 
 pub trait RotationSampler {
     fn sample(&self, rng: &mut impl Rng) -> f64;

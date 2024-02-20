@@ -3,8 +3,8 @@ use std::fmt::{Display, Formatter};
 
 use ordered_float::NotNan;
 
-use jaguars::geometry::geo_traits::Shape;
-use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
+use jagua_rs::geometry::geo_traits::Shape;
+use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 
 #[derive(PartialEq)]
 pub struct LBFCost {

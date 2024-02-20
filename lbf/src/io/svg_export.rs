@@ -1,13 +1,13 @@
 use svg::node::element::{Circle, Path};
 use svg::node::element::path::Data;
 
-use jaguars::collision_detection::hazard::HazardEntity;
-use jaguars::collision_detection::quadtree::qt_hazard::QTHazPresence;
-use jaguars::collision_detection::quadtree::qt_node::QTNode;
-use jaguars::geometry;
-use jaguars::geometry::primitives::edge::Edge;
-use jaguars::geometry::primitives::point::Point;
-use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
+use jagua_rs::collision_detection::hazard::HazardEntity;
+use jagua_rs::collision_detection::quadtree::qt_hazard::QTHazPresence;
+use jagua_rs::collision_detection::quadtree::qt_node::QTNode;
+use jagua_rs::geometry;
+use jagua_rs::geometry::primitives::edge::Edge;
+use jagua_rs::geometry::primitives::point::Point;
+use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 
 pub fn simple_polygon_data(s_poly: &SimplePolygon) -> Data {
     let mut data = Data::new().move_to::<(f64, f64)>(s_poly.get_point(0).into());

@@ -1,13 +1,13 @@
 use svg::Document;
 use svg::node::element::Group;
 
-use jaguars::entities::instance::Instance;
-use jaguars::entities::instance::InstanceGeneric;
-use jaguars::entities::layout::Layout;
-use jaguars::entities::layout::LayoutSnapshot;
-use jaguars::geometry::geo_enums::GeoPosition;
-use jaguars::geometry::geo_traits::Transformable;
-use jaguars::geometry::primitives::circle::Circle;
+use jagua_rs::entities::instance::Instance;
+use jagua_rs::entities::instance::InstanceGeneric;
+use jagua_rs::entities::layout::Layout;
+use jagua_rs::entities::layout::LayoutSnapshot;
+use jagua_rs::geometry::geo_enums::GeoPosition;
+use jagua_rs::geometry::geo_traits::Transformable;
+use jagua_rs::geometry::primitives::circle::Circle;
 
 use crate::io::{svg_export, svg_util};
 use crate::io::svg_util::SvgDrawOptions;

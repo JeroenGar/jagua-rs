@@ -3,11 +3,11 @@ use log::debug;
 use rand::prelude::SliceRandom;
 use rand::Rng;
 
-use jaguars::entities::item::Item;
-use jaguars::entities::layout::Layout;
-use jaguars::geometry::geo_traits::Shape;
-use jaguars::geometry::primitives::aa_rectangle::AARectangle;
-use jaguars::geometry::transformation::Transformation;
+use jagua_rs::entities::item::Item;
+use jagua_rs::entities::layout::Layout;
+use jagua_rs::geometry::geo_traits::Shape;
+use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
+use jagua_rs::geometry::transformation::Transformation;
 
 use crate::lbf_cost::LBFCost;
 use crate::samplers::uniform_rect_sampler::UniformAARectSampler;

@@ -8,8 +8,8 @@ use log::{error, LevelFilter, warn};
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
 
-use jaguars::io::parser;
-use jaguars::io::parser::Parser;
+use jagua_rs::io::parser;
+use jagua_rs::io::parser::Parser;
 use lbf::{EPOCH, io};
 use lbf::config::Config;
 use lbf::io::cli::Cli;

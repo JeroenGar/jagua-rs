@@ -7,11 +7,11 @@ use rand::prelude::SmallRng;
 use rand::SeedableRng;
 use rand::seq::IteratorRandom;
 
-use jaguars::entities::instance::InstanceGeneric;
-use jaguars::entities::placing_option::PlacingOption;
-use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric};
-use jaguars::geometry::geo_traits::TransformableFrom;
-use jaguars::io::json_instance::JsonInstance;
+use jagua_rs::entities::instance::InstanceGeneric;
+use jagua_rs::entities::placing_option::PlacingOption;
+use jagua_rs::entities::problems::problem::{LayoutIndex, ProblemGeneric};
+use jagua_rs::geometry::geo_traits::TransformableFrom;
+use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
 
 use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};

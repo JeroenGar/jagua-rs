@@ -1,9 +1,9 @@
 use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
 
-use jaguars::entities::item::Item;
-use jaguars::geometry::d_transformation::DTransformation;
-use jaguars::geometry::primitives::aa_rectangle::AARectangle;
+use jagua_rs::entities::item::Item;
+use jagua_rs::geometry::d_transformation::DTransformation;
+use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
 
 use crate::samplers::rotation_distr::UniformRotDistr;
 

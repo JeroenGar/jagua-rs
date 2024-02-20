@@ -6,15 +6,15 @@ use itertools::Itertools;
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
 
-use jaguars::entities::instance::InstanceGeneric;
-use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric};
-use jaguars::geometry::convex_hull;
-use jaguars::geometry::fail_fast::{piers, poi};
-use jaguars::geometry::fail_fast::sp_surrogate::SPSurrogate;
-use jaguars::geometry::geo_traits::TransformableFrom;
-use jaguars::geometry::primitives::circle::Circle;
-use jaguars::geometry::primitives::simple_polygon::SimplePolygon;
-use jaguars::io::json_instance::JsonInstance;
+use jagua_rs::entities::instance::InstanceGeneric;
+use jagua_rs::entities::problems::problem::{LayoutIndex, ProblemGeneric};
+use jagua_rs::geometry::convex_hull;
+use jagua_rs::geometry::fail_fast::{piers, poi};
+use jagua_rs::geometry::fail_fast::sp_surrogate::SPSurrogate;
+use jagua_rs::geometry::geo_traits::TransformableFrom;
+use jagua_rs::geometry::primitives::circle::Circle;
+use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
+use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::hpg_sampler::HPGSampler;
 
 use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};

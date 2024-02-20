@@ -2,9 +2,9 @@ use rand::distributions::Distribution;
 use rand::Rng;
 use rand_distr::Normal;
 
-use jaguars::entities::item::Item;
-use jaguars::geometry::d_transformation::DTransformation;
-use jaguars::geometry::transformation::Transformation;
+use jagua_rs::entities::item::Item;
+use jagua_rs::geometry::d_transformation::DTransformation;
+use jagua_rs::geometry::transformation::Transformation;
 
 use crate::samplers::rotation_distr::NormalRotDistr;
 

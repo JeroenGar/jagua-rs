@@ -6,14 +6,14 @@ use itertools::Itertools;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 
-use jaguars::entities::instance::{Instance, InstanceGeneric};
-use jaguars::entities::placed_item::PlacedItemUID;
-use jaguars::entities::placing_option::PlacingOption;
-use jaguars::entities::problems::problem::{LayoutIndex, ProblemGeneric};
-use jaguars::entities::problems::strip_packing::SPProblem;
-use jaguars::geometry::geo_traits::Shape;
-use jaguars::geometry::geo_traits::TransformableFrom;
-use jaguars::io::json_instance::JsonInstance;
+use jagua_rs::entities::instance::{Instance, InstanceGeneric};
+use jagua_rs::entities::placed_item::PlacedItemUID;
+use jagua_rs::entities::placing_option::PlacingOption;
+use jagua_rs::entities::problems::problem::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::problems::strip_packing::SPProblem;
+use jagua_rs::geometry::geo_traits::Shape;
+use jagua_rs::geometry::geo_traits::TransformableFrom;
+use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::hpg_sampler::HPGSampler;
 
 use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};

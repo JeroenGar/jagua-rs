@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use jaguars::util::config::{CDEConfig, SPSurrogateConfig};
-use jaguars::util::polygon_simplification::PolySimplConfig;
+use jagua_rs::util::config::{CDEConfig, SPSurrogateConfig};
+use jagua_rs::util::polygon_simplification::PolySimplConfig;
 
 use crate::io::svg_util::SvgDrawOptions;
 
