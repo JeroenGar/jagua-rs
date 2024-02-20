@@ -19,7 +19,7 @@ See [lbf crate](../lbf) for a reference implementation of an optimization algori
 - **Robust**
   - [x] Performs collision detection using the polygonal representation of shapes
   - [x] Mimics the results of a naive trigonometric approach, but much faster
-  - [x] Avoids infeasibility due floating point arithmetic errors by erring on the side of caution in edge cases
+  - [x] Avoids infeasibility due floating-point arithmetic errors by erring on the side of caution in edge cases
 - **Adaptable** 
   - [x] Unifying concept of `Hazards` allows for easy extension of the engine to incorporate extra *spatial* constraints
   - [x] Define new C&P problems by creating a custom `Instance` and accompanying `Problem` variants
