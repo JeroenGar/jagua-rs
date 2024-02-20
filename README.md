@@ -3,7 +3,7 @@
 
 **🏗️ 🚧 Under construction 🚧 🏗️**
 
-<img src="assets/jaguars_logo.svg" width="50%" alt="Jaguars logo">
+<img src="assets/jaguars_logo.svg" width="100%" height="300px" alt="Jaguars logo">
 
 ## Introduction
 2D irregular cutting and packing (C&P) problems are a class of optimization problems that involve placing irregular shaped items into containers in an efficient way.
@@ -33,7 +33,7 @@ TODO
 
 This project was funded by [Research Foundation - Flanders (FWO)](https://www.fwo.be/en/) (grant number: 1S71222N)
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Fonds_Wetenschappelijk_Onderzoek_logo.svg" width="10%" alt="FWO logo">
+<img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Fonds_Wetenschappelijk_Onderzoek_logo.svg" width="100px" alt="FWO logo">
 
 ## License
 
