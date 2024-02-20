@@ -11,7 +11,7 @@ These problems typically contain two challenges:
  * **Combinatorial challenge**: deciding which items to place in which configuration in order to optimize some objective function.
  * **Geometric challenge**: determining if it is possible to place an item at a certain position feasibly? (without colliding with other items, the bin or anything else)
 
-`jagua-rs` aims to decouple these two challenges by developing a Collision Detection Engine (CDE) that can be used to efficiently deal with the geometric challenges at hand.
+`jagua-rs` aims to decouple these two challenges by providing a Collision Detection Engine (CDE) that can be used to efficiently deal with the geometric challenges at hand.
 This allows for the separation of concerns and the development of optimization algorithms that can focus on the combinatorial challenge, while `jagua-rs` handles the geometric challenge.
 Thereby, lowering the barrier to entry for researchers and practitioners to develop and test new optimization algorithms and enable independent improvements in the geometric challenge.
 
