@@ -18,7 +18,7 @@ Thereby, lowering the barrier to entry for researchers and practitioners to deve
 ## Contents
 
 ### Jagua-rs
-The **[`jagua-rs`](jaguars)** crate contains everything necessary to solve 2D irregular cutting and packing problems without the combinatorial decision-making (i.e. which items to place where). It provides all necessary entities and components to create a dynamic model of a 2D irregular C&P instance and provide a collision detection engine to check the feasibility of a placement.
+The **[`jagua-rs`](jagua-rs)** crate contains everything necessary to solve 2D irregular cutting and packing problems without the combinatorial decision-making (i.e. which items to place where). It provides all necessary entities and components to create a dynamic model of a 2D irregular C&P instance and provide a collision detection engine to check the feasibility of a placement.
 
 ## LBF
 The **[`lbf`](lbf)** crate contains a reference implementation of an optimization algorithm using `jagua-rs`.
