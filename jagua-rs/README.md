@@ -4,7 +4,7 @@ This crate contains everything necessary to solve 2D irregular cutting and packi
 
 It provides all necessary entities and components to create a dynamic model of a 2D irregular C&P instance and provide a collision detection engine to check the feasibility of a placement.
 
-`jagua-rs` is a standalone algorithm, but rather is designed to be used as a building block by optimization algorithms which employ `jagua-rs` to provide efficient collision detection.
+`jagua-rs` is not a standalone algorithm, but rather is designed to be used as a building block by optimization algorithms which employ `jagua-rs` to provide efficient collision detection.
 This optimization algorithm would tackle combinatorial challenge, while `jagua-rs` would handle the geometric challenge.
 
 See [lbf crate](../lbf) for a reference implementation of an optimization algorithm making use of `jagua-rs`.
@@ -19,7 +19,7 @@ See [lbf crate](../lbf) for a reference implementation of an optimization algori
 - **Robust**
   - [x] Performs collision detection using the polygonal representation of shapes
   - [x] Mimics the results of a naive trigonometric approach, but much faster
-  - [x] Avoids infeasibility due floating point arithmetic errors by erring on the side of caution in edge cases
+  - [x] Avoids infeasibility due floating-point arithmetic errors by erring on the side of caution in edge cases
 - **Adaptable** 
   - [x] Unifying concept of `Hazards` allows for easy extension of the engine to incorporate extra *spatial* constraints
   - [x] Define new C&P problems by creating a custom `Instance` and accompanying `Problem` variants
