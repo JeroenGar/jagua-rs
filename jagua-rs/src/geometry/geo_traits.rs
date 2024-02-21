@@ -10,7 +10,7 @@ pub trait CollidesWith<T> {
 
 /// Trait for types that can detect almost-collisions between itself and an object from type T.
 /// Useful in situations where fp arithmetic precision could be problematic.
-/// Leans towards false positives rather than false negatives.
+/// Should be implemented to lean towards false positives rather than false negatives.
 pub trait AlmostCollidesWith<T> {
     fn almost_collides_with(&self, other: &T) -> bool;
 }

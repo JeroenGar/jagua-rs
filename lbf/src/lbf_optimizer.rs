@@ -36,11 +36,11 @@ pub const STDDEV_ROT_END_FRAC: f64 = 0.5 * (PI / 180.0);
 pub const ITEM_LIMIT: usize = usize::MAX;
 
 pub struct LBFOptimizer {
-    instance: Instance,
-    problem: Problem,
-    config: Config,
+    pub instance: Instance,
+    pub problem: Problem,
+    pub config: Config,
     /// SmallRng is a fast, non-cryptographic PRNG <https://rust-random.github.io/book/guide-rngs.html>
-    rng: SmallRng,
+    pub rng: SmallRng,
 }
 
 impl LBFOptimizer {
@@ -130,7 +130,7 @@ impl LBFOptimizer {
     }
 }
 
-fn find_placement(problem: &Problem, item: &Item, config: &Config, rng: &mut impl Rng) -> Option<PlacingOption> {
+pub fn find_placement(problem: &Problem, item: &Item, config: &Config, rng: &mut impl Rng) -> Option<PlacingOption> {
     let layouts_to_sample =
         (0..problem.layouts().len()).map(|i| (LayoutIndex::Existing(i)))
             .chain((0..problem.empty_layouts().len())
@@ -235,5 +235,3 @@ pub fn sample_layout(problem: &Problem, layout_index: LayoutIndex, item: &Item, 
 
     best.map(|b| b.0)
 }
-
-

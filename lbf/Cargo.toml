@@ -17,12 +17,13 @@ fern = "0.6.2"
 log = "0.4.20"
 humantime = "2.1.0"
 itertools = "0.12.0"
-svg = "0.14.0"
+svg = "0.15.1"
 ordered-float = "4.2.0"
 clap = { version = "4.4.18", features = ["derive"] }
 mimalloc = "0.1.39"
 tribool = "0.3.0"
 almost = "0.2.0"
+test-case = "3.3.1"
 
 [dev-dependencies]
 criterion = "0.5.1"
@@ -46,5 +47,6 @@ harness = false
 [profile.release]
 opt-level = 3
 
-[profile.bench]
+[profile.test]
+debug-assertions = true
 opt-level = 3

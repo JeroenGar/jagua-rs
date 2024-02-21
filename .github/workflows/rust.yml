@@ -17,4 +17,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: cd lbf && cargo build --verbose
+      run: |
+        cd lbf 
+        cargo build --verbose
+    - name: Tests
+      run: |
+        cd lbf 
+        cargo test -- --no-capture
+    - name: Docs
+      run : |
+        cd lbf
+        cargo doc
