@@ -1,5 +1,5 @@
 # Jagua-rs ![workflow](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg)
-**A fast and agile Collision Detection Engine for 2D irregular cutting and packing problems written in Rust 🦀.**
+**A fast and agile Collision Detection Engine for 2D irregular Cutting and Packing problems written in Rust 🦀.**
 
 **🏗️ 🚧 Under construction 🚧 🏗️**
 
