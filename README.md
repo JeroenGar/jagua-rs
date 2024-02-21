@@ -20,12 +20,12 @@ Thereby, lowering the barrier to entry for researchers and practitioners to deve
 ### Jagua-rs
 The **[`jagua-rs`](jagua-rs)** crate contains everything necessary to solve 2D irregular cutting and packing problems except the combinatorial aspect (i.e. deciding which items to place where). It has all necessary entities and components to model a 2D irregular C&P instance in addition to a collision detection engine to check the feasibility of a placement.
 
-## LBF
+### LBF
 The **[`lbf`](lbf)** crate contains a reference implementation of an optimization algorithm using `jagua-rs`.
 It is a simple left-bottom-fill heuristic, which places the items one-by-one in the bin each time at the left-bottom most position.
 It should provide a good starting point for anyone looking to create a more advanced optimization algorithm using ``jagua-rs``.
 
-## Assets
+### Assets
 
 TODO
 

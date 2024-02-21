@@ -7,18 +7,18 @@ It is a very simple constructive heuristic that places items one by one in the b
 ## How to run
 General usage:
 ```bash
-    cargo run --release -- \
-      -i <input file> \
-      -c <config file (optional)> \
-      -s <solution folder>
+cargo run --release -- \
+  -i <input file> \
+  -c <config file (optional)> \
+  -s <solution folder>
 ```
 
 Concrete example:
 ```bash
-    cargo run --release -- \
-      -i ../assets/swim.json \
-      -c ../assets/config_lbf.json \
-      -s ../solutions
+cargo run --release -- \
+  -i ../assets/swim.json \
+  -c ../assets/config_lbf.json \
+  -s ../solutions
 ```
 
 ## Input
