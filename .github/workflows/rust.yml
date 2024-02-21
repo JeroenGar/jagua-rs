@@ -23,7 +23,7 @@ jobs:
     - name: Tests
       run: |
         cd lbf 
-        cargo test -- --no-capture
+        cargo test -- --nocapture
     - name: Docs
       run : |
         cd lbf
