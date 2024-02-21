@@ -144,7 +144,8 @@ impl QTNode {
                         }
                         None => {
                             //Check if any of the partially present (and active) hazards collide with the entity
-                            self.hazards.active_hazards().iter().find(|hz| {
+                            let mut relevant_hazards = self.hazards.active_hazards().iter().filter(|hz| !irrelevant_hazards.contains(&hz.entity));
+                            relevant_hazards.find(|hz| {
                                 match &hz.presence {
                                     QTHazPresence::None => false,
                                     QTHazPresence::Entire => unreachable!("should have been handled above"),
