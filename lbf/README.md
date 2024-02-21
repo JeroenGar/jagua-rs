@@ -77,3 +77,14 @@ Seemingly superior configurations (such as increased `n_samples_per_item`), for 
 Testing with `deterministic_mode` set to `false` will demonstrate this spread in solution quality.
 
 **Once again, this heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as a reliable optimization algorithm for any real-world problems.**
+
+## Testing
+
+`lbf` contains some basic integration tests to validate the correctness of the heuristic on a macro level. (needs to be improved and expanded)
+It basically runs the heuristic on a set of input files with `debug-assertions = true`.
+
+
+To run the tests, use:
+```bash
+cargo test -- --nocapture
+``` 

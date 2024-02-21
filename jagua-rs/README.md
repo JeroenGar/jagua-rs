@@ -36,6 +36,8 @@ The docs can be build using `cargo doc --open` from the root of the repository.
 ## Testing
 
 `jagua-rs` contains a suite of assertions which are enabled by default in debug builds to ensure the correctness of the engine.
-These assertions are disabled in release builds to maximize performance.
+These tests are sprinkled throughout the codebase and aim to check correctness of many of the datastructures.
+In release builds, these assertions are disabled by default to maximize performance.
 
-TODO: unit testing
+`lbf` contains some basic integration tests (with assertions enabled) to validate the correctness of the engine on a macro level.
+See [lbf crate](../lbf#Testing) for more information.
