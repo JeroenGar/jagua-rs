@@ -24,11 +24,11 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build
       run: |
-        cd lbf 
-        cargo build --verbose
+        cd lbf
+        cargo build --all-targets --verbose
     - name: Tests
       run: |
-        cd lbf 
+        cd lbf
         cargo test -- --nocapture
     - name: Docs
       run : |
