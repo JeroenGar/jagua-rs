@@ -1,15 +1,15 @@
-# Jagua-rs [![Rust](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml)
-**A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems**
+# Jagua-rs [![Rust CI](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml)
+### A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems
 
 **🏗️ 🚧 Under construction 🚧 🏗️**
 
-<img src="assets/jaguars_logo.svg" width="100%" height="300px" alt="Jaguars logo">
+<img src="assets/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
 ## Introduction
 2D irregular cutting and packing (C&P) problems are a class of optimization problems that involve placing irregular shaped items into containers in an efficient way.
 These problems typically contain two challenges:
- * **Combinatorial challenge**: deciding which items to place in which configuration in order to optimize some objective function.
- * **Geometric challenge**: determining if it is possible to place an item at a certain position feasibly? (without colliding with other items, the bin or anything else)
+ * **Combinatorial**: deciding which items to place in which configuration in order to optimize some objective function.
+ * **Geometric**: determining if it is possible to place an item at a certain position feasibly? (without colliding with other items, the bin or anything else)
 
 `jagua-rs` aims to decouple these two challenges by providing a Collision Detection Engine (CDE) that can be used to efficiently deal with the geometric challenges at hand.
 This allows for the separation of concerns and the development of optimization algorithms that can focus on the combinatorial challenge, while `jagua-rs` handles the geometric challenge.
