@@ -17,20 +17,22 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Build
-      run: |
-        cd lbf
-        cargo build --all-targets --verbose
-    - name: Tests
-      run: |
-        cd lbf
-        cargo test -- --nocapture
-    - name: Docs
-      run : |
-        cd lbf
-        cargo doc
+      - uses: actions/checkout@v4
+      - name: build targets
+        run: |
+          cd lbf
+          cargo build --all-targets --verbose
+      - name: build docs
+        run: |
+          cd lbf
+          cargo doc
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: |
+          cd lbf
+          cargo test --verbose
