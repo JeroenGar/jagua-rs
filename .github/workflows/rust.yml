@@ -22,11 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: build targets
+      - name: Build targets
         run: |
           cd lbf
           cargo build --all-targets --verbose
-      - name: build docs
+      - name: Build docs
         run: |
           cd lbf
           cargo doc
@@ -34,7 +34,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Test
+      - name: Run tests
         run: |
           cd lbf
           cargo test --verbose
+
+  run_readme_example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: run README example
+        run: |
+          cd lbf
+          cargo run --release -- -i ../assets/swim.json -c ../assets/config_lbf.json -s ../solutions
