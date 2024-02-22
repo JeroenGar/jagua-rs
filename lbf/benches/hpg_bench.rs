@@ -5,11 +5,12 @@ use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
+use jagua_rs::entities::instances::instance::Instance;
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 
-use jagua_rs::entities::instance::{Instance, InstanceGeneric};
 use jagua_rs::entities::placed_item::PlacedItemUID;
 use jagua_rs::entities::placing_option::PlacingOption;
-use jagua_rs::entities::problems::problem::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::geo_traits::TransformableFrom;

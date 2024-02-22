@@ -2,13 +2,13 @@ use std::collections::HashSet;
 
 use itertools::Itertools;
 
-use crate::entities::instance::BPInstance;
-use crate::entities::instance::InstanceGeneric;
+use crate::entities::instances::bin_packing::BPInstance;
+use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem::{LayoutIndex, ProblemGeneric};
-use crate::entities::problems::problem::private::ProblemGenericPrivate;
+use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::solution::Solution;
 use crate::util::assertions;
 

@@ -6,10 +6,10 @@ use itertools::Itertools;
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
 use rand::seq::IteratorRandom;
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 
-use jagua_rs::entities::instance::InstanceGeneric;
 use jagua_rs::entities::placing_option::PlacingOption;
-use jagua_rs::entities::problems::problem::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;

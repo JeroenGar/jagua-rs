@@ -16,7 +16,7 @@ use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::layout::Layout;
 use crate::entities::layout::LayoutSnapshot;
-use crate::entities::problems::problem::ProblemGeneric;
+use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::transformation::Transformation;

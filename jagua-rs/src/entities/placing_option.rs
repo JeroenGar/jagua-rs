@@ -1,4 +1,4 @@
-use crate::entities::problems::problem::LayoutIndex;
+use crate::entities::problems::problem_generic::LayoutIndex;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::transformation::Transformation;
 

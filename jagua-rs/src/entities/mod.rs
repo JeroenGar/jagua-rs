@@ -3,7 +3,7 @@ pub mod item;
 pub mod layout;
 pub mod placed_item;
 pub mod quality_zone;
-pub mod instance;
 pub mod solution;
 pub mod problems;
 pub mod placing_option;
+pub mod instances;

@@ -7,10 +7,13 @@ use criterion::measurement::WallTime;
 use itertools::Itertools;
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
+use jagua_rs::entities::instances::bin_packing::BPInstance;
+use jagua_rs::entities::instances::instance::Instance;
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
+use jagua_rs::entities::instances::strip_packing::SPInstance;
 
-use jagua_rs::entities::instance::{BPInstance, Instance, InstanceGeneric, SPInstance};
 use jagua_rs::entities::item::Item;
-use jagua_rs::entities::problems::problem::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::point::Point;
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;

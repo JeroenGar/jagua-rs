@@ -2,8 +2,8 @@ use std::time::Instant;
 
 use itertools::Itertools;
 
-use crate::entities::instance::Instance;
-use crate::entities::instance::InstanceGeneric;
+use crate::entities::instances::instance::Instance;
+use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::LayoutSnapshot;
 use crate::geometry::geo_traits::Shape;
 
@@ -59,24 +59,6 @@ impl Solution {
         self.placed_item_qtys.iter().enumerate()
             .map(|(i, &qty)| instance.item_qty(i) as isize - qty as isize)
             .collect_vec()
-    }
-
-    //TODO: clean this up properly
-    pub fn is_best_possible(&self, instance: &Instance) -> bool {
-        match &instance {
-            Instance::SP(_) => false,
-            Instance::BP(bp_instance) => {
-                match self.layout_snapshots.len() {
-                    0 => panic!("No stored layouts in solution"),
-                    1 => {
-                        let bins = &bp_instance.bins;
-                        let cheapest_bin = &bins.iter().min_by(|(b1, _), (b2, _)| b1.value.cmp(&b2.value)).unwrap().0;
-                        self.layout_snapshots[0].bin.id == cheapest_bin.id
-                    }
-                    _ => false
-                }
-            }
-        }
     }
 
     pub fn n_items_placed(&self) -> usize {

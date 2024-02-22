@@ -5,9 +5,9 @@ use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 
-use jagua_rs::entities::instance::InstanceGeneric;
-use jagua_rs::entities::problems::problem::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::geometry::convex_hull;
 use jagua_rs::geometry::fail_fast::{piers, poi};
 use jagua_rs::geometry::fail_fast::sp_surrogate::SPSurrogate;

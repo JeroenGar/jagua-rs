@@ -5,11 +5,15 @@ use itertools::Itertools;
 use log::{Level, log, warn};
 
 use crate::entities::bin::Bin;
-use crate::entities::instance::{BPInstance, Instance, InstanceGeneric, SPInstance};
+use crate::entities::instances::bin_packing::BPInstance;
+use crate::entities::instances::instance::Instance;
+use crate::entities::instances::instance_generic::InstanceGeneric;
+use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::item::Item;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem::{LayoutIndex, Problem, ProblemGeneric};
+use crate::entities::problems::problem::Problem;
+use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::quality_zone::N_QUALITIES;
 use crate::entities::quality_zone::QualityZone;

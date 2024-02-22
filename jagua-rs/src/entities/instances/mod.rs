@@ -1,4 +1,4 @@
-pub mod problem;
+pub mod instance_generic;
 pub mod bin_packing;
 pub mod strip_packing;
-pub mod problem_generic;
+pub mod instance;

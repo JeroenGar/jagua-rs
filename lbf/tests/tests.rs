@@ -9,8 +9,8 @@ mod tests {
     use rand::prelude::SmallRng;
     use test_case::test_case;
 
-    use jagua_rs::entities::problems::problem::LayoutIndex;
-    use jagua_rs::entities::problems::problem::ProblemGeneric;
+    use jagua_rs::entities::problems::problem_generic::LayoutIndex;
+    use jagua_rs::entities::problems::problem_generic::ProblemGeneric;
     use jagua_rs::io::parser::Parser;
     use lbf::config::Config;
     use lbf::io;
@@ -49,13 +49,13 @@ mod tests {
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        // to a first optimization run
+        // a first optimization run
         optimizer.solve();
 
         {
             // remove some items
             let problem = &mut optimizer.problem;
-            for i in 0..N_ITEMS_TO_REMOVE {
+            for _ in 0..N_ITEMS_TO_REMOVE {
                 //pick random existing layout
                 let layout_index = LayoutIndex::Existing(rng.gen_range(0..problem.layouts().len()));
                 let random_placed_item = match problem.get_layout(&layout_index).placed_items().iter().choose(&mut rng) {
@@ -67,7 +67,7 @@ mod tests {
             }
             // flush changes
             problem.flush_changes();
-            // reoptimize
+            // second optimization run
             optimizer.solve();
         }
     }

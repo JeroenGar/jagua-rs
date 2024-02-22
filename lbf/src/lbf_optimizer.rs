@@ -9,13 +9,14 @@ use rand::prelude::SmallRng;
 use rand::Rng;
 
 use jagua_rs::collision_detection::hazard_filter;
-use jagua_rs::entities::instance::Instance;
-use jagua_rs::entities::instance::InstanceGeneric;
+use jagua_rs::entities::instances::instance::Instance;
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::item::Item;
 use jagua_rs::entities::layout::Layout;
 use jagua_rs::entities::placing_option::PlacingOption;
 use jagua_rs::entities::problems::bin_packing::BPProblem;
-use jagua_rs::entities::problems::problem::{LayoutIndex, Problem, ProblemGeneric};
+use jagua_rs::entities::problems::problem::Problem;
+use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::entities::solution::Solution;
 use jagua_rs::geometry::convex_hull::convex_hull_from_points;
@@ -84,7 +85,7 @@ impl LBFOptimizer {
                 //find a position and insert it
                 match find_placement(&self.problem, item, &self.config, &mut self.rng) {
                     Some(i_opt) => {
-                        info!("Inserting item {} at {}", i_opt.item_id, i_opt.d_transf);
+                        info!("Placing item {} at {}", i_opt.item_id, i_opt.d_transf);
                         self.problem.place_item(&i_opt);
                         if self.problem.included_item_qtys().iter().sum::<usize>() >= ITEM_LIMIT {
                             break 'outer;

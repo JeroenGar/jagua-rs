@@ -3,11 +3,12 @@ use std::path::Path;
 use log::info;
 use rand::prelude::{IteratorRandom, SmallRng};
 use rand::SeedableRng;
+use jagua_rs::entities::instances::instance::Instance;
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 
-use jagua_rs::entities::instance::Instance;
-use jagua_rs::entities::instance::InstanceGeneric;
 use jagua_rs::entities::placed_item::PlacedItemUID;
-use jagua_rs::entities::problems::problem::{LayoutIndex, Problem, ProblemGeneric};
+use jagua_rs::entities::problems::problem::Problem;
+use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::io::json_instance::JsonInstance;
 use jagua_rs::io::parser::Parser;

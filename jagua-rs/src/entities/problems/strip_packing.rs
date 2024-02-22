@@ -5,13 +5,14 @@ use ordered_float::NotNan;
 
 use crate::collision_detection::hazard_filter;
 use crate::entities::bin::Bin;
-use crate::entities::instance::InstanceGeneric;
-use crate::entities::instance::SPInstance;
+use crate::entities::instances::instance_generic::InstanceGeneric;
+use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem::{LayoutIndex, ProblemGeneric};
-use crate::entities::problems::problem::private::ProblemGenericPrivate;
+use crate::entities::problems::problem_generic::LayoutIndex;
+use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
+use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::util::assertions;

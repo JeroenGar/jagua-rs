@@ -1,8 +1,8 @@
 use svg::Document;
 use svg::node::element::Group;
 
-use jagua_rs::entities::instance::Instance;
-use jagua_rs::entities::instance::InstanceGeneric;
+use jagua_rs::entities::instances::instance::Instance;
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::layout::Layout;
 use jagua_rs::entities::layout::LayoutSnapshot;
 use jagua_rs::geometry::geo_enums::GeoPosition;
