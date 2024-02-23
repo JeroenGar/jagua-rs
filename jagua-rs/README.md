@@ -31,8 +31,8 @@ See [lbf crate](../lbf) for a reference implementation of an optimization algori
 
 ## Documentation
 
-The code is documented with rustdoc.
-The docs can be build using `cargo doc --open` from the root of the repository.
+The codebase is documented throughout using [rustdoc](https://doc.rust-lang.org/rustdoc/what-is-rustdoc.html).
+Use `cargo doc --open` to compile and view the documentation in your browser.
 
 ## Testing
 
