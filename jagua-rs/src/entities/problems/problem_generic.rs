@@ -13,22 +13,22 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex;
 
     /// Removes an item with a specific `PlacedItemUID` from a specific `Layout`
+    /// For more information about `commit_instantly`, see [`crate::collision_detection::cd_engine::CDEngine::deregister_hazard`].
     fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool);
 
-    /// Saves the current state into a `Solution`.
+    /// Saves the current state of the problem as a `Solution`.
     fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution;
 
     /// Restores the state of the problem to a previous `Solution`.
     fn restore_to_solution(&mut self, solution: &Solution);
 
-    /// Returns the layouts of the problem instance, with at least one item placed in them.
     fn layouts(&self) -> &[Layout];
 
     fn layouts_mut(&mut self) -> &mut [Layout];
 
-
-    /// Returns the template layouts of the problem instance, with no items placed in them.
-    /// When an item is placed in a template layout, a new real layout is created
+    /// Template layouts are empty and immutable.
+    /// For every unique bin in the problem instance, there is a template layout.
+    /// When an item is placed in a template layout, it is cloned into a real layout.
     fn template_layouts(&self) -> &[Layout];
 
     /// The quantity of each item that is requested but currently missing in the problem instance.

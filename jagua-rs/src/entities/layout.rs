@@ -65,7 +65,6 @@ impl Layout {
     }
 
     pub fn place_item(&mut self, item: &Item, d_transformation: &DTransformation) {
-
         let placed_item = PlacedItem::new(item, d_transformation.clone());
         self.cde.register_hazard((&placed_item).into());
         self.placed_items.push(placed_item);
@@ -74,7 +73,6 @@ impl Layout {
     }
 
     pub fn remove_item(&mut self, pi_uid: &PlacedItemUID, commit_instantly: bool) {
-
         let pos = self.placed_items.iter().position(|pi| &pi.uid == pi_uid).expect("item not found");
         let placed_item = self.placed_items.swap_remove(pos);
         self.cde.deregister_hazard(&placed_item.uid.clone().into(), commit_instantly);
@@ -110,7 +108,7 @@ impl Layout {
     }
 
     pub fn flush_changes(&mut self) {
-        self.cde.flush_changes();
+        self.cde.flush_haz_prox_grid();
     }
 }
 

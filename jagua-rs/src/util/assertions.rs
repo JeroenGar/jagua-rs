@@ -9,6 +9,8 @@ use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::hazard_filter;
 use crate::collision_detection::hazard_filter::CombinedHazardFilter;
 use crate::collision_detection::hazard_filter::EntityHazardFilter;
+use crate::collision_detection::hpg::hazard_proximity_grid::HazardProximityGrid;
+use crate::collision_detection::hpg::hpg_cell::HPGCellUpdate;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_node::QTNode;
@@ -342,4 +344,32 @@ fn hazards_match(chv1: &[Hazard], chv2: &[Hazard]) -> bool {
         return false;
     }
     true
+}
+
+pub fn hpg_correctly_updated(to_register: &Hazard, hpg: &mut HazardProximityGrid) -> bool {
+    //To ensure the boundary fill algorithm did not miss any cells, we check all the cells to make sure no cells were affected
+    let old_cells = hpg.grid.cells.clone();
+
+    //do a full sweep of the grid, and collect the affected cells
+    let undetected_cells_indices = hpg.grid.cells.iter_mut().enumerate()
+        .flat_map(|(i, cell)| cell.as_mut().map(|cell| (i, cell)))
+        .map(|(i, cell)| (i, cell.register_hazard(to_register)))
+        .filter(|(_i, res)| res == &HPGCellUpdate::Affected)
+        .map(|(i, _res)| i)
+        .collect_vec();
+
+    if !undetected_cells_indices.is_empty(){
+        //print the affected cells by row and col
+        let undetected_row_cols = undetected_cells_indices.iter()
+            .map(|i| hpg.grid.to_row_col(*i).unwrap()).collect_vec();
+        println!("{:?} undetected affected cells", undetected_row_cols);
+        for i in undetected_cells_indices {
+            println!("old {:?}", &old_cells[i]);
+            println!("new {:?}", &hpg.grid.cells[i]);
+        }
+        false
+    }
+    else{
+        true
+    }
 }

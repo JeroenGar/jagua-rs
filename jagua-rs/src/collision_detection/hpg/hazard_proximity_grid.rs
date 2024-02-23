@@ -10,14 +10,15 @@ use crate::collision_detection::hpg::grid_generator;
 use crate::collision_detection::hpg::hpg_cell::{HPGCell, HPGCellUpdate};
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
+use crate::util::assertions;
 
 /// Grid of cells which store information about hazards in their vicinity.
 /// The grid is a part of the `CDEngine` and is thus automatically updated when hazards are registered or deregistered.
 #[derive(Debug, Clone)]
 pub struct HazardProximityGrid {
     pub grid: Grid<HPGCell>,
-    pending_deregisters: Vec<HazardEntity>,
     pub cell_radius : f64,
+    uncommitted_deregisters: Vec<HazardEntity>,
 }
 
 impl HazardProximityGrid {
@@ -39,7 +40,7 @@ impl HazardProximityGrid {
 
         HazardProximityGrid {
             grid,
-            pending_deregisters: vec![],
+            uncommitted_deregisters: vec![],
             cell_radius
         }
     }
@@ -47,7 +48,7 @@ impl HazardProximityGrid {
     pub fn restore(&mut self, grid: Grid<HPGCell>) {
         assert_eq!(self.grid.cells.len(), grid.cells.len());
         self.grid = grid;
-        self.pending_deregisters.clear();
+        self.uncommitted_deregisters.clear();
     }
 
     pub fn register_hazard(&mut self, to_register: &Hazard) {
@@ -78,77 +79,43 @@ impl HazardProximityGrid {
             }
         }
 
-        //TODO: move this to an assertion check
-        debug_assert!(
-            {
-                let old_cells = self.grid.cells.clone();
-
-                //ensure no changes remain
-                let undetected = self.grid.cells.iter_mut().enumerate()
-                    .flat_map(|(i, cell)| cell.as_mut().map(|cell| (i, cell)))
-                    .map(|(i, cell)| (i, cell.register_hazard(to_register)))
-                    .filter(|(_i, res)| res == &HPGCellUpdate::Affected)
-                    .map(|(i, _res)| i)
-                    .collect_vec();
-
-                let undetected_row_cols = undetected.iter().map(|i| self.grid.to_row_col(*i).unwrap()).collect_vec();
-
-                if undetected.len() != 0 {
-                    println!("{:?} undetected affected cells", undetected_row_cols);
-                    for i in undetected {
-                        println!("old {:?}", &old_cells[i]);
-                        println!("new {:?}", &self.grid.cells[i]);
-                    }
-                    false
-                } else {
-                    true
-                }
-            }
-        );
+        debug_assert!(assertions::hpg_correctly_updated(to_register, self));
     }
 
     pub fn deregister_hazard<'a, I>(&mut self, to_deregister: &HazardEntity, remaining: I, process_now: bool)
         where I: Iterator<Item=&'a Hazard> + Clone
     {
-        match process_now {
-            true => {
-                for cell in self.grid.cells.iter_mut().flatten() {
-                    let result = cell.deregister_hazards(iter::once(to_deregister), remaining.clone());
-                    match result {
-                        HPGCellUpdate::Affected => (),
-                        HPGCellUpdate::Unaffected => (),
-                        HPGCellUpdate::Boundary => unreachable!()
-                    }
-                }
+        if process_now {
+            for cell in self.grid.cells.iter_mut().flatten() {
+                cell.deregister_hazards(iter::once(to_deregister), remaining.clone());
             }
-            false => {
-                self.pending_deregisters.push(to_deregister.clone());
-            }
+        } else {
+            self.uncommitted_deregisters.push(to_deregister.clone());
         }
     }
 
     pub fn flush_deregisters<'a, I>(&mut self, remaining: I)
         where I: Iterator<Item=&'a Hazard> + Clone
     {
-        if self.has_pending_deregisters() {
-            let to_deregister = self.pending_deregisters.iter();
-
+        if self.is_dirty() {
+            //deregister all pending hazards at once
+            let to_deregister = self.uncommitted_deregisters.iter();
             for cell in self.grid.cells.iter_mut().flatten() {
                 cell.deregister_hazards(to_deregister.clone(), remaining.clone());
             }
 
-            self.pending_deregisters.clear();
+            self.uncommitted_deregisters.clear();
         }
     }
 
-    pub fn has_pending_deregisters(&self) -> bool {
-        !self.pending_deregisters.is_empty()
+    pub fn is_dirty(&self) -> bool {
+        !self.uncommitted_deregisters.is_empty()
     }
-
 }
 
 
-/// Error type for when the `HazardProximityGrid` cannot be accessed due to pending changes.
-/// To avoid this error, ensure all changes are flushed before requesting the grid.
+/// Error type for when the `HazardProximityGrid` is in a dirty state.
+/// This can happen when the grid is accessed after a hazard has been deregistered but with "process_now" set to false.
+/// The grid should be flushed to ensure all changes are processed.
 #[derive(Debug)]
-pub struct PendingChangesErr;
+pub struct DirtyState;

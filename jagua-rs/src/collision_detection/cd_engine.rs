@@ -5,7 +5,7 @@ use tribool::Tribool;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::hpg::grid::Grid;
-use crate::collision_detection::hpg::hazard_proximity_grid::{HazardProximityGrid, PendingChangesErr};
+use crate::collision_detection::hpg::hazard_proximity_grid::{HazardProximityGrid, DirtyState};
 use crate::collision_detection::hpg::hpg_cell::HPGCell;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
@@ -31,7 +31,7 @@ pub struct CDEngine {
     haz_prox_grid: Option<HazardProximityGrid>,
     config: CDEConfig,
     bbox: AARectangle,
-    uncommited_deregisters: Vec<Hazard>,
+    uncommitted_deregisters: Vec<Hazard>,
 }
 
 
@@ -63,7 +63,7 @@ impl CDEngine {
             haz_prox_grid,
             config,
             bbox,
-            uncommited_deregisters: vec![],
+            uncommitted_deregisters: vec![],
         }
     }
 
@@ -71,11 +71,11 @@ impl CDEngine {
 
     pub fn register_hazard(&mut self, hazard: Hazard) {
         debug_assert!(self.dynamic_hazards.iter().find(|h| h.entity == hazard.entity).is_none(), "Hazard already registered");
-        let hazard_in_uncommitted_deregs = self.uncommited_deregisters.iter().position(|h| h.entity == hazard.entity);
+        let hazard_in_uncommitted_deregs = self.uncommitted_deregisters.iter().position(|h| h.entity == hazard.entity);
 
         let hazard = match hazard_in_uncommitted_deregs {
             Some(index) => {
-                let unc_hazard = self.uncommited_deregisters.swap_remove(index);
+                let unc_hazard = self.uncommitted_deregisters.swap_remove(index);
                 self.quadtree.activate_hazard(&unc_hazard.entity);
                 unc_hazard
             }
@@ -90,6 +90,16 @@ impl CDEngine {
         debug_assert!(assertions::qt_contains_no_dangling_hazards(&self));
     }
 
+    /// Removes a hazard from the CDE.
+    /// If `commit_instantly == true`, the deregistration is fully executed immediately.
+    /// If `commit_instantly == false`, the deregistration causes the hazard to be deactivated in the quadtree and
+    /// the hazard_proximity_grid to become dirty (and therefore inaccessible).
+    /// <br>
+    /// Can be beneficial not to `commit_instantly` if multiple hazards are to be deregistered, or if the chance of
+    /// restoring from a snapshot with the hazard present is high.
+    /// <br>
+    /// Call [`Self::commit_deregisters`] to commit all uncommitted deregisters in both quadtree & hazard proximity grid
+    /// or [`Self::flush_haz_prox_grid`] to just clear the hazard proximity grid.
     pub fn deregister_hazard(&mut self, hazard_entity: &HazardEntity, commit_instantly: bool) {
         let haz_index = self.dynamic_hazards.iter().position(|h| &h.entity == hazard_entity).expect("Hazard not found");
 
@@ -99,17 +109,17 @@ impl CDEngine {
             true => self.quadtree.deregister_hazard(hazard_entity),
             false => {
                 self.quadtree.deactivate_hazard(hazard_entity);
-                self.uncommited_deregisters.push(hazard);
+                self.uncommitted_deregisters.push(hazard);
             }
         }
-        self.haz_prox_grid.as_mut().map(|hpg| hpg.deregister_hazard(hazard_entity, self.dynamic_hazards.iter(), commit_instantly));
-
+        self.haz_prox_grid.as_mut()
+            .map(|hpg| hpg.deregister_hazard(hazard_entity, self.dynamic_hazards.iter(), commit_instantly));
         debug_assert!(assertions::qt_contains_no_dangling_hazards(&self));
     }
 
     pub fn create_snapshot(&mut self) -> CDESnapshot {
         self.commit_deregisters();
-        assert!(!self.haz_prox_grid.as_ref().map_or(false, |hpg| hpg.has_pending_deregisters()));
+        assert!(self.haz_prox_grid.as_ref().map_or(true, |hpg| !hpg.is_dirty()));
         CDESnapshot {
             dynamic_hazards: self.dynamic_hazards.clone(),
             grid: self.haz_prox_grid.as_ref().map(|hpg| hpg.grid.clone())
@@ -137,7 +147,7 @@ impl CDEngine {
         }
 
         //Some of the uncommitted deregisters might be in present in snapshot, if so we can just reactivate them
-        for unc_haz in self.uncommited_deregisters.drain(..) {
+        for unc_haz in self.uncommitted_deregisters.drain(..) {
             if let Some(pos) = hazards_to_add.iter().position(|h| &h.entity == &unc_haz.entity) {
                 //the uncommitted removed hazard needs to be activated again
                 self.quadtree.activate_hazard(&unc_haz.entity);
@@ -162,8 +172,8 @@ impl CDEngine {
         debug_assert!(self.dynamic_hazards.len() == snapshot.dynamic_hazards.len());
     }
 
-    fn commit_deregisters(&mut self) {
-        for uc_haz in self.uncommited_deregisters.drain(..) {
+    pub fn commit_deregisters(&mut self) {
+        for uc_haz in self.uncommitted_deregisters.drain(..) {
             self.quadtree.deregister_hazard(&uc_haz.entity);
         }
         self.haz_prox_grid.as_mut().map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
@@ -192,21 +202,24 @@ impl CDEngine {
         self.config
     }
 
-    pub fn haz_prox_grid(&self) -> Result<&HazardProximityGrid, PendingChangesErr> {
+    /// If the grid has uncommitted deregisters, it is considered dirty and cannot be accessed.
+    /// To flush all the changes, call [`Self::flush_haz_prox_grid`].
+    pub fn haz_prox_grid(&self) -> Result<&HazardProximityGrid, DirtyState> {
         let grid = self.haz_prox_grid.as_ref().expect("no hpg present");
-        match grid.has_pending_deregisters() {
-            true => Err(PendingChangesErr),
+        match grid.is_dirty() {
+            true => Err(DirtyState),
             false => Ok(grid)
         }
     }
 
-    pub fn flush_changes(&mut self) {
-        self.haz_prox_grid.as_mut()
-            .map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
+    pub fn flush_haz_prox_grid(&mut self) {
+        self.haz_prox_grid.as_mut().map(|hpg|
+            hpg.flush_deregisters(self.dynamic_hazards.iter())
+        );
     }
 
     pub fn has_uncommitted_deregisters(&self) -> bool {
-        self.uncommited_deregisters.len() > 0
+        self.uncommitted_deregisters.len() > 0
     }
 
     pub fn dynamic_hazards(&self) -> &Vec<Hazard> {
