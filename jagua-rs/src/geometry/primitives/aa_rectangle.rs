@@ -218,11 +218,11 @@ impl CollidesWith<Edge> for AARectangle {
     fn collides_with(&self, edge: &Edge) -> bool {
         //inspired by: https://stackoverflow.com/questions/99353/how-to-test-if-a-line-segment-intersects-an-axis-aligned-rectange-in-2d
 
-        let Point(x1, y1) = edge.start();
-        let Point(x2, y2) = edge.end();
+        let Point(x1, y1) = edge.start;
+        let Point(x2, y2) = edge.end;
 
         //If either end point of the line is inside the rectangle
-        if self.collides_with(&edge.start()) || self.collides_with(&edge.end()) {
+        if self.collides_with(&edge.start) || self.collides_with(&edge.end) {
             return true;
         }
 
@@ -246,8 +246,8 @@ impl CollidesWith<Edge> for AARectangle {
                 // if > 0.0, the point is "above" of the line
                 // if < 0.0, the point is "below" the line
                 let (p_x, p_y) = p.into();
-                let (s_x, s_y) = edge.start().into();
-                let (e_x, e_y) = edge.end().into();
+                let (s_x, s_y) = edge.start.into();
+                let (e_x, e_y) = edge.end.into();
                 (p_x - s_x) * (e_y - s_y) - (p_y - s_y) * (e_x - s_x)
             };
 

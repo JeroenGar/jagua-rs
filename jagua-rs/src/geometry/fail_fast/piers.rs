@@ -99,12 +99,12 @@ fn generate_ray_transformations(bbox: &AARectangle, rays_per_angle: usize, n_ang
 //clips a ray against the border of a polygon, potentially creating multiple "clips"
 fn clip(shape: &SimplePolygon, ray: &Edge) -> Vec<Edge> {
     //both ends of the ray should be outside the shape
-    assert!(!shape.collides_with(&ray.start()) && !shape.collides_with(&ray.end()));
+    assert!(!shape.collides_with(&ray.start) && !shape.collides_with(&ray.end));
 
     //collect all intersections of the ray with the shape, sorted by distance to the ray's start
     let intersections = shape.edge_iter()
         .flat_map(|edge| edge.collides_at(ray))
-        .sorted_by_key(|p| NotNan::new(ray.start().distance(p)).unwrap())
+        .sorted_by_key(|p| NotNan::new(ray.start.distance(p)).unwrap())
         .collect_vec();
 
     //every pair of (sorted) intersections defines a clipped line

@@ -270,8 +270,8 @@ impl CollidesWith<Point> for SimplePolygon {
                     //Check if the ray does not go through (or almost through) a vertex
                     //This can result in funky behaviour, which could incorrect results
                     //Therefore we handle this case
-                    let (s_x, s_y) = (F64A(edge.start().0), F64A(edge.start().1));
-                    let (e_x, e_y) = (F64A(edge.end().0), F64A(edge.end().1));
+                    let (s_x, s_y) = (F64A(edge.start.0), F64A(edge.start.1));
+                    let (e_x, e_y) = (F64A(edge.end.0), F64A(edge.end.1));
                     let (p_x, p_y) = (F64A(point.0), F64A(point.1));
 
                     if (s_y == p_y && s_x > p_x) || (e_y == p_y && e_x > p_x) {

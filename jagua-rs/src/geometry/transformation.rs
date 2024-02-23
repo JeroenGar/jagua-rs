@@ -103,7 +103,8 @@ fn translation_matrix((tx, ty): (f64, f64)) -> [[NotNan<f64>; 3]; 3] {
     ]
 }
 
-fn dot_prod<T: Add<Output=T> + Mul<Output=T> + Copy + Default>(lhs: &[[T; 3]; 3], rhs: &[[T; 3]; 3]) -> [[T; 3]; 3] {
+fn dot_prod<T>(lhs: &[[T; 3]; 3], rhs: &[[T; 3]; 3]) -> [[T; 3]; 3]
+    where T: Add<Output=T> + Mul<Output=T> + Copy + Default {
     let mut result = [[T::default(); 3]; 3];
     for i in 0..3 {
         for j in 0..3 {
@@ -115,7 +116,8 @@ fn dot_prod<T: Add<Output=T> + Mul<Output=T> + Copy + Default>(lhs: &[[T; 3]; 3]
     result
 }
 
-fn inverse<T: Add<Output=T> + Mul<Output=T> + Sub<Output=T> + Div<Output=T> + Copy>(m: &[[T; 3]; 3]) -> [[T; 3]; 3] {
+fn inverse<T>(m: &[[T; 3]; 3]) -> [[T; 3]; 3]
+    where T: Add<Output=T> + Mul<Output=T> + Sub<Output=T> + Div<Output=T> + Copy {
     let det = m[0][0] * m[1][1] * m[2][2]
         + m[0][1] * m[1][2] * m[2][0]
         + m[0][2] * m[1][0] * m[2][1]

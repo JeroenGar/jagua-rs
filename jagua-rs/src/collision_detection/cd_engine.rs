@@ -282,7 +282,7 @@ impl CDEngine {
     }
 
     pub fn edge_definitely_collides(&self, edge: &Edge, irrelevant_hazards: &[HazardEntity]) -> Tribool {
-        match !self.bbox.collides_with(&edge.start()) || !self.bbox.collides_with(&edge.end()) {
+        match !self.bbox.collides_with(&edge.start) || !self.bbox.collides_with(&edge.end) {
             true => Tribool::True, //if either the start or end of the edge is outside the quadtree, it definitely collides
             false => self.quadtree.definitely_collides(edge, irrelevant_hazards)
         }

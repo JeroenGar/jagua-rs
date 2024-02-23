@@ -146,9 +146,9 @@ fn multiply_edge_count(shape: &SimplePolygon, multiplier: usize) -> SimplePolygo
 
     for edge in shape.edge_iter(){
         //split x and y into "times" parts
-        let x_step = (edge.end().0 - edge.start().0) / multiplier as f64;
-        let y_step = (edge.end().1 - edge.start().1) / multiplier as f64;
-        let mut start = edge.start();
+        let x_step = (edge.end.0 - edge.start.0) / multiplier as f64;
+        let y_step = (edge.end.1 - edge.start.1) / multiplier as f64;
+        let mut start = edge.start;
         for _ in 0..multiplier {
             new_points.push(start);
             start = Point(start.0 + x_step, start.1 + y_step);

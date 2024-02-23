@@ -97,8 +97,8 @@ pub fn circle(circle: &geometry::primitives::circle::Circle, params: &[(&str, &s
 
 pub fn edge_data(edge: &Edge) -> Data {
     Data::new()
-        .move_to((edge.start().0, edge.start().1))
-        .line_to((edge.end().0, edge.end().1))
+        .move_to((edge.start.0, edge.start.1))
+        .line_to((edge.end.0, edge.end.1))
 }
 
 pub fn aa_rect_data(rect: &geometry::primitives::aa_rectangle::AARectangle) -> Data {

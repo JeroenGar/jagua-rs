@@ -209,7 +209,7 @@ fn candidate_is_valid(shape: &SimplePolygon, candidate: &Candidate) -> bool {
             let affected_points = [shape.get_point(c.0), shape.get_point(c.1), shape.get_point(c.2)];
 
             shape.edge_iter()
-                .filter(|l| !affected_points.contains(&l.start()) && !affected_points.contains(&l.end())) //filter edges with points that are not affected by the candidate
+                .filter(|l| !affected_points.contains(&l.start) && !affected_points.contains(&l.end)) //filter edges with points that are not affected by the candidate
                 .all(|l| { !l.collides_with(&new_edge) })
         }
         Candidate::ConvexConvex(c1, c2) => {
@@ -223,7 +223,7 @@ fn candidate_is_valid(shape: &SimplePolygon, candidate: &Candidate) -> bool {
                     let affected_points = [shape.get_point(c1.1), shape.get_point(c1.0), shape.get_point(c2.1), shape.get_point(c2.2)];
 
                     shape.edge_iter()
-                        .filter(|l| !affected_points.contains(&l.start()) && !affected_points.contains(&l.end())) //filter edges with points that are not affected by the candidate
+                        .filter(|l| !affected_points.contains(&l.start) && !affected_points.contains(&l.end)) //filter edges with points that are not affected by the candidate
                         .all(|l| { !l.collides_with(&new_edge_1) && !l.collides_with(&new_edge_2) })
                 }
             }
@@ -267,10 +267,10 @@ fn calculate_intersection_in_front(l1: &Edge, l2: &Edge) -> Option<Point> {
 
     //https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line_segment
     //vector 1 = [(x1,y1),(x2,y2)[ and vector 2 = [(x3,y3),(x4,y4)[
-    let Point(x1, y1) = l1.start();
-    let Point(x2, y2) = l1.end();
-    let Point(x3, y3) = l2.start();
-    let Point(x4, y4) = l2.end();
+    let Point(x1, y1) = l1.start;
+    let Point(x2, y2) = l1.end;
+    let Point(x3, y3) = l2.start;
+    let Point(x4, y4) = l2.end;
 
     //used formula is slightly different to the one on wikipedia. The orientation of the line segments are flipped
     //We consider an intersection if t == ]0,1] && u == ]0,1]

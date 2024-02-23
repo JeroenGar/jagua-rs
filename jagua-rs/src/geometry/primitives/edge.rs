@@ -20,36 +20,6 @@ impl Edge {
         Edge { start, end }
     }
 
-    pub fn extend_to_x(mut self, x: f64) -> Self {
-        let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
-        if dx != 0.0 {
-            if (dx > 0.0 && x < self.start.0) || (dx < 0.0 && x > self.start.0) {
-                //expand in the back
-                self.start.0 = x;
-                self.start.1 = self.end.1 + dy * (x - self.end.0) / dx;
-            } else if dx > 0.0 && x > self.end.0 || dx < 0.0 && x < self.end.0 {
-                //expand in front
-                self.end.0 = x;
-                self.end.1 = self.start.1 + dy * (x - self.start.0) / dx;
-            }
-        }
-        self
-    }
-
-    pub fn extend_to_y(mut self, y: f64) -> Self {
-        let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
-        if dy != 0.0 {
-            if y < self.start.1 {
-                self.start.1 = y;
-                self.start.0 = self.end.0 + dx * (y - self.end.1) / dy;
-            } else if y > self.end.1 {
-                self.end.1 = y;
-                self.end.0 = self.start.0 + dx * (y - self.start.1) / dy;
-            }
-        }
-        self
-    }
-
     pub fn extend_at_front(mut self, d: f64) -> Self {
         //extend the line at the front by distance d
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
@@ -87,14 +57,6 @@ impl Edge {
             Intersection::No => None,
             Intersection::Yes(point) => Some(point.expect("Intersection::Yes, but returned no point when this was requested")),
         }
-    }
-
-    pub fn start(&self) -> Point {
-        self.start
-    }
-
-    pub fn end(&self) -> Point {
-        self.end
     }
 
     pub fn x_min(&self) -> f64 {
@@ -156,7 +118,7 @@ impl Shape for Edge {
     }
 
     fn diameter(&self) -> f64 {
-        self.start().distance(&self.end())
+        self.start.distance(&self.end)
     }
 }
 

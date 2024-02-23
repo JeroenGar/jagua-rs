@@ -24,7 +24,8 @@ use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::transformation::Transformation;
 use crate::util;
 
-///
+//Various checks to verify correctness of the state of the system
+//Used in debug_assertion!() blocks
 
 pub fn instance_item_bin_ids_correct(items: &Vec<(Item, usize)>, bins: &Vec<(Bin, usize)>) -> bool {
     let mut id = 0;
@@ -102,7 +103,7 @@ pub fn item_to_place_does_not_collide(item: &Item, transformation: &Transformati
     let t_shape = shape.transform_clone(transformation);
 
     let entities_to_ignore = haz_filter.as_ref()
-        .map_or(vec![], |f| hazard_filter::get_irrelevant_hazard_entities(f, layout.cde().all_hazards()));
+        .map_or(vec![], |f| hazard_filter::generate_irrelevant_hazards(f, layout.cde().all_hazards()));
 
     if layout.cde().surrogate_collides(shape.surrogate(), transformation, &entities_to_ignore) ||
         layout.cde().shape_collides(&t_shape, &entities_to_ignore) {
@@ -122,7 +123,7 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
                 filters: vec![Box::new(&ehf), Box::new(hf)]
             }
         };
-        let entities_to_ignore = hazard_filter::get_irrelevant_hazard_entities(&combo_filter, layout.cde().all_hazards());
+        let entities_to_ignore = hazard_filter::generate_irrelevant_hazards(&combo_filter, layout.cde().all_hazards());
 
         if layout.cde().shape_collides(&pi.shape, &entities_to_ignore) {
             println!("Collision detected for item {:.?}", pi.uid);

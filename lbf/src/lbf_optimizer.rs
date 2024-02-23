@@ -146,7 +146,7 @@ pub fn sample_layout(problem: &Problem, layout_index: LayoutIndex, item: &Item, 
     let item_id = item.id;
     let layout: &Layout = problem.get_layout(&layout_index);
     let entities_to_ignore = item.hazard_filter.as_ref()
-        .map_or(vec![], |hf| hazard_filter::get_irrelevant_hazard_entities(hf, layout.cde().all_hazards()));
+        .map_or(vec![], |hf| hazard_filter::generate_irrelevant_hazards(hf, layout.cde().all_hazards()));
 
     let shape = &item.shape;
     let surrogate = item.shape.surrogate();

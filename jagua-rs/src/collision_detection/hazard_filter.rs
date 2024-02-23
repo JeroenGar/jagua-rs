@@ -11,7 +11,7 @@ pub trait HazardFilter {
 
 
 /// Returns the entities that are deemed irrelevant by the given filter from a set of `Hazard`s
-pub fn get_irrelevant_hazard_entities<'a>(filter: &impl HazardFilter, hazards: impl Iterator<Item=&'a Hazard>) -> Vec<HazardEntity> {
+pub fn generate_irrelevant_hazards<'a>(filter: &impl HazardFilter, hazards: impl Iterator<Item=&'a Hazard>) -> Vec<HazardEntity> {
     hazards.filter_map(|h| {
         match filter.is_irrelevant(&h.entity){
             true => Some(h.entity.clone()),

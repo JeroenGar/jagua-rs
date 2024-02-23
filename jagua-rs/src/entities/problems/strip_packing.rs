@@ -56,7 +56,8 @@ impl SPProblem {
 
         for p_uid in old_p_uids {
             let item = self.instance.item(p_uid.item_id);
-            let entities_to_ignore = item.hazard_filter.as_ref().map_or(vec![], |f| hazard_filter::get_irrelevant_hazard_entities(f, self.layout.cde().all_hazards()));
+            let entities_to_ignore = item.hazard_filter.as_ref()
+                .map_or(vec![], |f| hazard_filter::generate_irrelevant_hazards(f, self.layout.cde().all_hazards()));
             let shape = &item.shape;
             let transf = p_uid.d_transf.compose();
             if !self.layout.cde().surrogate_collides(shape.surrogate(), &transf, entities_to_ignore.as_slice()) {
@@ -131,6 +132,7 @@ impl ProblemGeneric for SPProblem {
     fn restore_to_solution(&mut self, solution: &Solution) {
         debug_assert!(solution.layout_snapshots.len() == 1);
         self.layout.restore(&solution.layout_snapshots[0]);
+        
         self.missing_item_qtys.iter_mut().enumerate().for_each(|(i, qty)| {
             *qty = (self.instance.item_qty(i) - solution.placed_item_qtys[i]) as isize
         });
