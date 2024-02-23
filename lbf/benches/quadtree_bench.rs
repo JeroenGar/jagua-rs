@@ -43,7 +43,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
         let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
         let (mut problem, _) = util::create_blf_problem(instance.clone(), config, 0);
 
-        let layout_index = LayoutIndex::Existing(0);
+        let layout_index = LayoutIndex::Real(0);
         let mut rng = SmallRng::seed_from_u64(0);
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
@@ -87,7 +87,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
         let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
         let (problem, selected_pi_uids) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = problem.get_layout(LayoutIndex::Existing(0));
+        let layout = problem.get_layout(LayoutIndex::Real(0));
         let sampler = UniformAARectSampler::new(layout.bin().bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -104,7 +104,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
             b.iter(|| {
                 let item_id = item_id_cycler.next().unwrap();
                 let item = instance.item(item_id);
-                let layout = problem.get_layout(LayoutIndex::Existing(0));
+                let layout = problem.get_layout(LayoutIndex::Real(0));
                 let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, transf);
@@ -138,7 +138,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
         let (mut problem, _) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = problem.get_layout(LayoutIndex::Existing(0));
+        let layout = problem.get_layout(LayoutIndex::Real(0));
         let sampler = UniformAARectSampler::new(layout.bin().bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -148,16 +148,16 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
-                let pi_uid = problem.get_layout(LayoutIndex::Existing(0)).placed_items().iter()
+                let pi_uid = problem.get_layout(LayoutIndex::Real(0)).placed_items().iter()
                     .map(|p_i| p_i.uid.clone())
                     .choose(&mut rng).expect("No items in layout");
 
-                problem.remove_item(LayoutIndex::Existing(0), &pi_uid, true);
+                problem.remove_item(LayoutIndex::Real(0), &pi_uid, true);
                 problem.flush_changes();
 
                 let item_id = pi_uid.item_id;
                 let item = instance.item(item_id);
-                let layout = problem.get_layout(LayoutIndex::Existing(0));
+                let layout = problem.get_layout(LayoutIndex::Real(0));
                 let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, &transf);
@@ -166,7 +166,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 }
 
                 problem.place_item(&PlacingOption {
-                    layout_index: LayoutIndex::Existing(0),
+                    layout_index: LayoutIndex::Real(0),
                     item_id: pi_uid.item_id,
                     transf: pi_uid.d_transf.compose(),
                     d_transf: pi_uid.d_transf,

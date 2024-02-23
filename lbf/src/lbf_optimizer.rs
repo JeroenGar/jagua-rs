@@ -132,15 +132,11 @@ impl LBFOptimizer {
 }
 
 pub fn find_placement(problem: &Problem, item: &Item, config: &Config, rng: &mut impl Rng) -> Option<PlacingOption> {
-    let layouts_to_sample =
-        (0..problem.layouts().len()).map(|i| (LayoutIndex::Existing(i)))
-            .chain((0..problem.empty_layouts().len())
-                .filter(|&i| problem.empty_layout_has_stock(i))
-                .map(|i| (LayoutIndex::Empty(i)))
-            ).collect_vec();
+    //search all existing layouts and template layouts with remaining stock
+    let layouts_to_sample = problem.layout_indices().chain(problem.template_layout_indices_with_stock());
 
-    let best_i_opt = layouts_to_sample.iter().filter_map(|l_i| {
-        sample_layout(problem, *l_i, item, config, rng)
+    let best_i_opt = layouts_to_sample.filter_map(|l_i| {
+        sample_layout(problem, l_i, item, config, rng)
     }).next();
 
     best_i_opt

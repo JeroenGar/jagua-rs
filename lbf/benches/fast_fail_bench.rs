@@ -53,7 +53,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     println!("avg number of edges per item: {}", ITEMS_ID_TO_TEST.iter().map(|&item_id| instance.item(item_id).shape.number_of_points()).sum::<usize>() as f64 / ITEMS_ID_TO_TEST.len() as f64);
 
     let mut rng = SmallRng::seed_from_u64(0);
-    let layout = problem.get_layout(LayoutIndex::Existing(0));
+    let layout = problem.get_layout(LayoutIndex::Real(0));
     let samples = ITEMS_ID_TO_TEST.iter()
         .map(|&item_id| {
             let sampler = HPGSampler::new(instance.item(item_id), layout).unwrap();

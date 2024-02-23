@@ -1,4 +1,4 @@
-use std::slice;
+use std::{iter, slice};
 
 use itertools::Itertools;
 use ordered_float::NotNan;
@@ -63,7 +63,7 @@ impl SPProblem {
                 let transformed_shape = shape.transform_clone(&transf);
                 if !self.layout.cde().shape_collides(&transformed_shape, entities_to_ignore.as_ref()) {
                     let insert_opt = PlacingOption {
-                        layout_index: LayoutIndex::Existing(0),
+                        layout_index: LayoutIndex::Real(0),
                         item_id: p_uid.item_id,
                         transf,
                         d_transf: p_uid.d_transf.clone(),
@@ -99,17 +99,17 @@ impl SPProblem {
 
 impl ProblemGeneric for SPProblem {
     fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex {
-        assert_eq!(i_opt.layout_index, LayoutIndex::Existing(0), "strip packing problems only have a single layout");
+        assert_eq!(i_opt.layout_index, LayoutIndex::Real(0), "Strip packing problems only have a single layout");
         let item_id = i_opt.item_id;
         let item = self.instance.item(item_id);
         self.layout.place_item(item, &i_opt.d_transf);
 
         self.register_included_item(item_id);
-        LayoutIndex::Existing(0)
+        LayoutIndex::Real(0)
     }
 
     fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool) {
-        assert_eq!(layout_index, LayoutIndex::Existing(0), "strip packing problems only have a single layout");
+        assert_eq!(layout_index, LayoutIndex::Real(0), "strip packing problems only have a single layout");
         self.layout.remove_item(pi_uid, commit_instantly);
         self.unregister_included_item(pi_uid.item_id);
     }
@@ -146,7 +146,7 @@ impl ProblemGeneric for SPProblem {
         slice::from_mut(&mut self.layout)
     }
 
-    fn empty_layouts(&self) -> &[Layout] {
+    fn template_layouts(&self) -> &[Layout] {
         &[]
     }
 
@@ -160,8 +160,8 @@ impl ProblemGeneric for SPProblem {
             .collect_vec()
     }
 
-    fn empty_layout_has_stock(&self, _index: usize) -> bool {
-        false
+    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
+        iter::empty::<LayoutIndex>()
     }
 
     fn bin_qtys(&self) -> &[usize] {

@@ -2,8 +2,8 @@ use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::solution::Solution;
 
@@ -23,7 +23,7 @@ pub enum Problem {
 }
 
 impl ProblemGeneric for Problem {
-    fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex{
+    fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex {
         match self {
             Problem::BP(bp) => bp.place_item(i_opt),
             Problem::SP(sp) => sp.place_item(i_opt),
@@ -65,10 +65,10 @@ impl ProblemGeneric for Problem {
         }
     }
 
-    fn empty_layouts(&self) -> &[Layout] {
+    fn template_layouts(&self) -> &[Layout] {
         match self {
-            Problem::BP(bp) => bp.empty_layouts(),
-            Problem::SP(sp) => sp.empty_layouts(),
+            Problem::BP(bp) => bp.template_layouts(),
+            Problem::SP(sp) => sp.template_layouts(),
         }
     }
 

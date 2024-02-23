@@ -198,8 +198,8 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
         };
         //Create the layout by inserting the first item
 
-        //Find the empty layout matching the bin id in the JSON solution, 0 if strip packing instance.
-        let (empty_layout_index, _) = problem.empty_layouts().iter().enumerate()
+        //Find the template layout matching the bin id in the JSON solution, 0 if strip packing instance.
+        let (template_layout_index, _) = problem.template_layouts().iter().enumerate()
             .find(|(_, layout)| layout.bin().id == bin.map_or(0, |b| b.id)).unwrap();
 
         let bin_centering = bin.map_or(DTransformation::empty(), |b| DTransformation::from(&b.centering_transform)).translation();
@@ -220,7 +220,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
         let d_transf = transf.decompose();
 
         let initial_insert_opt = PlacingOption {
-            layout_index: LayoutIndex::Empty(empty_layout_index),
+            layout_index: LayoutIndex::Template(template_layout_index),
             item_id: first_item.id,
             transf,
             d_transf,
@@ -244,7 +244,7 @@ fn build_solution_from_json(json_layouts: &[JsonLayout], instance: Arc<Instance>
             let d_transf = transf.decompose();
 
             let insert_opt = PlacingOption {
-                layout_index: LayoutIndex::Existing(layout_index),
+                layout_index: LayoutIndex::Real(layout_index),
                 item_id: item.id,
                 transf,
                 d_transf,

@@ -67,13 +67,13 @@ fn edge_sensitivity_bench(config: Config, mut g: BenchmarkGroup<WallTime>) {
                 surrogate: true,
                 ..SvgDrawOptions::default()
             };
-            let svg = io::layout_to_svg::layout_to_svg(problem.get_layout(LayoutIndex::Existing(0)), &instance, draw_options);
+            let svg = io::layout_to_svg::layout_to_svg(problem.get_layout(LayoutIndex::Real(0)), &instance, draw_options);
             io::write_svg(&svg, Path::new(&format!("edge_sensitivity_{edge_multiplier}.svg")));
         }
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        let layout = problem.get_layout(LayoutIndex::Existing(0));
+        let layout = problem.get_layout(LayoutIndex::Real(0));
         /*let samples = {
             let sampler = UniformAARectSampler::new(layout.bin().bbox(), instance.item(0));
             (0..N_SAMPLES).map(

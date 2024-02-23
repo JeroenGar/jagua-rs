@@ -57,7 +57,7 @@ mod tests {
             let problem = &mut optimizer.problem;
             for _ in 0..N_ITEMS_TO_REMOVE {
                 //pick random existing layout
-                let layout_index = LayoutIndex::Existing(rng.gen_range(0..problem.layouts().len()));
+                let layout_index = LayoutIndex::Real(rng.gen_range(0..problem.layouts().len()));
                 let random_placed_item = match problem.get_layout(&layout_index).placed_items().iter().choose(&mut rng) {
                     Some(pi) => pi.uid.clone(),
                     None => break,

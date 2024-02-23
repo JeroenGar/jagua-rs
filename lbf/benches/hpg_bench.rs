@@ -35,7 +35,7 @@ fn hpg_query_bench(c: &mut Criterion) {
     let base_config = create_base_config();
     let base_instance = util::create_instance(&json_instance, base_config.cde_config, base_config.poly_simpl_config);
     let (base_problem, _) = util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
-    let base_pi_uids = base_problem.get_layout(LayoutIndex::Existing(0)).placed_items().iter().map(|pi| pi.uid.clone()).collect_vec();
+    let base_pi_uids = base_problem.get_layout(LayoutIndex::Real(0)).placed_items().iter().map(|pi| pi.uid.clone()).collect_vec();
 
     let mut group = c.benchmark_group("hpg_bench_query");
     for n_hpg_cells in N_HPG_CELLS {
@@ -50,7 +50,7 @@ fn hpg_query_bench(c: &mut Criterion) {
         // Place the items in exactly the same way as the base problem
         for pi_uid in base_pi_uids.iter() {
             problem.place_item(&PlacingOption {
-                layout_index: LayoutIndex::Existing(0),
+                layout_index: LayoutIndex::Real(0),
                 item_id: pi_uid.item_id,
                 transf: pi_uid.d_transf.compose(),
                 d_transf: pi_uid.d_transf.clone(),
@@ -73,7 +73,7 @@ fn hpg_query_bench(c: &mut Criterion) {
 
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
-        let layout = problem.get_layout(LayoutIndex::Existing(0));
+        let layout = problem.get_layout(LayoutIndex::Real(0));
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
         let sampler = HPGSampler::new(item, layout).unwrap();
@@ -103,7 +103,7 @@ fn hpg_update_bench(c: &mut Criterion) {
     let base_config = create_base_config();
     let base_instance = util::create_instance(&json_instance, base_config.cde_config, base_config.poly_simpl_config);
     let (base_problem, _) = util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
-    let base_pi_uids = base_problem.get_layout(LayoutIndex::Existing(0)).placed_items().iter().map(|pi| pi.uid.clone()).collect_vec();
+    let base_pi_uids = base_problem.get_layout(LayoutIndex::Real(0)).placed_items().iter().map(|pi| pi.uid.clone()).collect_vec();
 
     let mut group = c.benchmark_group("hpg_bench_update");
     for n_hpg_cells in N_HPG_CELLS {
@@ -118,7 +118,7 @@ fn hpg_update_bench(c: &mut Criterion) {
         // Place the items in exactly the same way as the base problem
         for pi_uid in base_pi_uids.iter() {
             problem.place_item(&PlacingOption {
-                layout_index: LayoutIndex::Existing(0),
+                layout_index: LayoutIndex::Real(0),
                 item_id: pi_uid.item_id,
                 transf: pi_uid.d_transf.compose(),
                 d_transf: pi_uid.d_transf.clone(),
@@ -140,7 +140,7 @@ fn hpg_update_bench(c: &mut Criterion) {
 
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
-        let layout = problem.get_layout(LayoutIndex::Existing(0));
+        let layout = problem.get_layout(LayoutIndex::Real(0));
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
         let sampler = HPGSampler::new(item, layout).unwrap();
@@ -155,7 +155,7 @@ fn hpg_update_bench(c: &mut Criterion) {
                 if !layout.cde().shape_collides(&buffer_shape, &[]) {
                     let d_transf = transf.decompose();
                     valid_placements.push(PlacingOption {
-                        layout_index: LayoutIndex::Existing(0),
+                        layout_index: LayoutIndex::Real(0),
                         item_id: SELECTED_ITEM_ID,
                         transf,
                         d_transf,
@@ -171,7 +171,7 @@ fn hpg_update_bench(c: &mut Criterion) {
                 let opt = valid_samples_cycler.next().unwrap();
                 problem.place_item(opt);
                 problem.remove_item(
-                    LayoutIndex::Existing(0),
+                    LayoutIndex::Real(0),
                     &PlacedItemUID {
                         item_id: opt.item_id,
                         d_transf: opt.d_transf.clone(),

@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
@@ -7,7 +8,6 @@ use crate::entities::solution::Solution;
 
 /// Trait for public shared functionality of all problem variants.
 pub trait ProblemGeneric: ProblemGenericPrivate {
-
     /// Places an item into the problem instance according to the given `PlacingOption`.
     /// Returns the index of the layout where the item was placed.
     fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex;
@@ -27,9 +27,9 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     fn layouts_mut(&mut self) -> &mut [Layout];
 
 
-    /// Returns layouts of the problem instance, which are currently empty (no items placed in them).
-    /// These layouts can be used to place items into.
-    fn empty_layouts(&self) -> &[Layout];
+    /// Returns the template layouts of the problem instance, with no items placed in them.
+    /// When an item is placed in a template layout, a new real layout is created
+    fn template_layouts(&self) -> &[Layout];
 
     /// The quantity of each item that is requested but currently missing in the problem instance.
     /// Indexed by item id.
@@ -50,15 +50,23 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
 
     fn included_item_qtys(&self) -> Vec<usize>;
 
-    fn empty_layout_has_stock(&self, index: usize) -> bool {
-        let bin_id = self.empty_layouts()[index].bin().id;
-        self.bin_qtys()[bin_id] > 0
+    fn layout_indices(&self) -> impl Iterator<Item=LayoutIndex> {
+        (0..self.layouts().len()).into_iter().map(|i| LayoutIndex::Real(i))
+    }
+
+    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
+        self.template_layouts().iter().enumerate().filter_map(|(i, l)| {
+            match self.bin_qtys()[l.bin().id] {
+                0 => None,
+                _ => Some(LayoutIndex::Template(i))
+            }
+        })
     }
 
     fn get_layout(&self, index: impl Borrow<LayoutIndex>) -> &Layout {
         match index.borrow() {
-            LayoutIndex::Existing(i) => &self.layouts()[*i],
-            LayoutIndex::Empty(i) => &self.empty_layouts()[*i]
+            LayoutIndex::Real(i) => &self.layouts()[*i],
+            LayoutIndex::Template(i) => &self.template_layouts()[*i]
         }
     }
 
@@ -81,7 +89,6 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
 }
 
 pub(super) mod private {
-
     /// Trait for shared functionality of all problem variants, but not exposed to the public.
     pub trait ProblemGenericPrivate: Clone {
         fn next_solution_id(&mut self) -> usize;
@@ -99,10 +106,8 @@ pub(super) mod private {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-/// Unique identifier for a layout in a problem instance.
+/// Unique index for a `Layout` in a problem instance.
 pub enum LayoutIndex {
-    /// Existing layout (at least one item) and its index in the `Problem`'s `layouts` vector.
-    Existing(usize),
-    /// Empty layout (no items) and its index in the `Problem`'s `empty_layouts` vector.
-    Empty(usize),
+    Real(usize),
+    Template(usize),
 }

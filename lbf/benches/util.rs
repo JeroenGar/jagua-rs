@@ -41,7 +41,7 @@ pub fn create_blf_problem(instance: Instance, config: Config, n_items_removed: u
     };
 
     let mut rng = SmallRng::seed_from_u64(0);
-    let layout_index = LayoutIndex::Existing(0);
+    let layout_index = LayoutIndex::Real(0);
     // Remove some items from the layout
     let removed_pi_uids = problem.get_layout(&layout_index).placed_items().iter()
         .map(|p_i| p_i.uid.clone())

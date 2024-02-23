@@ -17,8 +17,7 @@ use crate::util::assertions;
 pub struct BPProblem {
     pub instance: BPInstance,
     layouts: Vec<Layout>,
-    // TODO: document empty layouts
-    empty_layouts: Vec<Layout>,
+    template_layouts: Vec<Layout>,
     missing_item_qtys: Vec<isize>,
     bin_qtys: Vec<usize>,
     layout_id_counter: usize,
@@ -33,10 +32,10 @@ impl BPProblem {
         let missing_item_qtys = instance.items.iter().map(|(_, qty)| *qty as isize).collect_vec();
         let bin_qtys = instance.bins.iter().map(|(_, qty)| *qty).collect_vec();
         let layouts = vec![];
-        let empty_layouts = instance.bins.iter().enumerate().map(|(i, (bin, _))| {
-            Layout::new(i, bin.clone())
-        }).collect_vec();
-        let layout_id_counter = empty_layouts.len();
+        let template_layouts = instance.bins.iter().enumerate()
+            .map(|(i, (bin, _))| Layout::new(i, bin.clone()))
+            .collect_vec();
+        let layout_id_counter = template_layouts.len();
         let unchanged_layouts = vec![];
         let unchanged_layouts_solution_id = None;
         let uncommitted_removed_layouts = vec![];
@@ -44,7 +43,7 @@ impl BPProblem {
         Self {
             instance,
             layouts,
-            empty_layouts,
+            template_layouts,
             missing_item_qtys,
             bin_qtys,
             layout_id_counter,
@@ -67,12 +66,12 @@ impl BPProblem {
             }
         );
         self.layouts.push(layout);
-        LayoutIndex::Existing(self.layouts.len() - 1)
+        LayoutIndex::Real(self.layouts.len() - 1)
     }
 
     pub fn unregister_layout(&mut self, layout_index: LayoutIndex) {
         match layout_index {
-            LayoutIndex::Existing(i) => {
+            LayoutIndex::Real(i) => {
                 let layout = self.layouts.remove(i);
                 self.layout_has_changed(layout.id());
                 self.unregister_bin(layout.bin().id);
@@ -80,7 +79,7 @@ impl BPProblem {
                     |v| { self.unregister_included_item(v.item_id()) });
                 self.uncommitted_removed_layouts.push(layout);
             }
-            LayoutIndex::Empty(_) => unreachable!("cannot remove empty layout")
+            LayoutIndex::Template(_) => unreachable!("cannot remove template layout")
         }
     }
 
@@ -114,18 +113,18 @@ impl BPProblem {
 impl ProblemGeneric for BPProblem {
     fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex {
         let layout_index = match &i_opt.layout_index {
-            LayoutIndex::Existing(i) => LayoutIndex::Existing(*i),
-            LayoutIndex::Empty(i) => {
+            LayoutIndex::Real(i) => LayoutIndex::Real(*i),
+            LayoutIndex::Template(i) => {
                 //Layout is empty, clone it and add it to `layouts`
                 let next_layout_id = self.next_layout_id();
-                let empty_layout = &self.empty_layouts[*i];
-                let copy = empty_layout.clone_with_id(next_layout_id);
+                let template = &self.template_layouts[*i];
+                let copy = template.clone_with_id(next_layout_id);
                 self.register_layout(copy)
             }
         };
         let layout = match layout_index {
-            LayoutIndex::Existing(i) => &mut self.layouts[i],
-            LayoutIndex::Empty(_) => unreachable!("cannot place item in empty layout")
+            LayoutIndex::Real(i) => &mut self.layouts[i],
+            LayoutIndex::Template(_) => unreachable!("cannot place item in template layout")
         };
         let item = self.instance.item(i_opt.item_id);
         layout.place_item(item, &i_opt.d_transf);
@@ -139,7 +138,7 @@ impl ProblemGeneric for BPProblem {
 
     fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool) {
         match layout_index {
-            LayoutIndex::Existing(i) => {
+            LayoutIndex::Real(i) => {
                 self.layout_has_changed(self.layouts[i].id());
                 let layout = &mut self.layouts[i];
                 layout.remove_item(pi_uid, commit_instantly);
@@ -149,7 +148,7 @@ impl ProblemGeneric for BPProblem {
                 }
                 self.unregister_included_item(pi_uid.item_id);
             }
-            LayoutIndex::Empty(_) => unreachable!("cannot remove item from empty layout")
+            LayoutIndex::Template(_) => unreachable!("cannot remove item from template layout")
         }
     }
 
@@ -262,8 +261,8 @@ impl ProblemGeneric for BPProblem {
         &mut self.layouts
     }
 
-    fn empty_layouts(&self) -> &[Layout] {
-        &self.empty_layouts
+    fn template_layouts(&self) -> &[Layout] {
+        &self.template_layouts
     }
 
     fn missing_item_qtys(&self) -> &[isize] {
