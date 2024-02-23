@@ -87,7 +87,7 @@ impl LBFOptimizer {
                     Some(i_opt) => {
                         info!("Placing item {} at {}", i_opt.item_id, i_opt.d_transf);
                         self.problem.place_item(&i_opt);
-                        if self.problem.included_item_qtys().iter().sum::<usize>() >= ITEM_LIMIT {
+                        if self.problem.placed_item_qtys().sum::<usize>() >= ITEM_LIMIT {
                             break 'outer;
                         }
                     }

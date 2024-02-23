@@ -1,3 +1,4 @@
+use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
@@ -79,17 +80,17 @@ impl ProblemGeneric for Problem {
         }
     }
 
-    fn included_item_qtys(&self) -> Vec<usize> {
-        match self {
-            Problem::BP(bp) => bp.included_item_qtys(),
-            Problem::SP(sp) => sp.included_item_qtys(),
-        }
-    }
-
     fn bin_qtys(&self) -> &[usize] {
         match self {
             Problem::BP(bp) => bp.bin_qtys(),
             Problem::SP(sp) => sp.bin_qtys(),
+        }
+    }
+
+    fn instance(&self) -> &dyn InstanceGeneric {
+        match self {
+            Problem::BP(bp) => bp.instance(),
+            Problem::SP(sp) => sp.instance(),
         }
     }
 }

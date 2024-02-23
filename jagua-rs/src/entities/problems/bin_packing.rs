@@ -16,7 +16,7 @@ use crate::util::assertions;
 #[derive(Clone)]
 pub struct BPProblem {
     pub instance: BPInstance,
-    layouts: Vec<Layout>,
+    pub layouts: Vec<Layout>,
     template_layouts: Vec<Layout>,
     missing_item_qtys: Vec<isize>,
     bin_qtys: Vec<usize>,
@@ -154,7 +154,7 @@ impl ProblemGeneric for BPProblem {
 
     fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution {
         let id = self.next_solution_id();
-        let included_item_qtys = self.included_item_qtys();
+        let included_item_qtys = self.placed_item_qtys().collect_vec();
         let bin_qtys = self.bin_qtys().to_vec();
         let layout_snapshots = match old_solution {
             Some(old_solution) => {
@@ -269,14 +269,12 @@ impl ProblemGeneric for BPProblem {
         &self.missing_item_qtys
     }
 
-    fn included_item_qtys(&self) -> Vec<usize> {
-        (0..self.missing_item_qtys().len())
-            .map(|i| (self.instance.item_qty(i) as isize - self.missing_item_qtys()[i]) as usize)
-            .collect_vec()
-    }
-
     fn bin_qtys(&self) -> &[usize] {
         &self.bin_qtys
+    }
+
+    fn instance(&self) -> &dyn InstanceGeneric {
+        &self.instance
     }
 }
 

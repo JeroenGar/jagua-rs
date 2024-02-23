@@ -22,7 +22,7 @@ use crate::util::config::CDEConfig;
 #[derive(Clone)]
 pub struct SPProblem {
     pub instance: SPInstance,
-    layout: Layout,
+    pub layout: Layout,
     strip_height: f64,
     strip_width: f64,
     missing_item_qtys: Vec<isize>,
@@ -116,7 +116,7 @@ impl ProblemGeneric for SPProblem {
 
     fn create_solution(&mut self, _old_solution: &Option<Solution>) -> Solution {
         let id = self.next_solution_id();
-        let included_item_qtys = self.included_item_qtys();
+        let included_item_qtys = self.placed_item_qtys().collect_vec();
         let bin_qtys = self.bin_qtys().to_vec();
         let layout_snapshots = vec![self.layout.create_layout_snapshot()];
         let target_item_qtys = self.instance.items.iter().map(|(_, qty)| *qty).collect_vec();
@@ -154,18 +154,16 @@ impl ProblemGeneric for SPProblem {
         &self.missing_item_qtys
     }
 
-    fn included_item_qtys(&self) -> Vec<usize> {
-        (0..self.missing_item_qtys().len())
-            .map(|i| (self.instance.item_qty(i) as isize - self.missing_item_qtys()[i]) as usize)
-            .collect_vec()
-    }
-
     fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
         iter::empty::<LayoutIndex>()
     }
 
     fn bin_qtys(&self) -> &[usize] {
         &[0]
+    }
+
+    fn instance(&self) -> &dyn InstanceGeneric {
+        &self.instance
     }
 }
 
