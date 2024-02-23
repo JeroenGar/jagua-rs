@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use itertools::Itertools;
 
 use crate::entities::instances::bin_packing::BPInstance;
@@ -22,8 +20,8 @@ pub struct BPProblem {
     bin_qtys: Vec<usize>,
     layout_id_counter: usize,
     solution_id_counter: usize,
-    unchanged_layouts: Vec<usize>,
-    unchanged_layouts_solution_id: Option<usize>,
+    unmodified_layout_ids: Vec<usize>,
+    unmodified_layouts_ref_solution: Option<usize>,
     uncommitted_removed_layouts: Vec<Layout>,
 }
 
@@ -48,14 +46,14 @@ impl BPProblem {
             bin_qtys,
             layout_id_counter,
             solution_id_counter: 0,
-            unchanged_layouts,
-            unchanged_layouts_solution_id,
+            unmodified_layout_ids: unchanged_layouts,
+            unmodified_layouts_ref_solution: unchanged_layouts_solution_id,
             uncommitted_removed_layouts,
         }
     }
 
     pub fn remove_layout(&mut self, layout_index: LayoutIndex) {
-        self.unregister_layout(layout_index);
+        self.deregister_layout(layout_index);
     }
 
     pub fn register_layout(&mut self, layout: Layout) -> LayoutIndex {
@@ -69,14 +67,14 @@ impl BPProblem {
         LayoutIndex::Real(self.layouts.len() - 1)
     }
 
-    pub fn unregister_layout(&mut self, layout_index: LayoutIndex) {
+    pub fn deregister_layout(&mut self, layout_index: LayoutIndex) {
         match layout_index {
             LayoutIndex::Real(i) => {
                 let layout = self.layouts.remove(i);
                 self.layout_has_changed(layout.id());
-                self.unregister_bin(layout.bin().id);
+                self.deregister_bin(layout.bin().id);
                 layout.placed_items().iter().for_each(
-                    |v| { self.unregister_included_item(v.item_id()) });
+                    |v| { self.deregister_included_item(v.item_id()) });
                 self.uncommitted_removed_layouts.push(layout);
             }
             LayoutIndex::Template(_) => unreachable!("cannot remove template layout")
@@ -88,9 +86,9 @@ impl BPProblem {
         self.layout_id_counter
     }
 
-    fn reset_unchanged_layouts(&mut self, unchanged_layouts_solution_id: usize) {
-        self.unchanged_layouts = self.layouts.iter().map(|l| l.id()).collect();
-        self.unchanged_layouts_solution_id = Some(unchanged_layouts_solution_id);
+    fn reset_unmodified_layouts(&mut self, ref_solution_id: usize) {
+        self.unmodified_layout_ids = self.layouts.iter().map(|l| l.id()).collect();
+        self.unmodified_layouts_ref_solution = Some(ref_solution_id);
     }
 
     fn register_bin(&mut self, bin_id: usize) {
@@ -98,14 +96,14 @@ impl BPProblem {
         self.bin_qtys[bin_id] -= 1
     }
 
-    fn unregister_bin(&mut self, bin_id: usize) {
+    fn deregister_bin(&mut self, bin_id: usize) {
         self.bin_qtys[bin_id] += 1
     }
 
     fn layout_has_changed(&mut self, l_id: usize) {
-        let index = self.unchanged_layouts.iter().position(|v| *v == l_id);
+        let index = self.unmodified_layout_ids.iter().position(|v| *v == l_id);
         if let Some(index) = index {
-            self.unchanged_layouts.remove(index);
+            self.unmodified_layout_ids.remove(index);
         }
     }
 }
@@ -144,11 +142,11 @@ impl ProblemGeneric for BPProblem {
                 layout.remove_item(pi_uid, commit_instantly);
                 if layout.is_empty() {
                     //if layout is empty, remove it
-                    self.unregister_layout(layout_index);
+                    self.deregister_layout(layout_index);
                 }
-                self.unregister_included_item(pi_uid.item_id);
+                self.deregister_included_item(pi_uid.item_id);
             }
-            LayoutIndex::Template(_) => unreachable!("cannot remove item from template layout")
+            LayoutIndex::Template(_) => panic!("cannot remove item from template layout")
         }
     }
 
@@ -158,10 +156,12 @@ impl ProblemGeneric for BPProblem {
         let bin_qtys = self.bin_qtys().to_vec();
         let layout_snapshots = match old_solution {
             Some(old_solution) => {
-                assert_eq!(old_solution.id, self.unchanged_layouts_solution_id.unwrap());
+                assert_eq!(old_solution.id, self.unmodified_layouts_ref_solution.unwrap());
                 self.layouts.iter_mut().map(|l| {
-                    match self.unchanged_layouts.contains(&l.id()) {
+                    match self.unmodified_layout_ids.contains(&l.id()) {
+                        //layout is unchanged with respect to the solution, clone the snapshot from the solution
                         true => old_solution.layout_snapshots.iter().find(|sl| sl.id == l.id()).unwrap().clone(),
+                        //layout was changed, create a new snapshot
                         false => l.create_layout_snapshot()
                     }
                 }).collect()
@@ -174,57 +174,61 @@ impl ProblemGeneric for BPProblem {
         let target_item_qtys = self.instance.items().iter().map(|(_, qty)| *qty).collect_vec();
 
         let solution = Solution::new(id, layout_snapshots, self.usage(), included_item_qtys, target_item_qtys, bin_qtys);
-
         debug_assert!(assertions::problem_matches_solution(self, &solution));
-        self.reset_unchanged_layouts(solution.id);
+
+        self.reset_unmodified_layouts(solution.id);
 
         solution
     }
 
     fn restore_to_solution(&mut self, solution: &Solution) {
-        match self.unchanged_layouts_solution_id == Some(solution.id) {
+        match Some(solution.id) == self.unmodified_layouts_ref_solution {
+            false => {
+                //partial restore is impossible, rebuild everything from scratch
+                self.layouts.clear();
+                for sl in solution.layout_snapshots.iter() {
+                    let layout = Layout::new_from_stored(sl.id, sl);
+                    self.layouts.push(layout);
+                }
+            }
             true => {
-                //A partial restore is possible.
-                //TODO: hashset here is probably slower than just using a (sorted) vector
-                let mut layout_ids_in_problem = HashSet::new();
-                let mut layout_ids_not_in_solution = vec![];
+                //id of solution matches the id of the solution on which unchanged_layouts is based
+                //partial restore is possible.
+                let mut ids_in_prob_in_sol = vec![];
+                let mut ids_in_prob_not_sol = vec![];
+                //For all current layouts, check whether they occur in the solution
                 for layout in self.layouts.iter_mut() {
-                    //For all layouts in the problem, check which ones occur in the solution
                     match solution.layout_snapshots.iter().position(|sl| sl.id == layout.id()) {
+                        None => ids_in_prob_not_sol.push(layout.id()),
                         Some(i) => {
-                            //layout is present in the solution
-                            match self.unchanged_layouts.contains(&layout.id()) {
-                                true => {
-                                    //the layout is unchanged with respect to the solution, nothing needs to change
-                                }
-                                false => {
-                                    //layout was changed, needs to be restored
-                                    layout.restore(&solution.layout_snapshots[i]);
-                                }
+                            //occurs in both, restore if modified, otherwise leave it as is
+                            if !self.unmodified_layout_ids.contains(&layout.id()) {
+                                layout.restore(&solution.layout_snapshots[i]);
                             }
-                            layout_ids_in_problem.insert(layout.id());
-                        }
-                        None => {
-                            //layout is not present in the solution, remove it
-                            layout_ids_not_in_solution.push(layout.id());
+                            ids_in_prob_in_sol.push(layout.id());
                         }
                     }
                 }
-                layout_ids_not_in_solution.iter().for_each(|id| { self.layouts.retain(|l| l.id() != *id); });
+                //Remove all layouts not present in the solution
+                ids_in_prob_not_sol.iter().for_each(|id| { self.layouts.retain(|l| l.id() != *id); });
+
+                //Sort the layout ids so we can use binary search
+                ids_in_prob_in_sol.sort();
 
                 //Some layouts are present in the solution, but not in the problem
                 for sl in solution.layout_snapshots.iter() {
-                    if !layout_ids_in_problem.contains(&sl.id) {
-                        //It is possible they are in the uncommitted_removed_layouts
-                        match self.uncommitted_removed_layouts.iter().position(|l| l.id() == sl.id) {
+                    match ids_in_prob_in_sol.binary_search(&sl.id) {
+                        Ok(_) => (), //Already present
+                        Err(_) => match self.uncommitted_removed_layouts.iter().position(|l| l.id() == sl.id) {
                             Some(i) => {
-                                //original layout is still present, restore it and add it to the problem
+                                //Not present in problem, but still present in uncommitted_removed_layouts
+                                //Restore it from there
                                 let mut layout = self.uncommitted_removed_layouts.swap_remove(i);
                                 layout.restore(sl);
                                 self.layouts.push(layout);
                             }
                             None => {
-                                //If not, the layout will have to be rebuilt from scratch
+                                //Rebuild from scratch
                                 let layout = Layout::new_from_stored(sl.id, sl);
                                 self.layouts.push(layout);
                             }
@@ -232,23 +236,18 @@ impl ProblemGeneric for BPProblem {
                     }
                 }
             }
-            false => {
-                //The id of the solution does not match unchanged_layouts_solution_id, a partial restore is not possible
-                self.layouts.clear();
-                for sl in solution.layout_snapshots.iter() {
-                    let layout = Layout::new_from_stored(sl.id, sl);
-                    self.layouts.push(layout);
-                }
-            }
         }
 
-        self.missing_item_qtys.iter_mut().enumerate().for_each(|(i, qty)| {
-            *qty = (self.instance.item_qty(i) - solution.placed_item_qtys[i]) as isize
-        });
-        self.bin_qtys.clone_from_slice(&solution.bin_qtys);
-        self.uncommitted_removed_layouts.clear();
+        //Restore missing item quantities to the state of the solution
+        self.missing_item_qtys.iter_mut().enumerate()
+            .for_each(|(i, missing_qty)| {
+                *missing_qty = (self.instance.item_qty(i) - solution.placed_item_qtys[i]) as isize
+            });
 
-        self.reset_unchanged_layouts(solution.id);
+        self.bin_qtys.clone_from_slice(&solution.bin_qtys);
+
+        self.uncommitted_removed_layouts.clear();
+        self.reset_unmodified_layouts(solution.id);
 
         debug_assert!(assertions::problem_matches_solution(self, solution));
     }

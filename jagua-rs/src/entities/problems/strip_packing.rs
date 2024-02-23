@@ -111,7 +111,7 @@ impl ProblemGeneric for SPProblem {
     fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool) {
         assert_eq!(layout_index, LayoutIndex::Real(0), "strip packing problems only have a single layout");
         self.layout.remove_item(pi_uid, commit_instantly);
-        self.unregister_included_item(pi_uid.item_id);
+        self.deregister_included_item(pi_uid.item_id);
     }
 
     fn create_solution(&mut self, _old_solution: &Option<Solution>) -> Solution {

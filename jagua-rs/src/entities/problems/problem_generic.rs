@@ -1,6 +1,6 @@
 use std::borrow::Borrow;
-use crate::entities::instances::instance_generic::InstanceGeneric;
 
+use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
@@ -36,17 +36,18 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     fn missing_item_qtys(&self) -> &[isize];
 
     /// The quantity of each item that is currently placed in the problem instance, indexed by item id.
-    fn placed_item_qtys(&self) -> impl Iterator<Item=usize>{
+    fn placed_item_qtys(&self) -> impl Iterator<Item=usize> {
         self.missing_item_qtys().iter().enumerate()
             .map(|(i, missing_qty)| (self.instance().item_qty(i) as isize - missing_qty) as usize)
     }
 
     fn usage(&mut self) -> f64 {
-        let (total_bin_area, total_used_area) = self.layouts_mut().iter_mut().fold((0.0, 0.0), |acc, l| {
-            let bin_area = l.bin().area;
-            let used_area = bin_area * l.usage();
-            (acc.0 + bin_area, acc.1 + used_area)
-        });
+        let (total_bin_area, total_used_area) = self.layouts_mut().iter_mut()
+            .fold((0.0, 0.0), |acc, l| {
+                let bin_area = l.bin().area;
+                let used_area = bin_area * l.usage();
+                (acc.0 + bin_area, acc.1 + used_area)
+            });
         total_used_area / total_bin_area
     }
 
@@ -96,7 +97,7 @@ pub(super) mod private {
             self.missing_item_qtys_mut()[item_id] -= 1;
         }
 
-        fn unregister_included_item(&mut self, item_id: usize) {
+        fn deregister_included_item(&mut self, item_id: usize) {
             self.missing_item_qtys_mut()[item_id] += 1;
         }
     }

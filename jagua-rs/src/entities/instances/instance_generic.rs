@@ -12,6 +12,5 @@ pub trait InstanceGeneric {
     fn total_item_qty(&self) -> usize{
         self.items().iter().map(|(_, qty)| qty).sum()
     }
-
     fn item_area(&self) -> f64;
 }
