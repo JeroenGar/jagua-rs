@@ -1,4 +1,4 @@
-# Jagua-rs
+# Jagua-rs 🐆
 
 This crate contains everything necessary to solve 2D irregular cutting and packing problems without the combinatorial decision-making (i.e. which items to place where).
 
