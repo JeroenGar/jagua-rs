@@ -9,7 +9,7 @@ use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
 use jagua_rs::geometry::transformation::Transformation;
 
-use crate::lbf_cost::LBFCost;
+use crate::lbf_cost::LBFPlacingCost;
 use crate::samplers::uniform_rect_sampler::UniformAARectSampler;
 
 pub struct HPGSampler<'a> {
@@ -68,9 +68,9 @@ impl<'a> HPGSampler<'a> {
         self.pretransform.clone().transform_from_decomposed(&sample)
     }
 
-    pub fn tighten_x_bound(&mut self, best: &LBFCost){
+    pub fn tighten_x_bound(&mut self, x_max: f64) {
         let poi_rad = self.item.shape.poi.radius;
-        let new_x_bound = *best.x_max - poi_rad; //we need at least one POI radius of space to the left of the best solution
+        let new_x_bound = x_max - poi_rad; //we need at least one POI radius of space to the left of the best solution
 
         if new_x_bound < self.x_bound {
             debug!("tightening x bound from {} to {}", self.x_bound, new_x_bound);

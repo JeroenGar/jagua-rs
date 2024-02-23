@@ -1,38 +1,20 @@
-use std::cmp::Ordering;
-use std::fmt::{Display, Formatter};
-
 use ordered_float::NotNan;
 
 use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 
-#[derive(PartialEq)]
-pub struct LBFCost {
-    pub x_max: NotNan<f64>,
-    pub y_max: NotNan<f64>,
-}
+const X_MULTIPLIER: f64 = 10.0;
 
-impl LBFCost {
-    pub fn new(shape: &SimplePolygon) -> Self {
-        let x_max = shape.bbox().x_max;
-        let y_max = shape.bbox().y_max;
-        Self {
-            x_max: NotNan::new(x_max).unwrap(),
-            y_max: NotNan::new(y_max).unwrap(),
-        }
-    }
+/// The cost LBF assigns to a placing option.
+/// A pure lexicographic comparison would lead to weird results due to continuous values,
+//  instead we opted for a weighted sum of the x_max and y_max of the shape,
+//  with the horizontal dimension being more important.
+#[derive(PartialEq, PartialOrd, Copy, Clone, Debug)]
+pub struct LBFPlacingCost(NotNan<f64>);
 
-    /// Compare two LBFCosts by their x_max and y_max values, where
-    /// x_max is weighted more than y_max
-    pub fn cmp(&self, other: &LBFCost) -> Ordering {
-        let x_mltp = NotNan::new(10.0).unwrap();
-
-        (x_mltp * self.x_max + self.y_max).cmp(&(x_mltp * other.x_max + other.y_max))
-    }
-}
-
-impl Display for LBFCost {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({:.5}, {:.5})", self.x_max, self.y_max)
+impl LBFPlacingCost {
+    pub fn from_shape(shape: &SimplePolygon) -> Self {
+        let cost = shape.bbox().x_max * X_MULTIPLIER + shape.bbox().y_max;
+        LBFPlacingCost(NotNan::new(cost).expect("cost is NaN"))
     }
 }

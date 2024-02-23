@@ -24,7 +24,7 @@ use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 
 use crate::config::Config;
-use crate::lbf_cost::LBFCost;
+use crate::lbf_cost::LBFPlacingCost;
 use crate::samplers::hpg_sampler::HPGSampler;
 use crate::samplers::ls_sampler::LSSampler;
 
@@ -165,18 +165,18 @@ pub fn sample_layout(problem: &Problem, layout_index: LayoutIndex, item: &Item, 
                 let transf = sampler.sample(rng);
                 if !layout.cde().surrogate_collides(surrogate, &transf, entities_to_ignore.as_ref()) {
                     buffer_shape.transform_from(&shape, &transf);
-                    let cost = LBFCost::new(&buffer_shape);
+                    let cost = LBFPlacingCost::from_shape(&buffer_shape);
 
                     //only validate the sample if it possibly can replace the current best
                     let worth_testing = best.as_ref()
-                        .map_or(true, |(_, best_cost)| cost.cmp(best_cost) == Ordering::Less);
+                        .map_or(true, |(_, best_cost)| cost.partial_cmp(best_cost).unwrap() == Ordering::Less);
 
                     if worth_testing && !layout.cde().shape_collides(&buffer_shape, entities_to_ignore.as_ref()) {
                         //sample is a valid option
                         let d_transf = transf.decompose();
                         let i_opt = PlacingOption { layout_index, item_id, transf, d_transf };
-                        sampler.tighten_x_bound(&cost);
-                        debug!("new random best: {}", &cost);
+                        sampler.tighten_x_bound(buffer_shape.bbox().x_max);
+                        debug!("new random best: {}", &i_opt.d_transf);
                         best = Some((i_opt, cost));
                     }
                 }
@@ -206,18 +206,18 @@ pub fn sample_layout(problem: &Problem, layout_index: LayoutIndex, item: &Item, 
             let transf = ls_sampler.sample(rng);
             if !layout.cde().surrogate_collides(surrogate, &transf, entities_to_ignore.as_ref()) {
                 buffer_shape.transform_from(&shape, &transf);
-                let cost = LBFCost::new(&buffer_shape);
+                let cost = LBFPlacingCost::from_shape(&buffer_shape);
 
                 //only validate the sample if it possibly can replace the current best
                 let worth_testing = best.as_ref()
-                    .map_or(true, |(_, best_cost)| cost.cmp(best_cost) == Ordering::Less);
+                    .map_or(true, |(_, best)| cost < *best);
 
                 if worth_testing && !layout.cde().shape_collides(&buffer_shape, entities_to_ignore.as_ref()) {
                     //sample is a valid option
                     let d_transf = transf.decompose();
                     ls_sampler.set_mean(&d_transf);
                     let i_opt = PlacingOption { layout_index, item_id, transf, d_transf };
-                    debug!("new ls best: {}", &cost);
+                    debug!("new ls best: {}", i_opt.d_transf);
                     best = Some((i_opt, cost));
                 }
             }
