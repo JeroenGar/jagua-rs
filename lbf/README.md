@@ -1,4 +1,4 @@
-# LBF
+# LBF ↙️
 A left-bottom-fill heuristic for 2D irregular cutting and packing problems using the `jagua-rs` collision detection engine.
 
 This heuristic serves as a reference implementation of how to use the collision detection engine. \
