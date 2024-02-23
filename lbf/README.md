@@ -40,6 +40,9 @@ Two types of files are written in the solution folder: the solution in JSON form
 
 *TODO*
 
+*Note: Unfortunately, the SVG standard does not support strokes drawn purely inside (or outside) shapes.
+Items might therefore sometimes falsely appear to be (very slightly) colliding in the SVG visualizations.*
+
 ## Config JSON
 
 If no config file is provided, the default configuration is used.
