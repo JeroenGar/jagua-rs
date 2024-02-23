@@ -98,13 +98,14 @@ impl SPProblem {
 }
 
 impl ProblemGeneric for SPProblem {
-    fn place_item(&mut self, i_opt: &PlacingOption) {
+    fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex {
         assert_eq!(i_opt.layout_index, LayoutIndex::Existing(0), "strip packing problems only have a single layout");
         let item_id = i_opt.item_id;
         let item = self.instance.item(item_id);
         self.layout.place_item(item, &i_opt.d_transf);
 
         self.register_included_item(item_id);
+        LayoutIndex::Existing(0)
     }
 
     fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool) {

@@ -11,6 +11,7 @@ use crate::util::assertions;
 ///It is a mutable representation, and can be modified by placing or removing items.
 #[derive(Clone)]
 pub struct Layout {
+    /// The unique identifier of the layout, only used for restoring from a snapshot.
     id: usize,
     bin: Bin,
     placed_items: Vec<PlacedItem>,

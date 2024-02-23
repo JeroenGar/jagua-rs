@@ -9,7 +9,8 @@ use crate::entities::solution::Solution;
 pub trait ProblemGeneric: ProblemGenericPrivate {
 
     /// Places an item into the problem instance according to the given `PlacingOption`.
-    fn place_item(&mut self, i_opt: &PlacingOption);
+    /// Returns the index of the layout where the item was placed.
+    fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex;
 
     /// Removes an item with a specific `PlacedItemUID` from a specific `Layout`
     fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool);

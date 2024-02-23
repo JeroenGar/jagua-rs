@@ -23,7 +23,7 @@ pub enum Problem {
 }
 
 impl ProblemGeneric for Problem {
-    fn place_item(&mut self, i_opt: &PlacingOption) {
+    fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex{
         match self {
             Problem::BP(bp) => bp.place_item(i_opt),
             Problem::SP(sp) => sp.place_item(i_opt),

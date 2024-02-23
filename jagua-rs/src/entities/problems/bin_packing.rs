@@ -17,6 +17,7 @@ use crate::util::assertions;
 pub struct BPProblem {
     pub instance: BPInstance,
     layouts: Vec<Layout>,
+    // TODO: document empty layouts
     empty_layouts: Vec<Layout>,
     missing_item_qtys: Vec<isize>,
     bin_qtys: Vec<usize>,
@@ -30,9 +31,9 @@ pub struct BPProblem {
 impl BPProblem {
     pub fn new(instance: BPInstance) -> Self {
         let missing_item_qtys = instance.items.iter().map(|(_, qty)| *qty as isize).collect_vec();
-        let bin_qtys =  instance.bins.iter().map(|(_, qty)| *qty).collect_vec();
+        let bin_qtys = instance.bins.iter().map(|(_, qty)| *qty).collect_vec();
         let layouts = vec![];
-        let empty_layouts =  instance.bins.iter().enumerate().map(|(i, (bin, _))| {
+        let empty_layouts = instance.bins.iter().enumerate().map(|(i, (bin, _))| {
             Layout::new(i, bin.clone())
         }).collect_vec();
         let layout_id_counter = empty_layouts.len();
@@ -58,7 +59,7 @@ impl BPProblem {
         self.unregister_layout(layout_index);
     }
 
-    pub fn register_layout(&mut self, layout: Layout) {
+    pub fn register_layout(&mut self, layout: Layout) -> LayoutIndex {
         self.register_bin(layout.bin().id);
         layout.placed_items().iter().for_each(
             |p_i| {
@@ -66,6 +67,7 @@ impl BPProblem {
             }
         );
         self.layouts.push(layout);
+        LayoutIndex::Existing(self.layouts.len() - 1)
     }
 
     pub fn unregister_layout(&mut self, layout_index: LayoutIndex) {
@@ -110,26 +112,29 @@ impl BPProblem {
 }
 
 impl ProblemGeneric for BPProblem {
-    fn place_item(&mut self, i_opt: &PlacingOption) {
-        let item_id = i_opt.item_id;
-        let layout = match &i_opt.layout_index {
-            LayoutIndex::Existing(i) => {
-                &mut self.layouts[*i]
-            }
+    fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex {
+        let layout_index = match &i_opt.layout_index {
+            LayoutIndex::Existing(i) => LayoutIndex::Existing(*i),
             LayoutIndex::Empty(i) => {
+                //Layout is empty, clone it and add it to `layouts`
                 let next_layout_id = self.next_layout_id();
                 let empty_layout = &self.empty_layouts[*i];
                 let copy = empty_layout.clone_with_id(next_layout_id);
-                self.register_layout(copy);
-                self.layouts.last_mut().unwrap()
+                self.register_layout(copy)
             }
         };
-        let item = self.instance.item(item_id);
+        let layout = match layout_index {
+            LayoutIndex::Existing(i) => &mut self.layouts[i],
+            LayoutIndex::Empty(_) => unreachable!("cannot place item in empty layout")
+        };
+        let item = self.instance.item(i_opt.item_id);
         layout.place_item(item, &i_opt.d_transf);
         let layout_id = layout.id();
 
-        self.register_included_item(item_id);
+        self.register_included_item(i_opt.item_id);
         self.layout_has_changed(layout_id);
+
+        layout_index
     }
 
     fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool) {
