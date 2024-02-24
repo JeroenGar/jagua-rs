@@ -3,8 +3,8 @@ use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
+use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::solution::Solution;
 
@@ -31,7 +31,12 @@ impl ProblemGeneric for Problem {
         }
     }
 
-    fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool) {
+    fn remove_item(
+        &mut self,
+        layout_index: LayoutIndex,
+        pi_uid: &PlacedItemUID,
+        commit_instantly: bool,
+    ) {
         match self {
             Problem::BP(bp) => bp.remove_item(layout_index, pi_uid, commit_instantly),
             Problem::SP(sp) => sp.remove_item(layout_index, pi_uid, commit_instantly),

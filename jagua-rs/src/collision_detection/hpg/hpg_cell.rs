@@ -32,7 +32,8 @@ impl HPGCell {
         //Calculate the exact distance to the edge bin (add new method in shape trait to do this)
         //For each of the distinct quality zones in a bin, calculate the distance to the closest zone
         let centroid = bbox.centroid();
-        let radius = f64::sqrt(f64::powi(bbox.width() / 2.0, 2) + f64::powi(bbox.height() / 2.0, 2));
+        let radius =
+            f64::sqrt(f64::powi(bbox.width() / 2.0, 2) + f64::powi(bbox.height() / 2.0, 2));
 
         let mut static_uni_haz_prox = (Proximity::default(), HazardEntity::BinExterior);
         let mut qz_haz_prox = [Proximity::default(); N_QUALITIES];
@@ -41,7 +42,7 @@ impl HPGCell {
             let (pos, distance) = hazard.shape.distance_from_border(&centroid);
             let prox = match pos == hazard.entity.position() {
                 true => Proximity::new(GeoPosition::Interior, distance), //cell in hazard, negative distance
-                false => Proximity::new(GeoPosition::Exterior, distance)
+                false => Proximity::new(GeoPosition::Exterior, distance),
             };
             match &hazard.entity {
                 HazardEntity::BinExterior | HazardEntity::BinHole { .. } => {
@@ -52,7 +53,7 @@ impl HPGCell {
                 HazardEntity::QualityZoneInferior { quality, .. } => {
                     qz_haz_prox[*quality] = qz_haz_prox[*quality].min(prox);
                 }
-                _ => panic!("Unexpected hazard entity type")
+                _ => panic!("Unexpected hazard entity type"),
             }
         }
 
@@ -67,7 +68,8 @@ impl HPGCell {
     }
 
     pub fn register_hazards<'a, I>(&mut self, to_register: I)
-        where I: Iterator<Item=&'a Hazard>
+    where
+        I: Iterator<Item = &'a Hazard>,
     {
         //For each item to register, calculate the distance from the cell to its bounding circle of the poles.
         //negative distance if inside of circle.
@@ -84,12 +86,16 @@ impl HPGCell {
                         (haz, Some(proximity))
                     }
                 }
-            }).collect();
+            })
+            .collect();
 
         //Go over the items in order of the closest bounding circle
         while !bounding_pole_distances.is_empty() {
-            let (index, (to_register, bounding_proximity)) = bounding_pole_distances.iter().enumerate()
-                .min_by_key(|(_, (_, d))| d).unwrap();
+            let (index, (to_register, bounding_proximity)) = bounding_pole_distances
+                .iter()
+                .enumerate()
+                .min_by_key(|(_, (_, d))| d)
+                .unwrap();
 
             let current_proximity = self.universal_hazard_proximity().0;
 
@@ -118,8 +124,12 @@ impl HPGCell {
 
         //For dynamic hazards, the surrogate poles are used to calculate the distance to the hazard (overestimation, but fast)
         let haz_prox = match to_register.entity.position() {
-            GeoPosition::Interior => distance_to_surrogate_poles_border(self, &to_register.shape.surrogate().poles),
-            GeoPosition::Exterior => unreachable!("No implementation yet for dynamic exterior hazards")
+            GeoPosition::Interior => {
+                distance_to_surrogate_poles_border(self, &to_register.shape.surrogate().poles)
+            }
+            GeoPosition::Exterior => {
+                unreachable!("No implementation yet for dynamic exterior hazards")
+            }
         };
 
         match haz_prox.cmp(&current_prox) {
@@ -129,7 +139,9 @@ impl HPGCell {
                 HPGCellUpdate::Affected
             }
             _ => {
-                if haz_prox.distance_from_border > current_prox.distance_from_border + 2.0 * self.radius {
+                if haz_prox.distance_from_border
+                    > current_prox.distance_from_border + 2.0 * self.radius
+                {
                     HPGCellUpdate::Boundary
                 } else {
                     HPGCellUpdate::Unaffected
@@ -138,8 +150,14 @@ impl HPGCell {
         }
     }
 
-    pub fn deregister_hazards<'a, 'b, I, J>(&mut self, mut to_deregister: J, remaining: I) -> HPGCellUpdate
-        where I: Iterator<Item=&'a Hazard>, J: Iterator<Item=&'b HazardEntity>
+    pub fn deregister_hazards<'a, 'b, I, J>(
+        &mut self,
+        mut to_deregister: J,
+        remaining: I,
+    ) -> HPGCellUpdate
+    where
+        I: Iterator<Item = &'a Hazard>,
+        J: Iterator<Item = &'b HazardEntity>,
     {
         if to_deregister.contains(&self.uni_haz_prox.1) {
             //closest current hazard has to be deregistered
@@ -165,7 +183,7 @@ impl HPGCell {
     }
 
     pub fn could_accommodate_item(&self, item: &Item) -> bool {
-        let haz_prox : f64 = (&self.hazard_proximity(item.base_quality)).into();
+        let haz_prox: f64 = (&self.hazard_proximity(item.base_quality)).into();
         let item_poi_radius = item.shape.poi.radius;
 
         item_poi_radius < haz_prox + self.radius
@@ -176,7 +194,7 @@ impl HPGCell {
         let mut haz_prox = self.uni_haz_prox.0;
         let relevant_qualities = match quality_level {
             Some(quality_level) => 0..quality_level,
-            None => 0..N_QUALITIES
+            None => 0..N_QUALITIES,
         };
 
         for quality in relevant_qualities {
@@ -201,10 +219,12 @@ impl HPGCell {
 }
 
 pub fn distance_to_surrogate_poles_border(hp_cell: &HPGCell, poles: &[Circle]) -> Proximity {
-    poles.iter()
+    poles
+        .iter()
         .map(|p| p.distance_from_border(&hp_cell.centroid))
         .map(|(pos, dist)| Proximity::new(pos, dist.abs()))
-        .min().unwrap()
+        .min()
+        .unwrap()
 }
 
 ///All possible results of an update on a cell in the `HazardProximityGrid`

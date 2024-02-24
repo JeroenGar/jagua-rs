@@ -19,18 +19,30 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn new(id: usize, mut shape: SimplePolygon, value: u64, allowed_rotation: AllowedRotation,
-               centering_transform: Transformation, base_quality: Option<usize>, surrogate_config: SPSurrogateConfig) -> Item {
+    pub fn new(
+        id: usize,
+        mut shape: SimplePolygon,
+        value: u64,
+        allowed_rotation: AllowedRotation,
+        centering_transform: Transformation,
+        base_quality: Option<usize>,
+        surrogate_config: SPSurrogateConfig,
+    ) -> Item {
         shape.generate_surrogate(surrogate_config);
         let shape = Arc::new(shape);
         let hazard_filter = base_quality.map(|q| QZHazardFilter { cutoff_quality: q });
-        Item { id, shape, allowed_rotation, base_quality, value, centering_transform, hazard_filter }
+        Item {
+            id,
+            shape,
+            allowed_rotation,
+            base_quality,
+            value,
+            centering_transform,
+            hazard_filter,
+        }
     }
 
     pub fn clone_with_id(&self, id: usize) -> Item {
-        Item {
-            id,
-            ..self.clone()
-        }
+        Item { id, ..self.clone() }
     }
 }

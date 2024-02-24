@@ -9,15 +9,17 @@ pub trait HazardFilter {
     fn is_irrelevant(&self, entity: &HazardEntity) -> bool;
 }
 
-
 /// Returns the entities that are deemed irrelevant by the given filter from a set of `Hazard`s
-pub fn generate_irrelevant_hazards<'a>(filter: &impl HazardFilter, hazards: impl Iterator<Item=&'a Hazard>) -> Vec<HazardEntity> {
-    hazards.filter_map(|h| {
-        match filter.is_irrelevant(&h.entity){
+pub fn generate_irrelevant_hazards<'a>(
+    filter: &impl HazardFilter,
+    hazards: impl Iterator<Item = &'a Hazard>,
+) -> Vec<HazardEntity> {
+    hazards
+        .filter_map(|h| match filter.is_irrelevant(&h.entity) {
             true => Some(h.entity.clone()),
-            false => None
-        }
-    }).collect_vec()
+            false => None,
+        })
+        .collect_vec()
 }
 
 /// Deems all hazards induced by the `Bin` as irrelevant.
@@ -53,8 +55,7 @@ impl HazardFilter for BinHazardFilter {
 
 impl<'a> HazardFilter for CombinedHazardFilter<'a> {
     fn is_irrelevant(&self, entity: &HazardEntity) -> bool {
-        self.filters.iter()
-            .any(|f| f.is_irrelevant(entity))
+        self.filters.iter().any(|f| f.is_irrelevant(entity))
     }
 }
 

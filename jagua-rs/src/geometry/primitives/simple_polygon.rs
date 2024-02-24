@@ -9,7 +9,9 @@ use ordered_float::NotNan;
 use crate::geometry::fail_fast::poi;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{
+    CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom,
+};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
@@ -33,10 +35,18 @@ impl SimplePolygon {
     pub fn new(mut points: Vec<Point>) -> Self {
         //Check if no two pair of consecutive points are identical
         if points.len() < 3 {
-            panic!("simple poly needs at least 3 points, but was only {} points", points.len());
+            panic!(
+                "simple poly needs at least 3 points, but was only {} points",
+                points.len()
+            );
         }
         //assert that there are no duplicate points
-        assert_eq!(points.iter().unique().count(), points.len(), "there are duplicate points in the poly: {:?}", points);
+        assert_eq!(
+            points.iter().unique().count(),
+            points.len(),
+            "there are duplicate points in the poly: {:?}",
+            points
+        );
 
         let mut area = SimplePolygon::calculate_area(&points);
 
@@ -84,7 +94,7 @@ impl SimplePolygon {
         Edge::new(Point::from(self.points[i]), self.points[j])
     }
 
-    pub fn edge_iter(&self) -> impl Iterator<Item=Edge> + '_ {
+    pub fn edge_iter(&self) -> impl Iterator<Item = Edge> + '_ {
         (0..self.number_of_points()).map(move |i| self.get_edge(i))
     }
 
@@ -97,11 +107,15 @@ impl SimplePolygon {
     }
 
     pub fn calculate_diameter(points: &[Point]) -> f64 {
-        let diameter = points.iter().tuple_combinations()
-            .map(|(&p1, &p2)| NotNan::new(
-                Edge::new(p1.into(), p2.into()).diameter()
-            ).expect("line length is NaN"))
-            .max().expect("could not determine shape diameter").into();
+        let diameter = points
+            .iter()
+            .tuple_combinations()
+            .map(|(&p1, &p2)| {
+                NotNan::new(Edge::new(p1.into(), p2.into()).diameter()).expect("line length is NaN")
+            })
+            .max()
+            .expect("could not determine shape diameter")
+            .into();
         diameter
     }
 
@@ -208,14 +222,22 @@ impl Shape for SimplePolygon {
     }
 }
 
-
 impl Transformable for SimplePolygon {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
         //destructuring pattern to ensure that the code is updated when the struct changes
-        let SimplePolygon { points, bbox, area: _, diameter: _, poi, surrogate } = self;
+        let SimplePolygon {
+            points,
+            bbox,
+            area: _,
+            diameter: _,
+            poi,
+            surrogate,
+        } = self;
 
         //transform all points of the simple poly
-        points.iter_mut().for_each(|p| { p.transform(t); });
+        points.iter_mut().for_each(|p| {
+            p.transform(t);
+        });
 
         poi.transform(t);
 
@@ -234,7 +256,14 @@ impl Transformable for SimplePolygon {
 impl TransformableFrom for SimplePolygon {
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self {
         //destructuring pattern to ensure that the code is updated when the struct changes
-        let SimplePolygon { points, bbox, area: _, diameter: _, poi, surrogate } = self;
+        let SimplePolygon {
+            points,
+            bbox,
+            area: _,
+            diameter: _,
+            poi,
+            surrogate,
+        } = self;
 
         for (p, ref_p) in points.iter_mut().zip(&reference.points) {
             p.transform_from(ref_p, t);
@@ -263,7 +292,6 @@ impl CollidesWith<Point> for SimplePolygon {
                 //Starting from the point to another point that is certainly outside the shape
                 let point_outside = Point(self.bbox.x_max + self.bbox.width(), point.1);
                 let ray = Edge::new(*point, point_outside);
-
 
                 let mut n_intersections = 0;
                 for edge in self.edge_iter() {
@@ -295,10 +323,11 @@ impl DistanceFrom<Point> for SimplePolygon {
     fn sq_distance(&self, point: &Point) -> f64 {
         match self.collides_with(point) {
             true => 0.0,
-            false => self.edge_iter()
+            false => self
+                .edge_iter()
                 .map(|edge| edge.sq_distance(point))
                 .min_by(|a, b| a.partial_cmp(b).unwrap())
-                .unwrap()
+                .unwrap(),
         }
     }
     fn distance(&self, point: &Point) -> f64 {
@@ -311,28 +340,30 @@ impl DistanceFrom<Point> for SimplePolygon {
     }
 
     fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, f64) {
-        let distance_to_border = self.edge_iter()
+        let distance_to_border = self
+            .edge_iter()
             .map(|edge| edge.sq_distance(point))
             .min_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap();
 
         match self.collides_with(point) {
             true => (GeoPosition::Interior, distance_to_border),
-            false => (GeoPosition::Exterior, distance_to_border)
+            false => (GeoPosition::Exterior, distance_to_border),
         }
     }
 }
 
-impl<T> From<T> for SimplePolygon where T: Borrow<AARectangle>{
+impl<T> From<T> for SimplePolygon
+where
+    T: Borrow<AARectangle>,
+{
     fn from(r: T) -> Self {
         let r = r.borrow();
-        SimplePolygon::new(
-            vec![
-                (r.x_min, r.y_min).into(),
-                (r.x_max, r.y_min).into(),
-                (r.x_max, r.y_max).into(),
-                (r.x_min, r.y_max).into(),
-            ]
-        )
+        SimplePolygon::new(vec![
+            (r.x_min, r.y_min).into(),
+            (r.x_max, r.y_min).into(),
+            (r.x_max, r.y_max).into(),
+            (r.x_min, r.y_max).into(),
+        ])
     }
 }

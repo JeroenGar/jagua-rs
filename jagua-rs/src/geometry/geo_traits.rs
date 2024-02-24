@@ -42,7 +42,6 @@ pub trait TransformableFrom: Transformable {
 
 /// Trait for shared properties of geometric primitives.
 pub trait Shape {
-
     /// Geometric center of the shape
     fn centroid(&self) -> Point;
 

@@ -5,8 +5,8 @@ use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
+use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::solution::Solution;
 use crate::util::assertions;
 
@@ -27,10 +27,17 @@ pub struct BPProblem {
 
 impl BPProblem {
     pub fn new(instance: BPInstance) -> Self {
-        let missing_item_qtys = instance.items.iter().map(|(_, qty)| *qty as isize).collect_vec();
+        let missing_item_qtys = instance
+            .items
+            .iter()
+            .map(|(_, qty)| *qty as isize)
+            .collect_vec();
         let bin_qtys = instance.bins.iter().map(|(_, qty)| *qty).collect_vec();
         let layouts = vec![];
-        let template_layouts = instance.bins.iter().enumerate()
+        let template_layouts = instance
+            .bins
+            .iter()
+            .enumerate()
             .map(|(i, (bin, _))| Layout::new(i, bin.clone()))
             .collect_vec();
         let layout_id_counter = template_layouts.len();
@@ -58,11 +65,10 @@ impl BPProblem {
 
     pub fn register_layout(&mut self, layout: Layout) -> LayoutIndex {
         self.register_bin(layout.bin().id);
-        layout.placed_items().iter().for_each(
-            |p_i| {
-                self.register_included_item(p_i.item_id())
-            }
-        );
+        layout
+            .placed_items()
+            .iter()
+            .for_each(|p_i| self.register_included_item(p_i.item_id()));
         self.layouts.push(layout);
         LayoutIndex::Real(self.layouts.len() - 1)
     }
@@ -73,11 +79,13 @@ impl BPProblem {
                 let layout = self.layouts.remove(i);
                 self.layout_has_changed(layout.id());
                 self.deregister_bin(layout.bin().id);
-                layout.placed_items().iter().for_each(
-                    |v| { self.deregister_included_item(v.item_id()) });
+                layout
+                    .placed_items()
+                    .iter()
+                    .for_each(|v| self.deregister_included_item(v.item_id()));
                 self.uncommitted_removed_layouts.push(layout);
             }
-            LayoutIndex::Template(_) => unreachable!("cannot remove template layout")
+            LayoutIndex::Template(_) => unreachable!("cannot remove template layout"),
         }
     }
 
@@ -122,7 +130,7 @@ impl ProblemGeneric for BPProblem {
         };
         let layout = match layout_index {
             LayoutIndex::Real(i) => &mut self.layouts[i],
-            LayoutIndex::Template(_) => unreachable!("cannot place item in template layout")
+            LayoutIndex::Template(_) => unreachable!("cannot place item in template layout"),
         };
         let item = self.instance.item(i_opt.item_id);
         layout.place_item(item, &i_opt.d_transf);
@@ -134,7 +142,12 @@ impl ProblemGeneric for BPProblem {
         layout_index
     }
 
-    fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool) {
+    fn remove_item(
+        &mut self,
+        layout_index: LayoutIndex,
+        pi_uid: &PlacedItemUID,
+        commit_instantly: bool,
+    ) {
         match layout_index {
             LayoutIndex::Real(i) => {
                 self.layout_has_changed(self.layouts[i].id());
@@ -146,7 +159,7 @@ impl ProblemGeneric for BPProblem {
                 }
                 self.deregister_included_item(pi_uid.item_id);
             }
-            LayoutIndex::Template(_) => panic!("cannot remove item from template layout")
+            LayoutIndex::Template(_) => panic!("cannot remove item from template layout"),
         }
     }
 
@@ -156,24 +169,49 @@ impl ProblemGeneric for BPProblem {
         let bin_qtys = self.bin_qtys().to_vec();
         let layout_snapshots = match old_solution {
             Some(old_solution) => {
-                assert_eq!(old_solution.id, self.unmodified_layouts_ref_solution.unwrap());
-                self.layouts.iter_mut().map(|l| {
-                    match self.unmodified_layout_ids.contains(&l.id()) {
-                        //layout is unchanged with respect to the solution, clone the snapshot from the solution
-                        true => old_solution.layout_snapshots.iter().find(|sl| sl.id == l.id()).unwrap().clone(),
-                        //layout was changed, create a new snapshot
-                        false => l.create_layout_snapshot()
-                    }
-                }).collect()
+                assert_eq!(
+                    old_solution.id,
+                    self.unmodified_layouts_ref_solution.unwrap()
+                );
+                self.layouts
+                    .iter_mut()
+                    .map(|l| {
+                        match self.unmodified_layout_ids.contains(&l.id()) {
+                            //layout is unchanged with respect to the solution, clone the snapshot from the solution
+                            true => old_solution
+                                .layout_snapshots
+                                .iter()
+                                .find(|sl| sl.id == l.id())
+                                .unwrap()
+                                .clone(),
+                            //layout was changed, create a new snapshot
+                            false => l.create_layout_snapshot(),
+                        }
+                    })
+                    .collect()
             }
-            None => {
-                self.layouts.iter_mut().map(|l| l.create_layout_snapshot()).collect()
-            }
+            None => self
+                .layouts
+                .iter_mut()
+                .map(|l| l.create_layout_snapshot())
+                .collect(),
         };
 
-        let target_item_qtys = self.instance.items().iter().map(|(_, qty)| *qty).collect_vec();
+        let target_item_qtys = self
+            .instance
+            .items()
+            .iter()
+            .map(|(_, qty)| *qty)
+            .collect_vec();
 
-        let solution = Solution::new(id, layout_snapshots, self.usage(), included_item_qtys, target_item_qtys, bin_qtys);
+        let solution = Solution::new(
+            id,
+            layout_snapshots,
+            self.usage(),
+            included_item_qtys,
+            target_item_qtys,
+            bin_qtys,
+        );
         debug_assert!(assertions::problem_matches_solution(self, &solution));
 
         self.reset_unmodified_layouts(solution.id);
@@ -198,7 +236,11 @@ impl ProblemGeneric for BPProblem {
                 let mut ids_in_prob_not_sol = vec![];
                 //For all current layouts, check whether they occur in the solution
                 for layout in self.layouts.iter_mut() {
-                    match solution.layout_snapshots.iter().position(|sl| sl.id == layout.id()) {
+                    match solution
+                        .layout_snapshots
+                        .iter()
+                        .position(|sl| sl.id == layout.id())
+                    {
                         None => ids_in_prob_not_sol.push(layout.id()),
                         Some(i) => {
                             //occurs in both, restore if modified, otherwise leave it as is
@@ -210,7 +252,9 @@ impl ProblemGeneric for BPProblem {
                     }
                 }
                 //Remove all layouts not present in the solution
-                ids_in_prob_not_sol.iter().for_each(|id| { self.layouts.retain(|l| l.id() != *id); });
+                ids_in_prob_not_sol.iter().for_each(|id| {
+                    self.layouts.retain(|l| l.id() != *id);
+                });
 
                 //Sort the layout ids so we can use binary search
                 ids_in_prob_in_sol.sort();
@@ -219,7 +263,11 @@ impl ProblemGeneric for BPProblem {
                 for sl in solution.layout_snapshots.iter() {
                     match ids_in_prob_in_sol.binary_search(&sl.id) {
                         Ok(_) => (), //Already present
-                        Err(_) => match self.uncommitted_removed_layouts.iter().position(|l| l.id() == sl.id) {
+                        Err(_) => match self
+                            .uncommitted_removed_layouts
+                            .iter()
+                            .position(|l| l.id() == sl.id)
+                        {
                             Some(i) => {
                                 //Not present in problem, but still present in uncommitted_removed_layouts
                                 //Restore it from there
@@ -232,14 +280,16 @@ impl ProblemGeneric for BPProblem {
                                 let layout = Layout::new_from_stored(sl.id, sl);
                                 self.layouts.push(layout);
                             }
-                        }
+                        },
                     }
                 }
             }
         }
 
         //Restore missing item quantities to the state of the solution
-        self.missing_item_qtys.iter_mut().enumerate()
+        self.missing_item_qtys
+            .iter_mut()
+            .enumerate()
             .for_each(|(i, missing_qty)| {
                 *missing_qty = (self.instance.item_qty(i) - solution.placed_item_qtys[i]) as isize
             });
@@ -276,7 +326,6 @@ impl ProblemGeneric for BPProblem {
         &self.instance
     }
 }
-
 
 impl ProblemGenericPrivate for BPProblem {
     fn next_solution_id(&mut self) -> usize {

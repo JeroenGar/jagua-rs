@@ -12,7 +12,6 @@ pub enum Instance {
     BP(BPInstance),
 }
 
-
 impl InstanceGeneric for Instance {
     fn items(&self) -> &[(Item, usize)] {
         match self {

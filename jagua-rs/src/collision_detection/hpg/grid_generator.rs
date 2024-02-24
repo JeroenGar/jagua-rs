@@ -73,13 +73,18 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
     cells
 }
 
-fn distance_to_hazard<'a, I>(point: &Point, hazards: I) -> f64 where I: Iterator<Item=&'a Hazard> {
-    hazards.map(|haz| {
-        let (pos, prox) = haz.shape.distance_from_border(point);
-        match pos == haz.entity.position() {
-            true => -prox, //cell in hazard, negative distance
-            false => prox
-        }
-    }).min_by(|a, b| a.partial_cmp(b).expect("NaN in distance_to_hazard"))
+fn distance_to_hazard<'a, I>(point: &Point, hazards: I) -> f64
+where
+    I: Iterator<Item = &'a Hazard>,
+{
+    hazards
+        .map(|haz| {
+            let (pos, prox) = haz.shape.distance_from_border(point);
+            match pos == haz.entity.position() {
+                true => -prox, //cell in hazard, negative distance
+                false => prox,
+            }
+        })
+        .min_by(|a, b| a.partial_cmp(b).expect("NaN in distance_to_hazard"))
         .unwrap_or(f64::MIN)
 }

@@ -46,7 +46,10 @@ impl DTransformation {
     }
 }
 
-impl<T> From<T> for DTransformation where T: Borrow<Transformation> {
+impl<T> From<T> for DTransformation
+where
+    T: Borrow<Transformation>,
+{
     fn from(t: T) -> Self {
         t.borrow().decompose()
     }
@@ -54,6 +57,12 @@ impl<T> From<T> for DTransformation where T: Borrow<Transformation> {
 
 impl Display for DTransformation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "r: {:.3}°, t: ({:.3}, {:.3})", self.rotation.to_degrees(), self.translation.0.into_inner(), self.translation.1.into_inner())
+        write!(
+            f,
+            "r: {:.3}°, t: ({:.3}, {:.3})",
+            self.rotation.to_degrees(),
+            self.translation.0.into_inner(),
+            self.translation.1.into_inner()
+        )
     }
 }

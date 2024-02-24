@@ -5,8 +5,8 @@ use itertools::Itertools;
 use crate::collision_detection::cd_engine::CDEngine;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
-use crate::entities::quality_zone::N_QUALITIES;
 use crate::entities::quality_zone::QualityZone;
+use crate::entities::quality_zone::N_QUALITIES;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
@@ -28,11 +28,29 @@ pub struct Bin {
 }
 
 impl Bin {
-    pub fn new(id: usize, outer: SimplePolygon, value: u64, centering_transform: Transformation, holes: Vec<SimplePolygon>, quality_zones: Vec<QualityZone>, cde_config: CDEConfig) -> Self {
+    pub fn new(
+        id: usize,
+        outer: SimplePolygon,
+        value: u64,
+        centering_transform: Transformation,
+        holes: Vec<SimplePolygon>,
+        quality_zones: Vec<QualityZone>,
+        cde_config: CDEConfig,
+    ) -> Self {
         let outer = Arc::new(outer);
         let holes = holes.into_iter().map(|z| Arc::new(z)).collect_vec();
-        assert_eq!(quality_zones.len(), quality_zones.iter().map(|qz| qz.quality).unique().count(), "Quality zones must have unique qualities");
-        assert!(quality_zones.iter().map(|qz| qz.quality).all(|q| q < N_QUALITIES), "All quality zones must be below N_QUALITIES");
+        assert_eq!(
+            quality_zones.len(),
+            quality_zones.iter().map(|qz| qz.quality).unique().count(),
+            "Quality zones must have unique qualities"
+        );
+        assert!(
+            quality_zones
+                .iter()
+                .map(|qz| qz.quality)
+                .all(|q| q < N_QUALITIES),
+            "All quality zones must be below N_QUALITIES"
+        );
         let quality_zones = {
             let mut qz = <[_; N_QUALITIES]>::default();
             for q in quality_zones {
@@ -66,23 +84,32 @@ impl Bin {
         let poly = SimplePolygon::from(AARectangle::new(0.0, 0.0, width, height));
         let value = poly.area() as u64;
 
-        Bin::new(id, poly, value, Transformation::empty(), vec![], vec![], cde_config)
+        Bin::new(
+            id,
+            poly,
+            value,
+            Transformation::empty(),
+            vec![],
+            vec![],
+            cde_config,
+        )
     }
-    fn generate_hazards(outer: &Arc<SimplePolygon>, holes: &[Arc<SimplePolygon>], quality_zones: &[Option<QualityZone>]) -> Vec<Hazard> {
-        let mut hazards = vec![
-            Hazard::new(HazardEntity::BinExterior, outer.clone())
-        ];
-        hazards.extend(
-            holes.iter().enumerate()
-                .map(|(i, shape)| {
-                    let haz_entity = HazardEntity::BinHole { id: i };
-                    Hazard::new(haz_entity, shape.clone())
-                })
-        );
+    fn generate_hazards(
+        outer: &Arc<SimplePolygon>,
+        holes: &[Arc<SimplePolygon>],
+        quality_zones: &[Option<QualityZone>],
+    ) -> Vec<Hazard> {
+        let mut hazards = vec![Hazard::new(HazardEntity::BinExterior, outer.clone())];
+        hazards.extend(holes.iter().enumerate().map(|(i, shape)| {
+            let haz_entity = HazardEntity::BinHole { id: i };
+            Hazard::new(haz_entity, shape.clone())
+        }));
 
         hazards.extend(
-            quality_zones.iter().flatten().map(
-                |q_zone| {
+            quality_zones
+                .iter()
+                .flatten()
+                .map(|q_zone| {
                     q_zone.zones.iter().enumerate().map(|(id, shape)| {
                         let haz_entity = HazardEntity::QualityZoneInferior {
                             quality: q_zone.quality,
@@ -90,8 +117,8 @@ impl Bin {
                         };
                         Hazard::new(haz_entity, shape.clone())
                     })
-                }
-            ).flatten()
+                })
+                .flatten(),
         );
 
         hazards

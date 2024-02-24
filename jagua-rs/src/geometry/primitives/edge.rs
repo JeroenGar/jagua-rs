@@ -1,5 +1,7 @@
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{
+    CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom,
+};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::transformation::Transformation;
@@ -55,7 +57,9 @@ impl Edge {
     pub fn collides_at(&self, other: &Edge) -> Option<Point> {
         match edge_intersection(self, other, true) {
             Intersection::No => None,
-            Intersection::Yes(point) => Some(point.expect("Intersection::Yes, but returned no point when this was requested")),
+            Intersection::Yes(point) => Some(
+                point.expect("Intersection::Yes, but returned no point when this was requested"),
+            ),
         }
     }
 
@@ -109,12 +113,7 @@ impl Shape for Edge {
     }
 
     fn bbox(&self) -> AARectangle {
-        AARectangle::new(
-            self.x_min(),
-            self.y_min(),
-            self.x_max(),
-            self.y_max(),
-        )
+        AARectangle::new(self.x_min(), self.y_min(), self.x_max(), self.y_max())
     }
 
     fn diameter(&self) -> f64 {
@@ -141,9 +140,9 @@ impl DistanceFrom<Point> for Edge {
             param = dot / len_sq;
         }
         let (xx, yy) = match param {
-            p if p < 0.0 => (x1, y1), //start is closest point
-            p if p > 1.0 => (x2, y2), //end is closest point
-            _ => (x1 + param * c, y1 + param * d) //closest point is on the edge
+            p if p < 0.0 => (x1, y1),              //start is closest point
+            p if p > 1.0 => (x2, y2),              //end is closest point
+            _ => (x1 + param * c, y1 + param * d), //closest point is on the edge
         };
 
         let (dx, dy) = (x - xx, y - yy);

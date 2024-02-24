@@ -16,7 +16,10 @@ pub struct QualityZone {
 
 impl QualityZone {
     pub fn new(quality: usize, shapes: Vec<SimplePolygon>) -> Self {
-        assert!(quality < N_QUALITIES, "Quality must be less than N_QUALITIES");
+        assert!(
+            quality < N_QUALITIES,
+            "Quality must be less than N_QUALITIES"
+        );
         let zones = shapes.into_iter().map(|z| Arc::new(z)).collect();
         Self { quality, zones }
     }

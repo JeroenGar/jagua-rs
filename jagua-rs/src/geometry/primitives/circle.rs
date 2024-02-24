@@ -2,7 +2,9 @@ use std::cmp::Ordering;
 use std::f64::consts::PI;
 
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{
+    CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom,
+};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
@@ -17,8 +19,16 @@ pub struct Circle {
 
 impl Circle {
     pub fn new(center: Point, radius: f64) -> Self {
-        debug_assert!(radius.is_finite() && radius >= 0.0, "invalid circle radius: {}", radius);
-        debug_assert!(center.0.is_finite() && center.1.is_finite(), "invalid circle center: {:?}", center);
+        debug_assert!(
+            radius.is_finite() && radius >= 0.0,
+            "invalid circle radius: {}",
+            radius
+        );
+        debug_assert!(
+            center.0.is_finite() && center.1.is_finite(),
+            "invalid circle center: {:?}",
+            center
+        );
 
         Self { center, radius }
     }
@@ -30,7 +40,11 @@ impl Circle {
 
         for circle in circles_iter {
             let distance_between_centers = bounding_circle.center.distance(&circle.center);
-            match bounding_circle.radius.partial_cmp(&(distance_between_centers + circle.radius)).unwrap() {
+            match bounding_circle
+                .radius
+                .partial_cmp(&(distance_between_centers + circle.radius))
+                .unwrap()
+            {
                 Ordering::Less => {
                     //bounding circle needs to expand
                     let edge = Edge::new(bounding_circle.center, circle.center)
@@ -42,7 +56,7 @@ impl Circle {
 
                     bounding_circle = Circle::new(new_center, new_radius);
                 }
-                _ => ()
+                _ => (),
             }
         }
         bounding_circle
@@ -89,7 +103,7 @@ impl CollidesWith<AARectangle> for Circle {
     #[inline(always)]
     fn collides_with(&self, rect: &AARectangle) -> bool {
         //Based on: https://yal.cc/rectangle-circle-intersection-test/
-        
+
         let Point(c_x, c_y) = self.center;
 
         let nearest_x = f64::max(rect.x_min, f64::min(c_x, rect.x_max));
@@ -128,7 +142,7 @@ impl DistanceFrom<Point> for Circle {
         let d_center = f64::sqrt((x - cx).powi(2) + (y - cy).powi(2));
         match d_center.partial_cmp(&self.radius).unwrap() {
             Ordering::Less | Ordering::Equal => (GeoPosition::Interior, self.radius - d_center),
-            Ordering::Greater => (GeoPosition::Exterior, d_center - self.radius)
+            Ordering::Greater => (GeoPosition::Exterior, d_center - self.radius),
         }
     }
 

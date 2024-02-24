@@ -13,15 +13,21 @@ pub struct Transformation {
 
 impl Transformation {
     pub const fn empty() -> Self {
-        Self { matrix: EMPTY_MATRIX }
+        Self {
+            matrix: EMPTY_MATRIX,
+        }
     }
 
     pub fn from_rotation(angle: f64) -> Self {
-        Self { matrix: rotation_matrix(angle) }
+        Self {
+            matrix: rotation_matrix(angle),
+        }
     }
 
     pub fn from_translation((tx, ty): (f64, f64)) -> Self {
-        Self { matrix: translation_matrix((tx, ty)) }
+        Self {
+            matrix: translation_matrix((tx, ty)),
+        }
     }
 
     pub fn rotate(mut self, angle: f64) -> Self {
@@ -64,7 +70,10 @@ impl Transformation {
     }
 }
 
-impl<T> From<T> for Transformation where T: Borrow<DTransformation> {
+impl<T> From<T> for Transformation
+where
+    T: Borrow<DTransformation>,
+{
     fn from(dt: T) -> Self {
         dt.borrow().compose()
     }
@@ -73,38 +82,26 @@ impl<T> From<T> for Transformation where T: Borrow<DTransformation> {
 const _0: NotNan<f64> = unsafe { NotNan::new_unchecked(0.0) };
 const _1: NotNan<f64> = unsafe { NotNan::new_unchecked(1.0) };
 
-const EMPTY_MATRIX: [[NotNan<f64>; 3]; 3] = {
-    [
-        [_1, _0, _0],
-        [_0, _1, _0],
-        [_0, _0, _1]
-    ]
-};
+const EMPTY_MATRIX: [[NotNan<f64>; 3]; 3] = { [[_1, _0, _0], [_0, _1, _0], [_0, _0, _1]] };
 
 fn rotation_matrix(angle: f64) -> [[NotNan<f64>; 3]; 3] {
     let cos = NotNan::new(angle.cos()).unwrap_or_else(|_| panic!("cos({}) is NaN", angle));
     let sin = NotNan::new(angle.sin()).unwrap_or_else(|_| panic!("sin({}) is NaN", angle));
 
-    [
-        [cos, -sin, _0],
-        [sin, cos, _0],
-        [_0, _0, _1],
-    ]
+    [[cos, -sin, _0], [sin, cos, _0], [_0, _0, _1]]
 }
 
 fn translation_matrix((tx, ty): (f64, f64)) -> [[NotNan<f64>; 3]; 3] {
     let tx = NotNan::new(tx).unwrap_or_else(|_| panic!("tx({}) is NaN", tx));
     let ty = NotNan::new(ty).unwrap_or_else(|_| panic!("ty({}) is NaN", ty));
 
-    [
-        [_1, _0, tx],
-        [_0, _1, ty],
-        [_0, _0, _1],
-    ]
+    [[_1, _0, tx], [_0, _1, ty], [_0, _0, _1]]
 }
 
 fn dot_prod<T>(lhs: &[[T; 3]; 3], rhs: &[[T; 3]; 3]) -> [[T; 3]; 3]
-    where T: Add<Output=T> + Mul<Output=T> + Copy + Default {
+where
+    T: Add<Output = T> + Mul<Output = T> + Copy + Default,
+{
     let mut result = [[T::default(); 3]; 3];
     for i in 0..3 {
         for j in 0..3 {
@@ -117,13 +114,14 @@ fn dot_prod<T>(lhs: &[[T; 3]; 3], rhs: &[[T; 3]; 3]) -> [[T; 3]; 3]
 }
 
 fn inverse<T>(m: &[[T; 3]; 3]) -> [[T; 3]; 3]
-    where T: Add<Output=T> + Mul<Output=T> + Sub<Output=T> + Div<Output=T> + Copy {
-    let det = m[0][0] * m[1][1] * m[2][2]
-        + m[0][1] * m[1][2] * m[2][0]
-        + m[0][2] * m[1][0] * m[2][1]
-        - m[0][2] * m[1][1] * m[2][0]
-        - m[0][1] * m[1][0] * m[2][2]
-        - m[0][0] * m[1][2] * m[2][1];
+where
+    T: Add<Output = T> + Mul<Output = T> + Sub<Output = T> + Div<Output = T> + Copy,
+{
+    let det =
+        m[0][0] * m[1][1] * m[2][2] + m[0][1] * m[1][2] * m[2][0] + m[0][2] * m[1][0] * m[2][1]
+            - m[0][2] * m[1][1] * m[2][0]
+            - m[0][1] * m[1][0] * m[2][2]
+            - m[0][0] * m[1][2] * m[2][1];
 
     [
         [

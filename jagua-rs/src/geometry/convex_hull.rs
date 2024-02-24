@@ -16,21 +16,19 @@ pub fn convex_hull_indices(shape: &SimplePolygon) -> Vec<usize> {
 /// Returns the points that form the convex hull of the input points
 /// Uses the Monotone chain algorithm : <https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain>
 pub fn convex_hull_from_points(mut points: Vec<Point>) -> Vec<Point> {
-
     //sort the points by x coordinate
     points.sort_by(|a, b| {
         let (a_x, b_x) = (a.0, b.0);
         a_x.partial_cmp(&b_x).unwrap()
     });
 
-    let mut lower_hull = points.iter()
-        .fold(vec![], |hull, p| {
-            grow_convex_hull(hull, p)
-        });
-    let mut upper_hull = points.iter().rev()
-        .fold(vec![], |hull, p| {
-            grow_convex_hull(hull, p)
-        });
+    let mut lower_hull = points
+        .iter()
+        .fold(vec![], |hull, p| grow_convex_hull(hull, p));
+    let mut upper_hull = points
+        .iter()
+        .rev()
+        .fold(vec![], |hull, p| grow_convex_hull(hull, p));
 
     //First and last element of both hull parts are the same point
     upper_hull.pop();

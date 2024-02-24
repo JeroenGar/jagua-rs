@@ -44,7 +44,7 @@ impl Iterator for CirclingIterator {
                         self.col_iter = self.original_col_iter.clone();
                         self.next()
                     }
-                    None => None
+                    None => None,
                 }
             }
         }

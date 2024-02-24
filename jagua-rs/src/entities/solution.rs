@@ -28,7 +28,14 @@ pub struct Solution {
 }
 
 impl Solution {
-    pub fn new(id: usize, layout_snapshots: Vec<LayoutSnapshot>, usage: f64, placed_item_qtys: Vec<usize>, target_item_qtys: Vec<usize>, bin_qtys: Vec<usize>) -> Self {
+    pub fn new(
+        id: usize,
+        layout_snapshots: Vec<LayoutSnapshot>,
+        usage: f64,
+        placed_item_qtys: Vec<usize>,
+        target_item_qtys: Vec<usize>,
+        bin_qtys: Vec<usize>,
+    ) -> Self {
         Solution {
             id,
             layout_snapshots,
@@ -41,13 +48,19 @@ impl Solution {
     }
 
     pub fn is_complete(&self, instance: &Instance) -> bool {
-        self.placed_item_qtys.iter().enumerate().all(|(i, &qty)| qty >= instance.item_qty(i))
+        self.placed_item_qtys
+            .iter()
+            .enumerate()
+            .all(|(i, &qty)| qty >= instance.item_qty(i))
     }
 
     pub fn completeness(&self, instance: &Instance) -> f64 {
         //ratio of included item area vs total instance item area
         let total_item_area = instance.item_area();
-        let included_item_area = self.placed_item_qtys.iter().enumerate()
+        let included_item_area = self
+            .placed_item_qtys
+            .iter()
+            .enumerate()
             .map(|(i, qty)| instance.item(i).shape.area() * *qty as f64)
             .sum::<f64>();
         let completeness = included_item_area / total_item_area;
@@ -56,7 +69,9 @@ impl Solution {
 
     pub fn missing_item_qtys(&self, instance: &Instance) -> Vec<isize> {
         debug_assert!(instance.items().len() == self.placed_item_qtys.len());
-        self.placed_item_qtys.iter().enumerate()
+        self.placed_item_qtys
+            .iter()
+            .enumerate()
             .map(|(i, &qty)| instance.item_qty(i) as isize - qty as isize)
             .collect_vec()
     }

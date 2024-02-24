@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 use itertools::Itertools;
-use log::{Level, log};
+use log::{log, Level};
 use serde::{Deserialize, Serialize};
 
 use crate::geometry::geo_traits::{CollidesWith, Shape};
@@ -17,7 +17,7 @@ pub enum PolySimplConfig {
     #[serde(rename = "enabled")]
     Enabled {
         /// max deviation from the original polygon area as a fraction of the original area
-        tolerance: f64, 
+        tolerance: f64,
     },
 }
 
@@ -38,7 +38,6 @@ impl PolySimplMode {
     }
 }
 
-
 #[derive(Clone, Debug, PartialEq)]
 enum Candidate {
     Concave(Corner),
@@ -55,7 +54,7 @@ impl Corner {
         std::mem::swap(&mut self.0, &mut self.2);
     }
 
-    pub fn to_points(&self, points: &[Point]) -> [Point;3] {
+    pub fn to_points(&self, points: &[Point]) -> [Point; 3] {
         [points[self.0], points[self.1], points[self.2]]
     }
 }
@@ -68,7 +67,7 @@ enum CornerType {
 }
 
 impl CornerType {
-    pub fn from([p1,p2,p3]: [Point;3]) -> Self {
+    pub fn from([p1, p2, p3]: [Point; 3]) -> Self {
         //returns the corner type on the left-hand side p1->p2->p3
         //From: https://algorithmtutor.com/Computational-Geometry/Determining-if-two-consecutive-segments-turn-left-or-right/
 
@@ -77,7 +76,7 @@ impl CornerType {
         let cross_prod = p1p2.0 * p1p3.1 - p1p2.1 * p1p3.0;
 
         //a positive cross product indicates that p2p3 turns to the left with respect to p1p2
-        match cross_prod.partial_cmp(&0.0).expect("cross product is NaN"){
+        match cross_prod.partial_cmp(&0.0).expect("cross product is NaN") {
             Ordering::Less => CornerType::Concave,
             Ordering::Equal => CornerType::Collinear,
             Ordering::Greater => CornerType::Convex,
@@ -87,7 +86,11 @@ impl CornerType {
 
 /// Simplifies a shape (removing vertices) strictly inflating or deflating based on the mode.
 /// The number of edges is reduced by one at a time, until either the change in area would exceed the max_area_delta or the number of edges would become less than 3.
-pub fn simplify_shape(shape: &SimplePolygon, mode: PolySimplMode, max_area_delta: f64) -> SimplePolygon {
+pub fn simplify_shape(
+    shape: &SimplePolygon,
+    mode: PolySimplMode,
+    max_area_delta: f64,
+) -> SimplePolygon {
     let original_area = shape.area();
 
     let mut ref_shape = shape.clone();
@@ -101,11 +104,13 @@ pub fn simplify_shape(shape: &SimplePolygon, mode: PolySimplMode, max_area_delta
         }
 
         let n_points = ref_shape.number_of_points() as isize;
-        let mut corners = (0..n_points).map(|i| {
-            let i_prev = (i - 1).rem_euclid(n_points);
-            let i_next = (i + 1).rem_euclid(n_points);
-            Corner(i_prev as usize, i as usize, i_next as usize)
-        }).collect_vec();
+        let mut corners = (0..n_points)
+            .map(|i| {
+                let i_prev = (i - 1).rem_euclid(n_points);
+                let i_next = (i + 1).rem_euclid(n_points);
+                Corner(i_prev as usize, i as usize, i_next as usize)
+            })
+            .collect_vec();
 
         if mode == PolySimplMode::Deflate {
             //default mode is to inflate, so we need to reverse the order of the corners and flip the corners for deflate mode
@@ -124,12 +129,8 @@ pub fn simplify_shape(shape: &SimplePolygon, mode: PolySimplMode, max_area_delta
 
             //Generate a removal candidate (or not)
             let candidate = match (&corner_type, &prev_corner_type) {
-                (CornerType::Concave, _) => {
-                    Some(Candidate::Concave(*corner))
-                }
-                (CornerType::Collinear, _) => {
-                    Some(Candidate::Collinear(*corner))
-                }
+                (CornerType::Concave, _) => Some(Candidate::Concave(*corner)),
+                (CornerType::Collinear, _) => Some(Candidate::Collinear(*corner)),
                 (CornerType::Convex, CornerType::Convex) => {
                     Some(Candidate::ConvexConvex(*prev_corner, *corner))
                 }
@@ -145,15 +146,21 @@ pub fn simplify_shape(shape: &SimplePolygon, mode: PolySimplMode, max_area_delta
         }
 
         let best_candidate = candidates.iter().min_by(|a, b| {
-            calculate_area_delta(&ref_shape, a).partial_cmp(&calculate_area_delta(&ref_shape, b)).unwrap()
+            calculate_area_delta(&ref_shape, a)
+                .partial_cmp(&calculate_area_delta(&ref_shape, b))
+                .unwrap()
         });
-
 
         if let Some(best_candidate) = best_candidate {
             let new_shape = execute_candidate(&ref_shape, best_candidate);
             let area_delta = (new_shape.area() - original_area).abs() / original_area;
             if area_delta <= max_area_delta {
-                log!(Level::Debug, "removed vertex: {:.2}% area change ({:?})", area_delta * 100.0, best_candidate);
+                log!(
+                    Level::Debug,
+                    "removed vertex: {:.2}% area change ({:?})",
+                    area_delta * 100.0,
+                    best_candidate
+                );
                 ref_shape = new_shape;
             } else {
                 break; //area change too significant
@@ -163,7 +170,13 @@ pub fn simplify_shape(shape: &SimplePolygon, mode: PolySimplMode, max_area_delta
         }
     }
 
-    log!(Level::Debug, "simplified from {} to {} edges ({:.3}% area difference)", shape.number_of_points(), ref_shape.number_of_points(), (ref_shape.area() - shape.area()) / shape.area() * 100.0);
+    log!(
+        Level::Debug,
+        "simplified from {} to {} edges ({:.3}% area difference)",
+        shape.number_of_points(),
+        ref_shape.number_of_points(),
+        (ref_shape.area() - shape.area()) / shape.area() * 100.0
+    );
 
     return ref_shape;
 }
@@ -171,11 +184,8 @@ pub fn simplify_shape(shape: &SimplePolygon, mode: PolySimplMode, max_area_delta
 fn calculate_area_delta(shape: &SimplePolygon, candidate: &Candidate) -> f64 {
     //calculate the difference in area of the shape if the candidate were to be executed
     match candidate {
-        Candidate::Collinear(_) => {
-            0.0
-        }
+        Candidate::Collinear(_) => 0.0,
         Candidate::Concave(c) => {
-
             //Triangle formed by i_prev, i and i_next will correspond to the change area
             let Point(x0, y0) = shape.get_point(c.0);
             let Point(x1, y1) = shape.get_point(c.1);
@@ -186,7 +196,8 @@ fn calculate_area_delta(shape: &SimplePolygon, candidate: &Candidate) -> f64 {
             area.abs()
         }
         Candidate::ConvexConvex(c1, c2) => {
-            let replacing_vertex = replacing_vertex_convex_convex_candidate(shape, candidate).expect("candidate is not valid");
+            let replacing_vertex = replacing_vertex_convex_convex_candidate(shape, candidate)
+                .expect("candidate is not valid");
 
             //the triangle formed by corner c1, c2, and replacing vertex will correspond to the change in area
             let Point(x0, y0) = shape.get_point(c1.1);
@@ -206,11 +217,18 @@ fn candidate_is_valid(shape: &SimplePolygon, candidate: &Candidate) -> bool {
         Candidate::Collinear(_) => true,
         Candidate::Concave(c) => {
             let new_edge = Edge::new(shape.get_point(c.0), shape.get_point(c.2));
-            let affected_points = [shape.get_point(c.0), shape.get_point(c.1), shape.get_point(c.2)];
+            let affected_points = [
+                shape.get_point(c.0),
+                shape.get_point(c.1),
+                shape.get_point(c.2),
+            ];
 
-            shape.edge_iter()
-                .filter(|l| !affected_points.contains(&l.start) && !affected_points.contains(&l.end)) //filter edges with points that are not affected by the candidate
-                .all(|l| { !l.collides_with(&new_edge) })
+            shape
+                .edge_iter()
+                .filter(|l| {
+                    !affected_points.contains(&l.start) && !affected_points.contains(&l.end)
+                }) //filter edges with points that are not affected by the candidate
+                .all(|l| !l.collides_with(&new_edge))
         }
         Candidate::ConvexConvex(c1, c2) => {
             let new_vertex = replacing_vertex_convex_convex_candidate(shape, candidate);
@@ -220,11 +238,19 @@ fn candidate_is_valid(shape: &SimplePolygon, candidate: &Candidate) -> bool {
                     let new_edge_1 = Edge::new(shape.get_point(c1.0), new_vertex);
                     let new_edge_2 = Edge::new(new_vertex, shape.get_point(c2.2));
 
-                    let affected_points = [shape.get_point(c1.1), shape.get_point(c1.0), shape.get_point(c2.1), shape.get_point(c2.2)];
+                    let affected_points = [
+                        shape.get_point(c1.1),
+                        shape.get_point(c1.0),
+                        shape.get_point(c2.1),
+                        shape.get_point(c2.2),
+                    ];
 
-                    shape.edge_iter()
-                        .filter(|l| !affected_points.contains(&l.start) && !affected_points.contains(&l.end)) //filter edges with points that are not affected by the candidate
-                        .all(|l| { !l.collides_with(&new_edge_1) && !l.collides_with(&new_edge_2) })
+                    shape
+                        .edge_iter()
+                        .filter(|l| {
+                            !affected_points.contains(&l.start) && !affected_points.contains(&l.end)
+                        }) //filter edges with points that are not affected by the candidate
+                        .all(|l| !l.collides_with(&new_edge_1) && !l.collides_with(&new_edge_2))
                 }
             }
         }
@@ -234,10 +260,15 @@ fn candidate_is_valid(shape: &SimplePolygon, candidate: &Candidate) -> bool {
 fn execute_candidate(shape: &SimplePolygon, candidate: &Candidate) -> SimplePolygon {
     let mut points = shape.points.clone();
     match candidate {
-        Candidate::Collinear(c) => { points.remove(c.1); }
-        Candidate::Concave(c) => { points.remove(c.1); }
+        Candidate::Collinear(c) => {
+            points.remove(c.1);
+        }
+        Candidate::Concave(c) => {
+            points.remove(c.1);
+        }
         Candidate::ConvexConvex(c1, c2) => {
-            let replacing_vertex = replacing_vertex_convex_convex_candidate(shape, candidate).expect("candidate is not valid");
+            let replacing_vertex = replacing_vertex_convex_convex_candidate(shape, candidate)
+                .expect("candidate is not valid");
             points.remove(c1.1);
             let other_index = if c1.1 < c2.1 { c2.1 - 1 } else { c2.1 };
             points.remove(other_index);
@@ -248,17 +279,25 @@ fn execute_candidate(shape: &SimplePolygon, candidate: &Candidate) -> SimplePoly
     new_shape
 }
 
-fn replacing_vertex_convex_convex_candidate(shape: &SimplePolygon, candidate: &Candidate) -> Option<Point> {
+fn replacing_vertex_convex_convex_candidate(
+    shape: &SimplePolygon,
+    candidate: &Candidate,
+) -> Option<Point> {
     match candidate {
         Candidate::ConvexConvex(c1, c2) => {
-            assert!(c1.2 == c2.1 && c1.1 == c2.0, "non-consecutive corners {:?},{:?}", c1, c2); //ensure the corners are adjacent
+            assert!(
+                c1.2 == c2.1 && c1.1 == c2.0,
+                "non-consecutive corners {:?},{:?}",
+                c1,
+                c2
+            ); //ensure the corners are adjacent
 
             let edge_prev = Edge::new(shape.get_point(c1.0), shape.get_point(c1.1));
             let edge_next = Edge::new(shape.get_point(c2.2), shape.get_point(c2.1));
 
             calculate_intersection_in_front(&edge_prev, &edge_next)
         }
-        _ => panic!("candidate is not of type convex convex")
+        _ => panic!("candidate is not of type convex convex"),
     }
 }
 

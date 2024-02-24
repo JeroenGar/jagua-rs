@@ -18,10 +18,13 @@ pub struct QTPartialHazard {
 #[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub enum EdgeIndices {
     All,
-    Some(Vec<usize>)
+    Some(Vec<usize>),
 }
 
-impl<T> From<T> for QTPartialHazard where T: Borrow<Hazard> {
+impl<T> From<T> for QTPartialHazard
+where
+    T: Borrow<Hazard>,
+{
     fn from(hazard: T) -> Self {
         Self {
             shape: Arc::downgrade(&hazard.borrow().shape),
@@ -31,7 +34,6 @@ impl<T> From<T> for QTPartialHazard where T: Borrow<Hazard> {
 }
 
 impl QTPartialHazard {
-
     pub fn new(shape: Arc<SimplePolygon>, edge_indices: EdgeIndices) -> Self {
         Self {
             shape: Arc::downgrade(&shape),
@@ -40,7 +42,9 @@ impl QTPartialHazard {
     }
 
     pub fn shape_arc(&self) -> Arc<SimplePolygon> {
-        self.shape.upgrade().expect("polygon reference is not alive")
+        self.shape
+            .upgrade()
+            .expect("polygon reference is not alive")
     }
 
     pub fn encompasses_all_edges(&self) -> bool {
@@ -55,7 +59,6 @@ impl QTPartialHazard {
             }
         }
     }
-
 }
 
 pub const BBOX_CHECK_THRESHOLD: usize = 4; //check bbox if number of edges is greater than this
@@ -64,26 +67,22 @@ impl CollidesWith<Edge> for QTPartialHazard {
     fn collides_with(&self, edge: &Edge) -> bool {
         let shape = self.shape_arc();
         match &self.edge_indices {
-            EdgeIndices::All => {
-                match shape.bbox().collides_with(edge) {
-                    false => false,
-                    true => shape.edge_iter().any(|e| {
-                        edge.collides_with(&e)
-                    })
-                }
+            EdgeIndices::All => match shape.bbox().collides_with(edge) {
+                false => false,
+                true => shape.edge_iter().any(|e| edge.collides_with(&e)),
             },
-            EdgeIndices::Some(indices) => {
-                match indices.len(){
-                    0 => unreachable!("edge indices should not be empty"),
-                    1..=BBOX_CHECK_THRESHOLD => indices.iter().any(|&i| edge.collides_with(&shape.get_edge(i))),
-                    BBOX_CHECK_THRESHOLD_PLUS_1.. => {
-                        match shape.bbox().collides_with(edge) {
-                            false => false,
-                            true => indices.iter().any(|&i| edge.collides_with(&shape.get_edge(i)))
-                        }
-                    }
-                }
-            }
+            EdgeIndices::Some(indices) => match indices.len() {
+                0 => unreachable!("edge indices should not be empty"),
+                1..=BBOX_CHECK_THRESHOLD => indices
+                    .iter()
+                    .any(|&i| edge.collides_with(&shape.get_edge(i))),
+                BBOX_CHECK_THRESHOLD_PLUS_1.. => match shape.bbox().collides_with(edge) {
+                    false => false,
+                    true => indices
+                        .iter()
+                        .any(|&i| edge.collides_with(&shape.get_edge(i))),
+                },
+            },
         }
     }
 }
@@ -92,26 +91,22 @@ impl CollidesWith<Circle> for QTPartialHazard {
     fn collides_with(&self, circle: &Circle) -> bool {
         let shape = self.shape_arc();
         match &self.edge_indices {
-            EdgeIndices::All => {
-                match circle.collides_with(&shape.bbox()) {
-                    false => false,
-                    true => shape.edge_iter().any(|e| {
-                        circle.collides_with(&e)
-                    })
-                }
+            EdgeIndices::All => match circle.collides_with(&shape.bbox()) {
+                false => false,
+                true => shape.edge_iter().any(|e| circle.collides_with(&e)),
             },
-            EdgeIndices::Some(indices) => {
-                match indices.len(){
-                    0 => unreachable!("edge indices should not be empty"),
-                    1..=BBOX_CHECK_THRESHOLD => indices.iter().any(|&i| circle.collides_with(&shape.get_edge(i))),
-                    BBOX_CHECK_THRESHOLD_PLUS_1.. => {
-                        match circle.collides_with(&shape.bbox()) {
-                            false => false,
-                            true => indices.iter().any(|&i| circle.collides_with(&shape.get_edge(i)))
-                        }
-                    }
-                }
-            }
+            EdgeIndices::Some(indices) => match indices.len() {
+                0 => unreachable!("edge indices should not be empty"),
+                1..=BBOX_CHECK_THRESHOLD => indices
+                    .iter()
+                    .any(|&i| circle.collides_with(&shape.get_edge(i))),
+                BBOX_CHECK_THRESHOLD_PLUS_1.. => match circle.collides_with(&shape.bbox()) {
+                    false => false,
+                    true => indices
+                        .iter()
+                        .any(|&i| circle.collides_with(&shape.get_edge(i))),
+                },
+            },
         }
     }
 }

@@ -20,9 +20,16 @@ impl BPInstance {
     pub fn new(items: Vec<(Item, usize)>, bins: Vec<(Bin, usize)>) -> Self {
         assert!(assertions::instance_item_bin_ids_correct(&items, &bins));
 
-        let item_area = items.iter().map(|(item, qty)| item.shape.area() * *qty as f64).sum();
+        let item_area = items
+            .iter()
+            .map(|(item, qty)| item.shape.area() * *qty as f64)
+            .sum();
 
-        Self { items, item_area, bins }
+        Self {
+            items,
+            item_area,
+            bins,
+        }
     }
 }
 

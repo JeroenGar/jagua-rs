@@ -34,7 +34,11 @@ pub fn generate_next_pole(shape: &SimplePolygon, poles: &[Circle]) -> Circle {
 }
 
 ///Generates additional poles for a shape alongside the PoI
-pub fn generate_additional_surrogate_poles(shape: &SimplePolygon, max_poles: usize, coverage_goal: f64) -> Vec<Circle> {
+pub fn generate_additional_surrogate_poles(
+    shape: &SimplePolygon,
+    max_poles: usize,
+    coverage_goal: f64,
+) -> Vec<Circle> {
     let mut all_poles = vec![shape.poi.clone()];
     let pole_area_goal = shape.area() * coverage_goal;
     let mut total_pole_area = shape.poi.area();
@@ -59,20 +63,26 @@ pub fn generate_additional_surrogate_poles(shape: &SimplePolygon, max_poles: usi
         let mut sorted_poles: Vec<Circle> = surrogate_poles.clone();
 
         while !surrogate_poles.is_empty() {
-            let next_pole = surrogate_poles.iter().enumerate().max_by_key(|(_i, p)| {
-                //or to centroid if no other poles present
-                let min_distance_to_existing_poles = sorted_poles.iter()
-                    .chain([&shape.poi])
-                    .map(|p2| {
-                        let d = p.distance_from_border(&p2.centroid()).1;
-                        NotNan::new(d).unwrap()
-                    })
-                    .min().unwrap();
+            let next_pole = surrogate_poles
+                .iter()
+                .enumerate()
+                .max_by_key(|(_i, p)| {
+                    //or to centroid if no other poles present
+                    let min_distance_to_existing_poles = sorted_poles
+                        .iter()
+                        .chain([&shape.poi])
+                        .map(|p2| {
+                            let d = p.distance_from_border(&p2.centroid()).1;
+                            NotNan::new(d).unwrap()
+                        })
+                        .min()
+                        .unwrap();
 
-                let radius = p.radius;
+                    let radius = p.radius;
 
-                NotNan::new(radius.powi(2)).unwrap() * min_distance_to_existing_poles
-            }).unwrap();
+                    NotNan::new(radius.powi(2)).unwrap() * min_distance_to_existing_poles
+                })
+                .unwrap();
             sorted_poles.push(surrogate_poles.remove(next_pole.0));
         }
 
@@ -98,13 +108,14 @@ impl POINode {
             && poles.iter().all(|c| !c.collides_with(&bbox.centroid()));
 
         let distance = {
-            let distance_to_edges = poly.edge_iter()
-                .map(|e| e.distance(&bbox.centroid()));
+            let distance_to_edges = poly.edge_iter().map(|e| e.distance(&bbox.centroid()));
 
-            let distance_to_poles = poles.iter()
+            let distance_to_poles = poles
+                .iter()
                 .map(|c| c.distance_from_border(&bbox.centroid()).1);
 
-            let distance_to_border = distance_to_edges.chain(distance_to_poles)
+            let distance_to_border = distance_to_edges
+                .chain(distance_to_poles)
                 .fold(f64::MAX, |acc, d| acc.min(d));
 
             //if the centroid is outside, distance is counted negative
@@ -126,9 +137,10 @@ impl POINode {
         match self.level {
             0 => None,
             _ => Some(
-                self.bbox.quadrants()
-                    .map(|qd| POINode::new(qd, self.level - 1, poly, poles))
-            )
+                self.bbox
+                    .quadrants()
+                    .map(|qd| POINode::new(qd, self.level - 1, poly, poles)),
+            ),
         }
     }
 

@@ -19,7 +19,6 @@ pub struct BoundaryFillGrid {
 }
 
 impl BoundaryFillGrid {
-
     /// Creates a new BoundaryFillGrid, add all cells inside the seed_bbox to the queue
     pub fn new<T>(grid: &Grid<T>, seed_bbox: AARectangle) -> Self {
         let state = vec![CellState::new(); grid.n_rows * grid.n_cols];
@@ -47,29 +46,25 @@ impl BoundaryFillGrid {
     /// if there are no more cells to visit return None
     pub fn pop<T>(&mut self, grid: &Grid<T>) -> Option<usize> {
         match self.seeded {
-            false => {
-                match self.seed_iterator.next() {
-                    Some((row, col)) => {
-                        let cell = grid.to_index(row, col);
-                        if let Some(cell) = cell {
-                            self.state[cell].visit();
-                            self.n_visited += 1;
-                        }
-                        cell
-                    }
-                    None => None
-                }
-            }
-            true => {
-                match self.queue.pop_front() {
-                    Some(cell) => {
+            false => match self.seed_iterator.next() {
+                Some((row, col)) => {
+                    let cell = grid.to_index(row, col);
+                    if let Some(cell) = cell {
                         self.state[cell].visit();
                         self.n_visited += 1;
-                        Some(cell)
                     }
-                    None => None
+                    cell
                 }
-            }
+                None => None,
+            },
+            true => match self.queue.pop_front() {
+                Some(cell) => {
+                    self.state[cell].visit();
+                    self.n_visited += 1;
+                    Some(cell)
+                }
+                None => None,
+            },
         }
     }
 
@@ -103,7 +98,7 @@ impl CellState {
     fn visit(&mut self) {
         *self = match self {
             CellState::Queued | CellState::NotQueued => CellState::Visited,
-            CellState::Visited => unreachable!("invalid state: cell already visited")
+            CellState::Visited => unreachable!("invalid state: cell already visited"),
         }
     }
 
@@ -111,9 +106,7 @@ impl CellState {
         *self = match self {
             CellState::NotQueued => CellState::Queued,
             CellState::Visited => unreachable!("invalid state: cell already visited"),
-            CellState::Queued => unreachable!("invalid state: cell already queued")
+            CellState::Queued => unreachable!("invalid state: cell already queued"),
         }
     }
-
 }
-

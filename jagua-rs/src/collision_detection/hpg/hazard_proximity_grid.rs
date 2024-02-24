@@ -17,7 +17,7 @@ use crate::util::assertions;
 #[derive(Debug, Clone)]
 pub struct HazardProximityGrid {
     pub grid: Grid<HPGCell>,
-    pub cell_radius : f64,
+    pub cell_radius: f64,
     uncommitted_deregisters: Vec<HazardEntity>,
 }
 
@@ -28,7 +28,8 @@ impl HazardProximityGrid {
         let cell_radius = cells[0].diameter() / 2.0;
 
         let grid = {
-            let elements = cells.into_iter()
+            let elements = cells
+                .into_iter()
                 .map(|bbox| HPGCell::new(bbox, static_hazards))
                 .map(|cell| {
                     let pos = cell.centroid();
@@ -41,7 +42,7 @@ impl HazardProximityGrid {
         HazardProximityGrid {
             grid,
             uncommitted_deregisters: vec![],
-            cell_radius
+            cell_radius,
         }
     }
 
@@ -74,7 +75,7 @@ impl HazardProximityGrid {
                     HPGCellUpdate::Unaffected => {
                         b_fill.queue_neighbors(next_dot_index, &self.grid);
                     }
-                    HPGCellUpdate::Boundary => ()
+                    HPGCellUpdate::Boundary => (),
                 }
             }
         }
@@ -82,8 +83,13 @@ impl HazardProximityGrid {
         debug_assert!(assertions::hpg_correctly_updated(to_register, self));
     }
 
-    pub fn deregister_hazard<'a, I>(&mut self, to_deregister: &HazardEntity, remaining: I, process_now: bool)
-        where I: Iterator<Item=&'a Hazard> + Clone
+    pub fn deregister_hazard<'a, I>(
+        &mut self,
+        to_deregister: &HazardEntity,
+        remaining: I,
+        process_now: bool,
+    ) where
+        I: Iterator<Item = &'a Hazard> + Clone,
     {
         if process_now {
             for cell in self.grid.cells.iter_mut().flatten() {
@@ -95,7 +101,8 @@ impl HazardProximityGrid {
     }
 
     pub fn flush_deregisters<'a, I>(&mut self, remaining: I)
-        where I: Iterator<Item=&'a Hazard> + Clone
+    where
+        I: Iterator<Item = &'a Hazard> + Clone,
     {
         if self.is_dirty() {
             //deregister all pending hazards at once
@@ -113,9 +120,14 @@ impl HazardProximityGrid {
     }
 }
 
-
 /// Error type for when the `HazardProximityGrid` is in a dirty state.
 /// This can happen when the grid is accessed after a hazard has been deregistered but with "process_now" set to false.
 /// The grid should be flushed to ensure all changes are processed.
 #[derive(Debug)]
 pub struct DirtyState;
+
+impl std::fmt::Display for DirtyState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "HazardProximityGrid is in a dirty state. Call `flush_deregisters` before accessing the grid.")
+    }
+}

@@ -5,7 +5,7 @@ use tribool::Tribool;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::hpg::grid::Grid;
-use crate::collision_detection::hpg::hazard_proximity_grid::{HazardProximityGrid, DirtyState};
+use crate::collision_detection::hpg::hazard_proximity_grid::{DirtyState, HazardProximityGrid};
 use crate::collision_detection::hpg::hpg_cell::HPGCell;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
@@ -34,20 +34,23 @@ pub struct CDEngine {
     uncommitted_deregisters: Vec<Hazard>,
 }
 
-
 /// Snapshot of the state of CDE at a given time.
 /// The CDE can take snapshots of itself at any time, and use them to restore to that state later.
 #[derive(Clone, Debug)]
 pub struct CDESnapshot {
     dynamic_hazards: Vec<Hazard>,
-    grid: Option<Grid<HPGCell>>
+    grid: Option<Grid<HPGCell>>,
 }
 
 impl CDEngine {
     pub fn new(bbox: AARectangle, static_hazards: Vec<Hazard>, config: CDEConfig) -> CDEngine {
         let haz_prox_grid = match config.hpg_n_cells {
             0 => None,
-            hpg_n_cells => Some(HazardProximityGrid::new(bbox.clone(), &static_hazards, hpg_n_cells))
+            hpg_n_cells => Some(HazardProximityGrid::new(
+                bbox.clone(),
+                &static_hazards,
+                hpg_n_cells,
+            )),
         };
 
         let mut qt_root = QTNode::new(config.quadtree_depth, bbox.clone(), None);
@@ -70,8 +73,17 @@ impl CDEngine {
     //UPDATE ---------------------------------------------------------------------------------------
 
     pub fn register_hazard(&mut self, hazard: Hazard) {
-        debug_assert!(self.dynamic_hazards.iter().find(|h| h.entity == hazard.entity).is_none(), "Hazard already registered");
-        let hazard_in_uncommitted_deregs = self.uncommitted_deregisters.iter().position(|h| h.entity == hazard.entity);
+        debug_assert!(
+            self.dynamic_hazards
+                .iter()
+                .find(|h| h.entity == hazard.entity)
+                .is_none(),
+            "Hazard already registered"
+        );
+        let hazard_in_uncommitted_deregs = self
+            .uncommitted_deregisters
+            .iter()
+            .position(|h| h.entity == hazard.entity);
 
         let hazard = match hazard_in_uncommitted_deregs {
             Some(index) => {
@@ -84,7 +96,9 @@ impl CDEngine {
                 hazard
             }
         };
-        self.haz_prox_grid.as_mut().map(|hpg| hpg.register_hazard(&hazard));
+        self.haz_prox_grid
+            .as_mut()
+            .map(|hpg| hpg.register_hazard(&hazard));
         self.dynamic_hazards.push(hazard);
 
         debug_assert!(assertions::qt_contains_no_dangling_hazards(&self));
@@ -101,7 +115,11 @@ impl CDEngine {
     /// Call [`Self::commit_deregisters`] to commit all uncommitted deregisters in both quadtree & hazard proximity grid
     /// or [`Self::flush_haz_prox_grid`] to just clear the hazard proximity grid.
     pub fn deregister_hazard(&mut self, hazard_entity: &HazardEntity, commit_instantly: bool) {
-        let haz_index = self.dynamic_hazards.iter().position(|h| &h.entity == hazard_entity).expect("Hazard not found");
+        let haz_index = self
+            .dynamic_hazards
+            .iter()
+            .position(|h| &h.entity == hazard_entity)
+            .expect("Hazard not found");
 
         let hazard = self.dynamic_hazards.swap_remove(haz_index);
 
@@ -112,23 +130,31 @@ impl CDEngine {
                 self.uncommitted_deregisters.push(hazard);
             }
         }
-        self.haz_prox_grid.as_mut()
-            .map(|hpg| hpg.deregister_hazard(hazard_entity, self.dynamic_hazards.iter(), commit_instantly));
+        self.haz_prox_grid.as_mut().map(|hpg| {
+            hpg.deregister_hazard(hazard_entity, self.dynamic_hazards.iter(), commit_instantly)
+        });
         debug_assert!(assertions::qt_contains_no_dangling_hazards(&self));
     }
 
     pub fn create_snapshot(&mut self) -> CDESnapshot {
         self.commit_deregisters();
-        assert!(self.haz_prox_grid.as_ref().map_or(true, |hpg| !hpg.is_dirty()));
+        assert!(self
+            .haz_prox_grid
+            .as_ref()
+            .map_or(true, |hpg| !hpg.is_dirty()));
         CDESnapshot {
             dynamic_hazards: self.dynamic_hazards.clone(),
-            grid: self.haz_prox_grid.as_ref().map(|hpg| hpg.grid.clone())
+            grid: self.haz_prox_grid.as_ref().map(|hpg| hpg.grid.clone()),
         }
     }
 
     pub fn restore(&mut self, snapshot: &CDESnapshot) {
         //Quadtree
-        let mut hazards_to_remove = self.dynamic_hazards.iter().map(|h| h.entity.clone()).collect::<IndexSet<HazardEntity>>();
+        let mut hazards_to_remove = self
+            .dynamic_hazards
+            .iter()
+            .map(|h| h.entity.clone())
+            .collect::<IndexSet<HazardEntity>>();
         debug_assert!(hazards_to_remove.len() == self.dynamic_hazards.len());
         let mut hazards_to_add = vec![];
 
@@ -141,14 +167,21 @@ impl CDEngine {
 
         //Hazards currently registered in the CDE, but not in the snapshot
         for haz_entity in hazards_to_remove.iter() {
-            let haz_index = self.dynamic_hazards.iter().position(|h| &h.entity == haz_entity).expect("Hazard not found");
+            let haz_index = self
+                .dynamic_hazards
+                .iter()
+                .position(|h| &h.entity == haz_entity)
+                .expect("Hazard not found");
             self.dynamic_hazards.swap_remove(haz_index);
             self.quadtree.deregister_hazard(&haz_entity);
         }
 
         //Some of the uncommitted deregisters might be in present in snapshot, if so we can just reactivate them
         for unc_haz in self.uncommitted_deregisters.drain(..) {
-            if let Some(pos) = hazards_to_add.iter().position(|h| &h.entity == &unc_haz.entity) {
+            if let Some(pos) = hazards_to_add
+                .iter()
+                .position(|h| &h.entity == &unc_haz.entity)
+            {
                 //the uncommitted removed hazard needs to be activated again
                 self.quadtree.activate_hazard(&unc_haz.entity);
                 self.dynamic_hazards.push(unc_haz);
@@ -176,7 +209,9 @@ impl CDEngine {
         for uc_haz in self.uncommitted_deregisters.drain(..) {
             self.quadtree.deregister_hazard(&uc_haz.entity);
         }
-        self.haz_prox_grid.as_mut().map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
+        self.haz_prox_grid
+            .as_mut()
+            .map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
     }
 
     pub fn quadtree(&self) -> &QTNode {
@@ -208,14 +243,14 @@ impl CDEngine {
         let grid = self.haz_prox_grid.as_ref().expect("no hpg present");
         match grid.is_dirty() {
             true => Err(DirtyState),
-            false => Ok(grid)
+            false => Ok(grid),
         }
     }
 
     pub fn flush_haz_prox_grid(&mut self) {
-        self.haz_prox_grid.as_mut().map(|hpg|
-            hpg.flush_deregisters(self.dynamic_hazards.iter())
-        );
+        self.haz_prox_grid
+            .as_mut()
+            .map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
     }
 
     pub fn has_uncommitted_deregisters(&self) -> bool {
@@ -230,14 +265,22 @@ impl CDEngine {
         &self.static_hazards
     }
 
-    pub fn all_hazards(&self) -> impl Iterator<Item=&Hazard> {
-        self.static_hazards.iter().chain(self.dynamic_hazards.iter())
+    pub fn all_hazards(&self) -> impl Iterator<Item = &Hazard> {
+        self.static_hazards
+            .iter()
+            .chain(self.dynamic_hazards.iter())
     }
 
     //QUERY ----------------------------------------------------------------------------------------
-    pub fn surrogate_or_shape_collides(&self, reference_shape: &SimplePolygon, buffer_shape : &mut SimplePolygon, transform: &Transformation, irrelevant_hazards: &[HazardEntity]) -> bool {
+    pub fn surrogate_or_shape_collides(
+        &self,
+        reference_shape: &SimplePolygon,
+        buffer_shape: &mut SimplePolygon,
+        transform: &Transformation,
+        irrelevant_hazards: &[HazardEntity],
+    ) -> bool {
         //Begin with checking the surrogate for collisions
-        match self.surrogate_collides(reference_shape.surrogate(), transform, irrelevant_hazards){
+        match self.surrogate_collides(reference_shape.surrogate(), transform, irrelevant_hazards) {
             true => true,
             false => {
                 //Transform the reference_shape and store the result in the buffer_shape
@@ -247,27 +290,44 @@ impl CDEngine {
         }
     }
 
-    pub fn shape_collides(&self, shape: &SimplePolygon, irrelevant_hazards: &[HazardEntity]) -> bool {
+    pub fn shape_collides(
+        &self,
+        shape: &SimplePolygon,
+        irrelevant_hazards: &[HazardEntity],
+    ) -> bool {
         match self.bbox.relation_to(&shape.bbox()) {
             //Not fully inside bbox => definite collision
             GeoRelation::Disjoint | GeoRelation::Enclosed | GeoRelation::Intersecting => true,
             GeoRelation::Surrounding => {
-                self.collision_by_edge_intersection(shape, irrelevant_hazards) ||
-                    self.collision_by_containment(shape, irrelevant_hazards)
+                self.collision_by_edge_intersection(shape, irrelevant_hazards)
+                    || self.collision_by_containment(shape, irrelevant_hazards)
             }
         }
     }
 
-    pub fn surrogate_collides(&self, base_surrogate: &SPSurrogate, transform: &Transformation, irrelevant_hazards: &[HazardEntity]) -> bool {
+    pub fn surrogate_collides(
+        &self,
+        base_surrogate: &SPSurrogate,
+        transform: &Transformation,
+        irrelevant_hazards: &[HazardEntity],
+    ) -> bool {
         for pole in base_surrogate.ff_poles() {
             let t_pole = pole.transform_clone(transform);
-            if self.quadtree.collides(&t_pole, irrelevant_hazards).is_some() {
+            if self
+                .quadtree
+                .collides(&t_pole, irrelevant_hazards)
+                .is_some()
+            {
                 return true;
             }
         }
         for pier in base_surrogate.ff_piers() {
             let t_pier = pier.transform_clone(transform);
-            if self.quadtree.collides(&t_pier, irrelevant_hazards).is_some() {
+            if self
+                .quadtree
+                .collides(&t_pier, irrelevant_hazards)
+                .is_some()
+            {
                 return true;
             }
         }
@@ -277,25 +337,39 @@ impl CDEngine {
     pub fn point_definitely_collides_with(&self, point: &Point, entity: &HazardEntity) -> Tribool {
         match self.bbox.collides_with(point) {
             false => Tribool::Indeterminate, //point is outside the quadtree, so no information available
-            true => self.quadtree.point_definitely_collides_with(point, entity)
+            true => self.quadtree.point_definitely_collides_with(point, entity),
         }
     }
 
-    pub fn edge_definitely_collides(&self, edge: &Edge, irrelevant_hazards: &[HazardEntity]) -> Tribool {
+    pub fn edge_definitely_collides(
+        &self,
+        edge: &Edge,
+        irrelevant_hazards: &[HazardEntity],
+    ) -> Tribool {
         match !self.bbox.collides_with(&edge.start) || !self.bbox.collides_with(&edge.end) {
             true => Tribool::True, //if either the start or end of the edge is outside the quadtree, it definitely collides
-            false => self.quadtree.definitely_collides(edge, irrelevant_hazards)
+            false => self.quadtree.definitely_collides(edge, irrelevant_hazards),
         }
     }
 
-    pub fn circle_definitely_collides(&self, circle: &Circle, irrelevant_hazards: &[HazardEntity]) -> Tribool {
+    pub fn circle_definitely_collides(
+        &self,
+        circle: &Circle,
+        irrelevant_hazards: &[HazardEntity],
+    ) -> Tribool {
         match self.bbox.collides_with(&circle.center) {
             false => Tribool::True, //outside the quadtree, so definitely collides
-            true => self.quadtree.definitely_collides(circle, irrelevant_hazards)
+            true => self
+                .quadtree
+                .definitely_collides(circle, irrelevant_hazards),
         }
     }
 
-    pub fn entities_in_circle(&self, circle: &Circle, irrelevant_hazards: &[HazardEntity]) -> Vec<HazardEntity> {
+    pub fn entities_in_circle(
+        &self,
+        circle: &Circle,
+        irrelevant_hazards: &[HazardEntity],
+    ) -> Vec<HazardEntity> {
         let mut colliding_entities = vec![];
         let mut irrelevant_hazards = irrelevant_hazards.iter().cloned().collect_vec();
 
@@ -318,15 +392,24 @@ impl CDEngine {
         colliding_entities
     }
 
-    fn collision_by_edge_intersection(&self, shape: &SimplePolygon, irrelevant_hazards: &[HazardEntity]) -> bool {
-        shape.edge_iter()
+    fn collision_by_edge_intersection(
+        &self,
+        shape: &SimplePolygon,
+        irrelevant_hazards: &[HazardEntity],
+    ) -> bool {
+        shape
+            .edge_iter()
             .any(|e| self.quadtree.collides(&e, irrelevant_hazards).is_some())
     }
 
-    fn collision_by_containment(&self, shape: &SimplePolygon, irrelevant_hazards: &[HazardEntity]) -> bool
-    {
+    fn collision_by_containment(
+        &self,
+        shape: &SimplePolygon,
+        irrelevant_hazards: &[HazardEntity],
+    ) -> bool {
         //collect all active and non-ignored hazards
-        let mut relevant_hazards = self.all_hazards()
+        let mut relevant_hazards = self
+            .all_hazards()
             .filter(|h| h.active && !irrelevant_hazards.contains(&h.entity));
 
         relevant_hazards.any(|haz| {
@@ -338,20 +421,24 @@ impl CDEngine {
 
             let (s_mu, s_omega) = match bbox_relation {
                 GeoRelation::Surrounding => (shape, haz_shape), //inclusion possible
-                GeoRelation::Enclosed => (haz_shape, shape), //inclusion possible
+                GeoRelation::Enclosed => (haz_shape, shape),    //inclusion possible
                 GeoRelation::Disjoint | GeoRelation::Intersecting => {
                     //no inclusion is possible
                     return match haz.entity.position() {
                         GeoPosition::Interior => false,
                         GeoPosition::Exterior => true,
-                    }
-                },
+                    };
+                }
             };
 
             if std::ptr::eq(haz_shape, s_omega) {
                 //s_omega is registered in the quadtree.
                 //maybe the quadtree can help us.
-                match self.quadtree.point_definitely_collides_with(&s_mu.poi.center, &haz.entity).try_into() {
+                match self
+                    .quadtree
+                    .point_definitely_collides_with(&s_mu.poi.center, &haz.entity)
+                    .try_into()
+                {
                     Ok(collides) => return collides,
                     Err(_) => (), //no definitive answer
                 }

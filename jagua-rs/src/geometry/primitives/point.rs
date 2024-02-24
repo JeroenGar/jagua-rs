@@ -27,16 +27,12 @@ impl TransformableFrom for Point {
     }
 }
 
-const TRANSFORM_FORMULA: fn(f64, f64, &Transformation) -> (f64, f64) = |x, y, t| -> (f64, f64){
+const TRANSFORM_FORMULA: fn(f64, f64, &Transformation) -> (f64, f64) = |x, y, t| -> (f64, f64) {
     let m = t.matrix();
 
-    let t_x = m[0][0].into_inner() * x +
-        m[0][1].into_inner() * y +
-        m[0][2].into_inner() * 1.0;
+    let t_x = m[0][0].into_inner() * x + m[0][1].into_inner() * y + m[0][2].into_inner() * 1.0;
 
-    let t_y = m[1][0].into_inner() * x +
-        m[1][1].into_inner() * y +
-        m[1][2].into_inner() * 1.0;
+    let t_y = m[1][0].into_inner() * x + m[1][1].into_inner() * y + m[1][2].into_inner() * 1.0;
 
     (t_x, t_y)
 };
@@ -74,7 +70,10 @@ impl From<(f64, f64)> for Point {
     }
 }
 
-impl<T> CollidesWith<T> for Point where T: CollidesWith<Point>{
+impl<T> CollidesWith<T> for Point
+where
+    T: CollidesWith<Point>,
+{
     fn collides_with(&self, other: &T) -> bool {
         other.collides_with(self)
     }

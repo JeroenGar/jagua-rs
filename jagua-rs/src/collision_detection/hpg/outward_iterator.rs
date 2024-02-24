@@ -38,12 +38,10 @@ impl Iterator for OutwardIterator {
         self.switch = !self.switch;
         match first_option {
             Some(_) => first_option,
-            None => {
-                match self.switch {
-                    true => self.right_iterator.next(),
-                    false => self.left_iterator.next(),
-                }
-            }
+            None => match self.switch {
+                true => self.right_iterator.next(),
+                false => self.left_iterator.next(),
+            },
         }
     }
 }

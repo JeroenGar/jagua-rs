@@ -1,8 +1,8 @@
 use tribool::Tribool;
 
 use crate::collision_detection::hazard::HazardEntity;
-use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
+use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_partial_hazard::QTPartialHazard;
 use crate::geometry::geo_traits::CollidesWith;
@@ -52,7 +52,10 @@ impl QTNode {
         }
 
         //If the hazard is of the partial type, and we are not at the max tree depth: generate children
-        if !self.has_children() && self.level > 0 && matches!(hazard.presence, QTHazPresence::Partial(_)) {
+        if !self.has_children()
+            && self.level > 0
+            && matches!(hazard.presence, QTHazPresence::Partial(_))
+        {
             self.generate_children();
             //register all existing hazards to the newly created children
             for hazard in self.hazards.all_hazards() {
@@ -73,7 +76,10 @@ impl QTNode {
                 self.children = None;
             } else {
                 //Otherwise, recursively deregister the entity from the children
-                self.children.as_mut().unwrap().iter_mut()
+                self.children
+                    .as_mut()
+                    .unwrap()
+                    .iter_mut()
                     .for_each(|child| child.deregister_hazard(hazard_entity));
             }
         }
@@ -83,9 +89,8 @@ impl QTNode {
         let modified = self.hazards.activate_hazard(entity);
         if modified {
             match &mut self.children {
-                Some(children) => children.iter_mut()
-                    .for_each(|c| c.activate_hazard(entity)),
-                None => ()
+                Some(children) => children.iter_mut().for_each(|c| c.activate_hazard(entity)),
+                None => (),
             }
         }
     }
@@ -94,26 +99,32 @@ impl QTNode {
         let modified = self.hazards.deactivate_hazard(entity);
         if modified {
             match &mut self.children {
-                Some(children) => children.iter_mut()
+                Some(children) => children
+                    .iter_mut()
                     .for_each(|c| c.deactivate_hazard(entity)),
-                None => ()
+                None => (),
             }
         }
     }
 
     fn generate_children(&mut self) {
         if self.level > 0 {
-            self.children = Some(Box::new(
-                self.bbox.quadrants()
-                    .map(|split_bbox| QTNode::new(self.level - 1, split_bbox, None))
-            ));
+            self.children =
+                Some(Box::new(self.bbox.quadrants().map(|split_bbox| {
+                    QTNode::new(self.level - 1, split_bbox, None)
+                })));
         }
     }
 
     pub fn get_number_of_children(&self) -> usize {
         match &self.children {
-            Some(children) => 4 + children.iter().map(|x| x.get_number_of_children()).sum::<usize>(),
-            None => 0
+            Some(children) => {
+                4 + children
+                    .iter()
+                    .map(|x| x.get_number_of_children())
+                    .sum::<usize>()
+            }
+            None => 0,
         }
     }
 
@@ -124,8 +135,14 @@ impl QTNode {
     /// Returns None if no collision between the entity and any hazard is detected,
     /// otherwise returns the first encountered hazard that collides with the entity
     /// In practice T is usually an `Edge` or `Circle`
-    pub fn collides<T>(&self, entity: &T, irrelevant_hazards: &[HazardEntity]) -> Option<&HazardEntity>
-        where T: CollidesWith<AARectangle>, QTPartialHazard: CollidesWith<T>
+    pub fn collides<T>(
+        &self,
+        entity: &T,
+        irrelevant_hazards: &[HazardEntity],
+    ) -> Option<&HazardEntity>
+    where
+        T: CollidesWith<AARectangle>,
+        QTPartialHazard: CollidesWith<T>,
     {
         match self.hazards.strongest(irrelevant_hazards) {
             None => None,
@@ -137,33 +154,41 @@ impl QTNode {
                     QTHazPresence::Partial(_) => match &self.children {
                         Some(children) => {
                             //Check if any of the children intersect with the entity
-                            children.iter()
+                            children
+                                .iter()
                                 .map(|child| child.collides(entity, irrelevant_hazards))
                                 .find(|x| x.is_some())
                                 .flatten()
                         }
                         None => {
                             //Check if any of the partially present (and active) hazards collide with the entity
-                            let mut relevant_hazards = self.hazards.active_hazards().iter().filter(|hz| !irrelevant_hazards.contains(&hz.entity));
-                            relevant_hazards.find(|hz| {
-                                match &hz.presence {
+                            let mut relevant_hazards = self
+                                .hazards
+                                .active_hazards()
+                                .iter()
+                                .filter(|hz| !irrelevant_hazards.contains(&hz.entity));
+                            relevant_hazards
+                                .find(|hz| match &hz.presence {
                                     QTHazPresence::None => false,
-                                    QTHazPresence::Entire => unreachable!("should have been handled above"),
-                                    QTHazPresence::Partial(p_haz) => {
-                                        !irrelevant_hazards.contains(&hz.entity) &&
-                                            p_haz.collides_with(entity)
+                                    QTHazPresence::Entire => {
+                                        unreachable!("should have been handled above")
                                     }
-                                }
-                            }).map(|hz| &hz.entity)
+                                    QTHazPresence::Partial(p_haz) => {
+                                        !irrelevant_hazards.contains(&hz.entity)
+                                            && p_haz.collides_with(entity)
+                                    }
+                                })
+                                .map(|hz| &hz.entity)
                         }
-                    }
-                }
-            }
+                    },
+                },
+            },
         }
     }
 
     pub fn definitely_collides<T>(&self, entity: &T, irrelevant_hazards: &[HazardEntity]) -> Tribool
-        where T: CollidesWith<AARectangle>
+    where
+        T: CollidesWith<AARectangle>,
     {
         match self.hazards.strongest(irrelevant_hazards) {
             None => Tribool::False,
@@ -213,9 +238,9 @@ impl QTNode {
                             result
                         }
                         None => Tribool::Indeterminate, //There are no children, so we can't be sure
-                    }
-                }
-            }
+                    },
+                },
+            },
         }
     }
 }

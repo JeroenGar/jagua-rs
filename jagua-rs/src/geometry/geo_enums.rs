@@ -18,12 +18,12 @@ pub enum GeoRelation {
     Intersecting,
     Enclosed,
     Surrounding,
-    Disjoint
+    Disjoint,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum AllowedRotation {
     None,
     Continuous,
-    Discrete(Vec<f64>)
+    Discrete(Vec<f64>),
 }

@@ -13,9 +13,16 @@ pub struct SPInstance {
 
 impl SPInstance {
     pub fn new(items: Vec<(Item, usize)>, strip_height: f64) -> Self {
-        let item_area = items.iter().map(|(item, qty)| item.shape.area() * *qty as f64).sum();
+        let item_area = items
+            .iter()
+            .map(|(item, qty)| item.shape.area() * *qty as f64)
+            .sum();
 
-        Self { items, item_area, strip_height }
+        Self {
+            items,
+            item_area,
+            strip_height,
+        }
     }
 }
 

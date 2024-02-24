@@ -15,7 +15,12 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
 
     /// Removes an item with a specific `PlacedItemUID` from a specific `Layout`
     /// For more information about `commit_instantly`, see [`crate::collision_detection::cd_engine::CDEngine::deregister_hazard`].
-    fn remove_item(&mut self, layout_index: LayoutIndex, pi_uid: &PlacedItemUID, commit_instantly: bool);
+    fn remove_item(
+        &mut self,
+        layout_index: LayoutIndex,
+        pi_uid: &PlacedItemUID,
+        commit_instantly: bool,
+    );
 
     /// Saves the current state of the problem as a `Solution`.
     fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution;
@@ -36,14 +41,16 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     fn missing_item_qtys(&self) -> &[isize];
 
     /// The quantity of each item that is currently placed in the problem instance, indexed by item id.
-    fn placed_item_qtys(&self) -> impl Iterator<Item=usize> {
-        self.missing_item_qtys().iter().enumerate()
+    fn placed_item_qtys(&self) -> impl Iterator<Item = usize> {
+        self.missing_item_qtys()
+            .iter()
+            .enumerate()
             .map(|(i, missing_qty)| (self.instance().item_qty(i) as isize - missing_qty) as usize)
     }
 
     fn usage(&mut self) -> f64 {
-        let (total_bin_area, total_used_area) = self.layouts_mut().iter_mut()
-            .fold((0.0, 0.0), |acc, l| {
+        let (total_bin_area, total_used_area) =
+            self.layouts_mut().iter_mut().fold((0.0, 0.0), |acc, l| {
                 let bin_area = l.bin().area;
                 let used_area = bin_area * l.usage();
                 (acc.0 + bin_area, acc.1 + used_area)
@@ -56,31 +63,36 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     }
 
     /// Returns the `LayoutIndex` of all layouts.
-    fn layout_indices(&self) -> impl Iterator<Item=LayoutIndex> {
-        (0..self.layouts().len()).into_iter().map(|i| LayoutIndex::Real(i))
+    fn layout_indices(&self) -> impl Iterator<Item = LayoutIndex> {
+        (0..self.layouts().len())
+            .into_iter()
+            .map(|i| LayoutIndex::Real(i))
     }
 
     /// Returns the `LayoutIndex` of all template layouts that have remaining stock.
-    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
-        self.template_layouts().iter().enumerate().filter_map(|(i, l)| {
-            match self.bin_qtys()[l.bin().id] {
+    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item = LayoutIndex> {
+        self.template_layouts()
+            .iter()
+            .enumerate()
+            .filter_map(|(i, l)| match self.bin_qtys()[l.bin().id] {
                 0 => None,
-                _ => Some(LayoutIndex::Template(i))
-            }
-        })
+                _ => Some(LayoutIndex::Template(i)),
+            })
     }
 
     fn get_layout(&self, index: impl Borrow<LayoutIndex>) -> &Layout {
         match index.borrow() {
             LayoutIndex::Real(i) => &self.layouts()[*i],
-            LayoutIndex::Template(i) => &self.template_layouts()[*i]
+            LayoutIndex::Template(i) => &self.template_layouts()[*i],
         }
     }
 
     fn bin_qtys(&self) -> &[usize];
 
     fn flush_changes(&mut self) {
-        self.layouts_mut().iter_mut().for_each(|l| l.flush_changes());
+        self.layouts_mut()
+            .iter_mut()
+            .for_each(|l| l.flush_changes());
     }
 
     fn instance(&self) -> &dyn InstanceGeneric;

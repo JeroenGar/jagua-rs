@@ -20,7 +20,11 @@ impl SPSurrogate {
     pub fn new(simple_poly: &SimplePolygon, config: SPSurrogateConfig) -> Self {
         let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
         let mut poles = vec![simple_poly.poi.clone()];
-        poles.extend(poi::generate_additional_surrogate_poles(simple_poly, config.max_poles.saturating_sub(1), config.pole_coverage_goal));
+        poles.extend(poi::generate_additional_surrogate_poles(
+            simple_poly,
+            config.max_poles.saturating_sub(1),
+            config.pole_coverage_goal,
+        ));
         let poles_bounding_circle = Circle::bounding_circle(&poles);
 
         let n_ff_poles = usize::min(config.n_ff_poles, poles.len());
@@ -32,7 +36,7 @@ impl SPSurrogate {
             poles,
             piers,
             poles_bounding_circle,
-            n_ff_poles
+            n_ff_poles,
         }
     }
 
@@ -43,13 +47,18 @@ impl SPSurrogate {
     pub fn ff_piers(&self) -> &[Edge] {
         &self.piers
     }
-
 }
 
 impl Transformable for SPSurrogate {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
         //destructuring pattern used to ensure that the code is updated accordingly when the struct changes
-        let Self {convex_hull_indices: _, poles, poles_bounding_circle, piers, n_ff_poles: _} = self;
+        let Self {
+            convex_hull_indices: _,
+            poles,
+            poles_bounding_circle,
+            piers,
+            n_ff_poles: _,
+        } = self;
 
         //transform poles
         poles.iter_mut().for_each(|c| {
@@ -73,7 +82,13 @@ impl TransformableFrom for SPSurrogate {
         debug_assert!(self.piers.len() == reference.piers.len());
 
         //destructuring pattern used to ensure that the code is updated accordingly when the struct changes
-        let Self {convex_hull_indices: _, poles, poles_bounding_circle, piers, n_ff_poles: _} = self;
+        let Self {
+            convex_hull_indices: _,
+            poles,
+            poles_bounding_circle,
+            piers,
+            n_ff_poles: _,
+        } = self;
 
         for (pole, ref_pole) in poles.iter_mut().zip(reference.poles.iter()) {
             pole.transform_from(ref_pole, t);

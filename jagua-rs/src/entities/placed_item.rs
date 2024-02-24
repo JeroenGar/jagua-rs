@@ -30,7 +30,10 @@ impl PlacedItem {
         let transf = d_transf.compose();
         let shape = Arc::new(item.shape.transform_clone(&transf));
         let qz_haz_filter = item.hazard_filter.clone();
-        let pi_uid = PlacedItemUID { item_id: item.id, d_transf };
+        let pi_uid = PlacedItemUID {
+            item_id: item.id,
+            d_transf,
+        };
         PlacedItem {
             uid: pi_uid,
             shape,

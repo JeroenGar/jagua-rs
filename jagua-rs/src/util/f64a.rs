@@ -17,8 +17,10 @@ impl F64A {
     }
 }
 
-
-impl<T> From<T> for F64A where T: Into<f64> {
+impl<T> From<T> for F64A
+where
+    T: Into<f64>,
+{
     fn from(n: T) -> Self {
         F64A(n.into())
     }
@@ -34,7 +36,7 @@ impl PartialOrd<Self> for F64A {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self.eq(other) {
             true => Some(Ordering::Equal),
-            false => self.0.partial_cmp(&other.0)
+            false => self.0.partial_cmp(&other.0),
         }
     }
 }

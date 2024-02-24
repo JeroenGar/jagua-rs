@@ -1,4 +1,4 @@
-use crate::collision_detection::cd_engine::{CDEngine, CDESnapshot};
+use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::placed_item::PlacedItem;
@@ -15,7 +15,7 @@ pub struct Layout {
     id: usize,
     bin: Bin,
     placed_items: Vec<PlacedItem>,
-    cde: CDEngine
+    cde: CDEngine,
 }
 
 impl Layout {
@@ -25,7 +25,7 @@ impl Layout {
             id,
             bin,
             placed_items: vec![],
-            cde
+            cde,
         }
     }
 
@@ -38,12 +38,12 @@ impl Layout {
     pub fn create_layout_snapshot(&mut self) -> LayoutSnapshot {
         debug_assert!(assertions::layout_is_collision_free(self));
 
-        LayoutSnapshot{
+        LayoutSnapshot {
             id: self.id,
             bin: self.bin.clone(),
             placed_items: self.placed_items.clone(),
             cde_snapshot: self.cde.create_snapshot(),
-            usage: self.usage()
+            usage: self.usage(),
         }
     }
 
@@ -58,10 +58,7 @@ impl Layout {
     }
 
     pub fn clone_with_id(&self, id: usize) -> Self {
-        Layout {
-            id,
-            ..self.clone()
-        }
+        Layout { id, ..self.clone() }
     }
 
     pub fn place_item(&mut self, item: &Item, d_transformation: &DTransformation) {
@@ -73,9 +70,14 @@ impl Layout {
     }
 
     pub fn remove_item(&mut self, pi_uid: &PlacedItemUID, commit_instantly: bool) {
-        let pos = self.placed_items.iter().position(|pi| &pi.uid == pi_uid).expect("item not found");
+        let pos = self
+            .placed_items
+            .iter()
+            .position(|pi| &pi.uid == pi_uid)
+            .expect("item not found");
         let placed_item = self.placed_items.swap_remove(pos);
-        self.cde.deregister_hazard(&placed_item.uid.clone().into(), commit_instantly);
+        self.cde
+            .deregister_hazard(&placed_item.uid.clone().into(), commit_instantly);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
     }
@@ -94,7 +96,11 @@ impl Layout {
 
     pub fn usage(&self) -> f64 {
         let bin_area = self.bin().area;
-        let item_area = self.placed_items.iter().map(|p_i| p_i.shape.area()).sum::<f64>();
+        let item_area = self
+            .placed_items
+            .iter()
+            .map(|p_i| p_i.shape.area())
+            .sum::<f64>();
 
         item_area / bin_area
     }
@@ -102,7 +108,7 @@ impl Layout {
     pub fn id(&self) -> usize {
         self.id
     }
-    
+
     pub fn cde(&self) -> &CDEngine {
         &self.cde
     }
@@ -111,7 +117,6 @@ impl Layout {
         self.cde.flush_haz_prox_grid();
     }
 }
-
 
 /// A `LayoutSnapshot` is an immutable representation of a `Layout` at a certain point in time.
 /// `Layout`s can create `LayoutSnapshot`s, and restore themselves to a previous state using them.

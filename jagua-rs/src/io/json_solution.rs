@@ -49,7 +49,7 @@ pub struct JsonTransformation {
 #[serde(rename_all = "PascalCase")]
 pub struct JsonLayoutStats {
     /// The percentage of the container that is packed with items
-    pub usage: f64
+    pub usage: f64,
 }
 
 /// Type of container that was used
@@ -57,10 +57,10 @@ pub struct JsonLayoutStats {
 #[serde(rename_all = "PascalCase")]
 #[serde(tag = "Type", content = "Params")]
 pub enum JsonContainer {
-    Bin { 
+    Bin {
         /// The index of the object in the instance
         #[serde(rename = "Index")]
-        index: usize 
+        index: usize,
     },
     Strip {
         /// The length of the strip (variable)
