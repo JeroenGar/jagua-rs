@@ -2,9 +2,9 @@
 mod tests {
     use std::path::Path;
 
-    use rand::{Rng, SeedableRng};
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;
+    use rand::{Rng, SeedableRng};
     use test_case::test_case;
 
     use jagua_rs::entities::problems::problem_generic::LayoutIndex;

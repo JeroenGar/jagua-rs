@@ -1,4 +1,4 @@
-use crate::collision_detection::cd_engine::{CDEngine, CDESnapshot};
+use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::placed_item::PlacedItem;

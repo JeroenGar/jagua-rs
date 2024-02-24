@@ -5,8 +5,8 @@ use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
+use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::solution::Solution;
 use crate::util::assertions;
 

@@ -3,13 +3,13 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
-use log::{info, Level, LevelFilter, log};
+use log::{info, log, Level, LevelFilter};
 use svg::Document;
 
 use jagua_rs::io::json_instance::JsonInstance;
 
-use crate::EPOCH;
 use crate::io::json_output::JsonOutput;
+use crate::EPOCH;
 
 pub mod cli;
 pub mod json_output;

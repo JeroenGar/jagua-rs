@@ -10,12 +10,12 @@ use rand::SeedableRng;
 
 use jagua_rs::io::parser;
 use jagua_rs::io::parser::Parser;
-use lbf::{EPOCH, io};
 use lbf::config::Config;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
 use lbf::io::layout_to_svg::s_layout_to_svg;
 use lbf::lbf_optimizer::LBFOptimizer;
+use lbf::{io, EPOCH};
 
 fn main() {
     let args = Cli::parse();

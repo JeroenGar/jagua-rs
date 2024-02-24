@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::BufReader;
 
-use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use itertools::Itertools;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;

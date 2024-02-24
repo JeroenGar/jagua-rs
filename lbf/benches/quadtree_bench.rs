@@ -1,11 +1,11 @@
 use std::fs::File;
 use std::io::BufReader;
 
-use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use itertools::Itertools;
 use rand::prelude::SmallRng;
-use rand::SeedableRng;
 use rand::seq::IteratorRandom;
+use rand::SeedableRng;
 
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::placing_option::PlacingOption;
