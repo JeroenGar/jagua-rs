@@ -68,7 +68,7 @@ The configuration file is a JSON file with the following structure:
   },
   "deterministic_mode": true, //The heuristic will always produce the same solution for the same input and configuration
   "n_samples_per_item": 5000, //5000 placement samples will be queried per item.
-  "ls_samples_fraction": 0.2 //Of those 5000, 80% will be sampled at random, 20% will be local search samples
+  "ls_samples_fraction": 0.2 //Of those 5000, 80% will be sampled at uniformly at random, 20% will be local search samples
 }
 ```
 

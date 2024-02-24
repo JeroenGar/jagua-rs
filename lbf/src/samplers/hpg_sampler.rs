@@ -9,7 +9,6 @@ use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
 use jagua_rs::geometry::transformation::Transformation;
 
-use crate::lbf_cost::LBFPlacingCost;
 use crate::samplers::uniform_rect_sampler::UniformAARectSampler;
 
 /// Creates transformation samples for a given item.

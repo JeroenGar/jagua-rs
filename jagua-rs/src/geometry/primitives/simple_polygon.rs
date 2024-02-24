@@ -78,13 +78,6 @@ impl SimplePolygon {
         self.surrogate = Some(SPSurrogate::new(self, config));
     }
 
-    pub fn clone_and_strip_surrogate(&self) -> Self {
-        SimplePolygon {
-            surrogate: None,
-            ..self.clone()
-        }
-    }
-
     pub fn get_point(&self, i: usize) -> Point {
         self.points[i]
     }

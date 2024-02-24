@@ -3,13 +3,13 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
-use log::{info, log, Level, LevelFilter};
+use log::{info, Level, LevelFilter, log};
 use svg::Document;
 
 use jagua_rs::io::json_instance::JsonInstance;
 
-use crate::io::json_output::JsonOutput;
 use crate::EPOCH;
+use crate::io::json_output::JsonOutput;
 
 pub mod cli;
 pub mod json_output;
@@ -48,8 +48,7 @@ pub fn write_svg(document: &Document, path: &Path) {
     );
 }
 
-pub fn init_logger(level_filter: Option<LevelFilter>) {
-    let level_filter = level_filter.unwrap_or(LevelFilter::Info);
+pub fn init_logger(level_filter: LevelFilter) {
     fern::Dispatch::new()
         // Perform allocation-free log formatting
         .format(|out, message, record| {

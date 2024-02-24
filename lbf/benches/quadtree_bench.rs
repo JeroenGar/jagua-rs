@@ -1,13 +1,13 @@
 use std::fs::File;
 use std::io::BufReader;
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use rand::prelude::SmallRng;
-use rand::seq::IteratorRandom;
 use rand::SeedableRng;
+use rand::seq::IteratorRandom;
 
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::placing_option::PlacingOption;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::geometry::geo_traits::TransformableFrom;
@@ -72,8 +72,8 @@ fn quadtree_update_bench(c: &mut Criterion) {
                 problem.place_item(&PlacingOption {
                     layout_index,
                     item_id: pi_uid.item_id,
-                    transf: pi_uid.d_transf.compose(),
-                    d_transf: pi_uid.d_transf,
+                    transform: pi_uid.d_transf.compose(),
+                    d_transform: pi_uid.d_transf,
                 });
             })
         });
@@ -194,8 +194,8 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 problem.place_item(&PlacingOption {
                     layout_index: LayoutIndex::Real(0),
                     item_id: pi_uid.item_id,
-                    transf: pi_uid.d_transf.compose(),
-                    d_transf: pi_uid.d_transf,
+                    transform: pi_uid.d_transf.compose(),
+                    d_transform: pi_uid.d_transf,
                 })
             })
         });

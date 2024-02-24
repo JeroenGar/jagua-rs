@@ -1,12 +1,20 @@
+use std::f64::consts::PI;
+
 use rand::distributions::Distribution;
 use rand::Rng;
 use rand_distr::Normal;
 
 use jagua_rs::entities::item::Item;
 use jagua_rs::geometry::d_transformation::DTransformation;
+use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
 use jagua_rs::geometry::transformation::Transformation;
 
 use crate::samplers::rotation_distr::NormalRotDistr;
+
+const TRANSL_START_FRAC: f64 = 0.01;
+const TRANSL_END_FRAC: f64 = 0.001;
+const ROT_START_FRAC: f64 = 2.0 * (PI / 180.0);
+const ROT_END_FRAC: f64 = 0.5 * (PI / 180.0);
 
 pub struct LSSampler {
     normal_x: Normal<f64>,
@@ -14,15 +22,20 @@ pub struct LSSampler {
     normal_r: NormalRotDistr,
     stddev_transl: f64,
     stddev_rot: f64,
+    stddev_transl_range: (f64, f64),
+    stddev_rot_range: (f64, f64),
 }
 
 impl LSSampler {
     pub fn new(
         item: &Item,
         ref_transform: &DTransformation,
-        stddev_transl: f64,
-        stddev_rot: f64,
+        stddev_transl_range: (f64, f64),
+        stddev_rot_range: (f64, f64),
     ) -> Self {
+        let stddev_transl = stddev_transl_range.0;
+        let stddev_rot = stddev_rot_range.0;
+
         let normal_x = Normal::new(ref_transform.translation().0, stddev_transl).unwrap();
         let normal_y = Normal::new(ref_transform.translation().1, stddev_transl).unwrap();
         let normal_r = NormalRotDistr::from_item(item, ref_transform.rotation(), stddev_rot);
@@ -33,10 +46,23 @@ impl LSSampler {
             normal_r,
             stddev_transl,
             stddev_rot,
+            stddev_transl_range,
+            stddev_rot_range,
         }
     }
 
-    pub fn set_mean(&mut self, ref_transform: &DTransformation) {
+    pub fn from_default_stddevs(
+        item: &Item,
+        ref_transform: &DTransformation,
+        bbox: &AARectangle,
+    ) -> Self {
+        let max_dim = f64::max(bbox.width(), bbox.height());
+        let stddev_transl_range = (max_dim * TRANSL_START_FRAC, max_dim * TRANSL_END_FRAC);
+        let stddev_rot_range = (ROT_START_FRAC, ROT_END_FRAC);
+        Self::new(item, ref_transform, stddev_transl_range, stddev_rot_range)
+    }
+
+    pub fn shift_mean(&mut self, ref_transform: &DTransformation) {
         self.normal_x = Normal::new(ref_transform.translation().0, self.stddev_transl).unwrap();
         self.normal_y = Normal::new(ref_transform.translation().1, self.stddev_transl).unwrap();
         self.normal_r.set_mean(ref_transform.rotation());
@@ -52,12 +78,15 @@ impl LSSampler {
         self.normal_r.set_stddev(self.stddev_rot);
     }
 
-    pub fn stddev_transl(&self) -> f64 {
-        self.stddev_transl
-    }
-
-    pub fn stddev_rot(&self) -> f64 {
-        self.stddev_rot
+    /// Changes the stddev according to the pct of samples that have passed.
+    /// `pct` is a value in [0, 1] that represents the percentage of samples that have passed.
+    /// 0 means the first sample, 1 means the last sample.
+    pub fn evolve_stddev(&mut self, progress_pct: f64) {
+        let calc_stddev = |(init, end): (f64, f64), pct: f64| init * (end / init).powf(pct);
+        self.set_stddev(
+            calc_stddev(self.stddev_transl_range, progress_pct),
+            calc_stddev(self.stddev_rot_range, progress_pct),
+        );
     }
 
     pub fn sample(&self, rng: &mut impl Rng) -> Transformation {

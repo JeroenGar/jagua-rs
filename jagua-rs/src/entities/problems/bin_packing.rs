@@ -5,8 +5,8 @@ use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::solution::Solution;
 use crate::util::assertions;
 
@@ -133,7 +133,7 @@ impl ProblemGeneric for BPProblem {
             LayoutIndex::Template(_) => unreachable!("cannot place item in template layout"),
         };
         let item = self.instance.item(i_opt.item_id);
-        layout.place_item(item, &i_opt.d_transf);
+        layout.place_item(item, &i_opt.d_transform);
         let layout_id = layout.id();
 
         self.register_included_item(i_opt.item_id);

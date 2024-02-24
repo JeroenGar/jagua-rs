@@ -4,23 +4,23 @@ use std::io::BufReader;
 use std::path::Path;
 
 use clap::Parser as ClapParser;
-use log::{error, warn, LevelFilter};
+use log::{error, warn};
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
 
 use jagua_rs::io::parser;
 use jagua_rs::io::parser::Parser;
+use lbf::{EPOCH, io};
 use lbf::config::Config;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
 use lbf::io::layout_to_svg::s_layout_to_svg;
 use lbf::lbf_optimizer::LBFOptimizer;
-use lbf::{io, EPOCH};
 
 fn main() {
-    io::init_logger(Some(LevelFilter::Info));
-
     let args = Cli::parse();
+    io::init_logger(args.log_level);
+
     let config = match args.config_file {
         None => {
             warn!("No config file provided, use --config-file to provide a custom config");

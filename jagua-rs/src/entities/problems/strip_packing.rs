@@ -10,8 +10,8 @@ use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::LayoutIndex;
+use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
@@ -95,8 +95,8 @@ impl SPProblem {
                     let insert_opt = PlacingOption {
                         layout_index: LayoutIndex::Real(0),
                         item_id: p_uid.item_id,
-                        transf,
-                        d_transf: p_uid.d_transf.clone(),
+                        transform: transf,
+                        d_transform: p_uid.d_transf.clone(),
                     };
                     self.place_item(&insert_opt);
                 }
@@ -140,7 +140,7 @@ impl ProblemGeneric for SPProblem {
         );
         let item_id = i_opt.item_id;
         let item = self.instance.item(item_id);
-        self.layout.place_item(item, &i_opt.d_transf);
+        self.layout.place_item(item, &i_opt.d_transform);
 
         self.register_included_item(item_id);
         LayoutIndex::Real(0)

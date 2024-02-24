@@ -82,7 +82,7 @@ where
 const _0: NotNan<f64> = unsafe { NotNan::new_unchecked(0.0) };
 const _1: NotNan<f64> = unsafe { NotNan::new_unchecked(1.0) };
 
-const EMPTY_MATRIX: [[NotNan<f64>; 3]; 3] = { [[_1, _0, _0], [_0, _1, _0], [_0, _0, _1]] };
+const EMPTY_MATRIX: [[NotNan<f64>; 3]; 3] = [[_1, _0, _0], [_0, _1, _0], [_0, _0, _1]];
 
 fn rotation_matrix(angle: f64) -> [[NotNan<f64>; 3]; 3] {
     let cos = NotNan::new(angle.cos()).unwrap_or_else(|_| panic!("cos({}) is NaN", angle));

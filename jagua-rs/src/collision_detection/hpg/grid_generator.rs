@@ -7,6 +7,8 @@ use crate::geometry::geo_traits::{DistanceFrom, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
 
+const MAX_ITERATIONS: usize = 25;
+
 /// Generates a grid of equal sized square rectangles within a shape.
 /// The number of cells is approximately equal to target_n_cells, but can be slightly more or less
 /// This is due to the fact that the cells are always remain square, so we cannot guarantee an exact number of cells
@@ -40,8 +42,9 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
                 }
             }
         }
-        if n_iters >= 25 {
-            debug!("grid generation is taking too long, stopping after 25 iterations ({} cells instead of target {})", cells.len(), target_n_cells);
+
+        if n_iters >= MAX_ITERATIONS {
+            debug!("terminating grid generation after {MAX_ITERATIONS} iterations ({} cells vs {} targeted)", cells.len(), target_n_cells);
             break;
         }
 

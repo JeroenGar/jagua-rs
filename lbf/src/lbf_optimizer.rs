@@ -1,5 +1,4 @@
 use std::cmp::{Ordering, Reverse};
-use std::f64::consts::PI;
 use std::time::Instant;
 
 use itertools::Itertools;
@@ -27,11 +26,6 @@ use crate::config::Config;
 use crate::lbf_cost::LBFPlacingCost;
 use crate::samplers::hpg_sampler::HPGSampler;
 use crate::samplers::ls_sampler::LSSampler;
-
-pub const STDDEV_TRANSL_START_FRAC: f64 = 0.01;
-pub const STDDEV_TRANSL_END_FRAC: f64 = 0.001;
-pub const STDDEV_ROT_START_FRAC: f64 = 2.0 * (PI / 180.0);
-pub const STDDEV_ROT_END_FRAC: f64 = 0.5 * (PI / 180.0);
 
 //limits the number of items to be placed, for debugging purposes
 pub const ITEM_LIMIT: usize = usize::MAX;
@@ -81,22 +75,27 @@ impl LBFOptimizer {
             //place all items of this type
             while self.problem.missing_item_qtys()[item_index] > 0 {
                 //find a position and insert it
-                match find_placement(&self.problem, item, &self.config, &mut self.rng) {
+                match find_lbf_placement(&self.problem, item, &self.config, &mut self.rng) {
                     Some(i_opt) => {
-                        info!("Placing item {} at {}", i_opt.item_id, i_opt.d_transf);
+                        info!(
+                            "[LBF] placing item {} at {}",
+                            i_opt.item_id, i_opt.d_transform
+                        );
                         self.problem.place_item(&i_opt);
                         if self.problem.placed_item_qtys().sum::<usize>() >= ITEM_LIMIT {
                             break 'outer;
                         }
                     }
-                    None => match &mut self.problem {
-                        Problem::BP(_) => break,
-                        Problem::SP(sp_problem) => {
-                            let new_width = sp_problem.strip_width() * 1.1;
-                            info!("Extending the strip by 10%: {:.3}", new_width);
-                            sp_problem.modify_strip_width(new_width);
+                    None => {
+                        match &mut self.problem {
+                            Problem::BP(_) => break,
+                            Problem::SP(sp_problem) => {
+                                let new_width = sp_problem.strip_width() * 1.1;
+                                info!("[LBF] no placement found, extending strip width by 10% to {:.3}", new_width);
+                                sp_problem.modify_strip_width(new_width);
+                            }
                         }
-                    },
+                    }
                 }
             }
         }
@@ -105,176 +104,133 @@ impl LBFOptimizer {
             Problem::BP(_) => {}
             Problem::SP(sp_problem) => {
                 sp_problem.fit_strip_width();
-                info!("Final strip width: {:.3}", sp_problem.strip_width());
+                info!("[OPT] final strip width: {:.3}", sp_problem.strip_width());
             }
         }
 
         let solution: Solution = self.problem.create_solution(&None);
 
         info!(
-            "BLFOptimizer finished, {} items placed in {}ms, usage: {:.3}%",
+            "[LBF] optimization finished, placed {} items in {:?} with {:.3}% usage",
             solution.n_items_placed(),
-            start.elapsed().as_millis(),
+            start.elapsed(),
             solution.usage * 100.0
         );
         solution
     }
-
-    pub fn instance(&self) -> &Instance {
-        &self.instance
-    }
-    pub fn problem(&self) -> &Problem {
-        &self.problem
-    }
-    pub fn config(&self) -> &Config {
-        &self.config
-    }
 }
 
-pub fn find_placement(
+pub fn find_lbf_placement(
     problem: &Problem,
     item: &Item,
     config: &Config,
     rng: &mut impl Rng,
 ) -> Option<PlacingOption> {
     //search all existing layouts and template layouts with remaining stock
-    let layouts_to_sample = problem
-        .layout_indices()
-        .chain(problem.template_layout_indices_with_stock());
+    let existing_layouts = problem.layout_indices();
+    let template_layouts = problem.template_layout_indices_with_stock();
 
-    let best_i_opt = layouts_to_sample
-        .filter_map(|l_i| sample_layout(problem, l_i, item, config, rng))
-        .next();
-
-    best_i_opt
+    //sequential search until a valid placement is found
+    for layout in existing_layouts.chain(template_layouts) {
+        if let Some(placing_opt) = sample_layout(problem, layout, item, config, rng) {
+            return Some(placing_opt);
+        }
+    }
+    None
 }
 
 pub fn sample_layout(
     problem: &Problem,
-    layout_index: LayoutIndex,
+    l_index: LayoutIndex,
     item: &Item,
     config: &Config,
     rng: &mut impl Rng,
 ) -> Option<PlacingOption> {
-    let item_id = item.id;
-    let layout: &Layout = problem.get_layout(&layout_index);
-    let entities_to_ignore = item.hazard_filter.as_ref().map_or(vec![], |hf| {
-        hazard_filter::generate_irrelevant_hazards(hf, layout.cde().all_hazards())
-    });
+    let layout: &Layout = problem.get_layout(&l_index);
+    let cde = layout.cde();
+    let irrel_hazards = match item.hazard_filter.as_ref() {
+        None => vec![],
+        Some(hf) => hazard_filter::generate_irrelevant_hazards(hf, layout.cde().all_hazards()),
+    };
 
-    let shape = &item.shape;
     let surrogate = item.shape.surrogate();
-    let mut buffer_shape = shape.clone_and_strip_surrogate();
+    //create a clone of the shape which will we can use to apply the transformations
+    let mut buffer = {
+        let mut buffer = (*item.shape).clone();
+        buffer.surrogate = None; //strip the surrogate for faster transforms, we don't need it for the buffer shape
+        buffer
+    };
 
-    let mut best = None;
+    let mut best: Option<(PlacingOption, LBFPlacingCost)> = None;
 
+    //calculate the number of uniform and local search samples
     let n_ls_samples = (config.n_samples_per_item as f32 * config.ls_samples_fraction) as usize;
-    let n_random_samples = config.n_samples_per_item - n_ls_samples;
+    let n_uni_samples = config.n_samples_per_item - n_ls_samples;
 
-    //random sampling within the valid cells of the Hazard Proximity Grid, tracking the best valid insertion option
-    match HPGSampler::new(item, layout) {
-        None => {}
-        Some(mut sampler) => {
-            for _ in 0..n_random_samples {
-                let transf = sampler.sample(rng);
-                if !layout
-                    .cde()
-                    .surrogate_collides(surrogate, &transf, entities_to_ignore.as_ref())
-                {
-                    buffer_shape.transform_from(&shape, &transf);
-                    let cost = LBFPlacingCost::from_shape(&buffer_shape);
-
-                    //only validate the sample if it possibly can replace the current best
-                    let worth_testing = best.as_ref().map_or(true, |(_, best_cost)| {
-                        cost.partial_cmp(best_cost).unwrap() == Ordering::Less
-                    });
-
-                    if worth_testing
-                        && !layout
-                            .cde()
-                            .shape_collides(&buffer_shape, entities_to_ignore.as_ref())
-                    {
-                        //sample is a valid option
-                        let d_transf = transf.decompose();
-                        let i_opt = PlacingOption {
-                            layout_index,
-                            item_id,
-                            transf,
-                            d_transf,
-                        };
-                        sampler.tighten_x_bound(buffer_shape.bbox().x_max);
-                        debug!("new random best: {}", &i_opt.d_transf);
-                        best = Some((i_opt, cost));
-                    }
-                }
-            }
-            //dbg!(sampler.coverage_area() / layout.bin().area() * 100.0);
-        }
-    }
-
-    //local search samples
-    if best.is_some() {
-        let bbox_max_dim = f64::max(layout.cde().bbox().width(), layout.cde().bbox().height());
-        let (stddev_transl_start, stddev_transl_end) = (
-            bbox_max_dim * STDDEV_TRANSL_START_FRAC,
-            bbox_max_dim * STDDEV_TRANSL_END_FRAC,
-        );
-        let (stddev_rot_start, stddev_rot_end) = (STDDEV_ROT_START_FRAC, STDDEV_ROT_END_FRAC);
-
-        let ref_transformation = &best.as_ref().unwrap().0.d_transf;
-
-        let mut ls_sampler = LSSampler::new(
-            item,
-            ref_transformation,
-            stddev_transl_start,
-            stddev_rot_start,
-        );
-
-        // x = 0 => first sample
-        // x = 1 => last sample
-        // f(0) = start
-        // f(1) = end
-        // => f(x) = start * (end/start)^(x)
-        let calc_stddev = |init: f64, end: f64, pct: f64| init * (end / init).powf(pct);
-
-        for i in 0..n_ls_samples {
-            let transf = ls_sampler.sample(rng);
-            if !layout
-                .cde()
-                .surrogate_collides(surrogate, &transf, entities_to_ignore.as_ref())
-            {
-                buffer_shape.transform_from(&shape, &transf);
-                let cost = LBFPlacingCost::from_shape(&buffer_shape);
+    //uniform sampling within the valid cells of the Hazard Proximity Grid, tracking the best valid insertion option
+    if let Some(mut sampler) = HPGSampler::new(item, layout) {
+        for i in 0..n_uni_samples {
+            let transform = sampler.sample(rng);
+            if !cde.surrogate_collides(surrogate, &transform, &irrel_hazards) {
+                //if no collision is detected on the surrogate, apply the transformation
+                buffer.transform_from(&item.shape, &transform);
+                let cost = LBFPlacingCost::from_shape(&buffer);
 
                 //only validate the sample if it possibly can replace the current best
-                let worth_testing = best.as_ref().map_or(true, |(_, best)| cost < *best);
+                let worth_testing = match (best.as_ref(), &cost) {
+                    (Some((_, best_cost)), cost) => {
+                        cost.partial_cmp(best_cost).unwrap() == Ordering::Less
+                    }
+                    (None, _) => true,
+                };
 
-                if worth_testing
-                    && !layout
-                        .cde()
-                        .shape_collides(&buffer_shape, entities_to_ignore.as_ref())
-                {
-                    //sample is a valid option
-                    let d_transf = transf.decompose();
-                    ls_sampler.set_mean(&d_transf);
-                    let i_opt = PlacingOption {
-                        layout_index,
-                        item_id,
-                        transf,
-                        d_transf,
-                    };
-                    debug!("new ls best: {}", i_opt.d_transf);
-                    best = Some((i_opt, cost));
+                if worth_testing && !cde.shape_collides(&buffer, &irrel_hazards) {
+                    //sample is valid and improves on the current best
+                    let p_opt = PlacingOption::from_transform(l_index, item.id, transform);
+                    sampler.tighten_x_bound(buffer.bbox().x_max);
+                    debug!("[ls: {i}/{n_uni_samples}] better: {} ", &p_opt.d_transform);
+
+                    best = Some((p_opt, cost));
                 }
             }
-            let runs_pct = i as f64 / n_ls_samples as f64;
-
-            ls_sampler.set_stddev(
-                calc_stddev(stddev_transl_start, stddev_transl_end, runs_pct),
-                calc_stddev(stddev_rot_start, stddev_rot_end, runs_pct),
-            );
         }
     }
 
-    best.map(|b| b.0)
+    //if a valid sample was found during the uniform sampling, perform local search around it
+    if let Some((best_opt, best_cost)) = &mut best {
+        /*
+        The local search samplers in a normal distribution.
+        Throughout the course of the local search, the mean of the distribution is updated to the best found sample.
+        And the standard deviation tightens, to focus the search around the best sample.
+         */
+
+        let mut ls_sampler =
+            LSSampler::from_default_stddevs(item, &best_opt.d_transform, &layout.bin().bbox());
+
+        for i in 0..n_ls_samples {
+            let transform = ls_sampler.sample(rng);
+            if !cde.surrogate_collides(surrogate, &transform, &irrel_hazards) {
+                buffer.transform_from(&item.shape, &transform);
+                let cost = LBFPlacingCost::from_shape(&buffer);
+
+                //only validate the sample if it possibly can replace the current best
+                let worth_testing = cost < *best_cost;
+
+                if worth_testing && !cde.shape_collides(&buffer, &irrel_hazards) {
+                    //sample is valid and improves on the current best
+                    let p_opt = PlacingOption::from_transform(l_index, item.id, transform);
+                    ls_sampler.shift_mean(&p_opt.d_transform);
+                    debug!("[ls: {i}/{n_ls_samples}] better: {}", p_opt.d_transform);
+                    (*best_opt, *best_cost) = (p_opt, cost);
+                }
+            }
+            let progress_pct = i as f64 / n_ls_samples as f64;
+            ls_sampler.evolve_stddev(progress_pct);
+        }
+    }
+
+    match best {
+        Some((p_opt, _)) => Some(p_opt),
+        None => None,
+    }
 }

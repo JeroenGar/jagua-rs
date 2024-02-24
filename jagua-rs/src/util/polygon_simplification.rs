@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 use itertools::Itertools;
-use log::{log, Level};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::geometry::geo_traits::{CollidesWith, Shape};
@@ -155,11 +155,10 @@ pub fn simplify_shape(
             let new_shape = execute_candidate(&ref_shape, best_candidate);
             let area_delta = (new_shape.area() - original_area).abs() / original_area;
             if area_delta <= max_area_delta {
-                log!(
-                    Level::Debug,
-                    "removed vertex: {:.2}% area change ({:?})",
-                    area_delta * 100.0,
-                    best_candidate
+                debug!(
+                    "Simplified {:?} causing {:.2}% area change",
+                    best_candidate,
+                    area_delta * 100.0
                 );
                 ref_shape = new_shape;
             } else {
@@ -170,13 +169,19 @@ pub fn simplify_shape(
         }
     }
 
-    log!(
-        Level::Debug,
-        "simplified from {} to {} edges ({:.3}% area difference)",
-        shape.number_of_points(),
-        ref_shape.number_of_points(),
-        (ref_shape.area() - shape.area()) / shape.area() * 100.0
-    );
+    let original_vertices = shape.number_of_points();
+    let simpl_vertices = ref_shape.number_of_points();
+
+    if simpl_vertices < original_vertices {
+        info!(
+            "[PS] simplified polygon from {} to {} edges with {:.3}% area difference",
+            original_vertices,
+            simpl_vertices,
+            (ref_shape.area() - shape.area()) / shape.area() * 100.0
+        );
+    } else {
+        info!("[PS] no simplification possible");
+    }
 
     return ref_shape;
 }

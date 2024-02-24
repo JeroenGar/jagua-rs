@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use itertools::Itertools;
-use log::{log, warn, Level};
+use log::{Level, log, warn};
 
 use crate::entities::bin::Bin;
 use crate::entities::instances::bin_packing::BPInstance;
@@ -15,8 +15,8 @@ use crate::entities::problems::bin_packing::BPProblem;
 use crate::entities::problems::problem::Problem;
 use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::strip_packing::SPProblem;
-use crate::entities::quality_zone::QualityZone;
 use crate::entities::quality_zone::N_QUALITIES;
+use crate::entities::quality_zone::QualityZone;
 use crate::entities::solution::Solution;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_enums::AllowedRotation;
@@ -196,7 +196,7 @@ impl Parser {
             Instance::SP(spi) => {
                 log!(
                     Level::Info,
-                    "Strip packing instance \"{}\" parsed: {} items ({} unique), {} strip height",
+                    "[PARSE] strip packing instance \"{}\": {} items ({} unique), {} strip height",
                     json_instance.name,
                     spi.total_item_qty(),
                     spi.items.len(),
@@ -206,7 +206,7 @@ impl Parser {
             Instance::BP(bpi) => {
                 log!(
                     Level::Info,
-                    "Bin packing instance \"{}\" parsed: {} items ({} unique), {} bins ({} unique)",
+                    "[PARSE] bin packing instance \"{}\": {} items ({} unique), {} bins ({} unique)",
                     json_instance.name,
                     bpi.total_item_qty(),
                     bpi.items.len(),
@@ -216,11 +216,6 @@ impl Parser {
             }
         }
 
-        log!(
-            Level::Debug,
-            "Total area of items: {}",
-            instance.total_item_qty()
-        );
         instance
     }
 
@@ -300,8 +295,8 @@ fn build_solution_from_json(
         let initial_insert_opt = PlacingOption {
             layout_index: LayoutIndex::Template(template_layout_index),
             item_id: first_item.id,
-            transf,
-            d_transf,
+            transform: transf,
+            d_transform: d_transf,
         };
         problem.place_item(&initial_insert_opt);
         problem.flush_changes();
@@ -329,8 +324,8 @@ fn build_solution_from_json(
             let insert_opt = PlacingOption {
                 layout_index: LayoutIndex::Real(layout_index),
                 item_id: item.id,
-                transf,
-                d_transf,
+                transform: transf,
+                d_transform: d_transf,
             };
             problem.place_item(&insert_opt);
             problem.flush_changes();

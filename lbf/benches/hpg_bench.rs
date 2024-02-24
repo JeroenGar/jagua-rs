@@ -1,13 +1,13 @@
 use std::fs::File;
 use std::io::BufReader;
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 
+use jagua_rs::entities::instances::instance::Instance;
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::placed_item::PlacedItemUID;
 use jagua_rs::entities::placing_option::PlacingOption;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
@@ -66,8 +66,8 @@ fn hpg_query_bench(c: &mut Criterion) {
             problem.place_item(&PlacingOption {
                 layout_index: LayoutIndex::Real(0),
                 item_id: pi_uid.item_id,
-                transf: pi_uid.d_transf.compose(),
-                d_transf: pi_uid.d_transf.clone(),
+                transform: pi_uid.d_transf.compose(),
+                d_transform: pi_uid.d_transf.clone(),
             });
         }
 
@@ -152,8 +152,8 @@ fn hpg_update_bench(c: &mut Criterion) {
             problem.place_item(&PlacingOption {
                 layout_index: LayoutIndex::Real(0),
                 item_id: pi_uid.item_id,
-                transf: pi_uid.d_transf.compose(),
-                d_transf: pi_uid.d_transf.clone(),
+                transform: pi_uid.d_transf.compose(),
+                d_transform: pi_uid.d_transf.clone(),
             });
         }
 
@@ -194,8 +194,8 @@ fn hpg_update_bench(c: &mut Criterion) {
                     valid_placements.push(PlacingOption {
                         layout_index: LayoutIndex::Real(0),
                         item_id: SELECTED_ITEM_ID,
-                        transf,
-                        d_transf,
+                        transform: transf,
+                        d_transform: d_transf,
                     });
                 }
             }
@@ -211,7 +211,7 @@ fn hpg_update_bench(c: &mut Criterion) {
                     LayoutIndex::Real(0),
                     &PlacedItemUID {
                         item_id: opt.item_id,
-                        d_transf: opt.d_transf.clone(),
+                        d_transf: opt.d_transform.clone(),
                     },
                     true,
                 );

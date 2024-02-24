@@ -1,4 +1,4 @@
-use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
+use crate::collision_detection::cd_engine::{CDEngine, CDESnapshot};
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::placed_item::PlacedItem;
@@ -67,6 +67,7 @@ impl Layout {
         self.placed_items.push(placed_item);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
+        debug_assert!(assertions::layout_is_collision_free(self));
     }
 
     pub fn remove_item(&mut self, pi_uid: &PlacedItemUID, commit_instantly: bool) {
