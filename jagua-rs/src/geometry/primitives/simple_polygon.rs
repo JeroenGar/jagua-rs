@@ -6,6 +6,7 @@ use itertools::Itertools;
 use num_integer::Integer;
 use ordered_float::NotNan;
 
+use crate::geometry::convex_hull::convex_hull_from_points;
 use crate::geometry::fail_fast::poi;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::geo_enums::GeoPosition;
@@ -60,9 +61,9 @@ impl SimplePolygon {
             Ordering::Greater => (),
         }
 
-        let diameter = SimplePolygon::calculate_diameter(&points);
+        let diameter = SimplePolygon::calculate_diameter(points.clone());
         let bbox = SimplePolygon::generate_bounding_box(&points);
-        let poi = SimplePolygon::calculate_poi(&points);
+        let poi = SimplePolygon::calculate_poi(&points, diameter);
 
         SimplePolygon {
             points,
@@ -99,17 +100,17 @@ impl SimplePolygon {
         self.surrogate.as_ref().expect("surrogate not generated")
     }
 
-    pub fn calculate_diameter(points: &[Point]) -> f64 {
-        let diameter = points
-            .iter()
+    pub fn calculate_diameter(points: Vec<Point>) -> f64 {
+        //The two points furthest apart must be part of the convex hull
+        let ch = convex_hull_from_points(points);
+
+        //go through all pairs of points and find the pair with the largest distance
+        ch.iter()
             .tuple_combinations()
-            .map(|(&p1, &p2)| {
-                NotNan::new(Edge::new(p1.into(), p2.into()).diameter()).expect("line length is NaN")
-            })
-            .max()
-            .expect("could not determine shape diameter")
-            .into();
-        diameter
+            .map(|(p1, p2)| p1.sq_distance(p2))
+            .max_by_key(|d| NotNan::new(*d).unwrap())
+            .expect("convex hull is empty")
+            .into()
     }
 
     pub fn generate_bounding_box(points: &[Point]) -> AARectangle {
@@ -144,13 +145,12 @@ impl SimplePolygon {
         0.5 * sigma
     }
 
-    pub fn calculate_poi(points: &Vec<Point>) -> Circle {
+    pub fn calculate_poi(points: &Vec<Point>, diameter: f64) -> Circle {
         //need to make a dummy simple polygon, because the pole generation algorithm
         //relies on many of the methods provided by the simple polygon struct
         let dummy_sp = {
             let bbox = SimplePolygon::generate_bounding_box(points);
             let area = SimplePolygon::calculate_area(points);
-            let diameter = SimplePolygon::calculate_diameter(points);
             let dummy_poi = Circle::new(Point(f64::MAX, f64::MAX), f64::MAX);
 
             SimplePolygon {
