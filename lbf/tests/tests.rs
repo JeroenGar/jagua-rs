@@ -1,12 +1,10 @@
 #[cfg(test)]
 mod tests {
     use std::path::Path;
-    use std::sync::Once;
 
-    use log::info;
+    use rand::{Rng, SeedableRng};
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;
-    use rand::{Rng, SeedableRng};
     use test_case::test_case;
 
     use jagua_rs::entities::problems::problem_generic::LayoutIndex;
@@ -17,8 +15,6 @@ mod tests {
     use lbf::lbf_optimizer::LBFOptimizer;
 
     const N_ITEMS_TO_REMOVE: usize = 5;
-
-    static INIT_LOGGER: Once = Once::new();
 
     #[test_case("../assets/swim.json"; "swim")]
     #[test_case("../assets/shirts.json"; "shirts")]
@@ -31,13 +27,7 @@ mod tests {
     #[test_case("../assets/Baldacci/Test5.json"; "Baldacci/Test5")]
     #[test_case("../assets/Baldacci/Test6.json"; "Baldacci/Test6")]
     fn test_instance(instance_path: &str) {
-        INIT_LOGGER.call_once(|| {
-            io::init_logger(Some(log::LevelFilter::Info));
-        });
-
         let instance = Path::new(instance_path);
-
-        info!("Testing instance: {:?}", instance);
         // parse the instance
         let mut config = Config::default();
         config.n_samples_per_item = 100;

@@ -1,11 +1,11 @@
 use std::path::Path;
 
-use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use log::info;
 use rand::prelude::{IteratorRandom, SmallRng};
 use rand::SeedableRng;
 
+use jagua_rs::entities::instances::instance::Instance;
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::placed_item::PlacedItemUID;
 use jagua_rs::entities::problems::problem::Problem;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
@@ -43,7 +43,7 @@ pub fn create_blf_problem(
     let mut lbf_optimizer = LBFOptimizer::new(instance.clone(), config, SmallRng::seed_from_u64(0));
     lbf_optimizer.solve();
 
-    let mut problem = match lbf_optimizer.problem().clone() {
+    let mut problem = match lbf_optimizer.problem.clone() {
         Problem::SP(sp_problem) => sp_problem,
         _ => panic!("Expected SPProblem"),
     };
@@ -64,7 +64,7 @@ pub fn create_blf_problem(
             "Removed item: {} with {} edges",
             pi_uid.item_id,
             lbf_optimizer
-                .instance()
+                .instance
                 .item(pi_uid.item_id)
                 .shape
                 .number_of_points()

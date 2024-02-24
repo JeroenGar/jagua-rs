@@ -3,10 +3,10 @@ use std::io::BufReader;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use itertools::Itertools;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
 
+use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::geometry::convex_hull;
 use jagua_rs::geometry::fail_fast::sp_surrogate::SPSurrogate;
@@ -103,7 +103,11 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         let mut buffer_shapes = ITEMS_ID_TO_TEST
             .iter()
             .map(|&item_id| instance.item(item_id))
-            .map(|item| item.shape.clone_and_strip_surrogate())
+            .map(|item| {
+                let mut buffer = (*item.shape).clone();
+                buffer.surrogate = None; //strip the surrogate for faster transforms, we don't need it for the buffer shape
+                buffer
+            })
             .collect_vec();
 
         group.bench_function(
