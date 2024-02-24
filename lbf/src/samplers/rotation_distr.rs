@@ -2,36 +2,39 @@ use std::f64::consts::PI;
 
 use rand::distributions::Uniform;
 use rand::prelude::Distribution;
-use rand::Rng;
 use rand::seq::SliceRandom;
+use rand::Rng;
 use rand_distr::Normal;
 
 use jagua_rs::entities::item::Item;
 use jagua_rs::geometry::geo_enums::AllowedRotation;
 
+/// Samples a rotation (radians).
 pub trait RotationSampler {
     fn sample(&self, rng: &mut impl Rng) -> f64;
 }
 
+/// Samples a rotation from a uniform distribution over a given range or a discrete set of rotations.
 pub enum UniformRotDistr {
     Range(Uniform<f64>),
     Discrete(Vec<f64>),
     None,
 }
 
+/// Samples a rotation from a normal distribution over a given range or a discrete set of rotations.
+/// In case of discrete rotations the mean is always returned.
 pub enum NormalRotDistr {
     Range(Normal<f64>),
-    Discrete(f64), //normal distribution of an item with discrete orientations will always result in the same orientation being returned
+    Discrete(f64),
     None,
 }
 
 impl UniformRotDistr {
     pub fn from_item(item: &Item) -> Self {
         match &item.allowed_rotation {
-            AllowedRotation::None  => UniformRotDistr::None,
+            AllowedRotation::None => UniformRotDistr::None,
             AllowedRotation::Continuous => UniformRotDistr::Range(Uniform::new(0.0, 2.0 * PI)),
-            AllowedRotation::Discrete(a_o) => UniformRotDistr::Discrete(a_o.clone())
-
+            AllowedRotation::Discrete(a_o) => UniformRotDistr::Discrete(a_o.clone()),
         }
     }
 
@@ -39,9 +42,7 @@ impl UniformRotDistr {
         match self {
             UniformRotDistr::None => 0.0,
             UniformRotDistr::Range(u) => u.sample(rng),
-            UniformRotDistr::Discrete(a_o) => {
-                *a_o.choose(rng).unwrap()
-            }
+            UniformRotDistr::Discrete(a_o) => *a_o.choose(rng).unwrap(),
         }
     }
 }
@@ -49,10 +50,11 @@ impl UniformRotDistr {
 impl NormalRotDistr {
     pub fn from_item(item: &Item, r_ref: f64, stddev: f64) -> Self {
         match &item.allowed_rotation {
-            AllowedRotation::None  => NormalRotDistr::None,
-            AllowedRotation::Continuous => NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap()),
-            AllowedRotation::Discrete(_) => NormalRotDistr::Discrete(r_ref)
-
+            AllowedRotation::None => NormalRotDistr::None,
+            AllowedRotation::Continuous => {
+                NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap())
+            }
+            AllowedRotation::Discrete(_) => NormalRotDistr::Discrete(r_ref),
         }
     }
 
@@ -78,8 +80,7 @@ impl NormalRotDistr {
         match self {
             NormalRotDistr::None => 0.0,
             NormalRotDistr::Range(n) => n.sample(rng),
-            NormalRotDistr::Discrete(r) => *r
+            NormalRotDistr::Discrete(r) => *r,
         }
     }
 }
-

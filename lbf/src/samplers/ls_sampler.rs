@@ -16,14 +16,24 @@ pub struct LSSampler {
     stddev_rot: f64,
 }
 
-
 impl LSSampler {
-    pub fn new(item: &Item, ref_transform: &DTransformation, stddev_transl: f64, stddev_rot: f64) -> Self {
+    pub fn new(
+        item: &Item,
+        ref_transform: &DTransformation,
+        stddev_transl: f64,
+        stddev_rot: f64,
+    ) -> Self {
         let normal_x = Normal::new(ref_transform.translation().0, stddev_transl).unwrap();
         let normal_y = Normal::new(ref_transform.translation().1, stddev_transl).unwrap();
         let normal_r = NormalRotDistr::from_item(item, ref_transform.rotation(), stddev_rot);
 
-        Self { normal_x, normal_y, normal_r, stddev_transl, stddev_rot }
+        Self {
+            normal_x,
+            normal_y,
+            normal_r,
+            stddev_transl,
+            stddev_rot,
+        }
     }
 
     pub fn set_mean(&mut self, ref_transform: &DTransformation) {
@@ -45,6 +55,7 @@ impl LSSampler {
     pub fn stddev_transl(&self) -> f64 {
         self.stddev_transl
     }
+
     pub fn stddev_rot(&self) -> f64 {
         self.stddev_rot
     }

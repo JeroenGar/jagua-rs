@@ -7,16 +7,20 @@ use jagua_rs::entities::quality_zone::N_QUALITIES;
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
 pub struct SvgDrawOptions {
+    ///The theme to use for the svg
     #[serde(default)]
     pub theme: SvgLayoutTheme,
-    pub quadtree: bool, //draws the quadtree
-    pub haz_prox_grid: bool, //draws the hazard proximity grid
-    pub surrogate: bool, //draws the fail fast surrogate for each item
+    ///Draw the quadtree on top
+    pub quadtree: bool,
+    ///Draw the hazard proximity grid on top
+    pub haz_prox_grid: bool,
+    ///Draw the fail fast surrogate on top of each item
+    pub surrogate: bool,
 }
 
 impl Default for SvgDrawOptions {
     fn default() -> Self {
-        Self{
+        Self {
             theme: SvgLayoutTheme::default(),
             quadtree: false,
             haz_prox_grid: false,
@@ -49,16 +53,16 @@ impl SvgLayoutTheme {
             item_fill: "#FFC879".into(),
             hole_fill: "#2D2D2D".into(),
             qz_fill: [
-                "#000000".into(),  //BLACK
-                "#FF0000".into(),  //RED
-                "#FF5E00".into(),  //ORANGE
-                "#FFA500".into(),  //LIGHT ORANGE
-                "#FFAD00".into(),  //DARK YELLOW
-                "#FFFF00".into(),  //YELLOW
-                "#CBFF00".into(),  //GREEN
-                "#CBFF00".into(),  //GREEN
-                "#CBFF00".into(),  //GREEN
-                "#CBFF00".into()   //GREEN
+                "#000000".into(), //BLACK
+                "#FF0000".into(), //RED
+                "#FF5E00".into(), //ORANGE
+                "#FFA500".into(), //LIGHT ORANGE
+                "#C7A900".into(), //DARK YELLOW
+                "#FFFF00".into(), //YELLOW
+                "#CBFF00".into(), //GREEN
+                "#CBFF00".into(), //GREEN
+                "#CBFF00".into(), //GREEN
+                "#CBFF00".into(), //GREEN
             ],
             qz_stroke_opac: 0.5,
         }
@@ -71,16 +75,16 @@ impl SvgLayoutTheme {
             item_fill: "#8F8F8F".into(),
             hole_fill: "#FFFFFF".into(),
             qz_fill: [
-                "#636363".into(),  //GRAY
-                "#636363".into(),  //GRAY
-                "#636363".into(),  //GRAY
-                "#636363".into(),  //GRAY
-                "#636363".into(),  //GRAY
-                "#636363".into(),  //GRAY
-                "#636363".into(),  //GRAY
-                "#636363".into(),  //GRAY
-                "#636363".into(),  //GRAY
-                "#636363".into()   //GRAY
+                "#636363".into(), //GRAY
+                "#636363".into(), //GRAY
+                "#636363".into(), //GRAY
+                "#636363".into(), //GRAY
+                "#636363".into(), //GRAY
+                "#636363".into(), //GRAY
+                "#636363".into(), //GRAY
+                "#636363".into(), //GRAY
+                "#636363".into(), //GRAY
+                "#636363".into(), //GRAY
             ],
             qz_stroke_opac: 0.9,
         }
@@ -88,13 +92,12 @@ impl SvgLayoutTheme {
 }
 
 pub fn change_brightness(color: Color, fraction: f64) -> Color {
-
-    let Color(r,g,b) = color;
+    let Color(r, g, b) = color;
 
     let r = (r as f64 * fraction) as u8;
     let g = (g as f64 * fraction) as u8;
     let b = (b as f64 * fraction) as u8;
-    Color(r,g,b)
+    Color(r, g, b)
 }
 
 pub fn blend_colors(color_1: Color, color_2: Color) -> Color {
@@ -106,11 +109,11 @@ pub fn blend_colors(color_1: Color, color_2: Color) -> Color {
     let g = ((g_1 as f64 * 0.5) + (g_2 as f64 * 0.5)) as u8;
     let b = ((b_1 as f64 * 0.5) + (b_2 as f64 * 0.5)) as u8;
 
-    Color(r,g,b)
+    Color(r, g, b)
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub struct Color(u8,u8,u8);
+pub struct Color(u8, u8, u8);
 impl Display for Color {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "#{:02X}{:02X}{:02X}", self.0, self.1, self.2)
@@ -125,7 +128,7 @@ impl From<String> for Color {
         let r = u8::from_str_radix(&s[0..2], 16).unwrap();
         let g = u8::from_str_radix(&s[2..4], 16).unwrap();
         let b = u8::from_str_radix(&s[4..6], 16).unwrap();
-        Color(r,g,b)
+        Color(r, g, b)
     }
 }
 
@@ -135,16 +138,20 @@ impl From<&str> for Color {
     }
 }
 
-impl Serialize for Color{
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
-        S: Serializer {
+impl Serialize for Color {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
         serializer.serialize_str(&*format!("{self}"))
     }
 }
 
 impl<'de> Deserialize<'de> for Color {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error> where
-        D: Deserializer<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    where
+        D: Deserializer<'de>,
+    {
         let s = String::deserialize(deserializer)?;
         Ok(Color::from(s))
     }

@@ -1,12 +1,12 @@
 use std::fs::File;
 use std::io::BufReader;
 
-use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use itertools::Itertools;
-use rand::rngs::SmallRng;
-use rand::SeedableRng;
 use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 
 use jagua_rs::entities::placed_item::PlacedItemUID;
 use jagua_rs::entities::placing_option::PlacingOption;
@@ -20,7 +20,7 @@ use lbf::samplers::hpg_sampler::HPGSampler;
 use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};
 
 criterion_main!(benches);
-criterion_group!(benches,hpg_query_bench, hpg_update_bench);
+criterion_group!(benches, hpg_query_bench, hpg_update_bench);
 
 mod util;
 
@@ -31,21 +31,35 @@ const N_VALID_SAMPLES: usize = 1000;
 
 fn hpg_query_bench(c: &mut Criterion) {
     //HPG density has side effects on the LBF optimize, so we create a single problem instance and create a solution from it.
-    let json_instance: JsonInstance = serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
+    let json_instance: JsonInstance =
+        serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
     let base_config = create_base_config();
-    let base_instance = util::create_instance(&json_instance, base_config.cde_config, base_config.poly_simpl_config);
-    let (base_problem, _) = util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
-    let base_pi_uids = base_problem.get_layout(LayoutIndex::Real(0)).placed_items().iter().map(|pi| pi.uid.clone()).collect_vec();
+    let base_instance = util::create_instance(
+        &json_instance,
+        base_config.cde_config,
+        base_config.poly_simpl_config,
+    );
+    let (base_problem, _) =
+        util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
+    let base_pi_uids = base_problem
+        .get_layout(LayoutIndex::Real(0))
+        .placed_items()
+        .iter()
+        .map(|pi| pi.uid.clone())
+        .collect_vec();
 
     let mut group = c.benchmark_group("hpg_bench_query");
     for n_hpg_cells in N_HPG_CELLS {
         let mut config = base_config;
         config.cde_config.hpg_n_cells = n_hpg_cells;
         //create the instance and problem with the specific HPG config
-        let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+        let instance =
+            util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
         let mut problem = match instance.clone() {
             Instance::BP(_) => panic!("Expected SPInstance"),
-            Instance::SP(instance) => SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
+            Instance::SP(instance) => {
+                SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
+            }
         };
         // Place the items in exactly the same way as the base problem
         for pi_uid in base_pi_uids.iter() {
@@ -68,7 +82,6 @@ fn hpg_query_bench(c: &mut Criterion) {
             io::write_svg(&svg, Path::new(&format!("removed_items_{n_hpg_cells}.svg")));
         }*/
 
-
         let mut rng = SmallRng::seed_from_u64(0);
 
         // Search N_VALID_SAMPLES for each item
@@ -77,7 +90,12 @@ fn hpg_query_bench(c: &mut Criterion) {
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
         let sampler = HPGSampler::new(item, layout).unwrap();
-        println!("[{}] sampler coverage: {:.3}% with {} samplers", n_hpg_cells, sampler.coverage_area / layout.bin().bbox().area() * 100.0, sampler.cell_samplers.len());
+        println!(
+            "[{}] sampler coverage: {:.3}% with {} samplers",
+            n_hpg_cells,
+            sampler.coverage_area / layout.bin().bbox().area() * 100.0,
+            sampler.cell_samplers.len()
+        );
 
         group.bench_function(BenchmarkId::from_parameter(n_hpg_cells), |b| {
             b.iter(|| {
@@ -99,21 +117,35 @@ fn hpg_query_bench(c: &mut Criterion) {
 
 fn hpg_update_bench(c: &mut Criterion) {
     //HPG density has side effects on the LBF optimize, so we create a single problem instance and create a solution from it.
-    let json_instance: JsonInstance = serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
+    let json_instance: JsonInstance =
+        serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
     let base_config = create_base_config();
-    let base_instance = util::create_instance(&json_instance, base_config.cde_config, base_config.poly_simpl_config);
-    let (base_problem, _) = util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
-    let base_pi_uids = base_problem.get_layout(LayoutIndex::Real(0)).placed_items().iter().map(|pi| pi.uid.clone()).collect_vec();
+    let base_instance = util::create_instance(
+        &json_instance,
+        base_config.cde_config,
+        base_config.poly_simpl_config,
+    );
+    let (base_problem, _) =
+        util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
+    let base_pi_uids = base_problem
+        .get_layout(LayoutIndex::Real(0))
+        .placed_items()
+        .iter()
+        .map(|pi| pi.uid.clone())
+        .collect_vec();
 
     let mut group = c.benchmark_group("hpg_bench_update");
     for n_hpg_cells in N_HPG_CELLS {
         let mut config = base_config;
         config.cde_config.hpg_n_cells = n_hpg_cells;
         //create the instance and problem with the specific HPG config
-        let instance = util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+        let instance =
+            util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
         let mut problem = match instance.clone() {
             Instance::BP(_) => panic!("Expected SPInstance"),
-            Instance::SP(instance) => SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
+            Instance::SP(instance) => {
+                SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
+            }
         };
         // Place the items in exactly the same way as the base problem
         for pi_uid in base_pi_uids.iter() {
@@ -144,7 +176,12 @@ fn hpg_update_bench(c: &mut Criterion) {
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
         let sampler = HPGSampler::new(item, layout).unwrap();
-        println!("[{}] sampler coverage: {:.3}% with {} samplers", n_hpg_cells, sampler.coverage_area / layout.bin().bbox().area() * 100.0, sampler.cell_samplers.len());
+        println!(
+            "[{}] sampler coverage: {:.3}% with {} samplers",
+            n_hpg_cells,
+            sampler.coverage_area / layout.bin().bbox().area() * 100.0,
+            sampler.cell_samplers.len()
+        );
 
         //collect N_VALID_SAMPLES
         let mut valid_placements = vec![];

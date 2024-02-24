@@ -7,6 +7,7 @@ use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
 
 use crate::samplers::rotation_distr::UniformRotDistr;
 
+/// Samples a `DTransformation` from a uniform distribution over a given `AARectangle` and a `UniformRotDistr`.
 pub struct UniformAARectSampler {
     pub bbox: AARectangle,
     pub uniform_r: UniformRotDistr,
@@ -15,27 +16,24 @@ pub struct UniformAARectSampler {
 impl UniformAARectSampler {
     pub fn new(bbox: AARectangle, item: &Item) -> Self {
         let uniform_r = UniformRotDistr::from_item(item);
-        Self {
-            bbox,
-            uniform_r
-        }
+        Self { bbox, uniform_r }
     }
 
     pub fn sample(&self, rng: &mut impl Rng) -> DTransformation {
         let r_sample = self.uniform_r.sample(rng);
         let x_sample = Uniform::new(self.bbox.x_min, self.bbox.x_max).sample(rng);
         let y_sample = Uniform::new(self.bbox.y_min, self.bbox.y_max).sample(rng);
-        
-        DTransformation::new(r_sample,(x_sample, y_sample))
+
+        DTransformation::new(r_sample, (x_sample, y_sample))
     }
 
     pub fn sample_x_bounded(&self, rng: &mut impl Rng, x_bound: f64) -> DTransformation {
         let x_max = f64::min(self.bbox.x_max, x_bound);
-        
+
         let r_sample = self.uniform_r.sample(rng);
         let x_sample = Uniform::new(self.bbox.x_min, x_max).sample(rng);
         let y_sample = Uniform::new(self.bbox.y_min, self.bbox.y_max).sample(rng);
-        
-        DTransformation::new(r_sample,(x_sample, y_sample))
+
+        DTransformation::new(r_sample, (x_sample, y_sample))
     }
 }

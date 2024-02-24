@@ -1,5 +1,5 @@
-use svg::Document;
 use svg::node::element::Group;
+use svg::Document;
 
 use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
@@ -9,10 +9,14 @@ use jagua_rs::geometry::geo_enums::GeoPosition;
 use jagua_rs::geometry::geo_traits::Transformable;
 use jagua_rs::geometry::primitives::circle::Circle;
 
-use crate::io::{svg_export, svg_util};
 use crate::io::svg_util::SvgDrawOptions;
+use crate::io::{svg_export, svg_util};
 
-pub fn s_layout_to_svg(s_layout: &LayoutSnapshot, instance: &Instance, options: SvgDrawOptions) -> Document {
+pub fn s_layout_to_svg(
+    s_layout: &LayoutSnapshot,
+    instance: &Instance,
+    options: SvgDrawOptions,
+) -> Document {
     let layout = Layout::new_from_stored(s_layout.id, s_layout);
     layout_to_svg(&layout, instance, options)
 }
@@ -24,39 +28,38 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
 
     let theme = &options.theme;
 
-    let doc = Document::new()
-        .set("viewBox", (vbox.x_min, vbox.y_min, vbox.width(), vbox.height()));
+    let doc = Document::new().set(
+        "viewBox",
+        (vbox.x_min, vbox.y_min, vbox.width(), vbox.height()),
+    );
 
-    let stroke_width = f64::min(vbox.width(), vbox.height()) * 0.001 * theme.stroke_width_multiplier;
+    let stroke_width =
+        f64::min(vbox.width(), vbox.height()) * 0.001 * theme.stroke_width_multiplier;
 
     //draw bin
     let bin_group = {
         let mut group = Group::new();
 
         //outer
-        group = group.add(
-            svg_export::data_to_path(
-                svg_export::simple_polygon_data(&bin.outer),
-                &[
-                    ("fill", &*format!("{}", theme.bin_fill)),
-                    ("stroke", "black"),
-                    ("stroke-width", &*format!("{}", 2.0 * stroke_width)),
-                ]
-            )
-        );
+        group = group.add(svg_export::data_to_path(
+            svg_export::simple_polygon_data(&bin.outer),
+            &[
+                ("fill", &*format!("{}", theme.bin_fill)),
+                ("stroke", "black"),
+                ("stroke-width", &*format!("{}", 2.0 * stroke_width)),
+            ],
+        ));
 
         //holes
         for hole in &bin.holes {
-            group = group.add(
-                svg_export::data_to_path(
-                    svg_export::simple_polygon_data(hole),
-                    &[
-                        ("fill", &*format!("{}", theme.hole_fill)),
-                        ("stroke", "black"),
-                        ("stroke-width", &*format!("{}", 1.0 * stroke_width)),
-                    ]
-                )
-            )
+            group = group.add(svg_export::data_to_path(
+                svg_export::simple_polygon_data(hole),
+                &[
+                    ("fill", &*format!("{}", theme.hole_fill)),
+                    ("stroke", "black"),
+                    ("stroke-width", &*format!("{}", 1.0 * stroke_width)),
+                ],
+            ))
         }
         group
     };
@@ -69,21 +72,19 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
             let color = theme.qz_fill[qz.quality];
             let stroke_color = svg_util::change_brightness(color, 0.5);
             for qz_shape in qz.zones.iter() {
-                group = group.add(
-                    svg_export::data_to_path(
-                        svg_export::simple_polygon_data(qz_shape),
-                        &[
-                            ("fill", &*format!("{}", color)),
-                            ("fill-opacity", "0.50"),
-                            ("stroke", &*format!("{}", stroke_color)),
-                            ("stroke-width", &*format!("{}", 2.0 * stroke_width)),
-                            ("stroke-opacity", &*format!("{}", theme.qz_stroke_opac)),
-                            ("stroke-dasharray", &*format!("{}", 5.0 * stroke_width)),
-                            ("stroke-linecap", "round"),
-                            ("stroke-linejoin", "round")
-                        ]
-                    )
-                )
+                group = group.add(svg_export::data_to_path(
+                    svg_export::simple_polygon_data(qz_shape),
+                    &[
+                        ("fill", &*format!("{}", color)),
+                        ("fill-opacity", "0.50"),
+                        ("stroke", &*format!("{}", stroke_color)),
+                        ("stroke-width", &*format!("{}", 2.0 * stroke_width)),
+                        ("stroke-opacity", &*format!("{}", theme.qz_stroke_opac)),
+                        ("stroke-dasharray", &*format!("{}", 5.0 * stroke_width)),
+                        ("stroke-linecap", "round"),
+                        ("stroke-linejoin", "round"),
+                    ],
+                ))
             }
         }
         group
@@ -98,12 +99,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
             let shape = &pi.shape;
             let color = match item.base_quality {
                 None => theme.item_fill.to_owned(),
-                Some(q) => {
-                    svg_util::blend_colors(
-                        theme.item_fill,
-                        theme.qz_fill[q],
-                    )
-                }
+                Some(q) => svg_util::blend_colors(theme.item_fill, theme.qz_fill[q]),
             };
             group = group.add(svg_export::data_to_path(
                 svg_export::simple_polygon_data(&shape),
@@ -112,7 +108,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                     ("stroke-width", &*format!("{}", stroke_width)),
                     ("fill-rule", "nonzero"),
                     ("stroke", "black"),
-                    ("opacity", "0.9")
+                    ("opacity", "0.9"),
                 ],
             ));
 
@@ -137,10 +133,13 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                     ("stroke-opacity", "0.5"),
                     ("stroke-dasharray", &*format!("{}", 5.0 * stroke_width)),
                     ("stroke-linecap", "round"),
-                    ("stroke-linejoin", "round")
+                    ("stroke-linejoin", "round"),
                 ];
 
-                let transformed_surrogate = item.shape.surrogate().transform_clone(&pi.d_transformation().compose());
+                let transformed_surrogate = item
+                    .shape
+                    .surrogate()
+                    .transform_clone(&pi.d_transformation().compose());
                 let poi = &transformed_surrogate.poles[0];
                 let ff_poles = transformed_surrogate.ff_poles();
 
@@ -156,7 +155,10 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                     }
                 }
                 for pier in &transformed_surrogate.piers {
-                    group = group.add(svg_export::data_to_path(svg_export::edge_data(pier), &ff_style));
+                    group = group.add(svg_export::data_to_path(
+                        svg_export::edge_data(pier),
+                        &ff_style,
+                    ));
                 }
             }
             items_group = items_group.add(group);
@@ -211,22 +213,28 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
 
                 let (radius, color) = match prox.position {
                     GeoPosition::Interior => (0.0, "red"),
-                    GeoPosition::Exterior => (prox.distance_from_border.into_inner(), "blue")
+                    GeoPosition::Exterior => (prox.distance_from_border.into_inner(), "blue"),
                 };
 
                 group = group.add(svg_export::point(center, Some(color), Some(stroke_width)));
 
-                group = group.add(svg_export::circle(&Circle::new(center, radius), &[
-                    ("fill", "none"),
-                    ("stroke", color),
-                    ("stroke-width", &*format!("{}", stroke_width)),
-                ]));
+                group = group.add(svg_export::circle(
+                    &Circle::new(center, radius),
+                    &[
+                        ("fill", "none"),
+                        ("stroke", color),
+                        ("stroke-width", &*format!("{}", stroke_width)),
+                    ],
+                ));
 
-                group = group.add(svg_export::data_to_path(svg_export::aa_rect_data(hp_cell.bbox()), &[
-                    ("fill", "none"),
-                    ("stroke", color),
-                    ("stroke-width", &*format!("{}", stroke_width)),
-                ]));
+                group = group.add(svg_export::data_to_path(
+                    svg_export::aa_rect_data(hp_cell.bbox()),
+                    &[
+                        ("fill", "none"),
+                        ("stroke", color),
+                        ("stroke-width", &*format!("{}", stroke_width)),
+                    ],
+                ));
             }
         }
         group

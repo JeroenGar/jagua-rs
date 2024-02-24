@@ -4,9 +4,9 @@ mod tests {
     use std::sync::Once;
 
     use log::info;
-    use rand::{Rng, SeedableRng};
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;
+    use rand::{Rng, SeedableRng};
     use test_case::test_case;
 
     use jagua_rs::entities::problems::problem_generic::LayoutIndex;
@@ -18,7 +18,7 @@ mod tests {
 
     const N_ITEMS_TO_REMOVE: usize = 5;
 
-    static INIT_LOGGER : Once = Once::new();
+    static INIT_LOGGER: Once = Once::new();
 
     #[test_case("../assets/swim.json"; "swim")]
     #[test_case("../assets/shirts.json"; "shirts")]
@@ -58,7 +58,12 @@ mod tests {
             for _ in 0..N_ITEMS_TO_REMOVE {
                 //pick random existing layout
                 let layout_index = LayoutIndex::Real(rng.gen_range(0..problem.layouts().len()));
-                let random_placed_item = match problem.get_layout(&layout_index).placed_items().iter().choose(&mut rng) {
+                let random_placed_item = match problem
+                    .get_layout(&layout_index)
+                    .placed_items()
+                    .iter()
+                    .choose(&mut rng)
+                {
                     Some(pi) => pi.uid.clone(),
                     None => break,
                 };

@@ -1,5 +1,5 @@
-use svg::node::element::{Circle, Path};
 use svg::node::element::path::Data;
+use svg::node::element::{Circle, Path};
 
 use jagua_rs::collision_detection::hazard::HazardEntity;
 use jagua_rs::collision_detection::quadtree::qt_hazard::QTHazPresence;
@@ -18,7 +18,13 @@ pub fn simple_polygon_data(s_poly: &SimplePolygon) -> Data {
 }
 
 pub fn quad_tree_data(qt_root: &QTNode, irrelevant_hazards: &[HazardEntity]) -> (Data, Data, Data) {
-    qt_node_data(qt_root, Data::new(), Data::new(), Data::new(), irrelevant_hazards)
+    qt_node_data(
+        qt_root,
+        Data::new(),
+        Data::new(),
+        Data::new(),
+        irrelevant_hazards,
+    )
 }
 
 fn qt_node_data(
@@ -30,7 +36,10 @@ fn qt_node_data(
 ) -> (Data, Data, Data) {
     //Only draw qt_nodes that do not have a child
 
-    match (qt_node.has_children(), qt_node.hazards.strongest(irrelevant_hazards)) {
+    match (
+        qt_node.has_children(),
+        qt_node.hazards.strongest(irrelevant_hazards),
+    ) {
         (true, Some(_)) => {
             //not a leaf node, go to children
             for child in qt_node.children.as_ref().unwrap().iter() {
@@ -44,8 +53,7 @@ fn qt_node_data(
             //leaf node, draw it
             let rect = &qt_node.bbox;
             let draw = |data: Data| -> Data {
-                data
-                    .move_to((rect.x_min, rect.y_min))
+                data.move_to((rect.x_min, rect.y_min))
                     .line_to((rect.x_max, rect.y_min))
                     .line_to((rect.x_max, rect.y_max))
                     .line_to((rect.x_min, rect.y_max))
@@ -53,13 +61,11 @@ fn qt_node_data(
             };
 
             match qt_node.hazards.strongest(irrelevant_hazards) {
-                Some(ch) => {
-                    match ch.presence {
-                        QTHazPresence::Entire => data_eh = draw(data_eh),
-                        QTHazPresence::Partial(_) => data_ph = draw(data_ph),
-                        QTHazPresence::None => unreachable!()
-                    }
-                }
+                Some(ch) => match ch.presence {
+                    QTHazPresence::Entire => data_eh = draw(data_eh),
+                    QTHazPresence::Partial(_) => data_ph = draw(data_ph),
+                    QTHazPresence::None => unreachable!(),
+                },
                 None => data_nh = draw(data_nh),
             }
         }
