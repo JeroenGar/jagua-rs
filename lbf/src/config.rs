@@ -5,12 +5,16 @@ use jagua_rs::util::polygon_simplification::PolySimplConfig;
 
 use crate::io::svg_util::SvgDrawOptions;
 
+/// Configuration for the LBF optimizer
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct Config {
     pub cde_config: CDEConfig,
     pub poly_simpl_config: PolySimplConfig,
+    /// Fixes the seed for the random number generator, resulting in deterministic behavior.
     pub deterministic_mode: bool,
+    /// Total number of samples per item
     pub n_samples_per_item: usize,
+    /// Fraction of the samples used for the local search sampler
     pub ls_samples_fraction: f32,
     #[serde(default)]
     pub svg_draw_options: SvgDrawOptions,

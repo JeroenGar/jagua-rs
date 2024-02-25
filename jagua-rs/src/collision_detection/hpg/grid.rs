@@ -66,7 +66,7 @@ impl<T> Grid<T> {
         }
     }
 
-    //returns the range if row indices to completely cover the coordinate range
+    //returns the range of row indices to completely cover the coordinate range
     pub fn rows_in_range(&self, y_range: RangeInclusive<f64>) -> RangeInclusive<usize> {
         let start_range = NotNan::new(*y_range.start()).expect("start is NaN");
         let end_range = NotNan::new(*y_range.end()).expect("end is NaN");
@@ -83,7 +83,7 @@ impl<T> Grid<T> {
         start_row..=end_row
     }
 
-    //returns the range if column indices to completely cover the coordinate range
+    //returns the range of column indices to completely cover the coordinate range
     pub fn cols_in_range(&self, x_range: RangeInclusive<f64>) -> RangeInclusive<usize> {
         let start_range = NotNan::new(*x_range.start()).expect("start is NaN");
         let end_range = NotNan::new(*x_range.end()).expect("end is NaN");

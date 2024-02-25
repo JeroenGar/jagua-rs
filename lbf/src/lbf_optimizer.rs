@@ -77,11 +77,15 @@ impl LBFOptimizer {
                 //find a position and insert it
                 match find_lbf_placement(&self.problem, item, &self.config, &mut self.rng) {
                     Some(i_opt) => {
+                        let l_index = self.problem.place_item(&i_opt);
                         info!(
-                            "[LBF] placing item {} at {}",
-                            i_opt.item_id, i_opt.d_transform
+                            "[LBF] placing item {}/{} with id {} at {} in {:?}",
+                            self.problem.placed_item_qtys().sum::<usize>(),
+                            self.instance.items().len(),
+                            i_opt.item_id,
+                            i_opt.d_transform,
+                            l_index
                         );
-                        self.problem.place_item(&i_opt);
                         if self.problem.placed_item_qtys().sum::<usize>() >= ITEM_LIMIT {
                             break 'outer;
                         }
