@@ -13,8 +13,12 @@ const X_MULTIPLIER: f64 = 10.0;
 pub struct LBFPlacingCost(NotNan<f64>);
 
 impl LBFPlacingCost {
-    pub fn from_shape(shape: &SimplePolygon) -> Self {
-        let cost = shape.bbox().x_max * X_MULTIPLIER + shape.bbox().y_max;
+    pub fn new(x_max: f64, y_max: f64) -> Self {
+        let cost = x_max * X_MULTIPLIER + y_max;
         LBFPlacingCost(NotNan::new(cost).expect("cost is NaN"))
+    }
+
+    pub fn from_shape(shape: &SimplePolygon) -> Self {
+        LBFPlacingCost::new(shape.bbox().x_max, shape.bbox().y_max)
     }
 }

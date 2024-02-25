@@ -62,6 +62,7 @@ impl LSSampler {
         Self::new(item, ref_transform, stddev_transl_range, stddev_rot_range)
     }
 
+    /// Shifts the mean of the normal distributions to the given reference transformation.
     pub fn shift_mean(&mut self, ref_transform: &DTransformation) {
         self.normal_x = Normal::new(ref_transform.translation().0, self.stddev_transl).unwrap();
         self.normal_y = Normal::new(ref_transform.translation().1, self.stddev_transl).unwrap();
@@ -78,10 +79,14 @@ impl LSSampler {
         self.normal_r.set_stddev(self.stddev_rot);
     }
 
-    /// Changes the stddev according to the pct of samples that have passed.
-    /// `pct` is a value in [0, 1] that represents the percentage of samples that have passed.
-    /// 0 means the first sample, 1 means the last sample.
-    pub fn evolve_stddev(&mut self, progress_pct: f64) {
+    /// Adjusts the standard deviation according to the fraction of samples that have passed,
+    /// following an exponential decay curve.
+    /// `progress_pct` is a value in [0, 1].
+    ///
+    /// f(0) = init;
+    /// f(1) = end;
+    /// f(x) = init * (end/init)^x;
+    pub fn adjust_stddev(&mut self, progress_pct: f64) {
         let calc_stddev = |(init, end): (f64, f64), pct: f64| init * (end / init).powf(pct);
         self.set_stddev(
             calc_stddev(self.stddev_transl_range, progress_pct),

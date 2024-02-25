@@ -187,8 +187,8 @@ pub fn sample_layout(
                 if worth_testing && !cde.shape_collides(&buffer, &irrel_hazards) {
                     //sample is valid and improves on the current best
                     let p_opt = PlacingOption::from_transform(l_index, item.id, transform);
-                    sampler.tighten_x_bound(buffer.bbox().x_max);
-                    debug!("[ls: {i}/{n_uni_samples}] better: {} ", &p_opt.d_transform);
+                    sampler.tighten(cost);
+                    debug!("[UNI: {i}/{n_uni_samples}] better: {} ", &p_opt.d_transform);
 
                     best = Some((p_opt, cost));
                 }
@@ -220,12 +220,12 @@ pub fn sample_layout(
                     //sample is valid and improves on the current best
                     let p_opt = PlacingOption::from_transform(l_index, item.id, transform);
                     ls_sampler.shift_mean(&p_opt.d_transform);
-                    debug!("[ls: {i}/{n_ls_samples}] better: {}", p_opt.d_transform);
+                    debug!("[LS: {i}/{n_ls_samples}] better: {}", p_opt.d_transform);
                     (*best_opt, *best_cost) = (p_opt, cost);
                 }
             }
             let progress_pct = i as f64 / n_ls_samples as f64;
-            ls_sampler.evolve_stddev(progress_pct);
+            ls_sampler.adjust_stddev(progress_pct);
         }
     }
 
