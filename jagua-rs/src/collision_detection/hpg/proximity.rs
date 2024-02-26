@@ -16,6 +16,7 @@ pub struct Proximity {
 
 impl Proximity {
     pub fn new(position: GeoPosition, distance: f64) -> Self {
+        assert!(distance.signum() >= 0.0, "distances must be non-negative");
         Self {
             position,
             distance_from_border: NotNan::new(distance).expect("distance was NaN"),

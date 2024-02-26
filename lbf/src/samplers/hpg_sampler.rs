@@ -38,11 +38,16 @@ impl<'a> HPGSampler<'a> {
 
         //create samplers for all eligible cells
         let cell_samplers = eligible_cells
-            .map(|c| {
+            .filter_map(|c| {
                 //map each eligible cell to a rectangle sampler, bounded by the layout's bbox.
                 //(at low densities, the cells could extend significantly beyond the layout's bbox)
-                AARectangle::from_intersection(c.bbox(), &bin_bbox)
-                    .expect("cell should at least partially intersect with bin bbox")
+                match AARectangle::from_intersection(c.bbox(), &bin_bbox) {
+                    Some(bbox) => Some(bbox),
+                    None => {
+                        debug!("[HPG] cell bbox does not intersect with layout bbox");
+                        None
+                    }
+                }
             })
             .map(|bbox| UniformAARectSampler::new(bbox, item))
             .collect_vec();

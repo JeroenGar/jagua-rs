@@ -5,7 +5,6 @@ use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::layout::Layout;
 use jagua_rs::entities::layout::LayoutSnapshot;
-use jagua_rs::geometry::geo_enums::GeoPosition;
 use jagua_rs::geometry::geo_traits::Transformable;
 use jagua_rs::geometry::primitives::circle::Circle;
 
@@ -211,15 +210,12 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 let center = hp_cell.centroid();
                 let prox = hp_cell.hazard_proximity(None);
 
-                let (radius, color) = match prox.position {
-                    GeoPosition::Interior => (0.0, "red"),
-                    GeoPosition::Exterior => (prox.distance_from_border.into_inner(), "blue"),
-                };
+                let color = if prox == 0.0 { "red" } else { "blue" };
 
                 group = group.add(svg_export::point(center, Some(color), Some(stroke_width)));
 
                 group = group.add(svg_export::circle(
-                    &Circle::new(center, radius),
+                    &Circle::new(center, prox),
                     &[
                         ("fill", "none"),
                         ("stroke", color),

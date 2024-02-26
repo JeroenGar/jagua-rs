@@ -81,7 +81,7 @@ impl LBFOptimizer {
                         info!(
                             "[LBF] placing item {}/{} with id {} at {} in {:?}",
                             self.problem.placed_item_qtys().sum::<usize>(),
-                            self.instance.items().len(),
+                            self.instance.total_item_qty(),
                             i_opt.item_id,
                             i_opt.d_transform,
                             l_index

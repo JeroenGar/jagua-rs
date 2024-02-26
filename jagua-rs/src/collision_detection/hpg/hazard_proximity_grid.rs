@@ -24,7 +24,16 @@ pub struct HazardProximityGrid {
 impl HazardProximityGrid {
     pub fn new(bbox: AARectangle, static_hazards: &[Hazard], n_cells: usize) -> Self {
         assert!(n_cells > 0);
-        let cells = grid_generator::generate(bbox, static_hazards, n_cells);
+
+        let cells = {
+            //all universal hazards are applicable for the grid generator
+            let uni_hazards = static_hazards
+                .iter()
+                .filter(|h| h.entity.universal())
+                .map(|h| h.clone())
+                .collect_vec();
+            grid_generator::generate(bbox, &uni_hazards, n_cells)
+        };
         let cell_radius = cells[0].diameter() / 2.0;
 
         let grid = {
@@ -53,34 +62,45 @@ impl HazardProximityGrid {
     }
 
     pub fn register_hazard(&mut self, to_register: &Hazard) {
-        let seed_bbox = {
-            let shape_bbox = to_register.shape.bbox();
-            AARectangle::new(
-                shape_bbox.x_min - self.cell_radius,
-                shape_bbox.y_min - self.cell_radius,
-                shape_bbox.x_max + self.cell_radius,
-                shape_bbox.y_max + self.cell_radius,
-            )
-        };
+        //TODO: add documentation
+        let shape = &to_register.shape;
+        let poles = &shape.surrogate().poles;
 
-        let mut b_fill = BoundaryFillGrid::new(&self.grid, seed_bbox);
+        let mut b_fill = BoundaryFillGrid::new(&self.grid, &shape.bbox());
 
-        while let Some(next_dot_index) = b_fill.pop(&self.grid) {
-            let cell = self.grid.cells[next_dot_index].as_mut();
-            if let Some(cell) = cell {
-                match cell.register_hazard(to_register) {
-                    HPGCellUpdate::Affected => {
-                        b_fill.queue_neighbors(next_dot_index, &self.grid);
+        for pole in poles {
+            let seed_box = AARectangle::new(
+                pole.bbox().x_min - 2.0 * self.cell_radius,
+                pole.bbox().y_min - 2.0 * self.cell_radius,
+                pole.bbox().x_max + 2.0 * self.cell_radius,
+                pole.bbox().y_max + 2.0 * self.cell_radius,
+            );
+
+            b_fill = b_fill.reset_and_reseed(&self.grid, &seed_box);
+
+            let mut n_cells_visited = 0;
+
+            while let Some(next_dot_index) = b_fill.pop(&self.grid) {
+                let cell = self.grid.cells[next_dot_index].as_mut();
+                if let Some(cell) = cell {
+                    match cell.register_hazard_pole(to_register, pole) {
+                        HPGCellUpdate::Affected => {
+                            b_fill.queue_neighbors(next_dot_index, &self.grid);
+                        }
+                        HPGCellUpdate::Unaffected => {
+                            b_fill.queue_neighbors(next_dot_index, &self.grid);
+                        }
+                        HPGCellUpdate::UnaffectedAndNeighborsUnaffected => (),
                     }
-                    HPGCellUpdate::Unaffected => {
-                        b_fill.queue_neighbors(next_dot_index, &self.grid);
-                    }
-                    HPGCellUpdate::Boundary => (),
+                    n_cells_visited += 1;
                 }
             }
+            debug_assert!(n_cells_visited > 0 && b_fill.seeded);
         }
-
-        debug_assert!(assertions::hpg_correctly_updated(to_register, self));
+        debug_assert!(assertions::hpg_update_no_affected_cells_remain(
+            to_register,
+            self
+        ));
     }
 
     pub fn deregister_hazard<'a, I>(

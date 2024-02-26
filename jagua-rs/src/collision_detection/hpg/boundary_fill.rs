@@ -14,13 +14,13 @@ pub struct BoundaryFillGrid {
     state: Vec<CellState>,
     seed_iterator: CirclingIterator,
     queue: VecDeque<usize>,
-    n_visited: usize,
-    seeded: bool,
+    pub n_visited: usize,
+    pub seeded: bool,
 }
 
 impl BoundaryFillGrid {
     /// Creates a new BoundaryFillGrid, add all cells inside the seed_bbox to the queue
-    pub fn new<T>(grid: &Grid<T>, seed_bbox: AARectangle) -> Self {
+    pub fn new<T>(grid: &Grid<T>, seed_bbox: &AARectangle) -> Self {
         let state = vec![CellState::new(); grid.n_rows * grid.n_cols];
 
         //Find the range of rows and columns which reside inside the seed_bbox
@@ -79,6 +79,26 @@ impl BoundaryFillGrid {
                 self.state[neighbor].queue();
                 self.queue.push_back(neighbor);
             }
+        }
+    }
+
+    pub fn reset_and_reseed<T>(mut self, grid: &Grid<T>, seed_bbox: &AARectangle) -> Self {
+        self.state
+            .iter_mut()
+            .for_each(|state| *state = CellState::NotQueued);
+        self.queue.clear();
+        self.seed_iterator = {
+            let row_range = grid.rows_in_range(seed_bbox.y_min..=seed_bbox.y_max);
+            let col_range = grid.cols_in_range(seed_bbox.x_min..=seed_bbox.x_max);
+            CirclingIterator::new(row_range, col_range)
+        };
+
+        Self {
+            state: self.state,
+            seed_iterator: self.seed_iterator,
+            queue: self.queue,
+            n_visited: 0,
+            seeded: false,
         }
     }
 }

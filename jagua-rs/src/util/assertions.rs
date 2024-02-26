@@ -11,8 +11,8 @@ use crate::collision_detection::hazard_filter::CombinedHazardFilter;
 use crate::collision_detection::hazard_filter::EntityHazardFilter;
 use crate::collision_detection::hpg::hazard_proximity_grid::HazardProximityGrid;
 use crate::collision_detection::hpg::hpg_cell::HPGCellUpdate;
-use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
+use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
@@ -407,7 +407,10 @@ fn hazards_match(chv1: &[Hazard], chv2: &[Hazard]) -> bool {
     true
 }
 
-pub fn hpg_correctly_updated(to_register: &Hazard, hpg: &mut HazardProximityGrid) -> bool {
+pub fn hpg_update_no_affected_cells_remain(
+    to_register: &Hazard,
+    hpg: &mut HazardProximityGrid,
+) -> bool {
     //To ensure the boundary fill algorithm did not miss any cells, we check all the cells to make sure no cells were affected
     let old_cells = hpg.grid.cells.clone();
 
@@ -429,8 +432,21 @@ pub fn hpg_correctly_updated(to_register: &Hazard, hpg: &mut HazardProximityGrid
             .iter()
             .map(|i| hpg.grid.to_row_col(*i).unwrap())
             .collect_vec();
-        println!("undetected affected cells: {:?}", undetected_row_cols);
-        for i in undetected_cells_indices {
+        println!(
+            "{} detected affected cells, radius: {}",
+            undetected_cells_indices.len(),
+            hpg.cell_radius
+        );
+        for (&i, (row, col)) in undetected_cells_indices
+            .iter()
+            .zip(undetected_row_cols.iter())
+        {
+            println!(
+                "cell [{},{}] with {} neighbors",
+                row,
+                col,
+                hpg.grid.get_neighbors(i).map(|j| j != i).iter().count()
+            );
             println!(
                 "old {:?}",
                 old_cells[i].as_ref().unwrap().universal_hazard_proximity()
@@ -442,6 +458,7 @@ pub fn hpg_correctly_updated(to_register: &Hazard, hpg: &mut HazardProximityGrid
                     .unwrap()
                     .universal_hazard_proximity()
             );
+            println!()
         }
         false
     } else {

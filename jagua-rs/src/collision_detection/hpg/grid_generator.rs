@@ -9,7 +9,8 @@ use crate::geometry::primitives::point::Point;
 
 const MAX_ITERATIONS: usize = 25;
 
-/// Generates a grid of equal sized square rectangles within a shape.
+/// Generates a grid of equal sized square rectangles within a bounding box.
+/// All hazards are regarded as exterior regions, and will not contain cells.
 /// The number of cells is approximately equal to target_n_cells, but can be slightly more or less
 /// This is due to the fact that the cells are always remain square, so we cannot guarantee an exact number of cells
 pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) -> Vec<AARectangle> {
