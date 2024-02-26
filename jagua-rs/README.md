@@ -34,8 +34,9 @@ See [lbf crate](../lbf) for a reference implementation of an optimization algori
 
 ## Documentation
 
-The codebase is documented throughout using [rustdoc](https://doc.rust-lang.org/rustdoc/what-is-rustdoc.html).
-Use `cargo doc --open` to compile and view the documentation in your browser.
+Documentation of this repo is automatically deployed to [GitHub Pages](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/).
+
+Or alternatively, use `cargo doc --open` to compile locally and view the documentation in your browser.
 
 ## Testing
 

@@ -3,8 +3,16 @@ name: Docs
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - '**.rs'
+      - '**.toml'
+      - '**.yml'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - '**.rs'
+      - '**.toml'
+      - '**.yml'
 
 env:
   CARGO_TERM_COLOR: always
@@ -16,14 +24,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build jagua-rs docs
         run: |
-          cd jagua-rs
+          cd lbf
           cargo doc --all
       - name: deploy docs
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           token: ${{ secrets.DOCS_PAT }}
           branch: gh-pages
-          folder: jagua-rs/target/doc
+          folder: lbf/target/doc
           clean: true
           repository-name: JeroenGar/jagua-rs-docs
           commit-message: "auto update docs"

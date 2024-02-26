@@ -1,4 +1,4 @@
-# Jagua-rs [![Rust CI](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml)
+# Jagua-rs [![Rust CI](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml)[![Docs](https://github.com/JeroenGar/jagua-rs/actions/workflows/doc.yml/badge.svg)](https://github.com/JeroenGar/jagua-rs/actions/workflows/doc.yml)
 ### A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems
 
 **🏗️ 🚧 Under construction 🚧 🏗️**
