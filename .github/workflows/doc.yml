@@ -1,0 +1,30 @@
+name: Docs
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rustdoc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build jagua-rs docs
+        run: |
+          cd jagua-rs
+          cargo doc --all
+      - name: deploy docs
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.DOCS_PAT }}
+          branch: gh-pages
+          folder: jagua-rs/target/doc
+          clean: true
+          repository-name: JeroenGar/jagua-rs-docs
+          commit-message: "auto update docs"
+          single-commit: true
