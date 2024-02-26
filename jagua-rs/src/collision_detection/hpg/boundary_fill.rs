@@ -1,109 +1,130 @@
 use std::collections::VecDeque;
+use std::ops::RangeInclusive;
 
-use crate::collision_detection::hpg::circling_iterator::CirclingIterator;
 use crate::collision_detection::hpg::grid::Grid;
+use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 
-///Boundary Fill type of algorithm.
-///Iteratively visits cells within a grid.
-///While unseeded, the struct will visit cells from the seed_bbox, from the inside out.
-///When a cell's neighbors are queued, the struct is considered seeded, and will from then on visit cells from the queue.
-///The "Fill" finished when there are no more cells to visit, i.e. the seed_iterator runs out (unseeded) or the queue is empty (seeded)
+// Boundary fill algorithm to propagate update through the hazard proximity grid.
+// During the update of an HPGCell, it can often guarantee that the update will also not affect any of its direct neighbors.
+// These "unaffected" cells can form a boundary around the update.
+// By using the boundary fill algorithm, we can efficiently visit all cells that are affected by the update, without iterating over the entire grid.
+
+// The `BoundaryFillHPG` operates in two states: "unseeded" and "seeded".
+// In the "unseeded" state, we have not yet found any cell that is inside the "boundary" of the update.
+// During this state, the algorithm will visit all the cells that fall within the seedbox.
+// The seedbox is a rectangle that is guaranteed to contain at least one cell that is "within the boundary" of the update.
+
+// From the moment we find a cell that is inside the boundary, we enter the "seeded" state.
+// From this point on, the algorithm will only queue neighbors of cells within the boundary,
+
+// When the queue runs out of cells to visit, all cells which could be affected should have been visited and updated.
 #[derive(Debug, Clone)]
-pub struct BoundaryFillGrid {
+pub struct BoundaryFillHPG {
     state: Vec<CellState>,
-    seed_iterator: CirclingIterator,
+    seedbox_rows: RangeInclusive<usize>,
+    seedbox_cols: RangeInclusive<usize>,
     queue: VecDeque<usize>,
     pub n_visited: usize,
     pub seeded: bool,
 }
 
-impl BoundaryFillGrid {
-    /// Creates a new BoundaryFillGrid, add all cells inside the seed_bbox to the queue
+impl BoundaryFillHPG {
     pub fn new<T>(grid: &Grid<T>, seed_bbox: &AARectangle) -> Self {
-        let state = vec![CellState::new(); grid.n_rows * grid.n_cols];
-
-        //Find the range of rows and columns which reside inside the seed_bbox
-        let row_range = grid.rows_in_range(seed_bbox.y_min..=seed_bbox.y_max);
-        let col_range = grid.cols_in_range(seed_bbox.x_min..=seed_bbox.x_max);
-
-        //FIFO queue to keep track of which cells to visit next
-        let queue = VecDeque::with_capacity(state.len());
-
-        //Queue all cells within the seed_box, from the inside out. (seed is more likely to be in the center)
-        let seed_iterator = CirclingIterator::new(row_range, col_range);
-
+        let n_cells = grid.n_rows * grid.n_cols;
+        //convert the seedbox from a rectangle to a range of rows and columns in the grid
+        let seedbox_rows = grid.rows_in_range(seed_bbox.y_min..=seed_bbox.y_max);
+        let seedbox_cols = grid.cols_in_range(seed_bbox.x_min..=seed_bbox.x_max);
         Self {
-            state,
-            seed_iterator,
-            queue,
+            state: vec![CellState::NotQueued; n_cells],
+            seedbox_rows,
+            seedbox_cols,
+            queue: VecDeque::with_capacity(n_cells),
             n_visited: 0,
             seeded: false,
         }
+        .init_queue(grid)
+    }
+
+    /// Initializes the queue with the middle cell of the seedbox
+    fn init_queue<T>(mut self, grid: &Grid<T>) -> Self {
+        debug_assert!(self.n_visited == 0 && self.queue.is_empty());
+        let middle_row =
+            self.seedbox_rows.start() + (self.seedbox_rows.end() - self.seedbox_rows.start()) / 2;
+        let middle_col =
+            self.seedbox_cols.start() + (self.seedbox_cols.end() - self.seedbox_cols.start()) / 2;
+        let middle_cell = grid.to_index(middle_row, middle_col).unwrap();
+
+        self.state[middle_cell].queue();
+        self.queue.push_back(middle_cell);
+
+        self
     }
 
     /// Returns the next cell to visit and pops it from the queue,
     /// if there are no more cells to visit return None
-    pub fn pop<T>(&mut self, grid: &Grid<T>) -> Option<usize> {
-        match self.seeded {
-            false => match self.seed_iterator.next() {
-                Some((row, col)) => {
-                    let cell = grid.to_index(row, col);
-                    if let Some(cell) = cell {
-                        self.state[cell].visit();
-                        self.n_visited += 1;
-                    }
-                    cell
-                }
-                None => None,
-            },
-            true => match self.queue.pop_front() {
-                Some(cell) => {
-                    self.state[cell].visit();
-                    self.n_visited += 1;
-                    Some(cell)
-                }
-                None => None,
-            },
+    pub fn pop(&mut self) -> Option<usize> {
+        match self.queue.pop_front() {
+            Some(cell) => {
+                self.state[cell].visit(&mut self.n_visited);
+                Some(cell)
+            }
+            None => None,
         }
     }
 
-    /// Adds all unvisited neighbors of the cell at index to the queue
-    /// Also marks the grid as seeded
-    pub fn queue_neighbors<T>(&mut self, index: usize, grid: &Grid<T>) {
-        self.seeded = true;
+    /// Reports if the cell was inside or outside the boundary of the update
+    pub fn report_position<T>(&mut self, index: usize, position: GeoPosition, grid: &Grid<T>) {
+        let queue_neighbors = match (self.seeded, position) {
+            (false, GeoPosition::Interior) => {
+                //seed has been found, unqueue all cells and mark as seeded
+                self.seeded = true;
+                self.queue.drain(..).for_each(|i| self.state[i].dequeue());
+                true
+            }
+            (false, GeoPosition::Exterior) => {
+                //no seed found, continue queuing if the cell is within the seedbox
+                let (row, col) = grid.to_row_col(index).expect("cell should exist");
+                self.seedbox_rows.contains(&row) && self.seedbox_cols.contains(&col)
+            }
+            //seeded, only queue if the cell is within the boundary
+            (true, GeoPosition::Interior) => true,
+            (true, GeoPosition::Exterior) => false,
+        };
 
-        //Push all not-queued neighbor cells to the queue
-        for neighbor in grid.get_neighbors(index) {
-            if self.state[neighbor] == CellState::NotQueued {
-                self.state[neighbor].queue();
-                self.queue.push_back(neighbor);
+        if queue_neighbors {
+            for neighbor in grid.get_neighbors(index) {
+                if self.state[neighbor] == CellState::NotQueued {
+                    self.state[neighbor].queue();
+                    self.queue.push_back(neighbor);
+                }
             }
         }
     }
 
-    pub fn reset_and_reseed<T>(mut self, grid: &Grid<T>, seed_bbox: &AARectangle) -> Self {
+    /// Resets the state of the boundary fill algorithm, with a new seedbox
+    pub fn reset<T>(mut self, grid: &Grid<T>, seed_bbox: &AARectangle) -> Self {
+        debug_assert!(self.state.len() == grid.n_rows * grid.n_cols);
+
+        //allows us to reuse the heap allocated state and queue vectors
         self.state
             .iter_mut()
             .for_each(|state| *state = CellState::NotQueued);
         self.queue.clear();
-        self.seed_iterator = {
-            let row_range = grid.rows_in_range(seed_bbox.y_min..=seed_bbox.y_max);
-            let col_range = grid.cols_in_range(seed_bbox.x_min..=seed_bbox.x_max);
-            CirclingIterator::new(row_range, col_range)
-        };
 
         Self {
             state: self.state,
-            seed_iterator: self.seed_iterator,
+            seedbox_rows: grid.rows_in_range(seed_bbox.y_min..=seed_bbox.y_max),
+            seedbox_cols: grid.cols_in_range(seed_bbox.x_min..=seed_bbox.x_max),
             queue: self.queue,
             n_visited: 0,
             seeded: false,
         }
+        .init_queue(grid)
     }
 }
 
-//state machine to keep track of each cells status
+//State machine to keep track of each cell's status
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum CellState {
     NotQueued,
@@ -112,10 +133,8 @@ enum CellState {
 }
 
 impl CellState {
-    fn new() -> Self {
-        CellState::NotQueued
-    }
-    fn visit(&mut self) {
+    fn visit(&mut self, visit_count: &mut usize) {
+        *visit_count += 1;
         *self = match self {
             CellState::Queued | CellState::NotQueued => CellState::Visited,
             CellState::Visited => unreachable!("invalid state: cell already visited"),
@@ -127,6 +146,14 @@ impl CellState {
             CellState::NotQueued => CellState::Queued,
             CellState::Visited => unreachable!("invalid state: cell already visited"),
             CellState::Queued => unreachable!("invalid state: cell already queued"),
+        }
+    }
+
+    fn dequeue(&mut self) {
+        *self = match self {
+            CellState::Queued => CellState::NotQueued,
+            CellState::Visited => unreachable!("invalid state: cell already visited"),
+            CellState::NotQueued => unreachable!("invalid state: cell already not queued"),
         }
     }
 }

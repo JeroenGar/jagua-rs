@@ -144,9 +144,9 @@ impl HPGCell {
             }
             _ => {
                 if haz_prox > current_prox + 2.0 * self.radius {
-                    HPGCellUpdate::UnaffectedAndNeighborsUnaffected
+                    HPGCellUpdate::NeighborsNotAffected
                 } else {
-                    HPGCellUpdate::Unaffected
+                    HPGCellUpdate::NotAffected
                 }
             }
         }
@@ -184,11 +184,11 @@ impl HPGCell {
                 let haz_prox_lower_bound = new_prox - max_neighbor_distance;
                 let current_prox_upper_bound = current_prox + max_neighbor_distance;
 
-                if haz_prox_lower_bound > current_prox_upper_bound {
-                    //neighbors can't be affected, since the current hazard will always be closer
-                    HPGCellUpdate::UnaffectedAndNeighborsUnaffected
-                } else {
-                    HPGCellUpdate::Unaffected
+                match haz_prox_lower_bound > current_prox_upper_bound {
+                    //this cell is unaffected, but no guarantees about its neighbors
+                    false => HPGCellUpdate::NotAffected,
+                    //Current hazard will always be closer, we can guarantee that the neighbors will also be unaffected
+                    true => HPGCellUpdate::NeighborsNotAffected,
                 }
             }
         }
@@ -210,7 +210,7 @@ impl HPGCell {
             self.register_hazards(remaining);
             HPGCellUpdate::Affected
         } else {
-            HPGCellUpdate::Unaffected
+            HPGCellUpdate::NotAffected
         }
     }
 
@@ -286,7 +286,7 @@ pub enum HPGCellUpdate {
     ///Update affected the cell
     Affected,
     ///Update did not affect the cell, but its neighbors can be affected
-    Unaffected,
+    NotAffected,
     ///Update did not affect the cell and its neighbors are also guaranteed to be unaffected
-    UnaffectedAndNeighborsUnaffected,
+    NeighborsNotAffected,
 }

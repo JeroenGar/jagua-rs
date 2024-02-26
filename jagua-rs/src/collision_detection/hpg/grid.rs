@@ -136,14 +136,19 @@ impl<T> Grid<T> {
         neighbors
     }
 
-    pub fn to_index(&self, row: usize, col: usize) -> Option<usize> {
+    pub fn to_index(&self, row: usize, col: usize) -> Result<usize, OutOfBounds> {
         Self::calculate_index(row, col, self.n_rows, self.n_cols)
     }
 
-    fn calculate_index(row: usize, col: usize, n_rows: usize, n_cols: usize) -> Option<usize> {
+    fn calculate_index(
+        row: usize,
+        col: usize,
+        n_rows: usize,
+        n_cols: usize,
+    ) -> Result<usize, OutOfBounds> {
         match (row.cmp(&n_rows), col.cmp(&n_cols)) {
-            (Ordering::Less, Ordering::Less) => Some(row * n_cols + col),
-            _ => None, //out of bounds
+            (Ordering::Less, Ordering::Less) => Ok(row * n_cols + col),
+            _ => Err(OutOfBounds), //out of bounds
         }
     }
 
@@ -158,3 +163,6 @@ impl<T> Grid<T> {
         }
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+pub struct OutOfBounds;

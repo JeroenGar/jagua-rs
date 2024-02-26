@@ -4,10 +4,11 @@ use itertools::Itertools;
 
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
-use crate::collision_detection::hpg::boundary_fill::BoundaryFillGrid;
+use crate::collision_detection::hpg::boundary_fill::BoundaryFillHPG;
 use crate::collision_detection::hpg::grid::Grid;
 use crate::collision_detection::hpg::grid_generator;
 use crate::collision_detection::hpg::hpg_cell::{HPGCell, HPGCellUpdate};
+use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::util::assertions;
@@ -62,11 +63,11 @@ impl HazardProximityGrid {
     }
 
     pub fn register_hazard(&mut self, to_register: &Hazard) {
-        //TODO: add documentation
         let shape = &to_register.shape;
         let poles = &shape.surrogate().poles;
 
-        let mut b_fill = BoundaryFillGrid::new(&self.grid, &shape.bbox());
+        //To update the grid efficiently, we use a boundary fill algorithm to propogate the effect of each pole through the grid
+        let mut b_fill = BoundaryFillHPG::new(&self.grid, &shape.bbox());
 
         for pole in poles {
             let seed_box = AARectangle::new(
@@ -76,26 +77,32 @@ impl HazardProximityGrid {
                 pole.bbox().y_max + 2.0 * self.cell_radius,
             );
 
-            b_fill = b_fill.reset_and_reseed(&self.grid, &seed_box);
+            b_fill = b_fill.reset(&self.grid, &seed_box);
 
             let mut n_cells_visited = 0;
 
-            while let Some(next_dot_index) = b_fill.pop(&self.grid) {
-                let cell = self.grid.cells[next_dot_index].as_mut();
+            //As long as the boundary fill keeps finding new cells, keep updating the grid
+            while let Some(next_cell) = b_fill.pop() {
+                let cell = self.grid.cells[next_cell].as_mut();
                 if let Some(cell) = cell {
-                    match cell.register_hazard_pole(to_register, pole) {
-                        HPGCellUpdate::Affected => {
-                            b_fill.queue_neighbors(next_dot_index, &self.grid);
-                        }
-                        HPGCellUpdate::Unaffected => {
-                            b_fill.queue_neighbors(next_dot_index, &self.grid);
-                        }
-                        HPGCellUpdate::UnaffectedAndNeighborsUnaffected => (),
-                    }
+                    let cell_update_result = cell.register_hazard_pole(to_register, pole);
+                    let position_in_bf = match cell_update_result {
+                        //Cell was directly affected, inside the boundary
+                        HPGCellUpdate::Affected => GeoPosition::Interior,
+                        //Cell was not affected, but its neighbors might be, so it is considered inside the boundary
+                        HPGCellUpdate::NotAffected => GeoPosition::Interior,
+                        //Cell was not affected and its neighbors are not affected, so it is considered outside the boundary
+                        HPGCellUpdate::NeighborsNotAffected => GeoPosition::Exterior,
+                    };
+                    b_fill.report_position(next_cell, position_in_bf, &self.grid);
                     n_cells_visited += 1;
+                } else {
+                    //cell does not exist, mark as exterior
+                    b_fill.report_position(next_cell, GeoPosition::Exterior, &self.grid);
                 }
             }
-            debug_assert!(n_cells_visited > 0 && b_fill.seeded);
+            debug_assert!(n_cells_visited > 0);
+            debug_assert!(b_fill.seeded);
         }
         debug_assert!(assertions::hpg_update_no_affected_cells_remain(
             to_register,

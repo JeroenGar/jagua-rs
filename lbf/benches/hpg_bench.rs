@@ -20,7 +20,7 @@ use lbf::samplers::hpg_sampler::HPGSampler;
 use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};
 
 criterion_main!(benches);
-criterion_group!(benches, hpg_query_bench, hpg_update_bench);
+criterion_group!(benches, hpg_update_bench, hpg_query_bench);
 
 mod util;
 
