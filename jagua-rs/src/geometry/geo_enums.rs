@@ -23,7 +23,10 @@ pub enum GeoRelation {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum AllowedRotation {
+    /// No rotation is allowed
     None,
+    /// Any rotation is allowed
     Continuous,
+    /// Only a limited set of rotations is allowed
     Discrete(Vec<f64>),
 }

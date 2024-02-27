@@ -25,8 +25,8 @@ pub struct JsonInstance {
 pub struct JsonBin {
     /// The cost of using this bin
     pub cost: u64,
-    /// Number of this bin available
-    pub stock: u64,
+    /// Number of this bin available, if not present, it is assumed to be unlimited
+    pub stock: Option<u64>,
     /// Polygon shape of the bin
     pub shape: JsonPoly,
     /// A list of zones with different quality levels
@@ -47,8 +47,7 @@ pub struct JsonStrip {
 pub struct JsonItem {
     /// Number of times this item should be produced
     pub demand: u64,
-    /// List of allowed orientations angles (in degrees).
-    /// Some(_) if only the specified angles are allowed; None if continuous rotation is allowed
+    /// List of allowed orientations angles (in degrees), if not present, any orientation is allowed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allowed_orientations: Option<Vec<f64>>,
     /// Polygon shape of the item

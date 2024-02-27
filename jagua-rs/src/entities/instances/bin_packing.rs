@@ -12,7 +12,7 @@ pub struct BPInstance {
     pub items: Vec<(Item, usize)>,
     /// Total area of all items in the instance
     pub item_area: f64,
-
+    /// Set of bins available to pack the items, along with their quantities
     pub bins: Vec<(Bin, usize)>,
 }
 

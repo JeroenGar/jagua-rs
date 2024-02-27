@@ -6,8 +6,11 @@ use crate::geometry::geo_traits::Shape;
 /// The items are to be packed in such a way that the total width of the strip used is minimized.
 #[derive(Debug, Clone)]
 pub struct SPInstance {
+    /// The items to be packed and their quantities
     pub items: Vec<(Item, usize)>,
+    /// The total area of the items
     pub item_area: f64,
+    /// The (fixed) height of the strip
     pub strip_height: f64,
 }
 

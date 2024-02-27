@@ -5,9 +5,13 @@ use crate::geometry::transformation::Transformation;
 #[derive(Clone, Debug)]
 /// Encapsulates all required information to place an `Item` in a `Problem`
 pub struct PlacingOption {
+    /// Which layout to place the item in
     pub layout_index: LayoutIndex,
+    /// The id of the item to be placed
     pub item_id: usize,
+    /// The transformation to be applied to the item
     pub transform: Transformation,
+    /// The decomposition of the transformation
     pub d_transform: DTransformation,
 }
 

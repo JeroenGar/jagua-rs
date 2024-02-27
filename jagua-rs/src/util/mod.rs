@@ -1,11 +1,17 @@
 use crate::entities::layout::Layout;
 
+/// Set of functions used throughout assure the correctness of the library.
 pub mod assertions;
+
+/// Configuration options for the library
 pub mod config;
+
 pub mod f64a;
+
+/// Functions to simplify polygons in preprocessing
 pub mod polygon_simplification;
 
-///Intended for debugging purposes
+///Prints code to recreate a layout. Intended for debugging purposes.
 pub fn print_layout(layout: &Layout) {
     println!(
         "let mut layout = Layout::new(0, instance.bin({}).clone());",

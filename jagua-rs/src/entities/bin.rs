@@ -14,15 +14,20 @@ use crate::geometry::transformation::Transformation;
 use crate::util::config::CDEConfig;
 
 /// A `Bin` is a container in which items can be placed.
-/// Its interior is defined by an outer polygon and zero or more holes.
 #[derive(Clone, Debug)]
 pub struct Bin {
     pub id: usize,
+    /// The contour of the bin
     pub outer: Arc<SimplePolygon>,
+    /// The cost of using the bin
     pub value: u64,
+    /// Every bin is centered around its centroid (using this transformation)
     pub centering_transform: Transformation,
+    /// Shapes of holes/defects in the bins, if any
     pub holes: Vec<Arc<SimplePolygon>>,
+    /// Zones of different qualities in the bin, stored per quality.
     pub quality_zones: [Option<QualityZone>; N_QUALITIES],
+    /// The starting state of the `CDEngine` for this bin.
     pub base_cde: Arc<CDEngine>,
     pub area: f64,
 }
@@ -62,7 +67,7 @@ impl Bin {
 
         let base_cde = CDEngine::new(
             outer.bbox().inflate_to_square(),
-            Self::generate_hazards(&outer, &holes, &quality_zones),
+            Bin::generate_hazards(&outer, &holes, &quality_zones),
             cde_config,
         );
         let base_cde = Arc::new(base_cde);
@@ -80,6 +85,7 @@ impl Bin {
         }
     }
 
+    /// Create a new `Bin` for a strip-packing problem. Instead of a shape, the bin is always rectangular.
     pub fn from_strip(id: usize, width: f64, height: f64, cde_config: CDEConfig) -> Self {
         let poly = SimplePolygon::from(AARectangle::new(0.0, 0.0, width, height));
         let value = poly.area() as u64;
@@ -99,27 +105,25 @@ impl Bin {
         holes: &[Arc<SimplePolygon>],
         quality_zones: &[Option<QualityZone>],
     ) -> Vec<Hazard> {
+        //Hazard induced by the outside of the bin
         let mut hazards = vec![Hazard::new(HazardEntity::BinExterior, outer.clone())];
+
+        //Hazard induced by any holes in the bin
         hazards.extend(holes.iter().enumerate().map(|(i, shape)| {
             let haz_entity = HazardEntity::BinHole { id: i };
             Hazard::new(haz_entity, shape.clone())
         }));
 
-        hazards.extend(
-            quality_zones
-                .iter()
-                .flatten()
-                .map(|q_zone| {
-                    q_zone.zones.iter().enumerate().map(|(id, shape)| {
-                        let haz_entity = HazardEntity::QualityZoneInferior {
-                            quality: q_zone.quality,
-                            id,
-                        };
-                        Hazard::new(haz_entity, shape.clone())
-                    })
-                })
-                .flatten(),
-        );
+        //Hazards induced by quality zones
+        for q_zone in quality_zones.iter().flatten() {
+            for (id, shape) in q_zone.zones.iter().enumerate() {
+                let haz_entity = HazardEntity::QualityZoneInferior {
+                    quality: q_zone.quality,
+                    id,
+                };
+                hazards.push(Hazard::new(haz_entity, shape.clone()));
+            }
+        }
 
         hazards
     }

@@ -32,6 +32,7 @@ use crate::util::config::CDEConfig;
 use crate::util::polygon_simplification;
 use crate::util::polygon_simplification::{PolySimplConfig, PolySimplMode};
 
+/// Parses a `JsonInstance` into an `Instance`.
 pub struct Parser {
     poly_simpl_config: PolySimplConfig,
     cde_config: CDEConfig,
@@ -51,6 +52,7 @@ impl Parser {
         }
     }
 
+    /// Parses a `JsonInstance` into an `Instance`.
     pub fn parse(&self, json_instance: &JsonInstance) -> Instance {
         let mut items: Vec<(Item, usize)> = vec![];
         let mut instance = None;
@@ -171,8 +173,9 @@ impl Parser {
                                 quality_zones,
                                 self.cde_config,
                             );
+                            let stock = json_bin.stock.unwrap_or(u64::MAX) as usize;
 
-                            (bin, json_bin.stock as usize)
+                            (bin, stock)
                         });
                         bin_join_handles.push(handle);
                     }
@@ -219,6 +222,7 @@ impl Parser {
         instance
     }
 
+    /// Parses a `JsonInstance` and accompanying `JsonLayout`s into an `Instance` and `Solution`.
     pub fn parse_and_build_solution(
         &self,
         json_instance: &JsonInstance,
@@ -232,6 +236,7 @@ impl Parser {
     }
 }
 
+/// Builds a `Solution` from a set of `JsonLayout`s and an `Instance`.
 fn build_solution_from_json(
     json_layouts: &[JsonLayout],
     instance: Arc<Instance>,
@@ -335,6 +340,7 @@ fn build_solution_from_json(
     problem.create_solution(&None)
 }
 
+/// Composes a `JsonSolution` from a `Solution` and an `Instance`.
 pub fn compose_json_solution(
     solution: &Solution,
     instance: &Instance,
@@ -442,7 +448,7 @@ fn json_shape_to_simple_polygon(
     (shape, centering_transform)
 }
 
-pub fn simple_json_shape_to_simple_polygon(
+fn simple_json_shape_to_simple_polygon(
     s_json_shape: &JsonSimplePoly,
     center_polygon: bool,
     simpl_config: PolySimplConfig,
