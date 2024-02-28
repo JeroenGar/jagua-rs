@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use itertools::Itertools;
-use log::{Level, log};
+use log::{log, Level};
 
 use crate::entities::bin::Bin;
 use crate::entities::instances::bin_packing::BPInstance;
@@ -15,8 +15,8 @@ use crate::entities::problems::bin_packing::BPProblem;
 use crate::entities::problems::problem::Problem;
 use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::strip_packing::SPProblem;
-use crate::entities::quality_zone::N_QUALITIES;
 use crate::entities::quality_zone::QualityZone;
+use crate::entities::quality_zone::N_QUALITIES;
 use crate::entities::solution::Solution;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_enums::AllowedRotation;
