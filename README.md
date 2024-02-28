@@ -144,13 +144,12 @@ cargo test
 
 ## Documentation
 
-Documentation of this repo is written with rustdoc and is automatically deployed to GitHub pages.
+Documentation of this repo is written with rustdoc and is automatically deployed to GitHub Pages:
 
-[Link to `jagua-rs` docs](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/).
+[`jagua-rs` docs](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/)    
+[`lbf` docs](https://jeroengar.github.io/jagua-rs-docs/lbf/)
 
-[Link to `lbf` docs](https://jeroengar.github.io/jagua-rs-docs/lbf/).
-
-Alternatively use `cargo doc --open` to compile and view the documentation in your browser.
+Alternatively use `cargo doc --open` to compile and view the documentation locally.
 
 ## Acknowledgements
 
