@@ -3,13 +3,13 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
-use log::{info, log, Level, LevelFilter};
+use log::{info, Level, LevelFilter, log};
 use svg::Document;
 
 use jagua_rs::io::json_instance::JsonInstance;
 
-use crate::io::json_output::JsonOutput;
 use crate::EPOCH;
+use crate::io::json_output::JsonOutput;
 
 pub mod cli;
 pub mod json_output;
@@ -35,16 +35,22 @@ pub fn write_json_output(json_output: &JsonOutput, path: &Path) {
         .unwrap_or_else(|_| panic!("could not write solution file: {}", path.display()));
 
     info!(
-        "Solution JSON written to {:?}",
-        fs::canonicalize(path).expect("could not canonicalize path")
+        "Solution JSON written to file://{}",
+        fs::canonicalize(path)
+            .expect("could not canonicalize path")
+            .to_str()
+            .unwrap()
     );
 }
 
 pub fn write_svg(document: &Document, path: &Path) {
     svg::save(path, document).expect("failed to write svg file");
     info!(
-        "Solution SVG written to {:?}",
-        fs::canonicalize(&path).expect("could not canonicalize path")
+        "Solution SVG written to file://{}",
+        fs::canonicalize(&path)
+            .expect("could not canonicalize path")
+            .to_str()
+            .unwrap()
     );
 }
 
