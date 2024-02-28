@@ -21,6 +21,7 @@ use crate::entities::solution::Solution;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_enums::AllowedRotation;
 use crate::geometry::geo_traits::{Shape, Transformable};
+use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
@@ -62,6 +63,10 @@ impl Parser {
             for (item_id, json_item) in json_instance.items.iter().enumerate() {
                 let handle = s.spawn(move |_| {
                     let (shape, centering_transf) = match &json_item.shape {
+                        JsonShape::Rectangle{ width, height } => {
+                            let shape = SimplePolygon::from(AARectangle::new(0.0, 0.0, *width, *height));
+                            (shape, Transformation::empty())
+                        }
                         JsonShape::SimplePolygon(sp) => convert_json_simple_poly(
                             sp,
                             self.center_polygons,
@@ -118,6 +123,10 @@ impl Parser {
                     for (bin_id, json_bin) in json_bins.iter().enumerate() {
                         let handle = s.spawn(move |_| {
                             let (bin_outer, centering_transf) = match &json_bin.shape {
+                                JsonShape::Rectangle {width, height} => {
+                                    let shape = SimplePolygon::from(AARectangle::new(0.0, 0.0, *width, *height));
+                                    (shape, Transformation::empty())
+                                }
                                 JsonShape::SimplePolygon(jsp) => convert_json_simple_poly(
                                     jsp,
                                     self.center_polygons,
@@ -136,7 +145,7 @@ impl Parser {
                             };
 
                             let bin_holes = match &json_bin.shape {
-                                JsonShape::SimplePolygon(_) => vec![],
+                                JsonShape::SimplePolygon(_) | JsonShape::Rectangle {..} => vec![],
                                 JsonShape::Polygon(jp) => jp
                                     .inner
                                     .iter()
@@ -172,6 +181,10 @@ impl Parser {
                                         .filter(|zone| zone.quality == quality)
                                         .map(|zone| {
                                             let (zone_shape, _) = match &zone.shape {
+                                                JsonShape::Rectangle { width, height } => {
+                                                    let shape = SimplePolygon::from(AARectangle::new(0.0, 0.0, *width, *height));
+                                                    (shape, Transformation::empty())
+                                                }
                                                 JsonShape::SimplePolygon(jsp) => convert_json_simple_poly(
                                                     jsp,
                                                     false,

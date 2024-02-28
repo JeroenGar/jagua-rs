@@ -37,19 +37,19 @@ impl LSSampler {
         sd_transl_range: (f64, f64),
         sd_rot_range: (f64, f64),
     ) -> Self {
-        let stddev_transl = sd_transl_range.0;
-        let stddev_rot = sd_rot_range.0;
+        let sd_transl = sd_transl_range.0;
+        let sd_rot = sd_rot_range.0;
 
-        let normal_x = Normal::new(ref_transform.translation().0, stddev_transl).unwrap();
-        let normal_y = Normal::new(ref_transform.translation().1, stddev_transl).unwrap();
-        let normal_r = NormalRotDistr::from_item(item, ref_transform.rotation(), stddev_rot);
+        let normal_x = Normal::new(ref_transform.translation().0, sd_transl).unwrap();
+        let normal_y = Normal::new(ref_transform.translation().1, sd_transl).unwrap();
+        let normal_r = NormalRotDistr::from_item(item, ref_transform.rotation(), sd_rot);
 
         Self {
             normal_x,
             normal_y,
             normal_r,
-            sd_transl: stddev_transl,
-            sd_rot: stddev_rot,
+            sd_transl,
+            sd_rot,
             sd_transl_range,
             sd_rot_range,
         }
@@ -58,8 +58,8 @@ impl LSSampler {
     /// Creates a new sampler with default standard deviation ranges: [SD_TRANSL] and [SD_ROT].
     pub fn from_defaults(item: &Item, ref_transform: &DTransformation, bbox: &AARectangle) -> Self {
         let max_dim = f64::max(bbox.width(), bbox.height());
-        let stddev_transl_range = (SD_TRANSL.0 * max_dim, SD_TRANSL.1 * max_dim);
-        Self::new(item, ref_transform, stddev_transl_range, SD_ROT)
+        let sd_transl_range = (SD_TRANSL.0 * max_dim, SD_TRANSL.1 * max_dim);
+        Self::new(item, ref_transform, sd_transl_range, SD_ROT)
     }
 
     /// Shifts the mean of the normal distributions to the given reference transformation.

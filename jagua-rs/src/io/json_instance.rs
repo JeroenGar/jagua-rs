@@ -9,11 +9,11 @@ pub struct JsonInstance {
     /// Set of items to be produced
     #[serde(rename = "Items")]
     pub items: Vec<JsonItem>,
-    /// Set of bins where the items are to be placed (for Bin Packing problems)
+    /// Containers for a Bin Packing Problem
     #[serde(rename = "Objects")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bins: Option<Vec<JsonBin>>,
-    /// A strip where the items are to be placed (for Strip Packing problems)
+    /// Container for a Strip Packing Problem
     #[serde(rename = "Strip")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub strip: Option<JsonStrip>,
@@ -34,7 +34,7 @@ pub struct JsonBin {
     pub zones: Vec<JsonQualityZone>,
 }
 
-/// The JSON representation of a strip
+/// The JSON representation of a strip with fixed height and variable width
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct JsonStrip {
@@ -47,7 +47,7 @@ pub struct JsonStrip {
 pub struct JsonItem {
     /// Number of times this item should be produced
     pub demand: u64,
-    /// List of allowed orientations angles (in degrees), if not present, any orientation is allowed
+    /// List of allowed orientations angles (in degrees). If none any orientation is allowed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allowed_orientations: Option<Vec<f64>>,
     /// Polygon shape of the item
@@ -58,13 +58,18 @@ pub struct JsonItem {
     pub base_quality: Option<usize>,
 }
 
-/// An enum containing all the possible possibilities to define a shape
+/// All possible ways to represent a shape
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(tag = "Type", content = "Data")]
 #[serde(rename_all = "PascalCase")]
 pub enum JsonShape {
+    /// Axis-aligned rectangle
+    Rectangle { width: f64, height: f64 },
+    /// Polygon with a single outer boundary
     SimplePolygon(JsonSimplePoly),
+    /// Polygon with a single outer boundary and a list of holes
     Polygon(JsonPoly),
+    /// Multiple disjoint polygons
     MultiPolygon(Vec<JsonPoly>),
 }
 
@@ -75,7 +80,7 @@ pub struct JsonPoly {
     /// The outer boundary of the polygon
     pub outer: JsonSimplePoly,
     /// A list of holes in the polygon
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    #[serde(default)]
     pub inner: Vec<JsonSimplePoly>,
 }
 

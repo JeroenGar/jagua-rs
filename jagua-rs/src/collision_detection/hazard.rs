@@ -4,15 +4,14 @@ use crate::entities::placed_item::PlacedItemUID;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
-/// Defines a certain spatial constraint that affects the feasibility of placed items
-/// Hazards are defined by a certain entity, have a shape and can be active or inactive
+/// Defines a certain spatial constraint that affects the feasibility of an item placement.
 #[derive(Clone, Debug)]
 pub struct Hazard {
     /// The entity inducing the hazard
     pub entity: HazardEntity,
     /// The shape of the hazard
     pub shape: Arc<SimplePolygon>,
-    /// Whether the hazard is currently active or not
+    /// Hazards can be either active or inactive, inactive hazards are not considered during collision detection
     pub active: bool,
 }
 
@@ -27,16 +26,20 @@ impl Hazard {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-/// Entity inducing a hazard, every hazard entity must be unique
+/// Entity inducing the `Hazard`. All entities are uniquely identified.
 pub enum HazardEntity {
+    /// An item placed in the layout.
     PlacedItem(PlacedItemUID),
+    /// Represents all regions outside the bin
     BinExterior,
+    /// Represents a hole in the bin.
     BinHole { id: usize },
+    /// Represents a zone in the bin with a specific quality level that is inferior to the base quality.
     QualityZoneInferior { quality: usize, id: usize },
 }
 
 impl HazardEntity {
-    /// Whether the entity induces an Interior or Exterior hazard
+    /// Whether the entity induces an `Interior` or `Exterior` hazard
     pub fn position(&self) -> GeoPosition {
         match self {
             HazardEntity::PlacedItem(_) => GeoPosition::Interior,
@@ -46,7 +49,7 @@ impl HazardEntity {
         }
     }
 
-    /// True if the hazard is dynamic in nature, i.e. it can be modified by the optimizer
+    /// Whether the entity is dynamic in nature, i.e. it can be modified in the layout
     pub fn dynamic(&self) -> bool {
         match self {
             HazardEntity::PlacedItem(_) => true,
@@ -56,7 +59,7 @@ impl HazardEntity {
         }
     }
 
-    /// Returns true if the hazard is universally applicable, i.e. all items are affected by it
+    /// Whether the entity universally applicable, i.e. all items need to be checked against it
     pub fn universal(&self) -> bool {
         match self {
             HazardEntity::PlacedItem(_) => true,

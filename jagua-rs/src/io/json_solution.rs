@@ -63,8 +63,8 @@ pub enum JsonContainer {
         index: usize,
     },
     Strip {
-        /// The length of the strip (variable)
-        #[serde(rename = "Length")]
+        /// The width of the strip (variable)
+        #[serde(rename = "Width")]
         width: f64,
         /// The height of the strip (fixed)
         #[serde(rename = "Height")]

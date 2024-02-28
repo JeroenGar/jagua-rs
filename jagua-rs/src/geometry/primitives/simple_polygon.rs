@@ -24,11 +24,16 @@ use crate::util::f64a::F64A;
 /// Geometric primitive representing a simple polygon: <https://en.wikipedia.org/wiki/Simple_polygon>
 #[derive(Clone, Debug)]
 pub struct SimplePolygon {
+    /// Set of bounds describing the polygon
     pub points: Vec<Point>,
+    /// Bounding box
     pub bbox: AARectangle,
     pub area: f64,
+    /// Maximum distance between any two points in the polygon
     pub diameter: f64,
+    /// Pole of inaccessibility
     pub poi: Circle,
+    /// Surrogate representation (subset of the simple polygon)
     pub surrogate: Option<SPSurrogate>,
 }
 
@@ -129,7 +134,7 @@ impl SimplePolygon {
     }
 
     //https://en.wikipedia.org/wiki/Shoelace_formula
-    //counter clockwise = positive area, clockwise = negative area
+    //counterclockwise = positive area, clockwise = negative area
     pub fn calculate_area(points: &[Point]) -> f64 {
         let mut sigma: f64 = 0.0;
         for i in 0..points.len() {

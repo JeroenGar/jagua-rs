@@ -3,13 +3,13 @@ use itertools::Itertools;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 
-/// Trait that allows for filtering out irrelevant hazards depending on the context.
-/// Enables ignoring certain hazards when querying the CDE.
+/// Trait that allows for ignoring out specific hazards.
+/// Enables querying the `CDEngine` only for relevant hazards.
 pub trait HazardFilter {
     fn is_irrelevant(&self, entity: &HazardEntity) -> bool;
 }
 
-/// Returns the entities that are deemed irrelevant by the given filter from a set of `Hazard`s
+/// Returns the entities that are deemed irrelevant by the specified `HazardFilter`.
 pub fn generate_irrelevant_hazards<'a>(
     filter: &impl HazardFilter,
     hazards: impl Iterator<Item = &'a Hazard>,
@@ -26,20 +26,20 @@ pub fn generate_irrelevant_hazards<'a>(
 #[derive(Clone)]
 pub struct BinHazardFilter;
 
-/// Deems hazards induced by `QualityZone`s above a certain quality as irrelevant
+/// Deems hazards induced by `QualityZone`s above a certain quality as irrelevant.
 #[derive(Clone, Debug)]
 pub struct QZHazardFilter {
     pub cutoff_quality: usize,
 }
 
-/// Combines multiple `HazardFilter`s into a single filter
-pub struct CombinedHazardFilter<'a> {
-    pub filters: Vec<Box<&'a dyn HazardFilter>>,
-}
-
-/// Deems hazards induced by specific entities as irrelevant
+/// Deems hazards induced by specific entities as irrelevant.
 pub struct EntityHazardFilter {
     pub entities: Vec<HazardEntity>,
+}
+
+/// Combines multiple `HazardFilter`s into a single filter.
+pub struct CombinedHazardFilter<'a> {
+    pub filters: Vec<Box<&'a dyn HazardFilter>>,
 }
 
 impl HazardFilter for BinHazardFilter {
