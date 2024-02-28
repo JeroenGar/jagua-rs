@@ -10,8 +10,8 @@ mod tests {
     use jagua_rs::entities::problems::problem_generic::LayoutIndex;
     use jagua_rs::entities::problems::problem_generic::ProblemGeneric;
     use jagua_rs::io::parser::Parser;
-    use lbf::config::Config;
     use lbf::io;
+    use lbf::lbf_config::LBFConfig;
     use lbf::lbf_optimizer::LBFOptimizer;
 
     const N_ITEMS_TO_REMOVE: usize = 5;
@@ -29,7 +29,7 @@ mod tests {
     fn test_instance(instance_path: &str) {
         let instance = Path::new(instance_path);
         // parse the instance
-        let mut config = Config::default();
+        let mut config = LBFConfig::default();
         config.n_samples_per_item = 100;
         let json_instance = io::read_json_instance(&instance);
         let parser = Parser::new(config.poly_simpl_config, config.cde_config, true);

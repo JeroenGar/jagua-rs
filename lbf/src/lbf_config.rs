@@ -7,11 +7,13 @@ use crate::io::svg_util::SvgDrawOptions;
 
 /// Configuration for the LBF optimizer
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
-pub struct Config {
+pub struct LBFConfig {
+    /// Configuration of the Collision Detection Engine
     pub cde_config: CDEConfig,
+    /// Configuration of the polygon simplification in preprocessing
     pub poly_simpl_config: PolySimplConfig,
-    /// Fixes the seed for the random number generator, resulting in deterministic behavior.
-    pub deterministic_mode: bool,
+    /// Seed for the PRNG. If not defined, the algorithm will run in non-deterministic mode using entropy
+    pub prng_seed: Option<u64>,
     /// Total number of samples per item
     pub n_samples_per_item: usize,
     /// Fraction of the samples used for the local search sampler
@@ -20,7 +22,7 @@ pub struct Config {
     pub svg_draw_options: SvgDrawOptions,
 }
 
-impl Default for Config {
+impl Default for LBFConfig {
     fn default() -> Self {
         Self {
             cde_config: CDEConfig {
@@ -34,7 +36,7 @@ impl Default for Config {
                 },
             },
             poly_simpl_config: PolySimplConfig::Enabled { tolerance: 0.001 },
-            deterministic_mode: true,
+            prng_seed: Some(0),
             n_samples_per_item: 5000,
             ls_samples_fraction: 0.2,
             svg_draw_options: SvgDrawOptions::default(),

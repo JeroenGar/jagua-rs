@@ -10,10 +10,10 @@ use rand::SeedableRng;
 
 use jagua_rs::io::parser;
 use jagua_rs::io::parser::Parser;
-use lbf::config::Config;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
 use lbf::io::layout_to_svg::s_layout_to_svg;
+use lbf::lbf_config::LBFConfig;
 use lbf::lbf_optimizer::LBFOptimizer;
 use lbf::{io, EPOCH};
 
@@ -26,9 +26,9 @@ fn main() {
             warn!("No config file provided, use --config-file to provide a custom config");
             warn!(
                 "Falling back default config:\n{}",
-                serde_json::to_string(&Config::default()).unwrap()
+                serde_json::to_string(&LBFConfig::default()).unwrap()
             );
-            Config::default()
+            LBFConfig::default()
         }
         Some(config_file) => {
             let file = File::open(config_file).unwrap_or_else(|err| {
@@ -47,9 +47,9 @@ fn main() {
     let parser = Parser::new(config.poly_simpl_config, config.cde_config, true);
     let instance = parser.parse(&json_instance);
 
-    let rng = match config.deterministic_mode {
-        true => SmallRng::seed_from_u64(0),
-        false => SmallRng::from_entropy(),
+    let rng = match config.prng_seed {
+        Some(seed) => SmallRng::seed_from_u64(seed),
+        None => SmallRng::from_entropy(),
     };
 
     let mut optimizer = LBFOptimizer::new(instance.clone(), config, rng);

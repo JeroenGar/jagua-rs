@@ -5,22 +5,22 @@ use std::path::Path;
 use criterion::measurement::WallTime;
 use criterion::{criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion};
 use itertools::Itertools;
+use rand::prelude::SmallRng;
+use rand::SeedableRng;
+
 use jagua_rs::entities::instances::bin_packing::BPInstance;
 use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::instances::strip_packing::SPInstance;
-use rand::prelude::SmallRng;
-use rand::SeedableRng;
-
 use jagua_rs::entities::item::Item;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::point::Point;
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 use jagua_rs::io::json_instance::JsonInstance;
-use lbf::config::Config;
 use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
+use lbf::lbf_config::LBFConfig;
 use lbf::samplers::hpg_sampler::HPGSampler;
 
 use crate::util::{N_ITEMS_REMOVED, SWIM_PATH};
@@ -54,7 +54,7 @@ fn edge_sensitivity_bench_with_ff(c: &mut Criterion) {
     edge_sensitivity_bench(config, group);
 }
 
-fn edge_sensitivity_bench(config: Config, mut g: BenchmarkGroup<WallTime>) {
+fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
     let json_instance: JsonInstance =
         serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
 
@@ -142,7 +142,7 @@ fn edge_sensitivity_bench(config: Config, mut g: BenchmarkGroup<WallTime>) {
     g.finish();
 }
 
-fn modify_instance(instance: &Instance, multiplier: usize, config: Config) -> Instance {
+fn modify_instance(instance: &Instance, multiplier: usize, config: LBFConfig) -> Instance {
     let modified_items = instance
         .items()
         .iter()

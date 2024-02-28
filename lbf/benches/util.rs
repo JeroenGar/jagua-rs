@@ -14,9 +14,9 @@ use jagua_rs::io::json_instance::JsonInstance;
 use jagua_rs::io::parser::Parser;
 use jagua_rs::util::config::{CDEConfig, SPSurrogateConfig};
 use jagua_rs::util::polygon_simplification::PolySimplConfig;
-use lbf::config::Config;
 use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
+use lbf::lbf_config::LBFConfig;
 use lbf::lbf_optimizer::LBFOptimizer;
 
 pub const SWIM_PATH: &str = "../assets/swim.json";
@@ -36,7 +36,7 @@ pub fn create_instance(
 /// Simulates a common scenario in iterative optimization algorithms: dense packing with a few items removed
 pub fn create_blf_problem(
     instance: Instance,
-    config: Config,
+    config: LBFConfig,
     n_items_removed: usize,
 ) -> (SPProblem, Vec<PlacedItemUID>) {
     assert!(matches!(&instance, &Instance::SP(_)));
@@ -90,8 +90,8 @@ pub fn create_blf_problem(
     (problem, removed_pi_uids)
 }
 
-pub fn create_base_config() -> Config {
-    Config {
+pub fn create_base_config() -> LBFConfig {
+    LBFConfig {
         cde_config: CDEConfig {
             quadtree_depth: 5,
             hpg_n_cells: 2000,
@@ -103,7 +103,7 @@ pub fn create_base_config() -> Config {
             },
         },
         poly_simpl_config: PolySimplConfig::Disabled,
-        deterministic_mode: true,
+        prng_seed: Some(0),
         n_samples_per_item: 5000,
         ls_samples_fraction: 0.2,
         svg_draw_options: Default::default(),

@@ -22,7 +22,7 @@ use jagua_rs::geometry::convex_hull::convex_hull_from_points;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 
-use crate::config::Config;
+use crate::lbf_config::LBFConfig;
 use crate::lbf_cost::LBFPlacingCost;
 use crate::samplers::hpg_sampler::HPGSampler;
 use crate::samplers::ls_sampler::LSSampler;
@@ -33,13 +33,13 @@ pub const ITEM_LIMIT: usize = usize::MAX;
 pub struct LBFOptimizer {
     pub instance: Instance,
     pub problem: Problem,
-    pub config: Config,
+    pub config: LBFConfig,
     /// SmallRng is a fast, non-cryptographic PRNG <https://rust-random.github.io/book/guide-rngs.html>
     pub rng: SmallRng,
 }
 
 impl LBFOptimizer {
-    pub fn new(instance: Instance, config: Config, rng: SmallRng) -> Self {
+    pub fn new(instance: Instance, config: LBFConfig, rng: SmallRng) -> Self {
         assert!(config.n_samples_per_item > 0);
         let problem = match instance.clone() {
             Instance::BP(bpi) => BPProblem::new(bpi.clone()).into(),
@@ -127,7 +127,7 @@ impl LBFOptimizer {
 pub fn find_lbf_placement(
     problem: &Problem,
     item: &Item,
-    config: &Config,
+    config: &LBFConfig,
     rng: &mut impl Rng,
 ) -> Option<PlacingOption> {
     //search all existing layouts and template layouts with remaining stock
@@ -147,7 +147,7 @@ pub fn sample_layout(
     problem: &Problem,
     l_index: LayoutIndex,
     item: &Item,
-    config: &Config,
+    config: &LBFConfig,
     rng: &mut impl Rng,
 ) -> Option<PlacingOption> {
     let layout: &Layout = problem.get_layout(&l_index);
@@ -209,7 +209,7 @@ pub fn sample_layout(
          */
 
         let mut ls_sampler =
-            LSSampler::from_default_stddevs(item, &best_opt.d_transform, &layout.bin().bbox());
+            LSSampler::from_defaults(item, &best_opt.d_transform, &layout.bin().bbox());
 
         for i in 0..n_ls_samples {
             let transform = ls_sampler.sample(rng);

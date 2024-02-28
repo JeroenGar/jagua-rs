@@ -5,11 +5,11 @@ use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 
 const X_MULTIPLIER: f64 = 10.0;
 
-/// The cost LBF assigns to a placing option.
-/// A pure lexicographic comparison would lead to weird results due to continuous values,
-//  instead we opted for a weighted sum of the x_max and y_max of the shape,
-//  with the horizontal dimension being more important.
-#[derive(PartialEq, PartialOrd, Copy, Clone, Debug)]
+/// The cost LBF assigned to a placing option.
+/// Weighted sum of the x_max and y_max of the shape, with the horizontal dimension being more important.
+/// <br>
+/// A pure lexicographic comparison (always prioritizing x-axis) would lead to undesirable results due to the continuous nature of the values.
+#[derive(PartialEq, PartialOrd, Copy, Clone, Debug, Eq, Ord)]
 pub struct LBFPlacingCost(NotNan<f64>);
 
 impl LBFPlacingCost {
