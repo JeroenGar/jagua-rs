@@ -109,7 +109,7 @@ items and some additional stats.
 
 A visual representation of every layout is created in SVG format.
 By default, just the container and placed inside it are drawn.
-Optionally the quadtree, hazard proximity grid or fail-fast surrogates can be drawn on top.
+Optionally the quadtree, hazard proximity grid or fail-fast surrogates can be drawn on top, or a custom theme can be defined.
 
 This can be configured in the config file.
 See [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/io/svg_util/struct.SvgDrawOptions.html) for all available
