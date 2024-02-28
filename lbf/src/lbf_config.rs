@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use jagua_rs::util::config::{CDEConfig, SPSurrogateConfig};
-use jagua_rs::util::polygon_simplification::PolySimplConfig;
 
 use crate::io::svg_util::SvgDrawOptions;
 
@@ -10,14 +9,15 @@ use crate::io::svg_util::SvgDrawOptions;
 pub struct LBFConfig {
     /// Configuration of the Collision Detection Engine
     pub cde_config: CDEConfig,
-    /// Configuration of the polygon simplification in preprocessing
-    pub poly_simpl_config: PolySimplConfig,
-    /// Seed for the PRNG. If not defined, the algorithm will run in non-deterministic mode using entropy
+    /// Max deviation from the original polygon area as a fraction. If undefined, the algorithm will run without simplification
+    pub poly_simpl_tolerance: Option<f64>,
+    /// Seed for the PRNG. If undefined, the algorithm will run in non-deterministic mode using entropy
     pub prng_seed: Option<u64>,
-    /// Total number of samples per item
-    pub n_samples_per_item: usize,
-    /// Fraction of the samples used for the local search sampler
-    pub ls_samples_fraction: f32,
+    /// Total budget of samples to place each item
+    pub n_samples: usize,
+    /// Fraction of `n_samples_per_item` used for the local search sampler, the rest is sampled uniformly.
+    pub ls_frac: f32,
+    /// Optional SVG drawing options
     #[serde(default)]
     pub svg_draw_options: SvgDrawOptions,
 }
@@ -35,10 +35,10 @@ impl Default for LBFConfig {
                     n_ff_piers: 0,
                 },
             },
-            poly_simpl_config: PolySimplConfig::Enabled { tolerance: 0.001 },
+            poly_simpl_tolerance: Some(0.001),
             prng_seed: Some(0),
-            n_samples_per_item: 5000,
-            ls_samples_fraction: 0.2,
+            n_samples: 5000,
+            ls_frac: 0.2,
             svg_draw_options: SvgDrawOptions::default(),
         }
     }

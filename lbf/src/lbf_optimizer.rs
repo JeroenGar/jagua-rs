@@ -40,7 +40,7 @@ pub struct LBFOptimizer {
 
 impl LBFOptimizer {
     pub fn new(instance: Instance, config: LBFConfig, rng: SmallRng) -> Self {
-        assert!(config.n_samples_per_item > 0);
+        assert!(config.n_samples > 0);
         let problem = match instance.clone() {
             Instance::BP(bpi) => BPProblem::new(bpi.clone()).into(),
             Instance::SP(spi) => {
@@ -168,8 +168,8 @@ pub fn sample_layout(
     let mut best: Option<(PlacingOption, LBFPlacingCost)> = None;
 
     //calculate the number of uniform and local search samples
-    let n_ls_samples = (config.n_samples_per_item as f32 * config.ls_samples_fraction) as usize;
-    let n_uni_samples = config.n_samples_per_item - n_ls_samples;
+    let n_ls_samples = (config.n_samples as f32 * config.ls_frac) as usize;
+    let n_uni_samples = config.n_samples - n_ls_samples;
 
     //uniform sampling within the valid cells of the Hazard Proximity Grid, tracking the best valid insertion option
     if let Some(mut sampler) = HPGSampler::new(item, layout) {

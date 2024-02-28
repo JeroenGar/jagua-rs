@@ -9,13 +9,8 @@
       "n_ff_piers": 0
     }
   },
-  "poly_simpl_config": {
-    "mode": "enabled",
-    "params": {
-      "tolerance": 0.001
-    }
-  },
+  "poly_simpl_tolerance": 0.001,
   "prng_seed": 0,
-  "n_samples_per_item": 5000,
-  "ls_samples_fraction": 0.2
+  "n_samples": 5000,
+  "ls_frac": 0.2
 }

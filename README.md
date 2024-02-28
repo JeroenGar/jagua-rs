@@ -120,7 +120,7 @@ Items might therefore sometimes falsely appear to be (very slightly) colliding i
 
 ### Config JSON
 
-Configuration of the jagua-rs engine and lbf heuristic is done through a JSON file.
+Configuration of `jagua-rs` and `lbf` heuristic is done through a JSON file.
 An example config file is provided [here](assets/config_lbf.json).
 If no config file is provided, the default configuration is used.
 
@@ -137,19 +137,14 @@ The configuration file is a JSON file with the following structure:
       "n_ff_piers": 0 //Zero piers will be used for fail-fast collision detection
     }
   },
-  "poly_simpl_config": { // Polygon simplification configuration
-    "mode": "enabled", //[enabled/disabled]
-    "params": {
-      "tolerance": 0.001 //Polygons will be simplified until they deviate at most 0.1% from their original area.
-    }
-  },
-  "prng_seed": 0, //Seed for the pseudo-random number generator. If not defined the outcome will be non-deterministic
-  "n_samples_per_item": 5000, //5000 placement samples will be queried per item.
-  "ls_samples_fraction": 0.2 //Of those 5000, 80% will be sampled at uniformly at random, 20% will be local search samples
+  "poly_simpl_tolerance": 0.001, //Polygons will be simplified until at most a 0.1% deviation in area from the original
+  "prng_seed": 0, //Seed for the pseudo-random number generator. If undefined the outcome will be non-deterministic
+  "n_samples": 5000, //5000 placement samples will be queried per item
+  "ls_frac": 0.2 //Of those 5000, 80% will be sampled at uniformly at random, 20% will be local search samples
 }
 ```
 
-See [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/config/struct.Config.html) for a detailed description of all
+See [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/lbf_config/struct.LBFConfig.html) for a detailed description of all
 available options.
 
 ### Important note
@@ -159,10 +154,10 @@ Meaning that minute changes in the flow of the algorithm (sorting of the items, 
 drastically different quality. \
 Seemingly superior configurations (such as increased `n_samples_per_item`), for example, can result in worse solutions
 and vice versa. \
-Setting `prng_seed: null` will demonstrate this spread in solution quality.
+Omitting `prng_seed` in the config file will demonstrate this spread in solution quality.
 
-**Once again, this heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as a
-reliable optimization algorithm for any real-world problems.**
+**This heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as a
+reliable optimization algorithm for any real-world use case.**
 
 ## Testing
 
@@ -189,15 +184,19 @@ Documentation of this repo is written with rustdoc and is automatically deployed
 
 Alternatively, you can compile and view the docs locally with `cargo doc --open`.
 
+## Development
+
+Contributions to `jagua-rs` are more than welcome! To submit code contributions, [fork](https://help.github.com/articles/fork-a-repo/) the repository, commit your changes, and [submit a pull request](https://help.github.com/articles/creating-a-pull-request-from-a-fork/).
+
+## License
+
+This project is licensed under Mozilla Public License 2.0 - see the [LICENSE](LICENSE) file for details.
+
 ## Acknowledgements
 
-This project and funded by [Research Foundation - Flanders (FWO)](https://www.fwo.be/en/) (grant number: 1S71222N) and
+This project was funded by [Research Foundation - Flanders (FWO)](https://www.fwo.be/en/) (grant number: 1S71222N) and
 developed at [KU Leuven](https://www.kuleuven.be/english/).
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Fonds_Wetenschappelijk_Onderzoek_logo.svg" height="50px" alt="FWO logo">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <img src="https://upload.wikimedia.org/wikipedia/commons/4/49/KU_Leuven_logo.svg" height="50px" alt="KU Leuven logo">
-
-## License
-
-This project is licensed under the Mozilla Public License 2.0 - see the [LICENSE](LICENSE) file for details.

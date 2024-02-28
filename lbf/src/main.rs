@@ -10,6 +10,7 @@ use rand::SeedableRng;
 
 use jagua_rs::io::parser;
 use jagua_rs::io::parser::Parser;
+use jagua_rs::util::polygon_simplification::PolySimplConfig;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
 use lbf::io::layout_to_svg::s_layout_to_svg;
@@ -44,7 +45,12 @@ fn main() {
     };
 
     let json_instance = io::read_json_instance(args.input_file.as_path());
-    let parser = Parser::new(config.poly_simpl_config, config.cde_config, true);
+    let poly_simpl_config = match config.poly_simpl_tolerance {
+        Some(tolerance) => PolySimplConfig::Enabled { tolerance },
+        None => PolySimplConfig::Disabled,
+    };
+
+    let parser = Parser::new(poly_simpl_config, config.cde_config, true);
     let instance = parser.parse(&json_instance);
 
     let rng = match config.prng_seed {

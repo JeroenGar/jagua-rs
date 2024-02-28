@@ -58,7 +58,7 @@ pub struct JsonItem {
     pub base_quality: Option<usize>,
 }
 
-/// All possible ways to represent a shape
+/// Different ways to represent a shape
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(tag = "Type", content = "Data")]
 #[serde(rename_all = "PascalCase")]
