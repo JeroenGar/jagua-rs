@@ -1,8 +1,6 @@
 # Jagua-rs [![Rust CI](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml)[![Docs](https://github.com/JeroenGar/jagua-rs/actions/workflows/doc.yml/badge.svg)](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/)
 ### A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems
 
-**🏗️ 🚧 Under construction 🚧 🏗️**
-
 <img src="assets/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
 ## Preamble
@@ -75,21 +73,32 @@ The files are also available in the [OR-Datasets repository](https://github.com/
 
 ### Solution
 
-Two types of files are written in the solution folder: the solution in JSON format and an SVG file per layout to visualize the solution.
+At the end of the optimization, the solution is written to the specified folder.
+Two types of files are written in the solution folder:
 
 #### JSON
 
-*TODO*
+The solution JSON is similar to the input JSON, but with the addition of the `Solution` key at the top level.
+It contains all information required to recreate the solution, including the containers used, the placements of the items and some additional stats.
 
 #### SVG
 
-*TODO*
+A visual representation of every layout is created in SVG format.
+By default, just the container and placed inside it are drawn.
+Optionally the quadtree, hazard proximity grid or fail-fast surrogates can be drawn on top.
+
+This can be configured in the config file.
+See [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/io/svg_util/struct.SvgDrawOptions.html) for all available options.
+
+
 
 *Note: Unfortunately, the SVG standard does not support strokes drawn purely inside (or outside) shapes.
 Items might therefore sometimes falsely appear to be (very slightly) colliding in the SVG visualizations.*
 
 ### Config JSON
 
+Configuration of the jagua-rs engine and lbf heuristic is done through a JSON file.
+An example config file is provided [here](assets/config_lbf.json).
 If no config file is provided, the default configuration is used.
 
 The configuration file is a JSON file with the following structure:
@@ -116,8 +125,7 @@ The configuration file is a JSON file with the following structure:
   "ls_samples_fraction": 0.2 //Of those 5000, 80% will be sampled at uniformly at random, 20% will be local search samples
 }
 ```
-
-An example config file is provided [here](assets/config_lbf.json).
+See [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/config/struct.Config.html) for a detailed description of all available options.
 
 ### Important note
 
@@ -149,7 +157,7 @@ Documentation of this repo is written with rustdoc and is automatically deployed
 [`jagua-rs` docs](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/)    
 [`lbf` docs](https://jeroengar.github.io/jagua-rs-docs/lbf/)
 
-Alternatively use `cargo doc --open` to compile and view the documentation locally.
+Alternatively, you can compile and view the docs locally with `cargo doc --open`.
 
 ## Acknowledgements
 
