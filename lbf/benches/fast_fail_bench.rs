@@ -55,8 +55,11 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     config.cde_config.quadtree_depth = 5;
     config.cde_config.hpg_n_cells = 2000;
 
-    let instance =
-        util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+    let instance = util::create_instance(
+        &json_instance,
+        config.cde_config,
+        config.poly_simpl_tolerance,
+    );
     let (problem, _) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
     println!(

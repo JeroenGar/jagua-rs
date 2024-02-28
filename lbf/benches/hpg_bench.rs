@@ -37,7 +37,7 @@ fn hpg_query_bench(c: &mut Criterion) {
     let base_instance = util::create_instance(
         &json_instance,
         base_config.cde_config,
-        base_config.poly_simpl_config,
+        base_config.poly_simpl_tolerance,
     );
     let (base_problem, _) =
         util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
@@ -53,8 +53,11 @@ fn hpg_query_bench(c: &mut Criterion) {
         let mut config = base_config;
         config.cde_config.hpg_n_cells = n_hpg_cells;
         //create the instance and problem with the specific HPG config
-        let instance =
-            util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+        let instance = util::create_instance(
+            &json_instance,
+            config.cde_config,
+            config.poly_simpl_tolerance,
+        );
         let mut problem = match instance.clone() {
             Instance::BP(_) => panic!("Expected SPInstance"),
             Instance::SP(instance) => {
@@ -123,7 +126,7 @@ fn hpg_update_bench(c: &mut Criterion) {
     let base_instance = util::create_instance(
         &json_instance,
         base_config.cde_config,
-        base_config.poly_simpl_config,
+        base_config.poly_simpl_tolerance,
     );
     let (base_problem, _) =
         util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
@@ -139,8 +142,11 @@ fn hpg_update_bench(c: &mut Criterion) {
         let mut config = base_config;
         config.cde_config.hpg_n_cells = n_hpg_cells;
         //create the instance and problem with the specific HPG config
-        let instance =
-            util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+        let instance = util::create_instance(
+            &json_instance,
+            config.cde_config,
+            config.poly_simpl_tolerance,
+        );
         let mut problem = match instance.clone() {
             Instance::BP(_) => panic!("Expected SPInstance"),
             Instance::SP(instance) => {

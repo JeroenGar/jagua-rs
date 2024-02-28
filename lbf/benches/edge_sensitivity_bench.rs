@@ -60,8 +60,11 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
 
     for edge_multiplier in EDGE_MULTIPLIERS {
         let instance = {
-            let instance =
-                util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+            let instance = util::create_instance(
+                &json_instance,
+                config.cde_config,
+                config.poly_simpl_tolerance,
+            );
             modify_instance(&instance, edge_multiplier as usize, config)
         };
 

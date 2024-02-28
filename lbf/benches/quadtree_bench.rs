@@ -46,8 +46,11 @@ fn quadtree_update_bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("quadtree_update");
     for depth in QT_DEPTHS {
         config.cde_config.quadtree_depth = depth;
-        let instance =
-            util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+        let instance = util::create_instance(
+            &json_instance,
+            config.cde_config,
+            config.poly_simpl_tolerance,
+        );
         let (mut problem, _) = util::create_blf_problem(instance.clone(), config, 0);
 
         let layout_index = LayoutIndex::Real(0);
@@ -96,8 +99,11 @@ fn quadtree_query_bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("quadtree_query");
     for depth in QT_DEPTHS {
         config.cde_config.quadtree_depth = depth;
-        let instance =
-            util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+        let instance = util::create_instance(
+            &json_instance,
+            config.cde_config,
+            config.poly_simpl_tolerance,
+        );
         let (problem, selected_pi_uids) =
             util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
@@ -154,8 +160,11 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
     let mut group = c.benchmark_group("quadtree_query_update_1000_1");
     for depth in QT_DEPTHS {
         config.cde_config.quadtree_depth = depth;
-        let instance =
-            util::create_instance(&json_instance, config.cde_config, config.poly_simpl_config);
+        let instance = util::create_instance(
+            &json_instance,
+            config.cde_config,
+            config.poly_simpl_tolerance,
+        );
         let (mut problem, _) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = problem.get_layout(LayoutIndex::Real(0));

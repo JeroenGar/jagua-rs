@@ -25,8 +25,12 @@ pub const N_ITEMS_REMOVED: usize = 5;
 pub fn create_instance(
     json_instance: &JsonInstance,
     cde_config: CDEConfig,
-    poly_simpl_config: PolySimplConfig,
+    poly_simpl_tolerance: Option<f64>,
 ) -> Instance {
+    let poly_simpl_config = match poly_simpl_tolerance {
+        Some(tolerance) => PolySimplConfig::Enabled { tolerance },
+        None => PolySimplConfig::Disabled,
+    };
     let parser = Parser::new(poly_simpl_config, cde_config, true);
     parser.parse(json_instance)
 }
@@ -102,10 +106,10 @@ pub fn create_base_config() -> LBFConfig {
                 n_ff_piers: 0,
             },
         },
-        poly_simpl_config: PolySimplConfig::Disabled,
+        poly_simpl_tolerance: Some(0.001),
         prng_seed: Some(0),
-        n_samples_per_item: 5000,
-        ls_samples_fraction: 0.2,
+        n_samples: 5000,
+        ls_frac: 0.2,
         svg_draw_options: Default::default(),
     }
 }
