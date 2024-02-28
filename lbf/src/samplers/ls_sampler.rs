@@ -17,6 +17,9 @@ pub const SD_TRANSL: (f64, f64) = (0.01, 0.0005);
 /// The stddev of rotation starts at 2° and ends at 0.5°.
 pub const SD_ROT: (f64, f64) = (2.0 * PI / 180.0, 0.5 * PI / 180.0);
 
+///Creates `Transformation` samples for a given item.
+///The samples are drawn from normal distributions with decaying standard deviations.
+///Each time an improvement is found, the mean of the distributions is shifted to the new best transformation.
 pub struct LSSampler {
     normal_x: Normal<f64>,
     normal_y: Normal<f64>,
