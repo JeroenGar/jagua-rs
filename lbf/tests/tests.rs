@@ -2,9 +2,9 @@
 mod tests {
     use std::path::Path;
 
+    use rand::{Rng, SeedableRng};
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;
-    use rand::{Rng, SeedableRng};
     use test_case::test_case;
 
     use jagua_rs::entities::problems::problem_generic::LayoutIndex;
@@ -20,12 +20,12 @@ mod tests {
     #[test_case("../assets/shirts.json"; "shirts")]
     #[test_case("../assets/trousers.json"; "trousers")]
     #[test_case("../assets/mao.json"; "mao.json")]
-    #[test_case("../assets/Baldacci/Test1.json"; "Baldacci/Test1")]
-    #[test_case("../assets/Baldacci/Test2.json"; "Baldacci/Test2")]
-    #[test_case("../assets/Baldacci/Test3.json"; "Baldacci/Test3")]
-    #[test_case("../assets/Baldacci/Test4.json"; "Baldacci/Test4")]
-    #[test_case("../assets/Baldacci/Test5.json"; "Baldacci/Test5")]
-    #[test_case("../assets/Baldacci/Test6.json"; "Baldacci/Test6")]
+    #[test_case("../assets/baldacci1.json"; "baldacci1")]
+    #[test_case("../assets/baldacci2.json"; "baldacci2")]
+    #[test_case("../assets/baldacci3.json"; "baldacci3")]
+    #[test_case("../assets/baldacci4.json"; "baldacci4")]
+    #[test_case("../assets/baldacci5.json"; "baldacci5")]
+    #[test_case("../assets/baldacci6.json"; "baldacci6")]
     fn test_instance(instance_path: &str) {
         let instance = Path::new(instance_path);
         // parse the instance

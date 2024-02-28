@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use itertools::Itertools;
-use log::{log, warn, Level};
+use log::{Level, log};
 
 use crate::entities::bin::Bin;
 use crate::entities::instances::bin_packing::BPInstance;
@@ -15,8 +15,8 @@ use crate::entities::problems::bin_packing::BPProblem;
 use crate::entities::problems::problem::Problem;
 use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::strip_packing::SPProblem;
-use crate::entities::quality_zone::QualityZone;
 use crate::entities::quality_zone::N_QUALITIES;
+use crate::entities::quality_zone::QualityZone;
 use crate::entities::solution::Solution;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_enums::AllowedRotation;
@@ -24,7 +24,7 @@ use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
-use crate::io::json_instance::{JsonInstance, JsonPoly, JsonSimplePoly};
+use crate::io::json_instance::{JsonInstance, JsonShape, JsonSimplePoly};
 use crate::io::json_solution::{
     JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
 };
@@ -61,18 +61,23 @@ impl Parser {
             let mut item_join_handles = vec![];
             for (item_id, json_item) in json_instance.items.iter().enumerate() {
                 let handle = s.spawn(move |_| {
-                    let (shape, centering_transf) = json_shape_to_simple_polygon(
-                        &json_item.shape,
-                        self.center_polygons,
-                        self.poly_simpl_config,
-                        PolySimplMode::Inflate,
-                    );
+                    let (shape, centering_transf) = match &json_item.shape {
+                        JsonShape::SimplePolygon(sp) => convert_json_simple_poly(
+                            sp,
+                            self.center_polygons,
+                            self.poly_simpl_config,
+                            PolySimplMode::Inflate,
+                        ),
+                        JsonShape::Polygon(_) => {
+                            panic!("No support for polygon to simplepolygon conversion yet")
+                        }
+                        JsonShape::MultiPolygon(_) => {
+                            panic!("No support for multipolygon shapes yet")
+                        }
+                    };
+
                     let item_value = json_item.value.unwrap_or(0);
                     let base_quality = json_item.base_quality;
-
-                    if !json_item.zones.is_empty() {
-                        warn!("Quality zones for items are not supported yet, ignoring them");
-                    }
 
                     let allowed_orientations = match json_item.allowed_orientations.as_ref() {
                         Some(a_o) => {
@@ -112,27 +117,43 @@ impl Parser {
                     let mut bin_join_handles = vec![];
                     for (bin_id, json_bin) in json_bins.iter().enumerate() {
                         let handle = s.spawn(move |_| {
-                            let (bin_outer, centering_transf) = simple_json_shape_to_simple_polygon(
-                                &json_bin.shape.outer,
-                                self.center_polygons,
-                                self.poly_simpl_config,
-                                PolySimplMode::Deflate,
-                            );
+                            let (bin_outer, centering_transf) = match &json_bin.shape {
+                                JsonShape::SimplePolygon(jsp) => convert_json_simple_poly(
+                                    jsp,
+                                    self.center_polygons,
+                                    self.poly_simpl_config,
+                                    PolySimplMode::Deflate,
+                                ),
+                                JsonShape::Polygon(jp) => convert_json_simple_poly(
+                                    &jp.outer,
+                                    self.center_polygons,
+                                    self.poly_simpl_config,
+                                    PolySimplMode::Deflate,
+                                ),
+                                JsonShape::MultiPolygon(_) => {
+                                    panic!("No support for multipolygon shapes yet")
+                                }
+                            };
 
-                            let bin_holes = json_bin
-                                .shape
-                                .inner
-                                .iter()
-                                .map(|jsp| {
-                                    let (hole, _) = simple_json_shape_to_simple_polygon(
-                                        jsp,
-                                        false,
-                                        self.poly_simpl_config,
-                                        PolySimplMode::Inflate,
-                                    );
-                                    hole.transform_clone(&centering_transf)
-                                })
-                                .collect_vec();
+                            let bin_holes = match &json_bin.shape {
+                                JsonShape::SimplePolygon(_) => vec![],
+                                JsonShape::Polygon(jp) => jp
+                                    .inner
+                                    .iter()
+                                    .map(|jsp| {
+                                        let (hole, _) = convert_json_simple_poly(
+                                            jsp,
+                                            false,
+                                            self.poly_simpl_config,
+                                            PolySimplMode::Inflate,
+                                        );
+                                        hole.transform_clone(&centering_transf)
+                                    })
+                                    .collect_vec(),
+                                JsonShape::MultiPolygon(_) => {
+                                    panic!("No support for multipolygon shapes yet")
+                                }
+                            };
 
                             let material_value = (bin_outer.area()
                                 - bin_holes.iter().map(|hole| hole.area()).sum::<f64>())
@@ -150,12 +171,20 @@ impl Parser {
                                         .iter()
                                         .filter(|zone| zone.quality == quality)
                                         .map(|zone| {
-                                            let (zone_shape, _) = json_shape_to_simple_polygon(
-                                                &zone.shape,
-                                                false,
-                                                self.poly_simpl_config,
-                                                PolySimplMode::Inflate,
-                                            );
+                                            let (zone_shape, _) = match &zone.shape {
+                                                JsonShape::SimplePolygon(jsp) => convert_json_simple_poly(
+                                                    jsp,
+                                                    false,
+                                                    self.poly_simpl_config,
+                                                    PolySimplMode::Inflate,
+                                                ),
+                                                JsonShape::Polygon(_) => {
+                                                    panic!("No support for polygon to simplepolygon conversion yet")
+                                                }
+                                                JsonShape::MultiPolygon(_) => {
+                                                    panic!("No support for multipolygon shapes yet")
+                                                }
+                                            };
                                             zone_shape.transform_clone(&centering_transf)
                                         })
                                         .collect_vec();
@@ -415,40 +444,7 @@ pub fn compose_json_solution(
     }
 }
 
-fn json_shape_to_simple_polygon(
-    json_shape: &JsonPoly,
-    center_polygon: bool,
-    simpl_config: PolySimplConfig,
-    simpl_mode: PolySimplMode,
-) -> (SimplePolygon, Transformation) {
-    let outer = SimplePolygon::new(json_simple_poly_to_points(&json_shape.outer));
-    let inners = json_shape
-        .inner
-        .iter()
-        .map(|jsp| SimplePolygon::new(json_simple_poly_to_points(jsp)))
-        .collect_vec();
-
-    let shape = match inners.is_empty() {
-        true => outer,
-        false => panic!("no implementation for polygon -> simplepolygon conversion implemented"),
-    };
-
-    let shape = match simpl_config {
-        PolySimplConfig::Enabled { tolerance } => {
-            polygon_simplification::simplify_shape(&shape, simpl_mode, tolerance)
-        }
-        PolySimplConfig::Disabled => shape,
-    };
-
-    let (shape, centering_transform) = match center_polygon {
-        true => shape.center_around_centroid(),
-        false => (shape, Transformation::empty()),
-    };
-
-    (shape, centering_transform)
-}
-
-fn simple_json_shape_to_simple_polygon(
+fn convert_json_simple_poly(
     s_json_shape: &JsonSimplePoly,
     center_polygon: bool,
     simpl_config: PolySimplConfig,
