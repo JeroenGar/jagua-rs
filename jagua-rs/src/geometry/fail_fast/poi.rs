@@ -39,55 +39,50 @@ pub fn generate_additional_surrogate_poles(
     max_poles: usize,
     coverage_goal: f64,
 ) -> Vec<Circle> {
-    let mut all_poles = vec![shape.poi.clone()];
-    let pole_area_goal = shape.area() * coverage_goal;
-    let mut total_pole_area = shape.poi.area();
+    //generate the additional poles
+    let additional_poles = {
+        let mut all_poles = vec![shape.poi.clone()];
+        let pole_area_goal = shape.area() * coverage_goal;
+        let mut total_pole_area = shape.poi.area();
 
-    //Generate the poles
-    for _ in 0..max_poles {
-        let next = generate_next_pole(shape, &all_poles);
+        //Generate the poles
+        for _ in 0..max_poles {
+            let next = generate_next_pole(shape, &all_poles);
 
-        total_pole_area += next.area();
-        all_poles.push(next);
+            total_pole_area += next.area();
+            all_poles.push(next);
 
-        if total_pole_area > pole_area_goal {
-            //sufficient poles generated
-            break;
+            if total_pole_area > pole_area_goal {
+                //sufficient poles generated
+                break;
+            }
         }
+        all_poles[1..].to_vec()
+    };
+
+    //Sort the poles to maximize chance of early fail fast
+    let mut unsorted_poles = additional_poles.clone();
+    let mut sorted_poles = vec![];
+
+    while !unsorted_poles.is_empty() {
+        //find the pole that maximizes the distance to the closest prior pole and is also large
+        let (next_pole_index, _) = unsorted_poles
+            .iter()
+            .enumerate()
+            .map(|(i, p)| {
+                let prior_poles = sorted_poles.iter().chain([&shape.poi]);
+
+                let min_distance_prior_poles = prior_poles
+                    .map(|prior| prior.distance_from_border(&p.centroid()).1)
+                    .min_by(|a, b| a.partial_cmp(b).unwrap())
+                    .unwrap();
+                (i, p.radius.powi(2) * min_distance_prior_poles)
+            })
+            .max_by_key(|(_i, obj)| NotNan::new(*obj).unwrap())
+            .unwrap();
+        sorted_poles.push(unsorted_poles.remove(next_pole_index));
     }
 
-    let mut surrogate_poles = all_poles[1..].to_vec();
-
-    //TODO: test performance impact of sorting
-    let sorted_poles = {
-        let mut sorted_poles: Vec<Circle> = surrogate_poles.clone();
-
-        while !surrogate_poles.is_empty() {
-            let next_pole = surrogate_poles
-                .iter()
-                .enumerate()
-                .max_by_key(|(_i, p)| {
-                    //or to centroid if no other poles present
-                    let min_distance_to_existing_poles = sorted_poles
-                        .iter()
-                        .chain([&shape.poi])
-                        .map(|p2| {
-                            let d = p.distance_from_border(&p2.centroid()).1;
-                            NotNan::new(d).unwrap()
-                        })
-                        .min()
-                        .unwrap();
-
-                    let radius = p.radius;
-
-                    NotNan::new(radius.powi(2)).unwrap() * min_distance_to_existing_poles
-                })
-                .unwrap();
-            sorted_poles.push(surrogate_poles.remove(next_pole.0));
-        }
-
-        sorted_poles
-    };
     sorted_poles
 }
 

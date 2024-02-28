@@ -169,6 +169,5 @@ pub fn create_custom_surrogate(
         n_ff_poles,
     };
 
-    dbg!(surrogate.ff_poles().len(), surrogate.ff_piers().len());
     surrogate
 }
