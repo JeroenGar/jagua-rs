@@ -54,7 +54,7 @@ pub struct JsonItem {
     pub shape: JsonShape,
     /// The value of the item (for knapsack problems)
     pub value: Option<u64>,
-    /// The quality required for the entire item
+    /// The quality required for the entire item, if not defined maximum quality is required
     pub base_quality: Option<usize>,
 }
 

@@ -229,7 +229,7 @@ pub fn sample_layout(
                 }
             }
             let progress_pct = i as f64 / n_ls_samples as f64;
-            ls_sampler.adjust_stddev(progress_pct);
+            ls_sampler.decay_stddev(progress_pct);
         }
     }
 

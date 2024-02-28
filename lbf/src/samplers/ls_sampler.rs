@@ -86,7 +86,7 @@ impl LSSampler {
     /// f(0) = init;
     /// f(1) = end;
     /// f(x) = init * (end/init)^x;
-    pub fn adjust_stddev(&mut self, progress_pct: f64) {
+    pub fn decay_stddev(&mut self, progress_pct: f64) {
         let calc_stddev = |(init, end): (f64, f64), pct: f64| init * (end / init).powf(pct);
         self.set_stddev(
             calc_stddev(self.stddev_transl_range, progress_pct),
