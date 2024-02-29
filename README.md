@@ -152,7 +152,7 @@ available options.
 Due to `lbf` being a one-pass constructive heuristic, the final solution quality is very *chaotic*. \
 Meaning that minute changes in the flow of the algorithm (sorting of the items, configuration, prng seed...) lead to solutions with
 drastically different quality. \
-Seemingly superior configurations (such as increased `n_samples_per_item`), for example, can result in worse solutions
+Seemingly superior configurations (such as increased `n_samples`), for example, can result in worse solutions
 and vice versa. \
 Omitting `prng_seed` in the config file will demonstrate this spread in solution quality.
 
