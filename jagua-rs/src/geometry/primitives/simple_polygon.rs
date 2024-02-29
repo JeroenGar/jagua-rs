@@ -56,7 +56,7 @@ impl SimplePolygon {
 
         let mut area = SimplePolygon::calculate_area(&points);
 
-        //edges should always be ordered counter clockwise (positive area)
+        //edges should always be ordered counterclockwise (positive area)
         match area.partial_cmp(&0.0).unwrap() {
             Ordering::Equal => panic!("simple poly has no area {}", area),
             Ordering::Less => {

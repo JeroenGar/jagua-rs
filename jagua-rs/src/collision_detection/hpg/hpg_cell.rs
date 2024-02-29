@@ -49,7 +49,7 @@ impl HPGCell {
                         static_uni_prox = (prox, hazard.entity.clone());
                     }
                 }
-                HazardEntity::QualityZoneInferior { quality, .. } => {
+                HazardEntity::InferiorQualityZone { quality, .. } => {
                     qz_prox[*quality] = qz_prox[*quality].min(prox);
                 }
                 _ => panic!("Unexpected hazard entity type"),

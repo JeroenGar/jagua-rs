@@ -35,7 +35,7 @@ pub enum HazardEntity {
     /// Represents a hole in the bin.
     BinHole { id: usize },
     /// Represents a zone in the bin with a specific quality level that is inferior to the base quality.
-    QualityZoneInferior { quality: usize, id: usize },
+    InferiorQualityZone { quality: usize, id: usize },
 }
 
 impl HazardEntity {
@@ -45,7 +45,7 @@ impl HazardEntity {
             HazardEntity::PlacedItem(_) => GeoPosition::Interior,
             HazardEntity::BinExterior => GeoPosition::Exterior,
             HazardEntity::BinHole { .. } => GeoPosition::Interior,
-            HazardEntity::QualityZoneInferior { .. } => GeoPosition::Interior,
+            HazardEntity::InferiorQualityZone { .. } => GeoPosition::Interior,
         }
     }
 
@@ -55,7 +55,7 @@ impl HazardEntity {
             HazardEntity::PlacedItem(_) => true,
             HazardEntity::BinExterior => false,
             HazardEntity::BinHole { .. } => false,
-            HazardEntity::QualityZoneInferior { .. } => false,
+            HazardEntity::InferiorQualityZone { .. } => false,
         }
     }
 
@@ -65,7 +65,7 @@ impl HazardEntity {
             HazardEntity::PlacedItem(_) => true,
             HazardEntity::BinExterior => true,
             HazardEntity::BinHole { .. } => true,
-            HazardEntity::QualityZoneInferior { .. } => false,
+            HazardEntity::InferiorQualityZone { .. } => false,
         }
     }
 }

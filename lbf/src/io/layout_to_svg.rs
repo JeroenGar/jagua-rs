@@ -16,7 +16,7 @@ pub fn s_layout_to_svg(
     instance: &Instance,
     options: SvgDrawOptions,
 ) -> Document {
-    let layout = Layout::new_from_stored(s_layout.id, s_layout);
+    let layout = Layout::from_snapshot(s_layout.id, s_layout);
     layout_to_svg(&layout, instance, options)
 }
 

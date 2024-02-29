@@ -174,13 +174,13 @@ pub fn simplify_shape(
 
     if simpl_vertices < original_vertices {
         info!(
-            "[PS] simplified polygon from {} to {} edges with {:.3}% area difference",
+            "[PS] simplified from {} to {} edges with {:.3}% area difference",
             original_vertices,
             simpl_vertices,
             (ref_shape.area() - shape.area()) / shape.area() * 100.0
         );
     } else {
-        info!("[PS] no simplification possible");
+        info!("[PS] no simplification possible within area change constraints");
     }
 
     return ref_shape;

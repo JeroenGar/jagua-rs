@@ -13,7 +13,8 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 pub struct PlacedItem {
     /// Unique identifier for the placed item
     pub uid: PlacedItemUID,
-    pub qz_haz_filter: Option<QZHazardFilter>,
+    /// The filter for hazards that the `Item` is unaffected by
+    pub hazard_filter: Option<QZHazardFilter>,
     /// The shape of the `Item` after it has been transformed and placed in a `Layout`
     pub shape: Arc<SimplePolygon>,
 }
@@ -37,7 +38,7 @@ impl PlacedItem {
         PlacedItem {
             uid: pi_uid,
             shape,
-            qz_haz_filter,
+            hazard_filter: qz_haz_filter,
         }
     }
 

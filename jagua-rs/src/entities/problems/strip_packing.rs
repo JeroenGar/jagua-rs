@@ -165,7 +165,7 @@ impl ProblemGeneric for SPProblem {
         let id = self.next_solution_id();
         let included_item_qtys = self.placed_item_qtys().collect_vec();
         let bin_qtys = self.bin_qtys().to_vec();
-        let layout_snapshots = vec![self.layout.create_layout_snapshot()];
+        let layout_snapshots = vec![self.layout.create_snapshot()];
         let target_item_qtys = self
             .instance
             .items

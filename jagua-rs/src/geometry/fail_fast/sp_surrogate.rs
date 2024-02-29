@@ -8,11 +8,17 @@ use crate::geometry::transformation::Transformation;
 use crate::util::config::SPSurrogateConfig;
 
 #[derive(Clone, Debug)]
+/// Surrogate representation of a [SimplePolygon] for fail-fast purposes
 pub struct SPSurrogate {
+    /// Indices of the points in the [SimplePolygon] that form the convex hull
     pub convex_hull_indices: Vec<usize>,
+    /// Set of poles
     pub poles: Vec<Circle>,
+    /// Circle in which all poles are contained
     pub poles_bounding_circle: Circle,
+    /// Set of piers
     pub piers: Vec<Edge>,
+    /// Number of poles that will be checked during fail-fast
     pub n_ff_poles: usize,
 }
 

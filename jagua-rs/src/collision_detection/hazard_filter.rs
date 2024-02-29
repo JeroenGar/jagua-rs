@@ -26,16 +26,12 @@ pub fn generate_irrelevant_hazards<'a>(
 #[derive(Clone)]
 pub struct BinHazardFilter;
 
-/// Deems hazards induced by `QualityZone`s above a certain quality as irrelevant.
+/// Deems hazards induced by `QualityZone`s above a cutoff quality as irrelevant.
 #[derive(Clone, Debug)]
-pub struct QZHazardFilter {
-    pub cutoff_quality: usize,
-}
+pub struct QZHazardFilter(pub usize);
 
 /// Deems hazards induced by specific entities as irrelevant.
-pub struct EntityHazardFilter {
-    pub entities: Vec<HazardEntity>,
-}
+pub struct EntityHazardFilter(pub Vec<HazardEntity>);
 
 /// Combines multiple `HazardFilter`s into a single filter.
 pub struct CombinedHazardFilter<'a> {
@@ -48,7 +44,7 @@ impl HazardFilter for BinHazardFilter {
             HazardEntity::PlacedItem(_) => false,
             HazardEntity::BinExterior => true,
             HazardEntity::BinHole { .. } => true,
-            HazardEntity::QualityZoneInferior { .. } => true,
+            HazardEntity::InferiorQualityZone { .. } => true,
         }
     }
 }
@@ -61,14 +57,14 @@ impl<'a> HazardFilter for CombinedHazardFilter<'a> {
 
 impl HazardFilter for EntityHazardFilter {
     fn is_irrelevant(&self, entity: &HazardEntity) -> bool {
-        self.entities.contains(entity)
+        self.0.contains(entity)
     }
 }
 
 impl HazardFilter for QZHazardFilter {
     fn is_irrelevant(&self, entity: &HazardEntity) -> bool {
         match entity {
-            HazardEntity::QualityZoneInferior { quality, .. } => *quality >= self.cutoff_quality,
+            HazardEntity::InferiorQualityZone { quality, .. } => *quality >= self.0,
             _ => false,
         }
     }

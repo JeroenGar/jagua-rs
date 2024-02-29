@@ -132,10 +132,9 @@ pub fn item_to_place_does_not_collide(
 
 pub fn layout_is_collision_free(layout: &Layout) -> bool {
     for pi in layout.placed_items() {
-        let ehf = EntityHazardFilter {
-            entities: vec![pi.into()],
-        };
-        let combo_filter = match &pi.qz_haz_filter {
+        let ehf = EntityHazardFilter(vec![pi.into()]);
+
+        let combo_filter = match &pi.hazard_filter {
             None => CombinedHazardFilter {
                 filters: vec![Box::new(&ehf)],
             },

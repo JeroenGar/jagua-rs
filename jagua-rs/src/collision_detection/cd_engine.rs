@@ -114,7 +114,7 @@ impl CDEngine {
     /// <br>
     /// Call [`Self::commit_deregisters`] to commit all uncommitted deregisters in both quadtree & hazard proximity grid
     /// or [`Self::flush_haz_prox_grid`] to just clear the hazard proximity grid.
-    pub fn deregister_hazard(&mut self, hazard_entity: &HazardEntity, commit_instantly: bool) {
+    pub fn deregister_hazard(&mut self, hazard_entity: &HazardEntity, commit_instant: bool) {
         let haz_index = self
             .dynamic_hazards
             .iter()
@@ -123,7 +123,7 @@ impl CDEngine {
 
         let hazard = self.dynamic_hazards.swap_remove(haz_index);
 
-        match commit_instantly {
+        match commit_instant {
             true => self.quadtree.deregister_hazard(hazard_entity),
             false => {
                 self.quadtree.deactivate_hazard(hazard_entity);
@@ -131,7 +131,7 @@ impl CDEngine {
             }
         }
         self.haz_prox_grid.as_mut().map(|hpg| {
-            hpg.deregister_hazard(hazard_entity, self.dynamic_hazards.iter(), commit_instantly)
+            hpg.deregister_hazard(hazard_entity, self.dynamic_hazards.iter(), commit_instant)
         });
         debug_assert!(assertions::qt_contains_no_dangling_hazards(&self));
     }
@@ -247,6 +247,7 @@ impl CDEngine {
         }
     }
 
+    /// Flushes all uncommitted deregisters in the hazard proximity grid.
     pub fn flush_haz_prox_grid(&mut self) {
         self.haz_prox_grid
             .as_mut()

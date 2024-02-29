@@ -6,15 +6,20 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::config::SPSurrogateConfig;
 
-/// An `Item` to be placed in a `Bin`.
+/// Item to be placed in a Layout
 #[derive(Clone, Debug)]
 pub struct Item {
     pub id: usize,
+    /// Contour of the item
     pub shape: Arc<SimplePolygon>,
+    /// Possible rotations in which to place the item
     pub allowed_rotation: AllowedRotation,
+    /// The quality of the item, if `None` the item requires full quality
     pub base_quality: Option<usize>,
     pub value: u64,
+    /// The transformation to center the item around its centroid
     pub centering_transform: Transformation,
+    /// Filter for hazards that the item is unaffected by
     pub hazard_filter: Option<QZHazardFilter>,
 }
 
@@ -30,7 +35,7 @@ impl Item {
     ) -> Item {
         shape.generate_surrogate(surrogate_config);
         let shape = Arc::new(shape);
-        let hazard_filter = base_quality.map(|q| QZHazardFilter { cutoff_quality: q });
+        let hazard_filter = base_quality.map(|q| QZHazardFilter(q));
         Item {
             id,
             shape,

@@ -7,10 +7,10 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
-/// Generates the Pole of Inaccessibility (PoI)
-/// The interior is defined as the interior of the shape minus the interior of the poles
-/// Based on Mapbox's "Polylabel" algorithm: <https://github.com/mapbox/polylabel>
+/// Generates the Pole of Inaccessibility (PoI). The PoI is the point in the interior of the shape that is farthest from the boundary.
+/// The interior is defined as the interior of the `shape` minus the interior of the `poles`.
 pub fn generate_next_pole(shape: &SimplePolygon, poles: &[Circle]) -> Circle {
+    //Based on Mapbox's "Polylabel" algorithm: <https://github.com/mapbox/polylabel>
     let square_bbox = shape.bbox().inflate_to_square();
     let root = POINode::new(square_bbox, MAX_POI_TREE_DEPTH, shape, &poles);
     let mut queue = VecDeque::from([root]);
@@ -86,7 +86,7 @@ pub fn generate_additional_surrogate_poles(
     sorted_poles
 }
 
-pub const MAX_POI_TREE_DEPTH: usize = 10;
+const MAX_POI_TREE_DEPTH: usize = 10;
 
 struct POINode {
     pub level: usize,

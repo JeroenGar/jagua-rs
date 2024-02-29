@@ -47,6 +47,7 @@ impl Solution {
         }
     }
 
+    /// Whether all items demanded in the `instance` are placed
     pub fn is_complete(&self, instance: &Instance) -> bool {
         self.placed_item_qtys
             .iter()
@@ -54,8 +55,8 @@ impl Solution {
             .all(|(i, &qty)| qty >= instance.item_qty(i))
     }
 
+    /// Ratio of included item area vs total demanded item area in the instance
     pub fn completeness(&self, instance: &Instance) -> f64 {
-        //ratio of included item area vs total instance item area
         let total_item_area = instance.item_area();
         let included_item_area = self
             .placed_item_qtys
@@ -67,6 +68,7 @@ impl Solution {
         completeness
     }
 
+    /// Returns the quantities of the items that still need to be placed to reach a complete solution.
     pub fn missing_item_qtys(&self, instance: &Instance) -> Vec<isize> {
         debug_assert!(instance.items().len() == self.placed_item_qtys.len());
         self.placed_item_qtys

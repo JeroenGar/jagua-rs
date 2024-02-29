@@ -147,7 +147,7 @@ fn clip(shape: &SimplePolygon, ray: &Edge) -> Vec<Edge> {
     clipped_lines
 }
 
-pub fn generate_unrepresented_point_grid(
+fn generate_unrepresented_point_grid(
     bbox: &AARectangle,
     shape: &SimplePolygon,
     poles: &[Circle],

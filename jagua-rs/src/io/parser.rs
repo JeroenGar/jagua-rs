@@ -15,7 +15,7 @@ use crate::entities::problems::bin_packing::BPProblem;
 use crate::entities::problems::problem::Problem;
 use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::strip_packing::SPProblem;
-use crate::entities::quality_zone::QualityZone;
+use crate::entities::quality_zone::InferiorQualityZone;
 use crate::entities::quality_zone::N_QUALITIES;
 use crate::entities::solution::Solution;
 use crate::geometry::d_transformation::DTransformation;
@@ -202,7 +202,7 @@ impl Parser {
                                         })
                                         .collect_vec();
 
-                                    QualityZone::new(quality, zones)
+                                    InferiorQualityZone::new(quality, zones)
                                 })
                                 .collect_vec();
 
@@ -345,11 +345,8 @@ fn build_solution_from_json(
             transform: transf,
             d_transform: d_transf,
         };
-        problem.place_item(&initial_insert_opt);
+        let layout_index = problem.place_item(&initial_insert_opt);
         problem.flush_changes();
-
-        //TODO: assuming layouts are always added to the back of the vector is not very robust
-        let layout_index = problem.layouts().len() - 1;
 
         //Insert the rest of the items
         for json_item in json_layout.placed_items.iter().skip(1) {
@@ -369,7 +366,7 @@ fn build_solution_from_json(
             let d_transf = transf.decompose();
 
             let insert_opt = PlacingOption {
-                layout_index: LayoutIndex::Real(layout_index),
+                layout_index,
                 item_id: item.id,
                 transform: transf,
                 d_transform: d_transf,

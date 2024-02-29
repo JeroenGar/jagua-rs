@@ -5,7 +5,7 @@ use itertools::Itertools;
 use crate::collision_detection::cd_engine::CDEngine;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
-use crate::entities::quality_zone::QualityZone;
+use crate::entities::quality_zone::InferiorQualityZone;
 use crate::entities::quality_zone::N_QUALITIES;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
@@ -13,7 +13,7 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::config::CDEConfig;
 
-/// A `Bin` is a container in which items can be placed.
+/// A container in which items can be placed.
 #[derive(Clone, Debug)]
 pub struct Bin {
     pub id: usize,
@@ -26,7 +26,7 @@ pub struct Bin {
     /// Shapes of holes/defects in the bins, if any
     pub holes: Vec<Arc<SimplePolygon>>,
     /// Zones of different qualities in the bin, stored per quality.
-    pub quality_zones: [Option<QualityZone>; N_QUALITIES],
+    pub quality_zones: [Option<InferiorQualityZone>; N_QUALITIES],
     /// The starting state of the `CDEngine` for this bin.
     pub base_cde: Arc<CDEngine>,
     pub area: f64,
@@ -39,7 +39,7 @@ impl Bin {
         value: u64,
         centering_transform: Transformation,
         holes: Vec<SimplePolygon>,
-        quality_zones: Vec<QualityZone>,
+        quality_zones: Vec<InferiorQualityZone>,
         cde_config: CDEConfig,
     ) -> Self {
         let outer = Arc::new(outer);
@@ -65,11 +65,9 @@ impl Bin {
             qz
         };
 
-        let base_cde = CDEngine::new(
-            outer.bbox().inflate_to_square(),
-            Bin::generate_hazards(&outer, &holes, &quality_zones),
-            cde_config,
-        );
+        let bin_hazards = generate_bin_hazards(&outer, &holes, &quality_zones);
+
+        let base_cde = CDEngine::new(outer.bbox().inflate_to_square(), bin_hazards, cde_config);
         let base_cde = Arc::new(base_cde);
         let area = outer.area() - holes.iter().map(|h| h.area()).sum::<f64>();
 
@@ -100,35 +98,34 @@ impl Bin {
             cde_config,
         )
     }
-    fn generate_hazards(
-        outer: &Arc<SimplePolygon>,
-        holes: &[Arc<SimplePolygon>],
-        quality_zones: &[Option<QualityZone>],
-    ) -> Vec<Hazard> {
-        //Hazard induced by the outside of the bin
-        let mut hazards = vec![Hazard::new(HazardEntity::BinExterior, outer.clone())];
-
-        //Hazard induced by any holes in the bin
-        hazards.extend(holes.iter().enumerate().map(|(i, shape)| {
-            let haz_entity = HazardEntity::BinHole { id: i };
-            Hazard::new(haz_entity, shape.clone())
-        }));
-
-        //Hazards induced by quality zones
-        for q_zone in quality_zones.iter().flatten() {
-            for (id, shape) in q_zone.zones.iter().enumerate() {
-                let haz_entity = HazardEntity::QualityZoneInferior {
-                    quality: q_zone.quality,
-                    id,
-                };
-                hazards.push(Hazard::new(haz_entity, shape.clone()));
-            }
-        }
-
-        hazards
-    }
 
     pub fn bbox(&self) -> AARectangle {
         self.outer.bbox()
     }
+}
+fn generate_bin_hazards(
+    outer: &Arc<SimplePolygon>,
+    holes: &[Arc<SimplePolygon>],
+    quality_zones: &[Option<InferiorQualityZone>],
+) -> Vec<Hazard> {
+    //Hazard induced by the outside of the bin
+    let mut hazards = vec![Hazard::new(HazardEntity::BinExterior, outer.clone())];
+
+    //Hazard induced by any holes in the bin
+    hazards.extend(holes.iter().enumerate().map(|(i, shape)| {
+        let haz_entity = HazardEntity::BinHole { id: i };
+        Hazard::new(haz_entity, shape.clone())
+    }));
+
+    //Hazards induced by quality zones
+    for q_zone in quality_zones.iter().flatten() {
+        for (id, shape) in q_zone.zones.iter().enumerate() {
+            let haz_entity = HazardEntity::InferiorQualityZone {
+                quality: q_zone.quality,
+                id,
+            };
+            hazards.push(Hazard::new(haz_entity, shape.clone()));
+        }
+    }
+    hazards
 }
