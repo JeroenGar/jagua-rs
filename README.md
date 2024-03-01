@@ -14,7 +14,7 @@ These problems contain two distinct challenges:
 * **Geometric**: determining the feasibility of a placement. Does the item fit in the container? Does it not collide
   with other items?
 
-This project aim to decouples these challenges by providing a Collision Detection Engine (CDE) that deals with the
+This project aim to decouple these challenges by providing a Collision Detection Engine (CDE) that deals with the
 geometric aspects of the problem.
 `jagua-rs` enables you to confidently focus on the combinatorial aspects of the problem, without having to worry about
 the geometric feasibility of the placements.
