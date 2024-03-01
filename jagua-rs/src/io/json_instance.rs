@@ -63,7 +63,7 @@ pub struct JsonItem {
 #[serde(tag = "Type", content = "Data")]
 #[serde(rename_all = "PascalCase")]
 pub enum JsonShape {
-    /// Axis-aligned rectangle
+    /// Axis-aligned rectangle. With the left-bottom corner at (0, 0)
     Rectangle { width: f64, height: f64 },
     /// Polygon with a single outer boundary
     SimplePolygon(JsonSimplePoly),

@@ -90,3 +90,5 @@ fabric.properties
 /assets/#*.dxf
 
 /solutions/
+
+/act/
