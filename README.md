@@ -14,7 +14,7 @@ These problems contain two distinct challenges:
 * **Geometric**: determining the feasibility of a placement. Does the item fit in the container? Does it not collide
   with other items?
 
-This project aim to decouples these challenges by providing a Collision Detection Engine (CDE) that deals with the
+This project aim to decouple these challenges by providing a Collision Detection Engine (CDE) that deals with the
 geometric aspects of the problem.
 `jagua-rs` enables you to confidently focus on the combinatorial aspects of the problem, without having to worry about
 the geometric feasibility of the placements.
@@ -152,7 +152,7 @@ available options.
 Due to `lbf` being a one-pass constructive heuristic, the final solution quality is very *chaotic*. \
 Meaning that minute changes in the flow of the algorithm (sorting of the items, configuration, prng seed...) lead to solutions with
 drastically different quality. \
-Seemingly superior configurations (such as increased `n_samples_per_item`), for example, can result in worse solutions
+Seemingly superior configurations (such as increased `n_samples`), for example, can result in worse solutions
 and vice versa. \
 Omitting `prng_seed` in the config file will demonstrate this spread in solution quality.
 
