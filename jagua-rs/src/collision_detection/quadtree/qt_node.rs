@@ -14,36 +14,31 @@ use crate::geometry::primitives::point::Point;
 pub struct QTNode {
     /// The level of the node in the tree, 0 being the bottom-most level
     pub level: u8,
+    /// The bounding box of the node
     pub bbox: AARectangle,
+    /// The children of the node, if any
     pub children: Option<Box<[QTNode; 4]>>,
     /// The hazards present in the node
     pub hazards: QTHazardVec,
 }
 
 impl QTNode {
-    pub fn new(level: u8, bbox: AARectangle, children: Option<Box<[QTNode; 4]>>) -> Self {
-        let hazards = QTHazardVec::new();
+    pub fn new(level: u8, bbox: AARectangle) -> Self {
         QTNode {
             level,
             bbox,
-            children,
-            hazards,
+            children: None,
+            hazards: QTHazardVec::new(),
         }
     }
 
     pub fn register_hazard(&mut self, hazard: QTHazard) {
         fn register_to_children(children: &mut Option<Box<[QTNode; 4]>>, hazard: &QTHazard) {
             if let Some(children) = children.as_mut() {
-                let child_bboxes = [
-                    &children[0].bbox,
-                    &children[1].bbox,
-                    &children[2].bbox,
-                    &children[3].bbox,
-                ];
+                let child_bboxes = [0, 1, 2, 3].map(|i| &children[i].bbox);
+                let c_hazards = hazard.constrict(child_bboxes);
 
-                let constricted_hazards = hazard.constrict(child_bboxes);
-
-                for (i, c_hazard) in constricted_hazards.into_iter().enumerate() {
+                for (i, c_hazard) in c_hazards.into_iter().enumerate() {
                     if let Some(c_hazard) = c_hazard {
                         children[i].register_hazard(c_hazard);
                     }
@@ -72,7 +67,7 @@ impl QTNode {
 
         if removed_ch.is_some() && self.has_children() {
             if self.hazards.is_empty() || self.hazards.has_only_entire_hazards() {
-                //If there are no more inclusion, or only inclusion of type Entire, drop the children
+                //If there are no hazards, or only entire hazards, drop the children
                 self.children = None;
             } else {
                 //Otherwise, recursively deregister the entity from the children
@@ -109,10 +104,9 @@ impl QTNode {
 
     fn generate_children(&mut self) {
         if self.level > 0 {
-            self.children =
-                Some(Box::new(self.bbox.quadrants().map(|split_bbox| {
-                    QTNode::new(self.level - 1, split_bbox, None)
-                })));
+            let quadrants = self.bbox.quadrants();
+            let children = quadrants.map(|q| QTNode::new(self.level - 1, q));
+            self.children = Some(Box::new(children));
         }
     }
 
@@ -167,6 +161,7 @@ impl QTNode {
                                 .active_hazards()
                                 .iter()
                                 .filter(|hz| !irrelevant_hazards.contains(&hz.entity));
+
                             relevant_hazards
                                 .find(|hz| match &hz.presence {
                                     QTHazPresence::None => false,
@@ -217,7 +212,7 @@ impl QTNode {
 
     pub fn point_definitely_collides_with(&self, point: &Point, entity: &HazardEntity) -> Tribool {
         match self.hazards.get(entity) {
-            None => Tribool::False, //Node does not contain inclusion
+            None => Tribool::False, //Node does not contain entity
             Some(hazard) => match self.bbox.collides_with(point) {
                 false => Tribool::False, //Hazard present, but the point is fully outside the node
                 true => match hazard.presence {

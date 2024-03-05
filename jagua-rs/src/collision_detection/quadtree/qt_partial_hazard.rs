@@ -33,6 +33,18 @@ where
     }
 }
 
+impl From<usize> for EdgeIndices {
+    fn from(index: usize) -> Self {
+        EdgeIndices::Some(vec![index])
+    }
+}
+
+impl From<Vec<usize>> for EdgeIndices {
+    fn from(indices: Vec<usize>) -> Self {
+        EdgeIndices::Some(indices)
+    }
+}
+
 impl QTPartialHazard {
     pub fn new(shape: Arc<SimplePolygon>, edge_indices: EdgeIndices) -> Self {
         Self {

@@ -53,7 +53,7 @@ impl CDEngine {
             )),
         };
 
-        let mut qt_root = QTNode::new(config.quadtree_depth, bbox.clone(), None);
+        let mut qt_root = QTNode::new(config.quadtree_depth, bbox.clone());
 
         for haz in static_hazards.iter() {
             qt_root.register_hazard(haz.into());

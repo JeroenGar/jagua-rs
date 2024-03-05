@@ -29,9 +29,9 @@ pub fn quad_tree_data(qt_root: &QTNode, irrelevant_hazards: &[HazardEntity]) -> 
 
 fn qt_node_data(
     qt_node: &QTNode,
-    mut data_eh: Data, //entire inclusion data
-    mut data_ph: Data, //partial inclusion data
-    mut data_nh: Data, //no inclusion data
+    mut data_eh: Data, //entire hazards data
+    mut data_ph: Data, //partial hazards data
+    mut data_nh: Data, //no hazards data
     irrelevant_hazards: &[HazardEntity],
 ) -> (Data, Data, Data) {
     //Only draw qt_nodes that do not have a child

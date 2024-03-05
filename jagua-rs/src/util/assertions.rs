@@ -21,6 +21,7 @@ use crate::entities::layout::LayoutSnapshot;
 use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
+use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::transformation::Transformation;
 use crate::util;
 
@@ -463,4 +464,23 @@ pub fn hpg_update_no_affected_cells_remain(
     } else {
         true
     }
+}
+
+pub fn quadrants_have_valid_layout(quadrants: &[&AARectangle; 4]) -> bool {
+    //check top border
+    let [nw, ne, sw, se] = quadrants;
+
+    //check exterior borders
+    assert_eq!(nw.y_max, ne.y_max, "Top border does not match");
+    assert_eq!(sw.y_min, se.y_min, "Bottom border does not match");
+    assert_eq!(nw.x_min, sw.x_min, "Left border does not match");
+    assert_eq!(ne.x_max, se.x_max, "Right border does not match");
+
+    //check interior borders
+    assert_eq!(nw.x_max, ne.x_min, "Top interior border does not match");
+    assert_eq!(sw.x_max, se.x_min, "Bottom interior border does not match");
+    assert_eq!(nw.y_min, sw.y_max, "Left interior border does not match");
+    assert_eq!(ne.y_min, se.y_max, "Right interior border does not match");
+
+    true
 }

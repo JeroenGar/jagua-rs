@@ -10,7 +10,6 @@ use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 /// Strongest meaning the first active hazard with the highest presence (`Entire` > `Partial` > `None`)
 #[derive(Clone, Debug)]
 pub struct QTHazardVec {
-    /// Sorted in descending order by strongest
     hazards: Vec<QTHazard>,
     n_active: usize,
 }
@@ -67,6 +66,7 @@ impl QTHazardVec {
     }
 
     #[inline(always)]
+    /// Returns the strongest hazard (if any), meaning the first active hazard with the highest [QTHazPresence] (`Entire` > `Partial` > `None`)
     pub fn strongest(&self, irrelevant_hazards: &[HazardEntity]) -> Option<&QTHazard> {
         debug_assert!(
             self.hazards.iter().filter(|hz| hz.active).count() == self.n_active,
