@@ -42,7 +42,7 @@ impl DTransformation {
     }
 
     pub fn compose(&self) -> Transformation {
-        Transformation::from_rotation(self.rotation()).translate(self.translation())
+        Transformation::from_dt(self)
     }
 }
 

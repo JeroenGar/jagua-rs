@@ -4,7 +4,7 @@ use crate::entities::placed_item::PlacedItemUID;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
-/// Defines a certain spatial constraint that affects the feasibility of an item placement.
+/// Defines a certain spatial constraint that affects the feasibility of a placement.
 #[derive(Clone, Debug)]
 pub struct Hazard {
     /// The entity inducing the hazard

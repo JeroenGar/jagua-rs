@@ -96,7 +96,7 @@ fn generate_ray_transformations(
     let dx = bbox.width() / rays_per_angle as f64;
     let translations = (0..rays_per_angle)
         .map(|i| bbox.x_min + dx * i as f64)
-        .map(|x| Transformation::from_translation((x, 0.0)))
+        .map(|x| Transformation::empty().translate((x, 0.0)))
         .collect_vec();
 
     let angles = Array::linspace(0.0, f64::PI(), n_angles + 1).to_vec();

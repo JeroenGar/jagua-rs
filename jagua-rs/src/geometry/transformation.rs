@@ -5,6 +5,8 @@ use ordered_float::NotNan;
 
 use crate::geometry::d_transformation::DTransformation;
 
+//See https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/geometry/geo-tran.html#:~:text=A%20rotation%20matrix%20and%20a,rotations%20followed%20by%20a%20translation.
+
 #[derive(Clone, Debug)]
 ///Proper rigid transformation in matrix form
 pub struct Transformation {
@@ -18,25 +20,29 @@ impl Transformation {
         }
     }
 
-    pub fn from_rotation(angle: f64) -> Self {
+    pub fn from_dt(dt: &DTransformation) -> Self {
         Self {
-            matrix: rotation_matrix(angle),
-        }
-    }
-
-    pub fn from_translation((tx, ty): (f64, f64)) -> Self {
-        Self {
-            matrix: translation_matrix((tx, ty)),
+            matrix: rot_transl_m(dt.rotation(), dt.translation()),
         }
     }
 
     pub fn rotate(mut self, angle: f64) -> Self {
-        self.matrix = dot_prod(&rotation_matrix(angle), &self.matrix);
+        self.matrix = dot_prod(&rot_m(angle), &self.matrix);
         self
     }
 
     pub fn translate(mut self, (tx, ty): (f64, f64)) -> Self {
-        self.matrix = dot_prod(&translation_matrix((tx, ty)), &self.matrix);
+        self.matrix = dot_prod(&transl_m((tx, ty)), &self.matrix);
+        self
+    }
+
+    pub fn rotate_translate(mut self, angle: f64, (tx, ty): (f64, f64)) -> Self {
+        self.matrix = dot_prod(&rot_transl_m(angle, (tx, ty)), &self.matrix);
+        self
+    }
+
+    pub fn translate_rotate(mut self, (tx, ty): (f64, f64), angle: f64) -> Self {
+        self.matrix = dot_prod(&transl_rot_m((tx, ty), angle), &self.matrix);
         self
     }
 
@@ -46,7 +52,7 @@ impl Transformation {
     }
 
     pub fn transform_from_decomposed(self, other: &DTransformation) -> Self {
-        self.rotate(other.rotation()).translate(other.translation())
+        self.rotate_translate(other.rotation(), other.translation())
     }
 
     pub fn inverse(mut self) -> Self {
@@ -75,7 +81,7 @@ where
     T: Borrow<DTransformation>,
 {
     fn from(dt: T) -> Self {
-        dt.borrow().compose()
+        Self::from_dt(dt.borrow())
     }
 }
 
@@ -84,35 +90,72 @@ const _1: NotNan<f64> = unsafe { NotNan::new_unchecked(1.0) };
 
 const EMPTY_MATRIX: [[NotNan<f64>; 3]; 3] = [[_1, _0, _0], [_0, _1, _0], [_0, _0, _1]];
 
-fn rotation_matrix(angle: f64) -> [[NotNan<f64>; 3]; 3] {
-    let cos = NotNan::new(angle.cos()).unwrap_or_else(|_| panic!("cos({}) is NaN", angle));
-    let sin = NotNan::new(angle.sin()).unwrap_or_else(|_| panic!("sin({}) is NaN", angle));
+fn rot_m(angle: f64) -> [[NotNan<f64>; 3]; 3] {
+    let (sin, cos) = angle.sin_cos();
+    let cos = NotNan::new(cos).expect("cos is NaN");
+    let sin = NotNan::new(sin).expect("sin is NaN");
 
     [[cos, -sin, _0], [sin, cos, _0], [_0, _0, _1]]
 }
 
-fn translation_matrix((tx, ty): (f64, f64)) -> [[NotNan<f64>; 3]; 3] {
-    let tx = NotNan::new(tx).unwrap_or_else(|_| panic!("tx({}) is NaN", tx));
-    let ty = NotNan::new(ty).unwrap_or_else(|_| panic!("ty({}) is NaN", ty));
+fn transl_m((tx, ty): (f64, f64)) -> [[NotNan<f64>; 3]; 3] {
+    let h = NotNan::new(tx).expect("tx is NaN");
+    let k = NotNan::new(ty).expect("ty is NaN");
 
-    [[_1, _0, tx], [_0, _1, ty], [_0, _0, _1]]
+    [[_1, _0, h], [_0, _1, k], [_0, _0, _1]]
 }
 
-fn dot_prod<T>(lhs: &[[T; 3]; 3], rhs: &[[T; 3]; 3]) -> [[T; 3]; 3]
+//rotation followed by translation
+fn rot_transl_m(angle: f64, (tx, ty): (f64, f64)) -> [[NotNan<f64>; 3]; 3] {
+    let (sin, cos) = angle.sin_cos();
+    let cos = NotNan::new(cos).expect("cos is NaN");
+    let sin = NotNan::new(sin).expect("sin is NaN");
+    let h = NotNan::new(tx).expect("tx is NaN");
+    let k = NotNan::new(ty).expect("ty is NaN");
+
+    [[cos, -sin, h], [sin, cos, k], [_0, _0, _1]]
+}
+
+//translation followed by rotation
+fn transl_rot_m((tx, ty): (f64, f64), angle: f64) -> [[NotNan<f64>; 3]; 3] {
+    let (sin, cos) = angle.sin_cos();
+    let cos = NotNan::new(cos).expect("cos is NaN");
+    let sin = NotNan::new(sin).expect("sin is NaN");
+    let h = NotNan::new(tx).expect("tx is NaN");
+    let k = NotNan::new(ty).expect("ty is NaN");
+
+    [
+        [cos, -sin, h * cos - k * sin],
+        [sin, cos, h * sin + k * cos],
+        [_0, _0, _1],
+    ]
+}
+
+#[inline(always)]
+fn dot_prod<T>(l: &[[T; 3]; 3], r: &[[T; 3]; 3]) -> [[T; 3]; 3]
 where
     T: Add<Output = T> + Mul<Output = T> + Copy + Default,
 {
-    let mut result = [[T::default(); 3]; 3];
-    for i in 0..3 {
-        for j in 0..3 {
-            for k in 0..3 {
-                result[i][j] = result[i][j] + (lhs[i][k] * rhs[k][j]);
-            }
-        }
-    }
-    result
+    [
+        [
+            l[0][0] * r[0][0] + l[0][1] * r[1][0] + l[0][2] * r[2][0],
+            l[0][0] * r[0][1] + l[0][1] * r[1][1] + l[0][2] * r[2][1],
+            l[0][0] * r[0][2] + l[0][1] * r[1][2] + l[0][2] * r[2][2],
+        ],
+        [
+            l[1][0] * r[0][0] + l[1][1] * r[1][0] + l[1][2] * r[2][0],
+            l[1][0] * r[0][1] + l[1][1] * r[1][1] + l[1][2] * r[2][1],
+            l[1][0] * r[0][2] + l[1][1] * r[1][2] + l[1][2] * r[2][2],
+        ],
+        [
+            l[2][0] * r[0][0] + l[2][1] * r[1][0] + l[2][2] * r[2][0],
+            l[2][0] * r[0][1] + l[2][1] * r[1][1] + l[2][2] * r[2][1],
+            l[2][0] * r[0][2] + l[2][1] * r[1][2] + l[2][2] * r[2][2],
+        ],
+    ]
 }
 
+#[inline(always)]
 fn inverse<T>(m: &[[T; 3]; 3]) -> [[T; 3]; 3]
 where
     T: Add<Output = T> + Mul<Output = T> + Sub<Output = T> + Div<Output = T> + Copy,

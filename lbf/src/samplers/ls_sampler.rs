@@ -97,7 +97,10 @@ impl LSSampler {
 
     /// Samples a transformation from the distribution.
     pub fn sample(&self, rng: &mut impl Rng) -> Transformation {
-        Transformation::from_rotation(self.normal_r.sample(rng))
-            .translate((self.normal_x.sample(rng), self.normal_y.sample(rng)))
+        DTransformation::new(
+            self.normal_r.sample(rng),
+            (self.normal_x.sample(rng), self.normal_y.sample(rng)),
+        )
+        .compose()
     }
 }

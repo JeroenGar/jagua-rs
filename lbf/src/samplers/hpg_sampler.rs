@@ -30,7 +30,7 @@ impl<'a> HPGSampler<'a> {
         let bin_bbox = layout.bin().bbox();
 
         //create a pre-transformation which centers the shape around its Pole of Inaccessibility.
-        let pretransform = Transformation::from_translation((-poi.center.0, -poi.center.1));
+        let pretransform = Transformation::empty().translate((-poi.center.0, -poi.center.1));
 
         let hpg = layout.cde().haz_prox_grid().unwrap();
         let all_cells = hpg.grid.cells.iter().flatten();

@@ -173,7 +173,7 @@ impl SimplePolygon {
 
     pub fn center_around_centroid(mut self) -> (SimplePolygon, Transformation) {
         let Point(c_x, c_y) = self.centroid();
-        let transformation = Transformation::from_translation((-c_x, -c_y));
+        let transformation = Transformation::empty().translate((-c_x, -c_y));
 
         self.transform(&transformation);
 

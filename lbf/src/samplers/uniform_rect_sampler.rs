@@ -10,19 +10,28 @@ use crate::samplers::rotation_distr::UniformRotDistr;
 /// Samples a `DTransformation` from a uniform distribution over a given `AARectangle` and a `UniformRotDistr`.
 pub struct UniformAARectSampler {
     pub bbox: AARectangle,
+    pub uniform_x: Uniform<f64>,
+    pub uniform_y: Uniform<f64>,
     pub uniform_r: UniformRotDistr,
 }
 
 impl UniformAARectSampler {
     pub fn new(bbox: AARectangle, item: &Item) -> Self {
+        let uniform_x = Uniform::new(bbox.x_min, bbox.x_max);
+        let uniform_y = Uniform::new(bbox.y_min, bbox.y_max);
         let uniform_r = UniformRotDistr::from_item(item);
-        Self { bbox, uniform_r }
+        Self {
+            bbox,
+            uniform_x,
+            uniform_y,
+            uniform_r,
+        }
     }
 
     pub fn sample(&self, rng: &mut impl Rng) -> DTransformation {
         let r_sample = self.uniform_r.sample(rng);
-        let x_sample = Uniform::new(self.bbox.x_min, self.bbox.x_max).sample(rng);
-        let y_sample = Uniform::new(self.bbox.y_min, self.bbox.y_max).sample(rng);
+        let x_sample = self.uniform_x.sample(rng);
+        let y_sample = self.uniform_y.sample(rng);
 
         DTransformation::new(r_sample, (x_sample, y_sample))
     }
