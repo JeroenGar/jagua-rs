@@ -62,7 +62,9 @@ most position.
 It should provide a good starting point for anyone interested building their own optimization algorithm on top
 of `jagua-rs`.
 
-### How to run
+### How to run LBF
+
+Make sure [Rust and Cargo](https://www.rust-lang.org/learn/get-started) are installed.
 
 General usage:
 

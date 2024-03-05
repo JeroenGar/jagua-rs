@@ -24,6 +24,7 @@ mimalloc = "0.1.39"
 tribool = "0.3.0"
 almost = "0.2.0"
 test-case = "3.3.1"
+thousands = "0.2.0"
 
 [dev-dependencies]
 criterion = "0.5.1"

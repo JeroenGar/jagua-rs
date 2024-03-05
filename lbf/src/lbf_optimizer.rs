@@ -6,6 +6,7 @@ use log::{debug, info};
 use ordered_float::NotNan;
 use rand::prelude::SmallRng;
 use rand::Rng;
+use thousands::Separable;
 
 use jagua_rs::collision_detection::hazard_filter;
 use jagua_rs::entities::instances::instance::Instance;
@@ -103,21 +104,28 @@ impl LBFOptimizer {
                 }
             }
         }
-
         match &mut self.problem {
             Problem::BP(_) => {}
             Problem::SP(sp_problem) => {
                 sp_problem.fit_strip_width();
-                info!("[OPT] final strip width: {:.3}", sp_problem.strip_width());
+                info!(
+                    "[LBF] fitted strip width to {:.3}",
+                    sp_problem.strip_width()
+                );
             }
         }
 
         let solution: Solution = self.problem.create_solution(&None);
 
         info!(
-            "[LBF] optimization finished, placed {} items in {:?} with {:.3}% usage",
+            "[LBF] optimization finished in {:.3}ms ({} samples)",
+            start.elapsed().as_secs_f64() * 1000.0,
+            (self.config.n_samples * solution.n_items_placed()).separate_with_commas()
+        );
+
+        info!(
+            "[LBF] solution contains {} items with a usage of {:.3}%",
             solution.n_items_placed(),
-            start.elapsed(),
             solution.usage * 100.0
         );
         solution
