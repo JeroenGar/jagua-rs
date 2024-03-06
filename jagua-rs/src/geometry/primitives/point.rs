@@ -3,16 +3,14 @@ use std::hash::{Hash, Hasher};
 use crate::geometry::geo_traits::{CollidesWith, Transformable, TransformableFrom};
 use crate::geometry::transformation::Transformation;
 
-/// Geometric primitive representing a point
+/// Geometric primitive representing a point: (x, y)
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Point(pub f64, pub f64);
 
 impl Transformable for Point {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
         let Point(x, y) = self;
-        let (tx, ty) = TRANSFORM_FORMULA(*x, *y, t);
-        *x = tx;
-        *y = ty;
+        (*x, *y) = TRANSFORM_FORMULA(*x, *y, t);
         self
     }
 }
@@ -20,20 +18,15 @@ impl Transformable for Point {
 impl TransformableFrom for Point {
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self {
         let Point(x, y) = self;
-        let (tx, ty) = TRANSFORM_FORMULA(reference.0, reference.1, t);
-        *x = tx;
-        *y = ty;
+        (*x, *y) = TRANSFORM_FORMULA(reference.0, reference.1, t);
         self
     }
 }
 
 const TRANSFORM_FORMULA: fn(f64, f64, &Transformation) -> (f64, f64) = |x, y, t| -> (f64, f64) {
     let m = t.matrix();
-
     let t_x = m[0][0].into_inner() * x + m[0][1].into_inner() * y + m[0][2].into_inner() * 1.0;
-
     let t_y = m[1][0].into_inner() * x + m[1][1].into_inner() * y + m[1][2].into_inner() * 1.0;
-
     (t_x, t_y)
 };
 
@@ -65,8 +58,8 @@ impl From<Point> for (f64, f64) {
 }
 
 impl From<(f64, f64)> for Point {
-    fn from(p: (f64, f64)) -> Self {
-        Point(p.0, p.1)
+    fn from((x, y): (f64, f64)) -> Self {
+        Point(x, y)
     }
 }
 

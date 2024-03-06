@@ -331,8 +331,7 @@ fn build_solution_from_json(
             .decompose()
             .translation();
 
-        let transf = Transformation::empty()
-            .translate(first_item_centering_correction) //undo the item centering transformation
+        let transf = Transformation::from_translation(first_item_centering_correction) //undo the item centering transformation
             .rotate(json_first_item.transformation.rotation) //apply the rotation from the JSON solution
             .translate(json_first_item.transformation.translation) //apply the translation from the JSON solution
             .translate(bin_centering); //correct for the bin centering transformation
@@ -357,8 +356,7 @@ fn build_solution_from_json(
                 .inverse()
                 .decompose()
                 .translation();
-            let transf = Transformation::empty()
-                .translate(item_centering_correction)
+            let transf = Transformation::from_translation(item_centering_correction)
                 .rotate(json_item.transformation.rotation)
                 .translate(json_item.transformation.translation)
                 .translate(bin_centering);
@@ -421,8 +419,7 @@ pub fn compose_json_solution(
 
                     //Both bins and items have centering transformations, however in the output file, we need to restore them to the original positions
 
-                    let transformation = Transformation::empty()
-                        .translate(item_centering)
+                    let transformation = Transformation::from_translation(item_centering)
                         .rotate(pl_decomp_transf.rotation())
                         .translate(pl_decomp_transf.translation())
                         .translate(bin_centering_correction);

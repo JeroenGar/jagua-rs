@@ -20,6 +20,18 @@ impl Transformation {
         }
     }
 
+    pub fn from_translation((tx, ty): (f64, f64)) -> Self {
+        Self {
+            matrix: transl_m((tx, ty)),
+        }
+    }
+
+    pub fn from_rotation(angle: f64) -> Self {
+        Self {
+            matrix: rot_m(angle),
+        }
+    }
+
     pub fn from_dt(dt: &DTransformation) -> Self {
         Self {
             matrix: rot_transl_m(dt.rotation(), dt.translation()),
