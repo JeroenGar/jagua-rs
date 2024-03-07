@@ -196,9 +196,7 @@ This project is licensed under Mozilla Public License 2.0 - see the [LICENSE](LI
 
 ## Acknowledgements
 
-This project was funded by [Research Foundation - Flanders (FWO)](https://www.fwo.be/en/) (grant number: 1S71222N) and
-developed at [KU Leuven](https://www.kuleuven.be/english/).
-
+This project began developement at [KU Leuven](https://www.kuleuven.be/english/) and was funded by [Research Foundation - Flanders (FWO)](https://www.fwo.be/en/) (grant number: 1S71222N).
 <img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Fonds_Wetenschappelijk_Onderzoek_logo.svg" height="50px" alt="FWO logo">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <img src="https://upload.wikimedia.org/wikipedia/commons/4/49/KU_Leuven_logo.svg" height="50px" alt="KU Leuven logo">
