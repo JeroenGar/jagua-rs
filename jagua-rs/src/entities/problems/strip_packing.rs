@@ -189,7 +189,14 @@ impl ProblemGeneric for SPProblem {
 
     fn restore_to_solution(&mut self, solution: &Solution) {
         debug_assert!(solution.layout_snapshots.len() == 1);
-        self.layout.restore(&solution.layout_snapshots[0]);
+
+        let layout_snapshot = &solution.layout_snapshots[0];
+        let strip_unchanged = self.layout.id() == layout_snapshot.id;
+
+        match strip_unchanged {
+            true => self.layout.restore(layout_snapshot),
+            false => self.layout = Layout::from_snapshot(layout_snapshot),
+        }
 
         self.missing_item_qtys
             .iter_mut()

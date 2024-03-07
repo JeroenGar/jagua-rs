@@ -4,20 +4,17 @@ pub enum GeoPosition {
     Interior,
 }
 
-impl GeoPosition {
-    pub fn inverse(&self) -> Self {
-        match self {
-            GeoPosition::Exterior => GeoPosition::Interior,
-            GeoPosition::Interior => GeoPosition::Exterior,
-        }
-    }
-}
-
 #[derive(Debug, PartialEq)]
+/// Possible relations between two geometric entities A and B.
+/// A is `GeoRelation` to B
 pub enum GeoRelation {
+    /// A ∩ B ≠ ∅ and neither A ⊆ B nor B ⊆ A
     Intersecting,
+    /// A ⊆ B
     Enclosed,
+    /// B ⊆ A
     Surrounding,
+    /// A ∩ B = ∅
     Disjoint,
 }
 

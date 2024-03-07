@@ -32,9 +32,9 @@ impl Layout {
         }
     }
 
-    pub fn from_snapshot(id: usize, layout_snapshot: &LayoutSnapshot) -> Self {
-        let mut layout = Layout::new(id, layout_snapshot.bin.clone());
-        layout.restore(&layout_snapshot);
+    pub fn from_snapshot(ls: &LayoutSnapshot) -> Self {
+        let mut layout = Layout::new(ls.id, ls.bin.clone());
+        layout.restore(&ls);
         layout
     }
 

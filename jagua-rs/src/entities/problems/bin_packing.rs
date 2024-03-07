@@ -225,7 +225,7 @@ impl ProblemGeneric for BPProblem {
                 //partial restore is impossible, rebuild everything from scratch
                 self.layouts.clear();
                 for sl in solution.layout_snapshots.iter() {
-                    let layout = Layout::from_snapshot(sl.id, sl);
+                    let layout = Layout::from_snapshot(sl);
                     self.layouts.push(layout);
                 }
             }
@@ -277,7 +277,7 @@ impl ProblemGeneric for BPProblem {
                             }
                             None => {
                                 //Rebuild from scratch
-                                let layout = Layout::from_snapshot(sl.id, sl);
+                                let layout = Layout::from_snapshot(sl);
                                 self.layouts.push(layout);
                             }
                         },
