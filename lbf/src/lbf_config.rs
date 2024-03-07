@@ -13,7 +13,7 @@ pub struct LBFConfig {
     pub poly_simpl_tolerance: Option<f64>,
     /// Seed for the PRNG. If undefined, the algorithm will run in non-deterministic mode using entropy
     pub prng_seed: Option<u64>,
-    /// Total budget of samples to place each item
+    /// Total budget of samples per item per layout
     pub n_samples: usize,
     /// Fraction of `n_samples_per_item` used for the local search sampler, the rest is sampled uniformly.
     pub ls_frac: f32,

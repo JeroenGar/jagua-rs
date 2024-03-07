@@ -92,7 +92,7 @@ fn hpg_query_bench(c: &mut Criterion) {
         let layout = problem.get_layout(LayoutIndex::Real(0));
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
-        let sampler = HPGSampler::new(item, layout).unwrap();
+        let mut sampler = HPGSampler::new(item, layout).unwrap();
         println!(
             "[{}] sampler coverage: {:.3}% with {} samplers",
             n_hpg_cells,
@@ -181,7 +181,7 @@ fn hpg_update_bench(c: &mut Criterion) {
         let layout = problem.get_layout(LayoutIndex::Real(0));
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
-        let sampler = HPGSampler::new(item, layout).unwrap();
+        let mut sampler = HPGSampler::new(item, layout).unwrap();
         println!(
             "[{}] sampler coverage: {:.3}% with {} samplers",
             n_hpg_cells,

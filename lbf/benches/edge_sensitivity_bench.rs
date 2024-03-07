@@ -99,7 +99,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
         };*/
 
         let samples = {
-            let hpg_sampler = HPGSampler::new(instance.item(0), layout)
+            let mut hpg_sampler = HPGSampler::new(instance.item(0), layout)
                 .expect("should be able to create HPGSampler");
             (0..N_TOTAL_SAMPLES)
                 .map(|_| hpg_sampler.sample(&mut rng))

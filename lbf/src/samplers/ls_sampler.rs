@@ -28,6 +28,7 @@ pub struct LSSampler {
     sd_rot: f64,
     sd_transl_range: (f64, f64),
     sd_rot_range: (f64, f64),
+    pub(crate) n_samples: usize,
 }
 
 impl LSSampler {
@@ -52,6 +53,7 @@ impl LSSampler {
             sd_rot,
             sd_transl_range,
             sd_rot_range,
+            n_samples: 0,
         }
     }
 
@@ -96,7 +98,9 @@ impl LSSampler {
     }
 
     /// Samples a transformation from the distribution.
-    pub fn sample(&self, rng: &mut impl Rng) -> Transformation {
+    pub fn sample(&mut self, rng: &mut impl Rng) -> Transformation {
+        self.n_samples += 1;
+
         DTransformation::new(
             self.normal_r.sample(rng),
             (self.normal_x.sample(rng), self.normal_y.sample(rng)),

@@ -76,7 +76,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     let samples = ITEMS_ID_TO_TEST
         .iter()
         .map(|&item_id| {
-            let sampler = HPGSampler::new(instance.item(item_id), layout).unwrap();
+            let mut sampler = HPGSampler::new(instance.item(item_id), layout).unwrap();
             (0..N_TOTAL_SAMPLES)
                 .map(|_| sampler.sample(&mut rng))
                 .collect_vec()

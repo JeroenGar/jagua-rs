@@ -22,6 +22,7 @@ pub struct HPGSampler<'a> {
     pub pretransform: Transformation,
     pub coverage_area: f64,
     pub bin_bbox_area: f64,
+    pub n_samples: usize,
 }
 
 impl<'a> HPGSampler<'a> {
@@ -74,13 +75,16 @@ impl<'a> HPGSampler<'a> {
                     pretransform,
                     coverage_area,
                     bin_bbox_area: bin_bbox.area(),
+                    n_samples: 0,
                 })
             }
         }
     }
 
     /// Samples a `Transformation`
-    pub fn sample(&self, rng: &mut impl Rng) -> Transformation {
+    pub fn sample(&mut self, rng: &mut impl Rng) -> Transformation {
+        self.n_samples += 1;
+
         //sample one of the eligible cells
         let cell_sampler = self.cell_samplers.choose(rng).expect("no active samplers");
 
