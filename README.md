@@ -141,7 +141,7 @@ The configuration file is a JSON file with the following structure:
   },
   "poly_simpl_tolerance": 0.001, //Polygons will be simplified until at most a 0.1% deviation in area from the original
   "prng_seed": 0, //Seed for the pseudo-random number generator. If undefined the outcome will be non-deterministic
-  "n_samples": 5000, //5000 placement samples will be queried per item
+  "n_samples": 5000, //5000 placement samples will be queried per item per layout
   "ls_frac": 0.2 //Of those 5000, 80% will be sampled at uniformly at random, 20% will be local search samples
 }
 ```
