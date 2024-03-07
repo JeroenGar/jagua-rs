@@ -10,8 +10,8 @@ use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::LayoutIndex;
+use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
@@ -52,21 +52,24 @@ impl SPProblem {
     }
 
     pub fn modify_strip_width(&mut self, new_width: f64) {
-        let old_p_uids = self
+        let placed_items_uids = self
             .layout
             .placed_items()
             .iter()
             .map(|p_i| p_i.uid.clone())
             .collect_vec();
+
+        //reset the missing item quantities
         self.missing_item_qtys
             .iter_mut()
             .enumerate()
             .for_each(|(i, qty)| *qty = self.instance.item_qty(i) as isize);
-        let next_id = self.layout.id() + 1;
+
+        //Modifying the width causes the bin to change, so the layout must be replaced
         self.layout = Layout::new(
-            next_id,
+            self.layout.id() + 1,
             Bin::from_strip(
-                next_id,
+                self.layout.bin().id + 1,
                 new_width,
                 self.strip_height,
                 self.layout.bin().base_cde.config().clone(),
@@ -74,19 +77,20 @@ impl SPProblem {
         );
         self.strip_width = new_width;
 
-        for p_uid in old_p_uids {
+        //place the items back in the new layout
+        for p_uid in placed_items_uids {
             let item = self.instance.item(p_uid.item_id);
             let entities_to_ignore = item.hazard_filter.as_ref().map_or(vec![], |f| {
                 hazard_filter::generate_irrelevant_hazards(f, self.layout.cde().all_hazards())
             });
             let shape = &item.shape;
-            let transf = p_uid.d_transf.compose();
+            let transform = p_uid.d_transf.compose();
             if !self.layout.cde().surrogate_collides(
                 shape.surrogate(),
-                &transf,
+                &transform,
                 entities_to_ignore.as_slice(),
             ) {
-                let transformed_shape = shape.transform_clone(&transf);
+                let transformed_shape = shape.transform_clone(&transform);
                 if !self
                     .layout
                     .cde()
@@ -95,7 +99,7 @@ impl SPProblem {
                     let insert_opt = PlacingOption {
                         layout_index: LayoutIndex::Real(0),
                         item_id: p_uid.item_id,
-                        transform: transf,
+                        transform,
                         d_transform: p_uid.d_transf.clone(),
                     };
                     self.place_item(&insert_opt);
@@ -104,7 +108,31 @@ impl SPProblem {
         }
     }
 
-    pub fn fit_strip_width(&mut self) {
+    /// Shrinks the strip to the minimum width that fits all the items
+    pub fn fit_strip(&mut self) {
+        let n_items_in_old_strip = self.layout.placed_items().len();
+
+        let fitted_width = self.strip_width_fitted();
+        self.modify_strip_width(fitted_width);
+
+        assert_eq!(
+            n_items_in_old_strip,
+            self.layout.placed_items().len(),
+            "fit_strip() should not remove any items"
+        );
+    }
+
+    pub fn strip_height(&self) -> f64 {
+        self.strip_height
+    }
+
+    pub fn strip_width(&self) -> f64 {
+        self.strip_width
+    }
+
+    /// Returns the minimum strip width able to fit all currently placed items.
+    pub fn strip_width_fitted(&self) -> f64 {
+        //get the maximum x coordinate of the placed items
         let max_x = self
             .layout
             .placed_items()
@@ -114,20 +142,8 @@ impl SPProblem {
             .max()
             .map_or(0.0, |x| x.into_inner());
 
-        let strip_width = max_x + f32::EPSILON.sqrt() as f64;
-        let n_items_in_old_strip = self.layout.placed_items().len();
-
-        self.modify_strip_width(strip_width);
-
-        assert_eq!(n_items_in_old_strip, self.layout.placed_items().len());
-    }
-
-    pub fn strip_height(&self) -> f64 {
-        self.strip_height
-    }
-
-    pub fn strip_width(&self) -> f64 {
-        self.strip_width
+        //add a small epsilon to avoid floating point errors
+        max_x + f32::EPSILON.sqrt() as f64
     }
 }
 

@@ -231,7 +231,7 @@ impl ProblemGeneric for BPProblem {
             }
             true => {
                 //id of solution matches the id of the solution on which unchanged_layouts is based
-                //partial restore is possible.
+                //incremental restore is possible.
                 let mut ids_in_prob_in_sol = vec![];
                 let mut ids_in_prob_not_sol = vec![];
                 //For all current layouts, check whether they occur in the solution

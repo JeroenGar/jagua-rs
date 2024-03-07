@@ -107,7 +107,7 @@ impl LBFOptimizer {
         match &mut self.problem {
             Problem::BP(_) => {}
             Problem::SP(sp_problem) => {
-                sp_problem.fit_strip_width();
+                sp_problem.fit_strip();
                 info!(
                     "[LBF] fitted strip width to {:.3}",
                     sp_problem.strip_width()
