@@ -14,7 +14,7 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::util::assertions;
 
 /// Grid of cells which store information about hazards in their vicinity.
-/// The grid is a part of the `CDEngine` and is thus automatically updated when hazards are registered or deregistered.
+/// The grid is a part of the CDE and is thus automatically updated when hazards are registered or deregistered.
 #[derive(Debug, Clone)]
 pub struct HazardProximityGrid {
     pub grid: Grid<HPGCell>,
@@ -42,7 +42,7 @@ impl HazardProximityGrid {
                 .into_iter()
                 .map(|bbox| HPGCell::new(bbox, static_hazards))
                 .map(|cell| {
-                    let pos = cell.centroid();
+                    let pos = cell.centroid;
                     (cell, pos)
                 })
                 .collect_vec();

@@ -5,14 +5,14 @@ use arr_macro::arr;
 
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
-use crate::collision_detection::quadtree::qt_partial_hazard::{EdgeIndices, QTPartialHazard};
+use crate::collision_detection::quadtree::qt_partial_hazard::{PartialQTHaz, RelevantEdges};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::util::assertions;
 
-/// Represents the manifestation of a `Hazard` in a `QTNode`
+/// Represents the manifestation of a [Hazard] in a [QTNode]
 #[derive(Clone, Debug)]
 pub struct QTHazard {
     pub entity: HazardEntity,
@@ -20,10 +20,14 @@ pub struct QTHazard {
     pub active: bool,
 }
 
+/// How a [Hazard] is present in a [QTNode]
 #[derive(Clone, Debug)]
 pub enum QTHazPresence {
+    /// The hazard is entirely absent from the node
     None,
-    Partial(QTPartialHazard),
+    /// The hazard is present in the node, but only partially, defined by a [PartialQTHaz]
+    Partial(PartialQTHaz),
+    /// The hazard is entirely present in the node
     Entire,
 }
 impl QTHazard {
@@ -76,8 +80,8 @@ impl QTHazard {
                     let shape = partial_haz.shape_arc();
 
                     //Add the relevant edges to the presences in the quadrants
-                    match &partial_haz.edge_indices {
-                        EdgeIndices::All => {
+                    match &partial_haz.edges {
+                        RelevantEdges::All => {
                             for edge_i in 0..shape.number_of_points() {
                                 q_presences = Self::add_edge_to_q_presences(
                                     edge_i,
@@ -87,7 +91,7 @@ impl QTHazard {
                                 );
                             }
                         }
-                        EdgeIndices::Some(indices) => {
+                        RelevantEdges::Some(indices) => {
                             for &edge_i in indices {
                                 q_presences = Self::add_edge_to_q_presences(
                                     edge_i,
@@ -153,7 +157,7 @@ impl QTHazard {
                 match &mut q_presences[q_index] {
                     None => {
                         //create a new partial hazard
-                        q_presences[q_index] = Some(QTHazPresence::Partial(QTPartialHazard::new(
+                        q_presences[q_index] = Some(QTHazPresence::Partial(PartialQTHaz::new(
                             shape.clone(),
                             edge_index.into(),
                         )));

@@ -42,7 +42,7 @@ impl<'a> HPGSampler<'a> {
             .filter_map(|c| {
                 //map each eligible cell to a rectangle sampler, bounded by the layout's bbox.
                 //(at low densities, the cells could extend significantly beyond the layout's bbox)
-                match AARectangle::from_intersection(c.bbox(), &bin_bbox) {
+                match AARectangle::from_intersection(&c.bbox, &bin_bbox) {
                     Some(bbox) => Some(bbox),
                     None => {
                         debug!("[HPG] cell bbox does not intersect with layout bbox");

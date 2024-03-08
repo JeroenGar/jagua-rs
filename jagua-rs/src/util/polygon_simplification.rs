@@ -6,7 +6,6 @@ use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
@@ -206,8 +205,7 @@ fn calculate_area_delta(
             area.abs()
         }
         Candidate::ConvexConvex(c1, c2) => {
-            let replacing_vertex = replacing_vertex_convex_convex_candidate(shape, candidate)
-                .ok_or(InvalidCandidate)?;
+            let replacing_vertex = replacing_vertex_convex_convex_candidate(shape, (*c1, *c2))?;
 
             //the triangle formed by corner c1, c2, and replacing vertex will correspond to the change in area
             let Point(x0, y0) = shape[c1.1];
@@ -230,26 +228,25 @@ fn candidate_is_valid(shape: &[Point], candidate: &Candidate) -> bool {
             let new_edge = Edge::new(shape[c.0], shape[c.2]);
             let affected_points = [shape[c.0], shape[c.1], shape[c.2]];
 
+            //check for self-intersections
             edge_iter(shape)
-                .filter(|l| {
-                    !affected_points.contains(&l.start) && !affected_points.contains(&l.end)
-                }) //filter edges with points that are not affected by the candidate
+                .filter(|l| !affected_points.contains(&l.start))
+                .filter(|l| !affected_points.contains(&l.end))
                 .all(|l| !l.collides_with(&new_edge))
         }
         Candidate::ConvexConvex(c1, c2) => {
-            let new_vertex = replacing_vertex_convex_convex_candidate(shape, candidate);
-            match new_vertex {
-                None => false,
-                Some(new_vertex) => {
+            match replacing_vertex_convex_convex_candidate(shape, (*c1, *c2)) {
+                Err(_) => false,
+                Ok(new_vertex) => {
                     let new_edge_1 = Edge::new(shape[c1.0], new_vertex);
                     let new_edge_2 = Edge::new(new_vertex, shape[c2.2]);
 
                     let affected_points = [shape[c1.1], shape[c1.0], shape[c2.1], shape[c2.2]];
 
+                    //check for self-intersections
                     edge_iter(shape)
-                        .filter(|l| {
-                            !affected_points.contains(&l.start) && !affected_points.contains(&l.end)
-                        }) //filter edges with points that are not affected by the candidate
+                        .filter(|l| !affected_points.contains(&l.start))
+                        .filter(|l| !affected_points.contains(&l.end))
                         .all(|l| !l.collides_with(&new_edge_1) && !l.collides_with(&new_edge_2))
                 }
             }
@@ -268,15 +265,12 @@ fn edge_iter(points: &[Point]) -> impl Iterator<Item = Edge> + '_ {
 fn execute_candidate(shape: &[Point], candidate: &Candidate) -> Vec<Point> {
     let mut points = shape.iter().cloned().collect_vec();
     match candidate {
-        Candidate::Collinear(c) => {
-            points.remove(c.1);
-        }
-        Candidate::Concave(c) => {
+        Candidate::Collinear(c) | Candidate::Concave(c) => {
             points.remove(c.1);
         }
         Candidate::ConvexConvex(c1, c2) => {
-            let replacing_vertex = replacing_vertex_convex_convex_candidate(shape, candidate)
-                .expect("candidate is not valid");
+            let replacing_vertex = replacing_vertex_convex_convex_candidate(shape, (*c1, *c2))
+                .expect("invalid candidate cannot be executed");
             points.remove(c1.1);
             let other_index = if c1.1 < c2.1 { c2.1 - 1 } else { c2.1 };
             points.remove(other_index);
@@ -288,24 +282,15 @@ fn execute_candidate(shape: &[Point], candidate: &Candidate) -> Vec<Point> {
 
 fn replacing_vertex_convex_convex_candidate(
     shape: &[Point],
-    candidate: &Candidate,
-) -> Option<Point> {
-    match candidate {
-        Candidate::ConvexConvex(c1, c2) => {
-            assert!(
-                c1.2 == c2.1 && c1.1 == c2.0,
-                "non-consecutive corners {:?},{:?}",
-                c1,
-                c2
-            ); //ensure the corners are adjacent
+    (c1, c2): (Corner, Corner),
+) -> Result<Point, InvalidCandidate> {
+    assert_eq!(c1.2, c2.1, "non-consecutive corners {:?},{:?}", c1, c2);
+    assert_eq!(c1.1, c2.0, "non-consecutive corners {:?},{:?}", c1, c2);
 
-            let edge_prev = Edge::new(shape[c1.0], shape[c1.1]);
-            let edge_next = Edge::new(shape[c2.2], shape[c2.1]);
+    let edge_prev = Edge::new(shape[c1.0], shape[c1.1]);
+    let edge_next = Edge::new(shape[c2.2], shape[c2.1]);
 
-            calculate_intersection_in_front(&edge_prev, &edge_next)
-        }
-        _ => panic!("candidate is not of type convex convex"),
-    }
+    calculate_intersection_in_front(&edge_prev, &edge_next).ok_or(InvalidCandidate)
 }
 
 fn calculate_intersection_in_front(l1: &Edge, l2: &Edge) -> Option<Point> {

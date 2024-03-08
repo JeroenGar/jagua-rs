@@ -207,7 +207,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
         if options.haz_prox_grid {
             let hpg = layout.cde().haz_prox_grid().unwrap();
             for hp_cell in hpg.grid.cells.iter().flatten() {
-                let center = hp_cell.centroid();
+                let center = hp_cell.centroid;
                 let prox = hp_cell.hazard_proximity(None);
 
                 let color = if prox == 0.0 { "red" } else { "blue" };
@@ -224,7 +224,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 ));
 
                 group = group.add(svg_export::data_to_path(
-                    svg_export::aa_rect_data(hp_cell.bbox()),
+                    svg_export::aa_rect_data(&hp_cell.bbox),
                     &[
                         ("fill", "none"),
                         ("stroke", color),

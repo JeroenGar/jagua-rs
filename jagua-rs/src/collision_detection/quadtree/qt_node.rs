@@ -4,7 +4,7 @@ use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
-use crate::collision_detection::quadtree::qt_partial_hazard::QTPartialHazard;
+use crate::collision_detection::quadtree::qt_partial_hazard::PartialQTHaz;
 use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
@@ -136,7 +136,7 @@ impl QTNode {
     ) -> Option<&HazardEntity>
     where
         T: CollidesWith<AARectangle>,
-        QTPartialHazard: CollidesWith<T>,
+        PartialQTHaz: CollidesWith<T>,
     {
         match self.hazards.strongest(irrelevant_hazards) {
             None => None,

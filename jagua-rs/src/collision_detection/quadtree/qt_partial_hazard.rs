@@ -8,48 +8,30 @@ use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
-/// QTPartialHazards define a set of edges from a hazard that is partially active in the QTNode.
+/// Defines a set of edges from a hazard that is partially active in the [QTNode].
 #[derive(Clone, Debug)]
-pub struct QTPartialHazard {
+pub struct PartialQTHaz {
     pub shape: Weak<SimplePolygon>,
-    pub edge_indices: EdgeIndices,
+    pub edges: RelevantEdges,
 }
 
-#[derive(Clone, Debug, PartialEq, Hash, Eq)]
-pub enum EdgeIndices {
-    All,
-    Some(Vec<usize>),
-}
-
-impl<T> From<T> for QTPartialHazard
+impl<T> From<T> for PartialQTHaz
 where
     T: Borrow<Hazard>,
 {
     fn from(hazard: T) -> Self {
         Self {
             shape: Arc::downgrade(&hazard.borrow().shape),
-            edge_indices: EdgeIndices::All,
+            edges: RelevantEdges::All,
         }
     }
 }
 
-impl From<usize> for EdgeIndices {
-    fn from(index: usize) -> Self {
-        EdgeIndices::Some(vec![index])
-    }
-}
-
-impl From<Vec<usize>> for EdgeIndices {
-    fn from(indices: Vec<usize>) -> Self {
-        EdgeIndices::Some(indices)
-    }
-}
-
-impl QTPartialHazard {
-    pub fn new(shape: Arc<SimplePolygon>, edge_indices: EdgeIndices) -> Self {
+impl PartialQTHaz {
+    pub fn new(shape: Arc<SimplePolygon>, edge_indices: RelevantEdges) -> Self {
         Self {
             shape: Arc::downgrade(&shape),
-            edge_indices,
+            edges: edge_indices,
         }
     }
 
@@ -60,30 +42,30 @@ impl QTPartialHazard {
     }
 
     pub fn encompasses_all_edges(&self) -> bool {
-        self.edge_indices == EdgeIndices::All
+        self.edges == RelevantEdges::All
     }
 
     pub fn add_edge_index(&mut self, index: usize) {
-        match &mut self.edge_indices {
-            EdgeIndices::All => panic!("cannot add edge to a hazard that encompasses all edges"),
-            EdgeIndices::Some(indices) => {
+        match &mut self.edges {
+            RelevantEdges::All => panic!("cannot add edge to a hazard that encompasses all edges"),
+            RelevantEdges::Some(indices) => {
                 indices.push(index);
             }
         }
     }
 }
 
-pub const BBOX_CHECK_THRESHOLD: usize = 4; //check bbox if number of edges is greater than this
-pub const BBOX_CHECK_THRESHOLD_PLUS_1: usize = BBOX_CHECK_THRESHOLD + 1;
-impl CollidesWith<Edge> for QTPartialHazard {
+const BBOX_CHECK_THRESHOLD: usize = 4; //check bbox if number of edges is greater than this
+const BBOX_CHECK_THRESHOLD_PLUS_1: usize = BBOX_CHECK_THRESHOLD + 1;
+impl CollidesWith<Edge> for PartialQTHaz {
     fn collides_with(&self, edge: &Edge) -> bool {
         let shape = self.shape_arc();
-        match &self.edge_indices {
-            EdgeIndices::All => match shape.bbox().collides_with(edge) {
+        match &self.edges {
+            RelevantEdges::All => match shape.bbox().collides_with(edge) {
                 false => false,
                 true => shape.edge_iter().any(|e| edge.collides_with(&e)),
             },
-            EdgeIndices::Some(indices) => match indices.len() {
+            RelevantEdges::Some(indices) => match indices.len() {
                 0 => unreachable!("edge indices should not be empty"),
                 1..=BBOX_CHECK_THRESHOLD => indices
                     .iter()
@@ -99,15 +81,15 @@ impl CollidesWith<Edge> for QTPartialHazard {
     }
 }
 
-impl CollidesWith<Circle> for QTPartialHazard {
+impl CollidesWith<Circle> for PartialQTHaz {
     fn collides_with(&self, circle: &Circle) -> bool {
         let shape = self.shape_arc();
-        match &self.edge_indices {
-            EdgeIndices::All => match circle.collides_with(&shape.bbox()) {
+        match &self.edges {
+            RelevantEdges::All => match circle.collides_with(&shape.bbox()) {
                 false => false,
                 true => shape.edge_iter().any(|e| circle.collides_with(&e)),
             },
-            EdgeIndices::Some(indices) => match indices.len() {
+            RelevantEdges::Some(indices) => match indices.len() {
                 0 => unreachable!("edge indices should not be empty"),
                 1..=BBOX_CHECK_THRESHOLD => indices
                     .iter()
@@ -120,5 +102,25 @@ impl CollidesWith<Circle> for QTPartialHazard {
                 },
             },
         }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Hash, Eq)]
+pub enum RelevantEdges {
+    /// All edges of the hazard are relevant for the node
+    All,
+    /// Only some specific indices of the hazard's edges are relevant for the node
+    Some(Vec<usize>),
+}
+
+impl From<usize> for RelevantEdges {
+    fn from(index: usize) -> Self {
+        RelevantEdges::Some(vec![index])
+    }
+}
+
+impl From<Vec<usize>> for RelevantEdges {
+    fn from(indices: Vec<usize>) -> Self {
+        RelevantEdges::Some(indices)
     }
 }

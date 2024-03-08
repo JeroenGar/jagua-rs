@@ -16,15 +16,15 @@ use crate::geometry::primitives::point::Point;
 /// Represents a cell in the Hazard Proximity Grid
 #[derive(Clone, Debug)]
 pub struct HPGCell {
-    bbox: AARectangle,
-    centroid: Point,
-    radius: f64,
+    pub bbox: AARectangle,
+    pub centroid: Point,
+    pub radius: f64,
     ///Proximity of closest hazard which is universally applicable (bin or item), zero if inside
-    uni_prox: (f64, HazardEntity),
+    pub uni_prox: (f64, HazardEntity),
     ///Proximity of universal static hazards, zero if inside
-    static_uni_prox: (f64, HazardEntity),
+    pub static_uni_prox: (f64, HazardEntity),
     ///proximity of closest quality zone for each quality, zero if inside
-    qz_prox: [f64; N_QUALITIES],
+    pub qz_prox: [f64; N_QUALITIES],
 }
 
 impl HPGCell {
@@ -97,7 +97,7 @@ impl HPGCell {
                 .min_by_key(|(_, (_, d))| d.map(|d| NotNan::new(d).expect("distance was NaN")))
                 .unwrap();
 
-            let current_proximity = self.universal_hazard_proximity().0;
+            let current_proximity = self.uni_prox.0;
 
             match bounding_proximity {
                 None => {
@@ -214,18 +214,6 @@ impl HPGCell {
         }
     }
 
-    pub fn bbox(&self) -> &AARectangle {
-        &self.bbox
-    }
-
-    pub fn radius(&self) -> f64 {
-        self.radius
-    }
-
-    pub fn centroid(&self) -> Point {
-        self.centroid
-    }
-
     pub fn could_accommodate_item(&self, item: &Item) -> bool {
         let poi_d = item.shape.poi.radius;
         if self.radius > poi_d {
@@ -251,20 +239,6 @@ impl HPGCell {
             haz_prox = haz_prox.min(self.qz_prox[quality]);
         }
         haz_prox
-    }
-
-    pub fn universal_hazard_proximity(&self) -> &(f64, HazardEntity) {
-        &self.uni_prox
-    }
-    pub fn bin_haz_prox(&self) -> f64 {
-        self.static_uni_prox.0
-    }
-    pub fn qz_haz_prox(&self) -> [f64; 10] {
-        self.qz_prox
-    }
-
-    pub fn static_uni_haz_prox(&self) -> &(f64, HazardEntity) {
-        &self.static_uni_prox
     }
 }
 

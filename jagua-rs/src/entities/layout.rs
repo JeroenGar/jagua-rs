@@ -7,8 +7,11 @@ use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 
-///A `Layout` represents a configuration of one or more `Item`s placed in a `Bin`.
+///A Layout is made out of a [Bin] with a set of [Item]s positioned inside of it in a specific way.
 ///It is a mutable representation, and can be modified by placing or removing items.
+///
+///The layout is responsible for maintaining its [CDEngine],
+///ensuring that it always reflects the current state of the layout.
 #[derive(Clone)]
 pub struct Layout {
     /// The unique identifier of the layout, used only to match with a [LayoutSnapshot].

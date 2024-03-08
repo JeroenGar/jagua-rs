@@ -447,17 +447,8 @@ pub fn hpg_update_no_affected_cells_remain(
                 col,
                 hpg.grid.get_neighbors(i).map(|j| j != i).iter().count()
             );
-            println!(
-                "old {:?}",
-                old_cells[i].as_ref().unwrap().universal_hazard_proximity()
-            );
-            println!(
-                "new {:?}",
-                &hpg.grid.cells[i]
-                    .as_ref()
-                    .unwrap()
-                    .universal_hazard_proximity()
-            );
+            println!("old {:?}", &old_cells[i].as_ref().unwrap().uni_prox);
+            println!("new {:?}", &hpg.grid.cells[i].as_ref().unwrap().uni_prox);
             println!()
         }
         false

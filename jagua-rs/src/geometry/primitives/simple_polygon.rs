@@ -1,5 +1,4 @@
 use std::borrow::Borrow;
-use std::cmp::Ordering;
 use std::usize;
 
 use itertools::Itertools;
@@ -38,33 +37,28 @@ pub struct SimplePolygon {
 }
 
 impl SimplePolygon {
+    /// Create a new simple polygon from a set of points, expensive operations are performed here! Use [Self::clone()] or [Self::transform()] to avoid recomputation.
     pub fn new(mut points: Vec<Point>) -> Self {
-        //Check if no two pair of consecutive points are identical
-        if points.len() < 3 {
-            panic!(
-                "simple poly needs at least 3 points, but was only {} points",
-                points.len()
-            );
-        }
-        //assert that there are no duplicate points
+        assert!(
+            points.len() >= 3,
+            "simple polygon must have at least 3 points"
+        );
         assert_eq!(
             points.iter().unique().count(),
             points.len(),
-            "there are duplicate points in the poly: {:?}",
+            "simple polygon should not contain duplicate points: {:?}",
             points
         );
 
-        let mut area = SimplePolygon::calculate_area(&points);
-
-        //edges should always be ordered counterclockwise (positive area)
-        match area.partial_cmp(&0.0).unwrap() {
-            Ordering::Equal => panic!("simple poly has no area {}", area),
-            Ordering::Less => {
+        let area = match SimplePolygon::calculate_area(&points) {
+            area if area == 0.0 => panic!("simple polygon has no area: {:?}", points),
+            area if area < 0.0 => {
+                //edges should always be ordered counterclockwise (positive area)
                 points.reverse();
-                area *= -1.0;
+                -area
             }
-            Ordering::Greater => (),
-        }
+            area => area,
+        };
 
         let diameter = SimplePolygon::calculate_diameter(points.clone());
         let bbox = SimplePolygon::generate_bounding_box(&points);
@@ -119,15 +113,13 @@ impl SimplePolygon {
     }
 
     pub fn generate_bounding_box(points: &[Point]) -> AARectangle {
-        let mut x_min = f64::MAX;
-        let mut y_min = f64::MAX;
-        let mut x_max = f64::MIN;
-        let mut y_max = f64::MIN;
+        let (mut x_min, mut y_min) = (f64::MAX, f64::MAX);
+        let (mut x_max, mut y_max) = (f64::MIN, f64::MIN);
 
         for point in points.iter() {
             x_min = x_min.min(point.0);
-            x_max = x_max.max(point.0);
             y_min = y_min.min(point.1);
+            x_max = x_max.max(point.0);
             y_max = y_max.max(point.1);
         }
         AARectangle::new(x_min, y_min, x_max, y_max)

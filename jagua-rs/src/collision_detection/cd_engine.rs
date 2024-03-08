@@ -20,9 +20,9 @@ use crate::geometry::transformation::Transformation;
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
 
-/// The Collision Detection Engine (CDE) is responsible for validating potential placements of items in a `Layout`.
-/// It can be queried to check if a given shape or surrogate collides with any `Hazard`s in the `Layout`.
-/// Every `Layout` contains a `CDEngine` and is responsible for updating its state when items are placed or removed.
+/// The Collision Detection Engine (CDE).
+/// It can resolve a range of collision queries
+/// and update its state by registering and deregistering hazards.
 #[derive(Clone, Debug)]
 pub struct CDEngine {
     quadtree: QTNode,
@@ -34,8 +34,8 @@ pub struct CDEngine {
     uncommitted_deregisters: Vec<Hazard>,
 }
 
-/// Snapshot of the state of CDE at a given time.
-/// The CDE can take snapshots of itself at any time, and use them to restore to that state later.
+/// Snapshot of the state of [CDEngine] at a given time.
+/// The [CDEngine] can take snapshots of itself at any time, and use them to restore to that state later.
 #[derive(Clone, Debug)]
 pub struct CDESnapshot {
     dynamic_hazards: Vec<Hazard>,
@@ -70,8 +70,7 @@ impl CDEngine {
         }
     }
 
-    //UPDATE ---------------------------------------------------------------------------------------
-
+    /// Registers a new hazard in the CDE.
     pub fn register_hazard(&mut self, hazard: Hazard) {
         debug_assert!(
             self.dynamic_hazards
@@ -148,6 +147,7 @@ impl CDEngine {
         }
     }
 
+    /// Restores the CDE to a previous state, as described by the snapshot.
     pub fn restore(&mut self, snapshot: &CDESnapshot) {
         //Quadtree
         let mut hazards_to_remove = self
@@ -205,6 +205,8 @@ impl CDEngine {
         debug_assert!(self.dynamic_hazards.len() == snapshot.dynamic_hazards.len());
     }
 
+    /// Commits all pending deregisters by actually removing them from the quadtree
+    /// and flushing the hazard proximity grid.
     pub fn commit_deregisters(&mut self) {
         for uc_haz in self.uncommitted_deregisters.drain(..) {
             self.quadtree.deregister_hazard(&uc_haz.entity);
@@ -247,7 +249,7 @@ impl CDEngine {
         }
     }
 
-    /// Flushes all uncommitted deregisters in the hazard proximity grid.
+    /// Flushes all uncommitted deregisters in the [HazardProximityGrid].
     pub fn flush_haz_prox_grid(&mut self) {
         self.haz_prox_grid
             .as_mut()
@@ -258,26 +260,36 @@ impl CDEngine {
         self.uncommitted_deregisters.len() > 0
     }
 
+    /// Returns all hazards in the CDE, which can change during the lifetime of the CDE.
     pub fn dynamic_hazards(&self) -> &Vec<Hazard> {
         &self.dynamic_hazards
     }
 
+    /// Returns all hazards in the CDE, which cannot change during the lifetime of the CDE.
     pub fn static_hazards(&self) -> &Vec<Hazard> {
         &self.static_hazards
     }
 
+    /// Returns all hazards in the CDE, both static and dynamic.
     pub fn all_hazards(&self) -> impl Iterator<Item = &Hazard> {
         self.static_hazards
             .iter()
             .chain(self.dynamic_hazards.iter())
     }
 
-    //QUERY ----------------------------------------------------------------------------------------
+    ///Checks whether a reference shape, with a transformation applies, collides with any of the hazards.
+    ///The check is first done on the surrogate, then with the actual shape.
+    ///A buffer shape is used as a temporary storage for the transformed shape.
+    /// # Arguments
+    /// * `reference_shape` - The shape to be checked for collisions
+    /// * `transform` - The transformation to be applied to the reference shape
+    /// * `buffer_shape` - A temporary storage for the transformed shape
+    /// * `irrelevant_hazards` - entities to be ignored during the check
     pub fn surrogate_or_shape_collides(
         &self,
         reference_shape: &SimplePolygon,
-        buffer_shape: &mut SimplePolygon,
         transform: &Transformation,
+        buffer_shape: &mut SimplePolygon,
         irrelevant_hazards: &[HazardEntity],
     ) -> bool {
         //Begin with checking the surrogate for collisions
@@ -291,6 +303,7 @@ impl CDEngine {
         }
     }
 
+    ///Checks whether a shape collides with any of the (relevant) hazards
     pub fn shape_collides(
         &self,
         shape: &SimplePolygon,
@@ -306,6 +319,11 @@ impl CDEngine {
         }
     }
 
+    /// Checks whether a surrogate collides with any of the (relevant) hazards.
+    /// # Arguments
+    /// * `base_surrogate` - The (untransformed) surrogate to be checked for collisions
+    /// * `transform` - The transformation to be applied to the surrogate
+    /// * `irrelevant_hazards` - entities to be ignored during the check
     pub fn surrogate_collides(
         &self,
         base_surrogate: &SPSurrogate,
@@ -335,6 +353,8 @@ impl CDEngine {
         false
     }
 
+    /// Checks whether a point definitely collides with any of the (relevant) hazards.
+    /// Only fully hazardous nodes in the quadtree are considered.
     pub fn point_definitely_collides_with(&self, point: &Point, entity: &HazardEntity) -> Tribool {
         match self.bbox.collides_with(point) {
             false => Tribool::Indeterminate, //point is outside the quadtree, so no information available
@@ -342,6 +362,8 @@ impl CDEngine {
         }
     }
 
+    /// Checks whether an edge definitely collides with any of the (relevant) hazards.
+    /// Only fully hazardous nodes in the quadtree are considered.
     pub fn edge_definitely_collides(
         &self,
         edge: &Edge,
@@ -353,6 +375,8 @@ impl CDEngine {
         }
     }
 
+    /// Checks whether a circle definitely collides with any of the (relevant) hazards.
+    /// Only fully hazardous nodes in the quadtree are considered.
     pub fn circle_definitely_collides(
         &self,
         circle: &Circle,
@@ -366,6 +390,7 @@ impl CDEngine {
         }
     }
 
+    /// Returns all the (relevant) hazards present inside the circle.
     pub fn entities_in_circle(
         &self,
         circle: &Circle,
