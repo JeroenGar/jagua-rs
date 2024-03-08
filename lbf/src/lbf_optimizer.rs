@@ -153,6 +153,7 @@ pub fn find_lbf_placement(
 
     //sequential search until a valid placement is found
     for layout in existing_layouts.chain(template_layouts) {
+        debug!("searching in layout {:?}", layout);
         if let Some(placing_opt) = sample_layout(problem, layout, item, config, rng, sample_counter)
         {
             return Some(placing_opt);

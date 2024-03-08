@@ -90,7 +90,7 @@ impl SimplePolygon {
 
     pub fn get_edge(&self, i: usize) -> Edge {
         let j = (i + 1) % self.number_of_points();
-        Edge::new(Point::from(self.points[i]), self.points[j])
+        Edge::new(self.points[i], self.points[j])
     }
 
     pub fn edge_iter(&self) -> impl Iterator<Item = Edge> + '_ {
