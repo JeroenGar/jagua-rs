@@ -34,5 +34,5 @@ jobs:
           folder: lbf/target/doc
           clean: true
           repository-name: JeroenGar/jagua-rs-docs
-          commit-message: "auto update docs"
+          commit-message: "auto deploy docs"
           single-commit: true
