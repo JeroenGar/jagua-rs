@@ -21,7 +21,7 @@ the geometric feasibility of the placements.
 The speed at which these *feasibility checks* can be resolved is of paramount importance, defining the design
 constraints of the optimization algorithms that rely on it.
 
-`jagua-rs` can be used as-is (as a library) to build your own optimization algorithm on top of it.
+`jagua-rs` can be used as a library to build your own optimization algorithm on top.
 Or it can be used as the starting point for building a custom CDE tailored to your specific problem variant and use case.
 
 We also provide a reference implementation of an optimization algorithm built on top of `jagua-rs` in the `lbf` crate.
@@ -41,17 +41,17 @@ position without causing any *collisions*.
     - [x] Contains preprocessor to simplify polygons
 - **Robust:**
     - [x] Uses the polygon representation shapes and mimics the results of a basic trigonometric approach
-    - [x] Special care is taken to handle floating-point arithmetic edge cases
+    - [x] Special care is taken to handle edge cases caused by floating-point arithmetic
     - [x] Written in pure Rust 🦀
 - **Adaptable:**
-    - [x] Define custom C&P problem variants by adding new `Instance` and `Problem` implementations
+    - [x] Define custom C&P problem variants by creating new `Instance` and accompanying `Problem` implementations
     - [x] Add extra constraints by creating new `Hazards` and `HazardFilters`
-        - [x] `Hazards`: consolidating all spatial constraints into a single model
-        - [x] `HazardFilters`: excluding specific `Hazards` on a per-query basis
+        - [x] `Hazards`: consolidation of all spatial constraints into a single model
+        - [x] `HazardFilters`: excluding specific `Hazards` from consideration on a per-query basis
 - **Currently supports:**
     - [x] Bin- & strip-packing problems
     - [x] Irregular shaped items & bins
-    - [x] Continuous rotation & translation
+    - [x] Continuous rotation & translation (double precision)
     - [x] Holes and quality zones in the bin
 
 ## `lbf` ↙️
@@ -64,7 +64,7 @@ of `jagua-rs`.
 
 ### How to run LBF
 
-Make sure [Rust and Cargo](https://www.rust-lang.org/learn/get-started) are installed.
+Make sure [Rust and Cargo](https://www.rust-lang.org/learn/get-started) are installed and up to date.
 
 General usage:
 
@@ -92,9 +92,8 @@ cargo run --release -- \
 The [assets](assets) folder contains a set of input files from the academic literature that were converted to the
 same JSON structure.
 
-The files are also available in
-the [OR-Datasets repository](https://github.com/Oscar-Oliveira/OR-Datasets/tree/master/Cutting-and-Packing/2D-Irregular)
-by Oscar Oliveira.
+The files are also available in Oscar Oliveira's
+[OR-Datasets repository](https://github.com/Oscar-Oliveira/OR-Datasets/tree/master/Cutting-and-Packing/2D-Irregular).
 
 ### Solution
 
@@ -104,20 +103,20 @@ Two types of files are written in the solution folder:
 #### JSON
 
 The solution JSON is similar to the input JSON, but with the addition of the `Solution` key at the top level.
-It contains all information required to recreate the solution, including the containers used, the placements of the
-items and some additional stats.
+It contains all information required to recreate the solution, including the containers used, how the items are placed inside and some additional statistics.
 
 #### SVG
 
-A visual representation of every layout is created in SVG format.
-By default, just the container and placed inside it are drawn.
-Optionally the quadtree, hazard proximity grid or fail-fast surrogates can be drawn on top, or a custom theme can be defined.
+A visual representation of every layout is created as an SVG file.
+By default, just the container and the items placed inside it are drawn.
+Optionally the quadtree, hazard proximity grid or fail-fast surrogates can be drawn on top.
+A custom theme can also be defined.
 
-This can be configured in the config file.
+This can all be configured in the config file.
 See [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/io/svg_util/struct.SvgDrawOptions.html) for all available
 options.
 
-*Note: Unfortunately, the SVG standard does not support strokes drawn purely inside (or outside) shapes.
+*Note: Unfortunately, the SVG standard does not support strokes drawn purely inside (or outside) of polygons.
 Items might therefore sometimes falsely appear to be (very slightly) colliding in the SVG visualizations.*
 
 ### Config JSON
@@ -152,30 +151,13 @@ available options.
 ### Important note
 
 Due to `lbf` being a one-pass constructive heuristic, the final solution quality is very *chaotic*. \
-Meaning that minute changes in the flow of the algorithm (sorting of the items, configuration, prng seed...) lead to solutions with
-drastically different quality. \
-Seemingly superior configurations (such as increased `n_samples`), for example, can result in worse solutions
-and vice versa. \
-Omitting `prng_seed` in the config file will demonstrate this spread in solution quality.
+Meaning that minute changes in the operation of the algorithm (sorting of the items, configuration, prng seed...) 
+will lead to solutions with drastically different quality. \
+Seemingly superior configurations (such as increased `n_samples`), for example, can result in worse solutions and vice versa. \
+Omitting `prng_seed` in the config file disables deterministic behavior and will demonstrate the variation in solution quality.
 
-**This heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as a
-reliable optimization algorithm for any real-world use case.**
-
-## Testing
-
-The `jagua-rs` codebase contains a suite of assertion checks which verify the correctness of the engine.
-These `debug_asserts` are enabled by default in debug builds and tests but are omitted in release builds to maximize
-performance.
-
-Additionally, `lbf` contains some basic integration tests to validate the correctness of the engine on a macro level.
-It basically runs the heuristic on a set of input files with multiple configurations with assertions enabled.
-
-To run the tests, use:
-
-```bash
-cd lbf
-cargo test
-``` 
+**This heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as a 
+optimization algorithm for any real-world use case.**
 
 ## Documentation
 
@@ -186,9 +168,21 @@ Documentation of this repo is written with rustdoc and is automatically deployed
 
 Alternatively, you can compile and view the docs locally with `cargo doc --open`.
 
+## Testing
+
+The `jagua-rs` codebase contains a suite of assertion checks which verify the correctness of the engine.
+These `debug_asserts` are enabled by default in debug and test builds but are omitted in release builds to maximize performance.
+
+Additionally, `lbf` contains some basic integration tests to validate the correctness of the engine on a macro level.
+It basically runs the heuristic on a set of input files with multiple configurations with assertions enabled.
+
+The scope of these tests needs to be expanded in the future.
+
 ## Development
 
-Contributions to `jagua-rs` are more than welcome! To submit code contributions, [fork](https://help.github.com/articles/fork-a-repo/) the repository, commit your changes, and [submit a pull request](https://help.github.com/articles/creating-a-pull-request-from-a-fork/).
+Contributions to `jagua-rs` are more than welcome! 
+To submit code contributions, [fork](https://help.github.com/articles/fork-a-repo/) the repository, 
+commit your changes, and [submit a pull request](https://help.github.com/articles/creating-a-pull-request-from-a-fork/).
 
 ## License
 
@@ -196,7 +190,7 @@ This project is licensed under Mozilla Public License 2.0 - see the [LICENSE](LI
 
 ## Acknowledgements
 
-This project began developement at [KU Leuven](https://www.kuleuven.be/english/) and was funded by [Research Foundation - Flanders (FWO)](https://www.fwo.be/en/) (grant number: 1S71222N).
+This project began development at [KU Leuven](https://www.kuleuven.be/english/) and was funded by [Research Foundation - Flanders (FWO)](https://www.fwo.be/en/) (grant number: 1S71222N).
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Fonds_Wetenschappelijk_Onderzoek_logo.svg" height="50px" alt="FWO logo">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
