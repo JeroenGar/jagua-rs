@@ -14,15 +14,15 @@ These problems contain two distinct challenges:
 * **Geometric**: determining the feasibility of a placement. Does the item fit in the container? Does it not collide
   with other items?
 
-This project aim to decouple these challenges by providing a Collision Detection Engine (CDE) that deals with the
+Previously, those tackling these problems have had to address both challenges simultaneously, 
+requiring two distinct sets of expertise and lots of research & development effort.
+This project aims to decouple these challenges by providing a Collision Detection Engine (CDE) that deals with the
 geometric aspects of the problem.
 `jagua-rs` enables you to confidently focus on the combinatorial aspects of the problem, without having to worry about
 the geometric feasibility of the placements.
-The speed at which these *feasibility checks* can be resolved is of paramount importance, defining the design
-constraints of the optimization algorithms that rely on it.
 
-`jagua-rs` can be used as a library to build your own optimization algorithm on top.
-Or it can be used as the starting point for building a custom CDE tailored to your specific problem variant and use case.
+`jagua-rs` can be used as a library to build your own optimization algorithm on top, or 
+as the starting point for building a custom CDE tailored to your specific problem variant and use case.
 
 We also provide a reference implementation of an optimization algorithm built on top of `jagua-rs` in the `lbf` crate.
 
@@ -38,9 +38,9 @@ position without causing any *collisions*.
 - **Performant:**
     - [x] Focus on maximum performance, both in terms of query resolution and update speed
     - [x] Able to resolve millions of collision queries per second
-    - [x] Contains preprocessor to simplify polygons
+    - [x] Integrated preprocessor to simplify polygons
 - **Robust:**
-    - [x] Uses the polygon representation shapes and mimics the results of a basic trigonometric approach
+    - [x] Designed to mimic the exact results of a naive trigonometric approach
     - [x] Special care is taken to handle edge cases caused by floating-point arithmetic
     - [x] Written in pure Rust 🦀
 - **Adaptable:**
@@ -151,22 +151,22 @@ available options.
 ### Important note
 
 Due to `lbf` being a one-pass constructive heuristic, the final solution quality is very *chaotic*. \
-Meaning that minute changes in the operation of the algorithm (sorting of the items, configuration, prng seed...) 
+Meaning that tiny changes in the operation of the algorithm (sorting of the items, configuration, prng seed...) 
 will lead to solutions with drastically different quality. \
 Seemingly superior configurations (such as increased `n_samples`), for example, can result in worse solutions and vice versa. \
-Omitting `prng_seed` in the config file disables deterministic behavior and will demonstrate the variation in solution quality.
+Omitting `prng_seed` in the config file disables deterministic behavior and will demonstrate this variation in solution quality.
 
 **This heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as a 
 optimization algorithm for any real-world use case.**
 
 ## Documentation
 
-Documentation of this repo is written with rustdoc and is automatically deployed to GitHub Pages:
+Documentation of this repo is written with rustdoc and is the newest version is automatically deployed to GitHub Pages:
 
 [`jagua-rs` docs](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/)    
 [`lbf` docs](https://jeroengar.github.io/jagua-rs-docs/lbf/)
 
-Alternatively, you can compile and view the docs locally with `cargo doc --open`.
+Alternatively, you can compile and view the docs of older versions locally with `cargo doc --open`.
 
 ## Testing
 
