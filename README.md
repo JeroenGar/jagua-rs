@@ -6,25 +6,26 @@
 
 ## Preamble
 
-2D irregular cutting and packing (C&P) problems are a class of optimization problems that involve placing irregular
+2D irregular cutting and packing (C&P) problems are a class of combinatorial optimization problems that involve placing irregular
 shaped items into containers in an efficient way.
-These problems contain two distinct challenges:
+This class of problems contain two distinct challenges:
 
-* **Combinatorial**: deciding which items to place in which configuration in order to optimize some objective function.
+* **Optimization**: deciding which items to place in which configuration in order to optimize some objective function.
 * **Geometric**: determining the feasibility of a placement. Does the item fit in the container? Does it not collide
   with other items?
 
-Previously, those tackling these problems have had to address both challenges simultaneously, 
+Previously, those tackling these problems have had to address both challenges simultaneously,
 requiring two distinct sets of expertise and lots of research & development effort.
-This project aims to decouple these challenges by providing a Collision Detection Engine (CDE) that deals with the
-geometric aspects of the problem.
-`jagua-rs` enables you to confidently focus on the combinatorial aspects of the problem, without having to worry about
-the geometric feasibility of the placements.
 
-`jagua-rs` can be used as a library to build your own optimization algorithm on top, or 
-as the starting point for building a custom CDE tailored to your specific problem variant and use case.
+**This project aims to decouple the two challenges by providing a Collision Detection Engine (CDE) that deals with the
+geometric aspects of 2D irregular C&P problems.**
+The CDE's main responsibility is determining if an item can be placed at a certain location without causing any *collisions* (infeasibility).
+The CDE embedded in `jagua-rs` is able to resolve millions of these collision queries every second.
 
-We also provide a reference implementation of an optimization algorithm built on top of `jagua-rs` in the `lbf` crate.
+`jagua-rs` enables you to confidently focus on the combinatorial aspects of the optimization challenge at hand, without
+worrying about the underlying geometry.
+
+We also provide a reference implementation of a basic optimization algorithm built on top of `jagua-rs` in the `lbf` crate.
 
 ## `jagua-rs` 🐆
 
@@ -36,30 +37,31 @@ position without causing any *collisions*.
 ### Design Goals
 
 - **Performant:**
-    - [x] Focus on maximum performance, both in terms of query resolution and update speed
-    - [x] Able to resolve millions of collision queries per second
-    - [x] Integrated preprocessor to simplify polygons
+  - [x] Focus on maximum performance, both in terms of query resolution and update speed
+  - [x] Able to resolve millions of collision queries per second
+  - [x] Integrated preprocessor to simplify polygons
 - **Robust:**
-    - [x] Designed to mimic the exact results of a naive trigonometric approach
-    - [x] Special care is taken to handle edge cases caused by floating-point arithmetic
-    - [x] Written in pure Rust 🦀
+  - [x] Designed to mimic the exact results of a naive trigonometric approach
+  - [x] Special care is taken to handle edge cases caused by floating-point arithmetic
+  - [x] Written in pure Rust 🦀
 - **Adaptable:**
-    - [x] Define custom C&P problem variants by creating new `Instance` and accompanying `Problem` implementations
-    - [x] Add extra constraints by creating new `Hazards` and `HazardFilters`
-        - [x] `Hazards`: consolidation of all spatial constraints into a single model
-        - [x] `HazardFilters`: excluding specific `Hazards` from consideration on a per-query basis
+  - [x] Define custom C&P problem variants by creating new `Instance` and accompanying `Problem` implementations
+  - [x] Add extra constraints by creating new `Hazards` and `HazardFilters`
+    - [x] `Hazards`: consolidation of all spatial constraints into a single model
+    - [x] `HazardFilters`: excluding specific `Hazards` from consideration on a per-query basis
 - **Currently supports:**
-    - [x] Bin- & strip-packing problems
-    - [x] Irregular shaped items & bins
-    - [x] Continuous rotation & translation (double precision)
-    - [x] Holes and quality zones in the bin
+  - [x] Bin- & strip-packing problems
+  - [x] Irregular shaped items & bins
+  - [x] Continuous rotation & translation (double precision)
+  - [x] Holes and quality zones in the bin
 
 ## `lbf` ↙️
 
 The `lbf` crate contains a reference implementation of an optimization algorithm built on top of `jagua-rs`.
 It is a simple left-bottom-fill heuristic, which places the items one-by-one in the bin, each time at the left-bottom
 most position.
-It should provide a good starting point for anyone interested building their own optimization algorithm on top
+
+The code is thoroughly documented and should provide a good starting point for anyone interested building their own optimization algorithm on top
 of `jagua-rs`.
 
 ### How to run LBF
@@ -158,22 +160,22 @@ available options.
 ### Important note
 
 Due to `lbf` being a one-pass constructive heuristic, the final solution quality is very *chaotic*. \
-Meaning that tiny changes in the operation of the algorithm (sorting of the items, configuration, prng seed...) 
+Meaning that tiny changes in the operation of the algorithm (sorting of the items, configuration, prng seed...)
 will lead to solutions with drastically different quality. \
 Seemingly superior configurations (such as increased `n_samples`), for example, can result in worse solutions and vice versa. \
 Omitting `prng_seed` in the config file disables deterministic behavior and will demonstrate this variation in solution quality.
 
-**This heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as a 
+**This heuristic should only serve as a reference implementation of how to use `jagua-rs` and not as a
 optimization algorithm for any real-world use case.**
 
 ## Documentation
 
-Documentation of this repo is written with rustdoc and is the newest version is automatically deployed to GitHub Pages:
+Documentation of this repo is written with rustdoc and is the most recent version is automatically deployed and hosted on GitHub Pages:
 
-[`jagua-rs` docs](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/)    
-[`lbf` docs](https://jeroengar.github.io/jagua-rs-docs/lbf/)
+- `jagua-rs` docs: [https://jeroengar.github.io/jagua-rs-docs/jagua_rs/](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/)
+- `lbf` docs: [https://jeroengar.github.io/jagua-rs-docs/lbf/](https://jeroengar.github.io/jagua-rs-docs/lbf/)
 
-Alternatively, you can compile and view the docs of older versions locally with `cargo doc --open`.
+Alternatively, you can compile and view the docs of older versions locally by using: `cargo doc --open`.
 
 ## Testing
 
@@ -187,8 +189,8 @@ The scope of these tests needs to be expanded in the future.
 
 ## Development
 
-Contributions to `jagua-rs` are more than welcome! 
-To submit code contributions, [fork](https://help.github.com/articles/fork-a-repo/) the repository, 
+Contributions to `jagua-rs` are more than welcome!
+To submit code contributions, [fork](https://help.github.com/articles/fork-a-repo/) the repository,
 commit your changes, and [submit a pull request](https://help.github.com/articles/creating-a-pull-request-from-a-fork/).
 
 ## License
