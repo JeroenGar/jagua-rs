@@ -62,13 +62,6 @@ most position.
 It should provide a good starting point for anyone interested building their own optimization algorithm on top
 of `jagua-rs`.
 
-**Some layouts created by `lbf`**:
-<p align="center">
-  <img src="img/sp_example.svg" width="22%" alt="strip packing example">
-  <img src="img/leather_example.svg" width="20%" alt="leather example">
-  <img src="img/bp_example.svg" width="50%" alt="bin packing example">
-</p>
-
 ### How to run LBF
 
 Make sure [Rust and Cargo](https://www.rust-lang.org/learn/get-started) are installed and up to date.
@@ -122,6 +115,13 @@ A custom theme can also be defined.
 This can all be configured in the config file.
 See [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/io/svg_util/struct.SvgDrawOptions.html) for all available
 options.
+
+Some examples of layout SVGs created by `lbf`:
+<p align="center">
+  <img src="img/sp_example.svg" width="22%" alt="strip packing example">
+  <img src="img/leather_example.svg" width="20%" alt="leather example">
+  <img src="img/bp_example.svg" width="50%" alt="bin packing example">
+</p>
 
 *Note: Unfortunately, the SVG standard does not support strokes drawn purely inside (or outside) of polygons.
 Items might therefore sometimes falsely appear to be (very slightly) colliding in the SVG visualizations.*
