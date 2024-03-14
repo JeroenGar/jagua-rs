@@ -63,17 +63,11 @@ It should provide a good starting point for anyone interested building their own
 of `jagua-rs`.
 
 **Some layouts created by `lbf`**:
-<div style="display:flex;flex-flow:row;justify-content: stretch;height:250px">
-  <div>
-    <img src="img/sp_example.svg" width="100%" height="100%" alt="leather bin example">
-  </div>
-  <div>
-  <img src="img/leather_example.svg" width="100%" height="100%" alt="leather bin example">
-  </div>
-  <div>
-  <img src="img/bp_example.svg" width="100%" height="100%" alt="leather bin example">
-  </div>
-</div>
+<p align="center">
+  <img src="img/sp_example.svg" width="22%" alt="strip packing example">
+  <img src="img/leather_example.svg" width="20%" alt="leather example">
+  <img src="img/bp_example.svg" width="50%" alt="bin packing example">
+</p>
 
 ### How to run LBF
 
