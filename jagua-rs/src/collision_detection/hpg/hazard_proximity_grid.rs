@@ -66,7 +66,7 @@ impl HazardProximityGrid {
         let shape = &to_register.shape;
         let poles = &shape.surrogate().poles;
 
-        //To update the grid efficiently, we use a boundary fill algorithm to propogate the effect of each pole through the grid
+        //To update the grid efficiently, we use a boundary fill algorithm to propagate the effect of each pole through the grid
         let mut b_fill = BoundaryFillHPG::new(&self.grid, &shape.bbox());
 
         for pole in poles {

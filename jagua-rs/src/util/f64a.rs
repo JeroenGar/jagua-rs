@@ -5,6 +5,8 @@ use almost::AlmostEqual;
 ///Wrapper around the almost crate for easy comparison of floats with a certain tolerance
 ///the almost crate considers two floats equal if they are within a certain tolerance of each other.
 ///see crate docs for more details
+
+#[derive(Debug, Clone, Copy)]
 pub struct F64A(pub f64);
 
 impl F64A {

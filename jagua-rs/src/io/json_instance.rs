@@ -61,7 +61,7 @@ pub struct JsonItem {
 /// Different ways to represent a shape
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(tag = "Type", content = "Data")]
-#[serde(rename_all = "PascalCase")]
+#[serde(rename_all_fields = "PascalCase")]
 pub enum JsonShape {
     /// Axis-aligned rectangle. With the left-bottom corner at (0, 0)
     Rectangle { width: f64, height: f64 },
