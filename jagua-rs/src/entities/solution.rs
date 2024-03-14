@@ -48,7 +48,7 @@ impl Solution {
     }
 
     /// Whether all items demanded in the `instance` are placed
-    pub fn is_complete(&self, instance: &Instance) -> bool {
+    pub fn is_complete(&self, instance: &dyn InstanceGeneric) -> bool {
         self.placed_item_qtys
             .iter()
             .enumerate()

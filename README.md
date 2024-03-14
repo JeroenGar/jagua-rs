@@ -2,7 +2,7 @@
 
 ### A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems
 
-<img src="assets/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
+<img src="img/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
 ## Preamble
 
@@ -61,6 +61,19 @@ It is a simple left-bottom-fill heuristic, which places the items one-by-one in 
 most position.
 It should provide a good starting point for anyone interested building their own optimization algorithm on top
 of `jagua-rs`.
+
+**Some layouts created by `lbf`**:
+<div style="display:flex;flex-flow:row;justify-content: stretch;height:250px">
+  <div>
+    <img src="img/sp_example.svg" width="100%" height="100%" alt="leather bin example">
+  </div>
+  <div>
+  <img src="img/leather_example.svg" width="100%" height="100%" alt="leather bin example">
+  </div>
+  <div>
+  <img src="img/bp_example.svg" width="100%" height="100%" alt="leather bin example">
+  </div>
+</div>
 
 ### How to run LBF
 

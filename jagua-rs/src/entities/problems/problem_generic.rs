@@ -121,3 +121,11 @@ pub enum LayoutIndex {
     Real(usize),
     Template(usize),
 }
+
+impl Into<usize> for LayoutIndex {
+    fn into(self) -> usize {
+        match self {
+            LayoutIndex::Real(i) | LayoutIndex::Template(i) => i,
+        }
+    }
+}
