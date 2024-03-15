@@ -5,6 +5,7 @@ use std::path::Path;
 
 use clap::Parser as ClapParser;
 use log::{error, warn};
+use mimalloc::MiMalloc;
 use rand::prelude::SmallRng;
 use rand::SeedableRng;
 
@@ -18,6 +19,8 @@ use lbf::lbf_config::LBFConfig;
 use lbf::lbf_optimizer::LBFOptimizer;
 use lbf::{io, EPOCH};
 
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc; //more efficient allocator
 fn main() {
     let args = Cli::parse();
     io::init_logger(args.log_level);
