@@ -2,9 +2,9 @@
 mod tests {
     use std::path::Path;
 
+    use rand::{Rng, SeedableRng};
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;
-    use rand::{Rng, SeedableRng};
     use test_case::test_case;
 
     use jagua_rs::entities::problems::problem_generic::LayoutIndex;
@@ -20,7 +20,8 @@ mod tests {
     #[test_case("../assets/swim.json"; "swim")]
     #[test_case("../assets/shirts.json"; "shirts")]
     #[test_case("../assets/trousers.json"; "trousers")]
-    #[test_case("../assets/mao.json"; "mao.json")]
+    #[test_case("../assets/mao.json"; "mao")]
+    #[test_case("../assets/albano.json"; "albano")]
     #[test_case("../assets/baldacci1.json"; "baldacci1")]
     #[test_case("../assets/baldacci2.json"; "baldacci2")]
     #[test_case("../assets/baldacci3.json"; "baldacci3")]
