@@ -8,6 +8,7 @@ use crate::collision_detection::hpg::grid::Grid;
 use crate::collision_detection::hpg::hazard_proximity_grid::{DirtyState, HazardProximityGrid};
 use crate::collision_detection::hpg::hpg_cell::HPGCell;
 use crate::collision_detection::quadtree::qt_node::QTNode;
+use crate::fsize;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable, TransformableFrom};
@@ -228,11 +229,11 @@ impl CDEngine {
         &self.bbox
     }
 
-    pub fn smallest_qt_node_dimension(&self) -> f64 {
+    pub fn smallest_qt_node_dimension(&self) -> fsize {
         let bbox = &self.quadtree.bbox;
         let level = self.quadtree.level;
         //every level, the dimension is halved
-        bbox.width() / 2.0_f64.powi(level as i32)
+        bbox.width() / (2.0 as fsize).powi(level as i32)
     }
 
     pub fn config(&self) -> CDEConfig {

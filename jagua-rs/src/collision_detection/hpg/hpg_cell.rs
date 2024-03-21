@@ -7,6 +7,7 @@ use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::entities::item::Item;
 use crate::entities::quality_zone::N_QUALITIES;
+use crate::fsize;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{DistanceFrom, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
@@ -18,13 +19,13 @@ use crate::geometry::primitives::point::Point;
 pub struct HPGCell {
     pub bbox: AARectangle,
     pub centroid: Point,
-    pub radius: f64,
+    pub radius: fsize,
     ///Proximity of closest hazard which is universally applicable (bin or item), zero if inside
-    pub uni_prox: (f64, HazardEntity),
+    pub uni_prox: (fsize, HazardEntity),
     ///Proximity of universal static hazards, zero if inside
-    pub static_uni_prox: (f64, HazardEntity),
+    pub static_uni_prox: (fsize, HazardEntity),
     ///proximity of closest quality zone for each quality, zero if inside
-    pub qz_prox: [f64; N_QUALITIES],
+    pub qz_prox: [fsize; N_QUALITIES],
 }
 
 impl HPGCell {
@@ -34,8 +35,8 @@ impl HPGCell {
         let centroid = bbox.centroid();
         let radius = bbox.diameter() / 2.0;
 
-        let mut static_uni_prox = (f64::MAX, HazardEntity::BinExterior);
-        let mut qz_prox = [f64::MAX; N_QUALITIES];
+        let mut static_uni_prox = (fsize::MAX, HazardEntity::BinExterior);
+        let mut qz_prox = [fsize::MAX; N_QUALITIES];
 
         for hazard in static_hazards {
             let (pos, distance) = hazard.shape.distance_from_border(&centroid);
@@ -72,7 +73,7 @@ impl HPGCell {
     {
         //For each item to register, calculate the distance from the cell to its bounding circle of the poles.
         //This serves as a lower-bound for the distance to the item itself.
-        let mut bounding_pole_distances: Vec<(&Hazard, Option<f64>)> = to_register
+        let mut bounding_pole_distances: Vec<(&Hazard, Option<fsize>)> = to_register
             .filter(|haz| haz.active)
             .map(|haz| {
                 match haz.entity.position() {
@@ -227,7 +228,7 @@ impl HPGCell {
         }
     }
 
-    pub fn hazard_proximity(&self, quality_level: Option<usize>) -> f64 {
+    pub fn hazard_proximity(&self, quality_level: Option<usize>) -> fsize {
         //calculate the minimum distance to either bin, item or qz
         let mut haz_prox = self.uni_prox.0;
         let relevant_qualities = match quality_level {
@@ -242,7 +243,7 @@ impl HPGCell {
     }
 }
 
-pub fn distance_to_surrogate_poles_border(hp_cell: &HPGCell, poles: &[Circle]) -> f64 {
+pub fn distance_to_surrogate_poles_border(hp_cell: &HPGCell, poles: &[Circle]) -> fsize {
     poles
         .iter()
         .map(|p| p.distance_from_border(&hp_cell.centroid))

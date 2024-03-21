@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::fsize;
+
 /// The JSON representation of a problem instance
 #[derive(Serialize, Deserialize, Clone)]
 pub struct JsonInstance {
@@ -38,7 +40,7 @@ pub struct JsonBin {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct JsonStrip {
-    pub height: f64,
+    pub height: fsize,
 }
 
 /// The JSON representation of an item
@@ -49,7 +51,7 @@ pub struct JsonItem {
     pub demand: u64,
     /// List of allowed orientations angles (in degrees). If none any orientation is allowed
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub allowed_orientations: Option<Vec<f64>>,
+    pub allowed_orientations: Option<Vec<fsize>>,
     /// Polygon shape of the item
     pub shape: JsonShape,
     /// The value of the item (for knapsack problems)
@@ -64,7 +66,7 @@ pub struct JsonItem {
 #[serde(rename_all_fields = "PascalCase")]
 pub enum JsonShape {
     /// Axis-aligned rectangle. With the left-bottom corner at (0, 0)
-    Rectangle { width: f64, height: f64 },
+    Rectangle { width: fsize, height: fsize },
     /// Polygon with a single outer boundary
     SimplePolygon(JsonSimplePoly),
     /// Polygon with a single outer boundary and a list of holes
@@ -86,7 +88,7 @@ pub struct JsonPoly {
 
 /// A simple polygon represented as a list of points (x, y)
 #[derive(Serialize, Deserialize, Clone)]
-pub struct JsonSimplePoly(pub Vec<(f64, f64)>);
+pub struct JsonSimplePoly(pub Vec<(fsize, fsize)>);
 
 /// A zone with a specific quality level
 #[derive(Serialize, Deserialize, Clone)]

@@ -2,39 +2,44 @@ use std::cmp::Ordering;
 
 use almost::AlmostEqual;
 
+use crate::fsize;
+
 ///Wrapper around the almost crate for easy comparison of floats with a certain tolerance
 ///the almost crate considers two floats equal if they are within a certain tolerance of each other.
 ///see crate docs for more details
-
 #[derive(Debug, Clone, Copy)]
-pub struct F64A(pub f64);
+pub struct FPA(pub fsize);
 
-impl F64A {
+impl FPA {
     pub const fn zero() -> Self {
         Self(0.0)
     }
 
     pub fn is_zero(&self) -> bool {
-        almost::zero::<f64>(self.0.into())
+        almost::zero::<fsize>(self.0.into())
+    }
+
+    pub fn tolerance() -> fsize {
+        <fsize as AlmostEqual>::DEFAULT_TOLERANCE
     }
 }
 
-impl<T> From<T> for F64A
+impl<T> From<T> for FPA
 where
-    T: Into<f64>,
+    T: Into<fsize>,
 {
     fn from(n: T) -> Self {
-        F64A(n.into())
+        FPA(n.into())
     }
 }
 
-impl PartialEq<Self> for F64A {
+impl PartialEq<Self> for FPA {
     fn eq(&self, other: &Self) -> bool {
         self.0.almost_equals(other.0)
     }
 }
 
-impl PartialOrd<Self> for F64A {
+impl PartialOrd<Self> for FPA {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self.eq(other) {
             true => Some(Ordering::Equal),

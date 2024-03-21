@@ -2,6 +2,7 @@ use crate::entities::instances::bin_packing::BPInstance;
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::item::Item;
+use crate::fsize;
 
 /// An `Instance` is the static (unmodifiable) representation of a problem instance.
 /// This enum contains all variants of an instance.
@@ -20,7 +21,7 @@ impl InstanceGeneric for Instance {
         }
     }
 
-    fn item_area(&self) -> f64 {
+    fn item_area(&self) -> fsize {
         match self {
             Instance::SP(instance) => instance.item_area(),
             Instance::BP(instance) => instance.item_area(),

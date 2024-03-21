@@ -19,6 +19,7 @@ use jagua_rs::entities::problems::problem::Problem;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::entities::solution::Solution;
+use jagua_rs::fsize;
 use jagua_rs::geometry::convex_hull::convex_hull_from_points;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
@@ -254,7 +255,7 @@ pub fn sample_layout(
                 (*best_opt, *best_cost) = (p_opt, cost);
             }
         }
-        let progress_pct = i as f64 / ls_sample_budget as f64;
+        let progress_pct = i as fsize / ls_sample_budget as fsize;
         ls_sampler.decay_stddev(progress_pct);
     }
 

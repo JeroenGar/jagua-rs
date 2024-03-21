@@ -5,6 +5,7 @@ use rand::Rng;
 
 use jagua_rs::entities::item::Item;
 use jagua_rs::entities::layout::Layout;
+use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
 use jagua_rs::geometry::transformation::Transformation;
@@ -20,8 +21,8 @@ pub struct HPGSampler<'a> {
     pub cell_samplers: Vec<UniformAARectSampler>,
     pub cost_bound: LBFPlacingCost,
     pub pretransform: Transformation,
-    pub coverage_area: f64,
-    pub bin_bbox_area: f64,
+    pub coverage_area: fsize,
+    pub bin_bbox_area: fsize,
     pub n_samples: usize,
 }
 

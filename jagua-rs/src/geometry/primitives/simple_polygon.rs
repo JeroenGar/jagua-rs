@@ -5,6 +5,7 @@ use itertools::Itertools;
 use num_integer::Integer;
 use ordered_float::NotNan;
 
+use crate::fsize;
 use crate::geometry::convex_hull::convex_hull_from_points;
 use crate::geometry::fail_fast::poi;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
@@ -18,7 +19,7 @@ use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::transformation::Transformation;
 use crate::util::config::SPSurrogateConfig;
-use crate::util::f64a::F64A;
+use crate::util::fpa::FPA;
 
 /// Geometric primitive representing a simple polygon: <https://en.wikipedia.org/wiki/Simple_polygon>
 #[derive(Clone, Debug)]
@@ -27,9 +28,9 @@ pub struct SimplePolygon {
     pub points: Vec<Point>,
     /// Bounding box
     pub bbox: AARectangle,
-    pub area: f64,
+    pub area: fsize,
     /// Maximum distance between any two points in the polygon
-    pub diameter: f64,
+    pub diameter: fsize,
     /// Pole of inaccessibility
     pub poi: Circle,
     /// Surrogate representation (subset of the simple polygon)
@@ -99,7 +100,7 @@ impl SimplePolygon {
         self.surrogate.as_ref().expect("surrogate not generated")
     }
 
-    pub fn calculate_diameter(points: Vec<Point>) -> f64 {
+    pub fn calculate_diameter(points: Vec<Point>) -> fsize {
         //The two points furthest apart must be part of the convex hull
         let ch = convex_hull_from_points(points);
 
@@ -113,8 +114,8 @@ impl SimplePolygon {
     }
 
     pub fn generate_bounding_box(points: &[Point]) -> AARectangle {
-        let (mut x_min, mut y_min) = (f64::MAX, f64::MAX);
-        let (mut x_max, mut y_max) = (f64::MIN, f64::MIN);
+        let (mut x_min, mut y_min) = (fsize::MAX, fsize::MAX);
+        let (mut x_max, mut y_max) = (fsize::MIN, fsize::MIN);
 
         for point in points.iter() {
             x_min = x_min.min(point.0);
@@ -127,8 +128,8 @@ impl SimplePolygon {
 
     //https://en.wikipedia.org/wiki/Shoelace_formula
     //counterclockwise = positive area, clockwise = negative area
-    pub fn calculate_area(points: &[Point]) -> f64 {
-        let mut sigma: f64 = 0.0;
+    pub fn calculate_area(points: &[Point]) -> fsize {
+        let mut sigma: fsize = 0.0;
         for i in 0..points.len() {
             //next point
             let j = (i + 1) % points.len();
@@ -142,13 +143,13 @@ impl SimplePolygon {
         0.5 * sigma
     }
 
-    pub fn calculate_poi(points: &Vec<Point>, diameter: f64) -> Circle {
+    pub fn calculate_poi(points: &Vec<Point>, diameter: fsize) -> Circle {
         //need to make a dummy simple polygon, because the pole generation algorithm
         //relies on many of the methods provided by the simple polygon struct
         let dummy_sp = {
             let bbox = SimplePolygon::generate_bounding_box(points);
             let area = SimplePolygon::calculate_area(points);
-            let dummy_poi = Circle::new(Point(f64::MAX, f64::MAX), f64::MAX);
+            let dummy_poi = Circle::new(Point(fsize::MAX, fsize::MAX), fsize::MAX);
 
             SimplePolygon {
                 points: points.clone(),
@@ -199,7 +200,7 @@ impl Shape for SimplePolygon {
         (c_x, c_y).into()
     }
 
-    fn area(&self) -> f64 {
+    fn area(&self) -> fsize {
         self.area
     }
 
@@ -207,7 +208,7 @@ impl Shape for SimplePolygon {
         self.bbox.clone()
     }
 
-    fn diameter(&self) -> f64 {
+    fn diameter(&self) -> fsize {
         self.diameter
     }
 }
@@ -288,9 +289,9 @@ impl CollidesWith<Point> for SimplePolygon {
                     //Check if the ray does not go through (or almost through) a vertex
                     //This can result in funky behaviour, which could incorrect results
                     //Therefore we handle this case
-                    let (s_x, s_y) = (F64A(edge.start.0), F64A(edge.start.1));
-                    let (e_x, e_y) = (F64A(edge.end.0), F64A(edge.end.1));
-                    let (p_x, p_y) = (F64A(point.0), F64A(point.1));
+                    let (s_x, s_y) = (FPA(edge.start.0), FPA(edge.start.1));
+                    let (e_x, e_y) = (FPA(edge.end.0), FPA(edge.end.1));
+                    let (p_x, p_y) = (FPA(point.0), FPA(point.1));
 
                     if (s_y == p_y && s_x > p_x) || (e_y == p_y && e_x > p_x) {
                         //in this case, the ray passes through (or dangerously close to) a vertex
@@ -310,7 +311,7 @@ impl CollidesWith<Point> for SimplePolygon {
 }
 
 impl DistanceFrom<Point> for SimplePolygon {
-    fn sq_distance(&self, point: &Point) -> f64 {
+    fn sq_distance(&self, point: &Point) -> fsize {
         match self.collides_with(point) {
             true => 0.0,
             false => self
@@ -320,16 +321,16 @@ impl DistanceFrom<Point> for SimplePolygon {
                 .unwrap(),
         }
     }
-    fn distance(&self, point: &Point) -> f64 {
+    fn distance(&self, point: &Point) -> fsize {
         self.sq_distance(point).sqrt()
     }
 
-    fn distance_from_border(&self, point: &Point) -> (GeoPosition, f64) {
+    fn distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
         let (position, sq_distance) = self.sq_distance_from_border(point);
         (position, sq_distance.sqrt())
     }
 
-    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, f64) {
+    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
         let distance_to_border = self
             .edge_iter()
             .map(|edge| edge.sq_distance(point))

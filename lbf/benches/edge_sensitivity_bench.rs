@@ -14,6 +14,7 @@ use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::instances::strip_packing::SPInstance;
 use jagua_rs::entities::item::Item;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::point::Point;
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
@@ -139,7 +140,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
         });
         println!(
             "{:.3}% valid",
-            n_valid as f64 / (n_invalid + n_valid) as f64 * 100.0
+            n_valid as fsize / (n_invalid + n_valid) as fsize * 100.0
         );
     }
     g.finish();
@@ -170,13 +171,14 @@ fn modify_instance(instance: &Instance, multiplier: usize, config: LBFConfig) ->
         Instance::BP(bpi) => Instance::BP(BPInstance::new(modified_items, bpi.bins.clone())),
     }
 }
+
 fn multiply_edge_count(shape: &SimplePolygon, multiplier: usize) -> SimplePolygon {
     let mut new_points = vec![];
 
     for edge in shape.edge_iter() {
         //split x and y into "times" parts
-        let x_step = (edge.end.0 - edge.start.0) / multiplier as f64;
-        let y_step = (edge.end.1 - edge.start.1) / multiplier as f64;
+        let x_step = (edge.end.0 - edge.start.0) / multiplier as fsize;
+        let y_step = (edge.end.1 - edge.start.1) / multiplier as fsize;
         let mut start = edge.start;
         for _ in 0..multiplier {
             new_points.push(start);

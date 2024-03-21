@@ -1,5 +1,4 @@
 use std::cmp::Ordering;
-use std::f64::consts::PI;
 
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
@@ -9,16 +8,17 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::transformation::Transformation;
+use crate::{fsize, PI};
 
 /// Geometric primitive representing a circle
 #[derive(Clone, Debug, PartialEq)]
 pub struct Circle {
     pub center: Point,
-    pub radius: f64,
+    pub radius: fsize,
 }
 
 impl Circle {
-    pub fn new(center: Point, radius: f64) -> Self {
+    pub fn new(center: Point, radius: fsize) -> Self {
         debug_assert!(
             radius.is_finite() && radius >= 0.0,
             "invalid circle radius: {}",
@@ -106,8 +106,8 @@ impl CollidesWith<AARectangle> for Circle {
 
         let Point(c_x, c_y) = self.center;
 
-        let nearest_x = f64::max(rect.x_min, f64::min(c_x, rect.x_max));
-        let nearest_y = f64::max(rect.y_min, f64::min(c_y, rect.y_max));
+        let nearest_x = fsize::max(rect.x_min, fsize::min(c_x, rect.x_max));
+        let nearest_y = fsize::max(rect.y_min, fsize::min(c_y, rect.y_max));
 
         (nearest_x - c_x).powi(2) + (nearest_y - c_y).powi(2) <= self.radius.powi(2)
     }
@@ -120,11 +120,11 @@ impl CollidesWith<Point> for Circle {
 }
 
 impl DistanceFrom<Point> for Circle {
-    fn sq_distance(&self, other: &Point) -> f64 {
+    fn sq_distance(&self, other: &Point) -> fsize {
         self.distance(other).powi(2)
     }
 
-    fn distance(&self, point: &Point) -> f64 {
+    fn distance(&self, point: &Point) -> fsize {
         let Point(x, y) = point;
         let Point(cx, cy) = self.center;
         let sq_d = (x - cx).powi(2) + (y - cy).powi(2);
@@ -132,21 +132,21 @@ impl DistanceFrom<Point> for Circle {
             0.0 //point is inside circle
         } else {
             //point is outside circle
-            f64::sqrt(sq_d) - self.radius
+            fsize::sqrt(sq_d) - self.radius
         };
     }
 
-    fn distance_from_border(&self, point: &Point) -> (GeoPosition, f64) {
+    fn distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
         let Point(x, y) = point;
         let Point(cx, cy) = self.center;
-        let d_center = f64::sqrt((x - cx).powi(2) + (y - cy).powi(2));
+        let d_center = fsize::sqrt((x - cx).powi(2) + (y - cy).powi(2));
         match d_center.partial_cmp(&self.radius).unwrap() {
             Ordering::Less | Ordering::Equal => (GeoPosition::Interior, self.radius - d_center),
             Ordering::Greater => (GeoPosition::Exterior, d_center - self.radius),
         }
     }
 
-    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, f64) {
+    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
         let (pos, distance) = self.distance_from_border(point);
         (pos, distance.powi(2))
     }
@@ -157,7 +157,7 @@ impl Shape for Circle {
         self.center.clone()
     }
 
-    fn area(&self) -> f64 {
+    fn area(&self) -> fsize {
         self.radius * self.radius * PI
     }
 
@@ -166,7 +166,7 @@ impl Shape for Circle {
         AARectangle::new(x - r, y - r, x + r, y + r)
     }
 
-    fn diameter(&self) -> f64 {
+    fn diameter(&self) -> fsize {
         self.radius * 2.0
     }
 }

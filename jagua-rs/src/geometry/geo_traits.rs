@@ -1,3 +1,4 @@
+use crate::fsize;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
@@ -17,10 +18,10 @@ pub trait AlmostCollidesWith<T> {
 
 /// Trait for geometric primitives that can calculate distances to other primitives.
 pub trait DistanceFrom<T> {
-    fn sq_distance(&self, other: &T) -> f64;
-    fn distance(&self, other: &T) -> f64;
-    fn distance_from_border(&self, other: &T) -> (GeoPosition, f64);
-    fn sq_distance_from_border(&self, other: &T) -> (GeoPosition, f64);
+    fn sq_distance(&self, other: &T) -> fsize;
+    fn distance(&self, other: &T) -> fsize;
+    fn distance_from_border(&self, other: &T) -> (GeoPosition, fsize);
+    fn sq_distance_from_border(&self, other: &T) -> (GeoPosition, fsize);
 }
 
 /// Trait for types that can be transformed by a Transformation.
@@ -46,11 +47,11 @@ pub trait Shape {
     fn centroid(&self) -> Point;
 
     /// Area of the interior of the shape
-    fn area(&self) -> f64;
+    fn area(&self) -> fsize;
 
     /// Bounding box of the shape
     fn bbox(&self) -> AARectangle;
 
     /// The distance between the two furthest points in the shape.
-    fn diameter(&self) -> f64;
+    fn diameter(&self) -> fsize;
 }

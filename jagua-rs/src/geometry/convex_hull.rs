@@ -1,3 +1,4 @@
+use crate::fsize;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
@@ -46,6 +47,6 @@ fn grow_convex_hull(mut h: Vec<Point>, np: &Point) -> Vec<Point> {
     h
 }
 
-fn cross(a: &Point, b: &Point, c: &Point) -> f64 {
+fn cross(a: &Point, b: &Point, c: &Point) -> fsize {
     (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0)
 }

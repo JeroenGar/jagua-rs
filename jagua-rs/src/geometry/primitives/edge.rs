@@ -1,3 +1,4 @@
+use crate::fsize;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
     CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom,
@@ -22,7 +23,7 @@ impl Edge {
         Edge { start, end }
     }
 
-    pub fn extend_at_front(mut self, d: f64) -> Self {
+    pub fn extend_at_front(mut self, d: fsize) -> Self {
         //extend the line at the front by distance d
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
         let l = self.diameter();
@@ -31,7 +32,7 @@ impl Edge {
         self
     }
 
-    pub fn extend_at_back(mut self, d: f64) -> Self {
+    pub fn extend_at_back(mut self, d: fsize) -> Self {
         //extend the line at the back by distance d
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
         let l = self.diameter();
@@ -40,7 +41,7 @@ impl Edge {
         self
     }
 
-    pub fn scale(mut self, factor: f64) -> Self {
+    pub fn scale(mut self, factor: fsize) -> Self {
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
         self.start.0 = self.start.0 - (dx * (factor - 1.0) / 2.0);
         self.start.1 = self.start.1 - (dy * (factor - 1.0) / 2.0);
@@ -63,20 +64,20 @@ impl Edge {
         }
     }
 
-    pub fn x_min(&self) -> f64 {
-        f64::min(self.start.0, self.end.0)
+    pub fn x_min(&self) -> fsize {
+        fsize::min(self.start.0, self.end.0)
     }
 
-    pub fn y_min(&self) -> f64 {
-        f64::min(self.start.1, self.end.1)
+    pub fn y_min(&self) -> fsize {
+        fsize::min(self.start.1, self.end.1)
     }
 
-    pub fn x_max(&self) -> f64 {
-        f64::max(self.start.0, self.end.0)
+    pub fn x_max(&self) -> fsize {
+        fsize::max(self.start.0, self.end.0)
     }
 
-    pub fn y_max(&self) -> f64 {
-        f64::max(self.start.1, self.end.1)
+    pub fn y_max(&self) -> fsize {
+        fsize::max(self.start.1, self.end.1)
     }
 }
 
@@ -108,7 +109,7 @@ impl Shape for Edge {
         )
     }
 
-    fn area(&self) -> f64 {
+    fn area(&self) -> fsize {
         0.0
     }
 
@@ -116,13 +117,13 @@ impl Shape for Edge {
         AARectangle::new(self.x_min(), self.y_min(), self.x_max(), self.y_max())
     }
 
-    fn diameter(&self) -> f64 {
+    fn diameter(&self) -> fsize {
         self.start.distance(&self.end)
     }
 }
 
 impl DistanceFrom<Point> for Edge {
-    fn sq_distance(&self, point: &Point) -> f64 {
+    fn sq_distance(&self, point: &Point) -> fsize {
         //from https://stackoverflow.com/a/6853926
         let Point(x1, y1) = self.start;
         let Point(x2, y2) = self.end;
@@ -149,15 +150,15 @@ impl DistanceFrom<Point> for Edge {
         dx.powi(2) + dy.powi(2)
     }
 
-    fn distance(&self, point: &Point) -> f64 {
-        f64::sqrt(self.sq_distance(point))
+    fn distance(&self, point: &Point) -> fsize {
+        fsize::sqrt(self.sq_distance(point))
     }
 
-    fn distance_from_border(&self, point: &Point) -> (GeoPosition, f64) {
+    fn distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
         (GeoPosition::Exterior, self.distance(point))
     }
 
-    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, f64) {
+    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
         (GeoPosition::Exterior, self.sq_distance(point))
     }
 }
@@ -178,10 +179,10 @@ impl CollidesWith<AARectangle> for Edge {
 }
 
 fn edge_intersection(e1: &Edge, e2: &Edge, calculate_location: bool) -> Intersection {
-    if f64::max(e1.x_min(), e2.x_min()) > f64::min(e1.x_max(), e2.x_max()) {
+    if fsize::max(e1.x_min(), e2.x_min()) > fsize::min(e1.x_max(), e2.x_max()) {
         return Intersection::No;
     }
-    if f64::max(e1.y_min(), e2.y_min()) > f64::min(e1.y_max(), e2.y_max()) {
+    if fsize::max(e1.y_min(), e2.y_min()) > fsize::min(e1.y_max(), e2.y_max()) {
         return Intersection::No;
     }
 
@@ -231,7 +232,7 @@ fn edge_intersection(e1: &Edge, e2: &Edge, calculate_location: bool) -> Intersec
 
     match calculate_location {
         true => {
-            let t: f64 = (t_nom / t_denom).into();
+            let t: fsize = (t_nom / t_denom).into();
             Intersection::Yes(Some(Point(x2 + t * (x1 - x2), y2 + t * (y1 - y2))))
         }
         false => Intersection::Yes(None),

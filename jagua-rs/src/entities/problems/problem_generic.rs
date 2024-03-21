@@ -6,6 +6,7 @@ use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::solution::Solution;
+use crate::fsize;
 
 /// Trait for public shared functionality of all problem variants.
 pub trait ProblemGeneric: ProblemGenericPrivate {
@@ -48,7 +49,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
             .map(|(i, missing_qty)| (self.instance().item_qty(i) as isize - missing_qty) as usize)
     }
 
-    fn usage(&mut self) -> f64 {
+    fn usage(&mut self) -> fsize {
         let (total_bin_area, total_used_area) =
             self.layouts_mut().iter_mut().fold((0.0, 0.0), |acc, l| {
                 let bin_area = l.bin().area;

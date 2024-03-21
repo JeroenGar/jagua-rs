@@ -3,6 +3,7 @@ use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::placed_item::PlacedItem;
 use crate::entities::placed_item::PlacedItemUID;
+use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
@@ -107,13 +108,13 @@ impl Layout {
 
     /// Returns the usage of the bin with the items placed.
     /// It is the ratio of the area of the items placed to the area of the bin.
-    pub fn usage(&self) -> f64 {
+    pub fn usage(&self) -> fsize {
         let bin_area = self.bin().area;
         let item_area = self
             .placed_items
             .iter()
             .map(|p_i| p_i.shape.area())
-            .sum::<f64>();
+            .sum::<fsize>();
 
         item_area / bin_area
     }
@@ -146,5 +147,5 @@ pub struct LayoutSnapshot {
     /// The collision detection engine snapshot for this layout
     pub cde_snapshot: CDESnapshot,
     /// The usage of the bin with the items placed
-    pub usage: f64,
+    pub usage: fsize,
 }

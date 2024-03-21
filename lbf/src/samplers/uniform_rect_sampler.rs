@@ -2,6 +2,7 @@ use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
 
 use jagua_rs::entities::item::Item;
+use jagua_rs::fsize;
 use jagua_rs::geometry::d_transformation::DTransformation;
 use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
 
@@ -10,8 +11,8 @@ use crate::samplers::rotation_distr::UniformRotDistr;
 /// Samples a `DTransformation` from a uniform distribution over a given `AARectangle` and a `UniformRotDistr`.
 pub struct UniformAARectSampler {
     pub bbox: AARectangle,
-    pub uniform_x: Uniform<f64>,
-    pub uniform_y: Uniform<f64>,
+    pub uniform_x: Uniform<fsize>,
+    pub uniform_y: Uniform<fsize>,
     pub uniform_r: UniformRotDistr,
 }
 

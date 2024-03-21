@@ -10,6 +10,7 @@ use jagua_rs::entities::placed_item::PlacedItemUID;
 use jagua_rs::entities::problems::problem::Problem;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
+use jagua_rs::fsize;
 use jagua_rs::io::json_instance::JsonInstance;
 use jagua_rs::io::parser::Parser;
 use jagua_rs::util::config::{CDEConfig, SPSurrogateConfig};
@@ -25,7 +26,7 @@ pub const N_ITEMS_REMOVED: usize = 5;
 pub fn create_instance(
     json_instance: &JsonInstance,
     cde_config: CDEConfig,
-    poly_simpl_tolerance: Option<f64>,
+    poly_simpl_tolerance: Option<fsize>,
 ) -> Instance {
     let poly_simpl_config = match poly_simpl_tolerance {
         Some(tolerance) => PolySimplConfig::Enabled { tolerance },

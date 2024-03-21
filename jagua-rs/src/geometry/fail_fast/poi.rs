@@ -2,6 +2,7 @@ use std::collections::VecDeque;
 
 use ordered_float::NotNan;
 
+use crate::fsize;
 use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
@@ -37,7 +38,7 @@ pub fn generate_next_pole(shape: &SimplePolygon, poles: &[Circle]) -> Circle {
 pub fn generate_additional_surrogate_poles(
     shape: &SimplePolygon,
     max_poles: usize,
-    coverage_goal: f64,
+    coverage_goal: fsize,
 ) -> Vec<Circle> {
     //generate the additional poles
     let additional_poles = {
@@ -91,8 +92,8 @@ const MAX_POI_TREE_DEPTH: usize = 10;
 struct POINode {
     pub level: usize,
     pub bbox: AARectangle,
-    pub radius: f64,
-    pub distance: f64,
+    pub radius: fsize,
+    pub distance: fsize,
 }
 
 impl POINode {
@@ -111,7 +112,7 @@ impl POINode {
 
             let distance_to_border = distance_to_edges
                 .chain(distance_to_poles)
-                .fold(f64::MAX, |acc, d| acc.min(d));
+                .fold(fsize::MAX, |acc, d| acc.min(d));
 
             //if the centroid is outside, distance is counted negative
             match centroid_inside {
@@ -139,7 +140,7 @@ impl POINode {
         }
     }
 
-    pub fn distance_upperbound(&self) -> f64 {
+    pub fn distance_upperbound(&self) -> fsize {
         self.radius + self.distance
     }
 }

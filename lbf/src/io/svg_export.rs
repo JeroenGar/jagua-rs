@@ -4,15 +4,15 @@ use svg::node::element::{Circle, Path};
 use jagua_rs::collision_detection::hazard::HazardEntity;
 use jagua_rs::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use jagua_rs::collision_detection::quadtree::qt_node::QTNode;
-use jagua_rs::geometry;
 use jagua_rs::geometry::primitives::edge::Edge;
 use jagua_rs::geometry::primitives::point::Point;
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
+use jagua_rs::{fsize, geometry};
 
 pub fn simple_polygon_data(s_poly: &SimplePolygon) -> Data {
-    let mut data = Data::new().move_to::<(f64, f64)>(s_poly.get_point(0).into());
+    let mut data = Data::new().move_to::<(fsize, fsize)>(s_poly.get_point(0).into());
     for i in 1..s_poly.number_of_points() {
-        data = data.line_to::<(f64, f64)>(s_poly.get_point(i).into());
+        data = data.line_to::<(fsize, fsize)>(s_poly.get_point(i).into());
     }
     data.close()
 }
@@ -82,7 +82,7 @@ pub fn data_to_path(data: Data, params: &[(&str, &str)]) -> Path {
     path.set("d", data)
 }
 
-pub fn point(Point(x, y): Point, fill: Option<&str>, rad: Option<f64>) -> Circle {
+pub fn point(Point(x, y): Point, fill: Option<&str>, rad: Option<fsize>) -> Circle {
     Circle::new()
         .set("cx", x)
         .set("cy", y)

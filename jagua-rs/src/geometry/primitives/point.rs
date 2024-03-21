@@ -1,11 +1,12 @@
 use std::hash::{Hash, Hasher};
 
+use crate::fsize;
 use crate::geometry::geo_traits::{CollidesWith, Transformable, TransformableFrom};
 use crate::geometry::transformation::Transformation;
 
 /// Geometric primitive representing a point: (x, y)
 #[derive(Debug, Clone, PartialEq, Copy)]
-pub struct Point(pub f64, pub f64);
+pub struct Point(pub fsize, pub fsize);
 
 impl Transformable for Point {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
@@ -23,19 +24,20 @@ impl TransformableFrom for Point {
     }
 }
 
-const TRANSFORM_FORMULA: fn(f64, f64, &Transformation) -> (f64, f64) = |x, y, t| -> (f64, f64) {
-    let m = t.matrix();
-    let t_x = m[0][0].into_inner() * x + m[0][1].into_inner() * y + m[0][2].into_inner() * 1.0;
-    let t_y = m[1][0].into_inner() * x + m[1][1].into_inner() * y + m[1][2].into_inner() * 1.0;
-    (t_x, t_y)
-};
+const TRANSFORM_FORMULA: fn(fsize, fsize, &Transformation) -> (fsize, fsize) =
+    |x, y, t| -> (fsize, fsize) {
+        let m = t.matrix();
+        let t_x = m[0][0].into_inner() * x + m[0][1].into_inner() * y + m[0][2].into_inner() * 1.0;
+        let t_y = m[1][0].into_inner() * x + m[1][1].into_inner() * y + m[1][2].into_inner() * 1.0;
+        (t_x, t_y)
+    };
 
 impl Point {
-    pub fn distance(&self, other: &Point) -> f64 {
+    pub fn distance(&self, other: &Point) -> fsize {
         ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()
     }
 
-    pub fn sq_distance(&self, other: &Point) -> f64 {
+    pub fn sq_distance(&self, other: &Point) -> fsize {
         (self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)
     }
 }
@@ -51,14 +53,14 @@ impl Hash for Point {
     }
 }
 
-impl From<Point> for (f64, f64) {
+impl From<Point> for (fsize, fsize) {
     fn from(p: Point) -> Self {
         (p.0, p.1)
     }
 }
 
-impl From<(f64, f64)> for Point {
-    fn from((x, y): (f64, f64)) -> Self {
+impl From<(fsize, fsize)> for Point {
+    fn from((x, y): (fsize, fsize)) -> Self {
         Point(x, y)
     }
 }

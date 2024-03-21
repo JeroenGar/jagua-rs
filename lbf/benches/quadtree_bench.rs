@@ -10,6 +10,7 @@ use rand::SeedableRng;
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::placing_option::PlacingOption;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
@@ -141,7 +142,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
         });
         println!(
             "valid: {:.3}%",
-            n_valid as f64 / (n_valid + n_invalid) as f64 * 100.0
+            n_valid as fsize / (n_valid + n_invalid) as fsize * 100.0
         );
     }
     group.finish();

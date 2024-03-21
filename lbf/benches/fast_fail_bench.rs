@@ -8,6 +8,7 @@ use rand::SeedableRng;
 
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use jagua_rs::fsize;
 use jagua_rs::geometry::convex_hull;
 use jagua_rs::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use jagua_rs::geometry::fail_fast::{piers, poi};
@@ -67,8 +68,8 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         ITEMS_ID_TO_TEST
             .iter()
             .map(|&item_id| instance.item(item_id).shape.number_of_points())
-            .sum::<usize>() as f64
-            / ITEMS_ID_TO_TEST.len() as f64
+            .sum::<usize>() as fsize
+            / ITEMS_ID_TO_TEST.len() as fsize
     );
 
     let mut rng = SmallRng::seed_from_u64(0);
@@ -140,7 +141,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         );
         println!(
             "{:.3}% valid",
-            n_valid as f64 / (n_invalid + n_valid) as f64 * 100.0
+            n_valid as fsize / (n_invalid + n_valid) as fsize * 100.0
         );
     }
     group.finish();

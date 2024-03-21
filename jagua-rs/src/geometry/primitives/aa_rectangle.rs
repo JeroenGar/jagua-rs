@@ -2,23 +2,24 @@ use std::cmp::Ordering;
 
 use ordered_float::NotNan;
 
+use crate::fsize;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{AlmostCollidesWith, CollidesWith, DistanceFrom, Shape};
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
-use crate::util::f64a::F64A;
+use crate::util::fpa::FPA;
 
 ///Geometric primitive representing an axis-aligned rectangle
 #[derive(Clone, Debug, PartialEq)]
 pub struct AARectangle {
-    pub x_min: f64,
-    pub y_min: f64,
-    pub x_max: f64,
-    pub y_max: f64,
+    pub x_min: fsize,
+    pub y_min: fsize,
+    pub x_max: fsize,
+    pub y_max: fsize,
 }
 
 impl AARectangle {
-    pub fn new(x_min: f64, y_min: f64, x_max: f64, y_max: f64) -> Self {
+    pub fn new(x_min: fsize, y_min: fsize, x_max: fsize, y_max: fsize) -> Self {
         debug_assert!(
             x_min < x_max && y_min < y_max,
             "invalid AARectangle, x_min: {}, x_max: {}, y_min: {}, y_max: {}",
@@ -96,16 +97,16 @@ impl AARectangle {
     /// Leaning towards `Surrounding` and `Enclosed` instead of `Intersecting` in edge cases.
     pub fn almost_relation_to(&self, other: &AARectangle) -> GeoRelation {
         if self.almost_collides_with(other) {
-            if F64A::from(self.x_min) <= F64A::from(other.x_min)
-                && F64A::from(self.y_min) <= F64A::from(other.y_min)
-                && F64A::from(self.x_max) >= F64A::from(other.x_max)
-                && F64A::from(self.y_max) >= F64A::from(other.y_max)
+            if FPA::from(self.x_min) <= FPA::from(other.x_min)
+                && FPA::from(self.y_min) <= FPA::from(other.y_min)
+                && FPA::from(self.x_max) >= FPA::from(other.x_max)
+                && FPA::from(self.y_max) >= FPA::from(other.y_max)
             {
                 GeoRelation::Surrounding
-            } else if F64A::from(self.x_min) >= F64A::from(other.x_min)
-                && F64A::from(self.y_min) >= F64A::from(other.y_min)
-                && F64A::from(self.x_max) <= F64A::from(other.x_max)
-                && F64A::from(self.y_max) <= F64A::from(other.y_max)
+            } else if FPA::from(self.x_min) >= FPA::from(other.x_min)
+                && FPA::from(self.y_min) >= FPA::from(other.y_min)
+                && FPA::from(self.x_max) <= FPA::from(other.x_max)
+                && FPA::from(self.y_max) <= FPA::from(other.y_max)
             {
                 GeoRelation::Enclosed
             } else {
@@ -135,7 +136,7 @@ impl AARectangle {
         )
     }
 
-    pub fn scale(mut self, factor: f64) -> Self {
+    pub fn scale(mut self, factor: fsize) -> Self {
         let dx = (self.x_max - self.x_min) * (factor - 1.0) / 2.0;
         let dy = (self.y_max - self.y_min) * (factor - 1.0) / 2.0;
         self.x_min -= dx;
@@ -167,19 +168,19 @@ impl AARectangle {
         [rect_nw, rect_ne, rect_sw, rect_se]
     }
 
-    pub fn width(&self) -> f64 {
+    pub fn width(&self) -> fsize {
         self.x_max - self.x_min
     }
 
-    pub fn height(&self) -> f64 {
+    pub fn height(&self) -> fsize {
         self.y_max - self.y_min
     }
 
     pub fn from_intersection(a: &AARectangle, b: &AARectangle) -> Option<AARectangle> {
-        let x_min = f64::max(a.x_min, b.x_min);
-        let y_min = f64::max(a.y_min, b.y_min);
-        let x_max = f64::min(a.x_max, b.x_max);
-        let y_max = f64::min(a.y_max, b.y_max);
+        let x_min = fsize::max(a.x_min, b.x_min);
+        let y_min = fsize::max(a.y_min, b.y_min);
+        let x_max = fsize::min(a.x_max, b.x_max);
+        let y_max = fsize::min(a.y_max, b.y_max);
         if x_min < x_max && y_min < y_max {
             Some(AARectangle::new(x_min, y_min, x_max, y_max))
         } else {
@@ -196,7 +197,7 @@ impl Shape for AARectangle {
         )
     }
 
-    fn area(&self) -> f64 {
+    fn area(&self) -> fsize {
         (self.x_max - self.x_min) * (self.y_max - self.y_min)
     }
 
@@ -204,7 +205,7 @@ impl Shape for AARectangle {
         self.clone()
     }
 
-    fn diameter(&self) -> f64 {
+    fn diameter(&self) -> fsize {
         let dx = self.x_max - self.x_min;
         let dy = self.y_max - self.y_min;
         (dx.powi(2) + dy.powi(2)).sqrt()
@@ -213,15 +214,15 @@ impl Shape for AARectangle {
 
 impl CollidesWith<AARectangle> for AARectangle {
     fn collides_with(&self, other: &AARectangle) -> bool {
-        f64::max(self.x_min, other.x_min) <= f64::min(self.x_max, other.x_max)
-            && f64::max(self.y_min, other.y_min) <= f64::min(self.y_max, other.y_max)
+        fsize::max(self.x_min, other.x_min) <= fsize::min(self.x_max, other.x_max)
+            && fsize::max(self.y_min, other.y_min) <= fsize::min(self.y_max, other.y_max)
     }
 }
 
 impl AlmostCollidesWith<AARectangle> for AARectangle {
     fn almost_collides_with(&self, other: &AARectangle) -> bool {
-        F64A(f64::max(self.x_min, other.x_min)) <= F64A(f64::min(self.x_max, other.x_max))
-            && F64A(f64::max(self.y_min, other.y_min)) <= F64A(f64::min(self.y_max, other.y_max))
+        FPA(fsize::max(self.x_min, other.x_min)) <= FPA(fsize::min(self.x_max, other.x_max))
+            && FPA(fsize::max(self.y_min, other.y_min)) <= FPA(fsize::min(self.y_max, other.y_max))
     }
 }
 
@@ -235,10 +236,10 @@ impl CollidesWith<Point> for AARectangle {
 impl AlmostCollidesWith<Point> for AARectangle {
     fn almost_collides_with(&self, point: &Point) -> bool {
         let (x, y) = (*point).into();
-        F64A(x) >= F64A(self.x_min)
-            && F64A(x) <= F64A(self.x_max)
-            && F64A(y) >= F64A(self.y_min)
-            && F64A(y) <= F64A(self.y_max)
+        FPA(x) >= FPA(self.x_min)
+            && FPA(x) <= FPA(self.x_max)
+            && FPA(y) >= FPA(self.y_min)
+            && FPA(y) <= FPA(self.y_max)
     }
 }
 
@@ -269,7 +270,7 @@ impl CollidesWith<Edge> for AARectangle {
             return false; //edge entirely below rectangle
         }
 
-        const POINT_EDGE_RELATION: fn(Point, &Edge) -> f64 = |p: Point, edge: &Edge| -> f64 {
+        const POINT_EDGE_RELATION: fn(Point, &Edge) -> fsize = |p: Point, edge: &Edge| -> fsize {
             // if 0.0, the point is on the line
             // if > 0.0, the point is "above" of the line
             // if < 0.0, the point is "below" the line
@@ -317,9 +318,9 @@ impl CollidesWith<Edge> for AARectangle {
 }
 
 impl DistanceFrom<Point> for AARectangle {
-    fn sq_distance(&self, point: &Point) -> f64 {
+    fn sq_distance(&self, point: &Point) -> fsize {
         let Point(x, y) = *point;
-        let mut distance: f64 = 0.0;
+        let mut distance: fsize = 0.0;
         if x < self.x_min {
             distance += (x - self.x_min).powi(2);
         } else if x > self.x_max {
@@ -333,16 +334,16 @@ impl DistanceFrom<Point> for AARectangle {
         distance.abs()
     }
 
-    fn distance(&self, point: &Point) -> f64 {
+    fn distance(&self, point: &Point) -> fsize {
         self.sq_distance(point).sqrt()
     }
 
-    fn distance_from_border(&self, point: &Point) -> (GeoPosition, f64) {
+    fn distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
         let (position, sq_distance) = self.sq_distance_from_border(point);
         (position, sq_distance.sqrt())
     }
 
-    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, f64) {
+    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
         match self.collides_with(point) {
             false => (GeoPosition::Exterior, self.sq_distance(point)),
             true => {

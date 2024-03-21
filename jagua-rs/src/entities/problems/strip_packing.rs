@@ -14,23 +14,25 @@ use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::LayoutIndex;
 use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
+use crate::fsize;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
+use crate::util::fpa::FPA;
 
 /// Strip Packing Problem
 #[derive(Clone)]
 pub struct SPProblem {
     pub instance: SPInstance,
     pub layout: Layout,
-    strip_height: f64,
-    strip_width: f64,
+    strip_height: fsize,
+    strip_width: fsize,
     missing_item_qtys: Vec<isize>,
     solution_id_counter: usize,
 }
 
 impl SPProblem {
-    pub fn new(instance: SPInstance, strip_width: f64, cde_config: CDEConfig) -> Self {
+    pub fn new(instance: SPInstance, strip_width: fsize, cde_config: CDEConfig) -> Self {
         let height = instance.strip_height;
         let missing_item_qtys = instance
             .items
@@ -51,7 +53,7 @@ impl SPProblem {
         }
     }
 
-    pub fn modify_strip_width(&mut self, new_width: f64) {
+    pub fn modify_strip_width(&mut self, new_width: fsize) {
         let placed_items_uids = self
             .layout
             .placed_items()
@@ -122,16 +124,16 @@ impl SPProblem {
         );
     }
 
-    pub fn strip_height(&self) -> f64 {
+    pub fn strip_height(&self) -> fsize {
         self.strip_height
     }
 
-    pub fn strip_width(&self) -> f64 {
+    pub fn strip_width(&self) -> fsize {
         self.strip_width
     }
 
     /// Returns the minimum strip width able to fit all currently placed items.
-    pub fn strip_width_fitted(&self) -> f64 {
+    pub fn strip_width_fitted(&self) -> fsize {
         //get the maximum x coordinate of the placed items
         let max_x = self
             .layout
@@ -142,8 +144,8 @@ impl SPProblem {
             .max()
             .map_or(0.0, |x| x.into_inner());
 
-        //add a small epsilon to avoid floating point errors
-        max_x + f32::EPSILON.sqrt() as f64
+        //add a small tolerance to avoid floating point errors, and multiply by 2.0 to account for FPA false positives
+        max_x + FPA::tolerance() * 2.0
     }
 }
 

@@ -5,6 +5,7 @@ use itertools::Itertools;
 use crate::entities::instances::instance::Instance;
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::LayoutSnapshot;
+use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 
 /// Represents a snapshot of a `Problem` at a specific moment.
@@ -16,7 +17,7 @@ pub struct Solution {
     /// Snapshots of all `Layout`s in the `Problem` at the moment the solution was created
     pub layout_snapshots: Vec<LayoutSnapshot>,
     /// Average usage of bins in the solution
-    pub usage: f64,
+    pub usage: fsize,
     /// Quantity of placed items for each `Item` in the solution
     pub placed_item_qtys: Vec<usize>,
     /// Target quantity of each `Item` in the solution
@@ -31,7 +32,7 @@ impl Solution {
     pub fn new(
         id: usize,
         layout_snapshots: Vec<LayoutSnapshot>,
-        usage: f64,
+        usage: fsize,
         placed_item_qtys: Vec<usize>,
         target_item_qtys: Vec<usize>,
         bin_qtys: Vec<usize>,
@@ -56,14 +57,14 @@ impl Solution {
     }
 
     /// Ratio of included item area vs total demanded item area in the instance
-    pub fn completeness(&self, instance: &Instance) -> f64 {
+    pub fn completeness(&self, instance: &Instance) -> fsize {
         let total_item_area = instance.item_area();
         let included_item_area = self
             .placed_item_qtys
             .iter()
             .enumerate()
-            .map(|(i, qty)| instance.item(i).shape.area() * *qty as f64)
-            .sum::<f64>();
+            .map(|(i, qty)| instance.item(i).shape.area() * *qty as fsize)
+            .sum::<fsize>();
         let completeness = included_item_area / total_item_area;
         completeness
     }

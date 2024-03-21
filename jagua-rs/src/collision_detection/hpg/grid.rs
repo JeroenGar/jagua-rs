@@ -4,6 +4,7 @@ use std::ops::RangeInclusive;
 use itertools::Itertools;
 use ordered_float::NotNan;
 
+use crate::fsize;
 use crate::geometry::primitives::point::Point;
 
 /// Representation of a grid of optional elements of type T
@@ -11,8 +12,8 @@ use crate::geometry::primitives::point::Point;
 #[derive(Clone, Debug)]
 pub struct Grid<T> {
     pub cells: Vec<Option<T>>,
-    pub rows: Vec<NotNan<f64>>,
-    pub cols: Vec<NotNan<f64>>,
+    pub rows: Vec<NotNan<fsize>>,
+    pub cols: Vec<NotNan<fsize>>,
     pub n_rows: usize,
     pub n_cols: usize,
 }
@@ -26,14 +27,14 @@ impl<T> Grid<T> {
             .map(|(_e, Point(_x, y))| NotNan::new(*y).unwrap())
             .unique()
             .sorted()
-            .collect::<Vec<NotNan<f64>>>();
+            .collect::<Vec<NotNan<fsize>>>();
 
         let cols = elements
             .iter()
             .map(|(_e, Point(x, _y))| NotNan::new(*x).unwrap())
             .unique()
             .sorted()
-            .collect::<Vec<NotNan<f64>>>();
+            .collect::<Vec<NotNan<fsize>>>();
 
         let n_rows = rows.len();
         let n_cols = cols.len();
@@ -67,7 +68,7 @@ impl<T> Grid<T> {
     }
 
     //returns the range of row indices to completely cover the coordinate range
-    pub fn rows_in_range(&self, y_range: RangeInclusive<f64>) -> RangeInclusive<usize> {
+    pub fn rows_in_range(&self, y_range: RangeInclusive<fsize>) -> RangeInclusive<usize> {
         let start_range = NotNan::new(*y_range.start()).expect("start is NaN");
         let end_range = NotNan::new(*y_range.end()).expect("end is NaN");
 
@@ -84,7 +85,7 @@ impl<T> Grid<T> {
     }
 
     //returns the range of column indices to completely cover the coordinate range
-    pub fn cols_in_range(&self, x_range: RangeInclusive<f64>) -> RangeInclusive<usize> {
+    pub fn cols_in_range(&self, x_range: RangeInclusive<fsize>) -> RangeInclusive<usize> {
         let start_range = NotNan::new(*x_range.start()).expect("start is NaN");
         let end_range = NotNan::new(*x_range.end()).expect("end is NaN");
 

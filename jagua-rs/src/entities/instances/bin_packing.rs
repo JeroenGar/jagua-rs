@@ -1,6 +1,7 @@
 use crate::entities::bin::Bin;
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::item::Item;
+use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 
@@ -11,7 +12,7 @@ pub struct BPInstance {
     /// Items to be packed in the instance, along with their requested quantities
     pub items: Vec<(Item, usize)>,
     /// Total area of all items in the instance
-    pub item_area: f64,
+    pub item_area: fsize,
     /// Set of bins available to pack the items, along with their quantities
     pub bins: Vec<(Bin, usize)>,
 }
@@ -22,7 +23,7 @@ impl BPInstance {
 
         let item_area = items
             .iter()
-            .map(|(item, qty)| item.shape.area() * *qty as f64)
+            .map(|(item, qty)| item.shape.area() * *qty as fsize)
             .sum();
 
         Self {
@@ -38,7 +39,7 @@ impl InstanceGeneric for BPInstance {
         &self.items
     }
 
-    fn item_area(&self) -> f64 {
+    fn item_area(&self) -> fsize {
         self.item_area
     }
 }

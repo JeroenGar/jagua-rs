@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use log::debug;
 
 use crate::collision_detection::hazard::Hazard;
+use crate::fsize;
 use crate::geometry::geo_traits::{DistanceFrom, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
@@ -24,16 +25,16 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
     let mut previous_attempt = None;
 
     loop {
-        let cell_dim = f64::sqrt(bbox.area() / target_n_cells as f64) * correction_factor; //square cells
-        let n_cells_in_x = f64::ceil(bbox.width() / cell_dim) as usize;
-        let n_cells_in_y = f64::ceil(bbox.height() / cell_dim) as usize;
-        let cell_radius = f64::sqrt(2.0 * (cell_dim / 2.0).powi(2)); //half of the maximum distance between two cell centers
+        let cell_dim = fsize::sqrt(bbox.area() / target_n_cells as fsize) * correction_factor; //square cells
+        let n_cells_in_x = fsize::ceil(bbox.width() / cell_dim) as usize;
+        let n_cells_in_y = fsize::ceil(bbox.height() / cell_dim) as usize;
+        let cell_radius = fsize::sqrt(2.0 * (cell_dim / 2.0).powi(2)); //half of the maximum distance between two cell centers
 
         for i in 0..n_cells_in_x {
-            let x_min = bbox.x_min + cell_dim * i as f64;
+            let x_min = bbox.x_min + cell_dim * i as fsize;
             let x_max = x_min + cell_dim;
             for j in 0..n_cells_in_y {
-                let y_min = bbox.y_min + cell_dim * j as f64;
+                let y_min = bbox.y_min + cell_dim * j as fsize;
                 let y_max = y_min + cell_dim;
                 let rect = AARectangle::new(x_min, y_min, x_max, y_max);
                 //test if the cell is relevant
@@ -77,7 +78,7 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
     cells
 }
 
-fn distance_to_hazard<'a, I>(point: &Point, hazards: I) -> f64
+fn distance_to_hazard<'a, I>(point: &Point, hazards: I) -> fsize
 where
     I: Iterator<Item = &'a Hazard>,
 {
@@ -90,5 +91,5 @@ where
             }
         })
         .min_by(|a, b| a.partial_cmp(b).expect("NaN in distance_to_hazard"))
-        .unwrap_or(f64::MIN)
+        .unwrap_or(fsize::MIN)
 }

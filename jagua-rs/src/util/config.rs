@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::fsize;
+
 ///Configuration of the Collision Detection Engine
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct CDEConfig {
@@ -14,7 +16,7 @@ pub struct CDEConfig {
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct SPSurrogateConfig {
     ///Poles will stop being generated when the surrogate covers this fraction of the shape's area
-    pub pole_coverage_goal: f64,
+    pub pole_coverage_goal: fsize,
     ///Maximum number of poles to generate
     pub max_poles: usize,
     ///Number of poles to test during fail-fast (additional poles are exclusively used in the hazard proximity grid)

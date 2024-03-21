@@ -7,6 +7,7 @@ use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::entities::quality_zone::InferiorQualityZone;
 use crate::entities::quality_zone::N_QUALITIES;
+use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
@@ -29,7 +30,7 @@ pub struct Bin {
     pub quality_zones: [Option<InferiorQualityZone>; N_QUALITIES],
     /// The starting state of the `CDEngine` for this bin.
     pub base_cde: Arc<CDEngine>,
-    pub area: f64,
+    pub area: fsize,
 }
 
 impl Bin {
@@ -69,7 +70,7 @@ impl Bin {
 
         let base_cde = CDEngine::new(outer.bbox().inflate_to_square(), bin_hazards, cde_config);
         let base_cde = Arc::new(base_cde);
-        let area = outer.area() - holes.iter().map(|h| h.area()).sum::<f64>();
+        let area = outer.area() - holes.iter().map(|h| h.area()).sum::<fsize>();
 
         Self {
             id,
@@ -84,7 +85,7 @@ impl Bin {
     }
 
     /// Create a new `Bin` for a strip-packing problem. Instead of a shape, the bin is always rectangular.
-    pub fn from_strip(id: usize, width: f64, height: f64, cde_config: CDEConfig) -> Self {
+    pub fn from_strip(id: usize, width: fsize, height: fsize, cde_config: CDEConfig) -> Self {
         let poly = SimplePolygon::from(AARectangle::new(0.0, 0.0, width, height));
         let value = poly.area() as u64;
 
@@ -103,6 +104,7 @@ impl Bin {
         self.outer.bbox()
     }
 }
+
 fn generate_bin_hazards(
     outer: &Arc<SimplePolygon>,
     holes: &[Arc<SimplePolygon>],

@@ -3,19 +3,20 @@ use std::fmt::Display;
 
 use ordered_float::NotNan;
 
+use crate::fsize;
 use crate::geometry::transformation::Transformation;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// A proper rigid transformation, decomposed into a rotation followed by a translation.
 pub struct DTransformation {
     /// The rotation in radians
-    pub rotation: NotNan<f64>,
+    pub rotation: NotNan<fsize>,
     /// The translation in the x and y-axis
-    pub translation: (NotNan<f64>, NotNan<f64>),
+    pub translation: (NotNan<fsize>, NotNan<fsize>),
 }
 
 impl DTransformation {
-    pub fn new(rotation: f64, translation: (f64, f64)) -> Self {
+    pub fn new(rotation: fsize, translation: (fsize, fsize)) -> Self {
         Self {
             rotation: NotNan::new(rotation).expect("rotation is NaN"),
             translation: (
@@ -26,18 +27,18 @@ impl DTransformation {
     }
 
     pub const fn empty() -> Self {
-        const _0: NotNan<f64> = unsafe { NotNan::new_unchecked(0.0) };
+        const _0: NotNan<fsize> = unsafe { NotNan::new_unchecked(0.0) };
         Self {
             rotation: _0,
             translation: (_0, _0),
         }
     }
 
-    pub fn rotation(&self) -> f64 {
+    pub fn rotation(&self) -> fsize {
         self.rotation.into()
     }
 
-    pub fn translation(&self) -> (f64, f64) {
+    pub fn translation(&self) -> (fsize, fsize) {
         (self.translation.0.into(), self.translation.1.into())
     }
 

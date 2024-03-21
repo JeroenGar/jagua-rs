@@ -1,5 +1,6 @@
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::item::Item;
+use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 
 /// Strip-packing problem instance: a set of items to be packed into a single strip.
@@ -9,16 +10,16 @@ pub struct SPInstance {
     /// The items to be packed and their quantities
     pub items: Vec<(Item, usize)>,
     /// The total area of the items
-    pub item_area: f64,
+    pub item_area: fsize,
     /// The (fixed) height of the strip
-    pub strip_height: f64,
+    pub strip_height: fsize,
 }
 
 impl SPInstance {
-    pub fn new(items: Vec<(Item, usize)>, strip_height: f64) -> Self {
+    pub fn new(items: Vec<(Item, usize)>, strip_height: fsize) -> Self {
         let item_area = items
             .iter()
-            .map(|(item, qty)| item.shape.area() * *qty as f64)
+            .map(|(item, qty)| item.shape.area() * *qty as fsize)
             .sum();
 
         Self {
@@ -34,7 +35,7 @@ impl InstanceGeneric for SPInstance {
         &self.items
     }
 
-    fn item_area(&self) -> f64 {
+    fn item_area(&self) -> fsize {
         self.item_area
     }
 }

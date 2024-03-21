@@ -5,6 +5,7 @@ use log::{debug, info};
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
+use crate::fsize;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
@@ -18,7 +19,7 @@ pub enum PolySimplConfig {
     #[serde(rename = "enabled")]
     Enabled {
         /// max deviation from the original polygon area as a fraction of the original area
-        tolerance: f64,
+        tolerance: fsize,
     },
 }
 
@@ -90,7 +91,7 @@ impl CornerType {
 pub fn simplify_shape(
     shape: &SimplePolygon,
     mode: PolySimplMode,
-    max_area_delta: f64,
+    max_area_delta: fsize,
 ) -> SimplePolygon {
     let original_area = shape.area();
 
@@ -145,7 +146,7 @@ pub fn simplify_shape(
             .iter()
             .sorted_by_cached_key(|c| {
                 calculate_area_delta(&ref_points, c)
-                    .unwrap_or_else(|_| NotNan::new(f64::INFINITY).expect("area delta is NaN"))
+                    .unwrap_or_else(|_| NotNan::new(fsize::INFINITY).expect("area delta is NaN"))
             })
             .filter(|c| candidate_is_valid(&ref_points, &c))
             .next();
@@ -190,7 +191,7 @@ pub fn simplify_shape(
 fn calculate_area_delta(
     shape: &[Point],
     candidate: &Candidate,
-) -> Result<NotNan<f64>, InvalidCandidate> {
+) -> Result<NotNan<fsize>, InvalidCandidate> {
     //calculate the difference in area of the shape if the candidate were to be executed
     let area = match candidate {
         Candidate::Collinear(_) => 0.0,

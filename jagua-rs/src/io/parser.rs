@@ -18,6 +18,7 @@ use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::quality_zone::InferiorQualityZone;
 use crate::entities::quality_zone::N_QUALITIES;
 use crate::entities::solution::Solution;
+use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_enums::AllowedRotation;
 use crate::geometry::geo_traits::{Shape, Transformable};
@@ -63,7 +64,7 @@ impl Parser {
             for (item_id, json_item) in json_instance.items.iter().enumerate() {
                 let handle = s.spawn(move |_| {
                     let (shape, centering_transf) = match &json_item.shape {
-                        JsonShape::Rectangle{ width, height } => {
+                        JsonShape::Rectangle { width, height } => {
                             let shape = SimplePolygon::from(AARectangle::new(0.0, 0.0, *width, *height));
                             (shape, Transformation::empty())
                         }
@@ -123,7 +124,7 @@ impl Parser {
                     for (bin_id, json_bin) in json_bins.iter().enumerate() {
                         let handle = s.spawn(move |_| {
                             let (bin_outer, centering_transf) = match &json_bin.shape {
-                                JsonShape::Rectangle {width, height} => {
+                                JsonShape::Rectangle { width, height } => {
                                     let shape = SimplePolygon::from(AARectangle::new(0.0, 0.0, *width, *height));
                                     (shape, Transformation::empty())
                                 }
@@ -145,7 +146,7 @@ impl Parser {
                             };
 
                             let bin_holes = match &json_bin.shape {
-                                JsonShape::SimplePolygon(_) | JsonShape::Rectangle {..} => vec![],
+                                JsonShape::SimplePolygon(_) | JsonShape::Rectangle { .. } => vec![],
                                 JsonShape::Polygon(jp) => jp
                                     .inner
                                     .iter()
@@ -165,7 +166,7 @@ impl Parser {
                             };
 
                             let material_value = (bin_outer.area()
-                                - bin_holes.iter().map(|hole| hole.area()).sum::<f64>())
+                                - bin_holes.iter().map(|hole| hole.area()).sum::<fsize>())
                                 as u64;
 
                             assert!(
@@ -233,7 +234,7 @@ impl Parser {
                 (None, None) => panic!("No bins or strip packing specified"),
             };
         })
-        .unwrap();
+            .unwrap();
 
         let instance = instance.expect("Instance not parsed");
 

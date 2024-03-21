@@ -4,6 +4,7 @@ use std::fmt::{Display, Formatter};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use jagua_rs::entities::quality_zone::N_QUALITIES;
+use jagua_rs::fsize;
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
 pub struct SvgDrawOptions {
@@ -34,12 +35,12 @@ impl Default for SvgDrawOptions {
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
 pub struct SvgLayoutTheme {
-    pub stroke_width_multiplier: f64,
+    pub stroke_width_multiplier: fsize,
     pub bin_fill: Color,
     pub item_fill: Color,
     pub hole_fill: Color,
     pub qz_fill: [Color; N_QUALITIES],
-    pub qz_stroke_opac: f64,
+    pub qz_stroke_opac: fsize,
 }
 
 impl Default for SvgLayoutTheme {
@@ -94,12 +95,12 @@ impl SvgLayoutTheme {
     }
 }
 
-pub fn change_brightness(color: Color, fraction: f64) -> Color {
+pub fn change_brightness(color: Color, fraction: fsize) -> Color {
     let Color(r, g, b) = color;
 
-    let r = (r as f64 * fraction) as u8;
-    let g = (g as f64 * fraction) as u8;
-    let b = (b as f64 * fraction) as u8;
+    let r = (r as fsize * fraction) as u8;
+    let g = (g as fsize * fraction) as u8;
+    let b = (b as fsize * fraction) as u8;
     Color(r, g, b)
 }
 
@@ -108,15 +109,16 @@ pub fn blend_colors(color_1: Color, color_2: Color) -> Color {
     let Color(r_1, g_1, b_1) = color_1;
     let Color(r_2, g_2, b_2) = color_2;
 
-    let r = ((r_1 as f64 * 0.5) + (r_2 as f64 * 0.5)) as u8;
-    let g = ((g_1 as f64 * 0.5) + (g_2 as f64 * 0.5)) as u8;
-    let b = ((b_1 as f64 * 0.5) + (b_2 as f64 * 0.5)) as u8;
+    let r = ((r_1 as fsize * 0.5) + (r_2 as fsize * 0.5)) as u8;
+    let g = ((g_1 as fsize * 0.5) + (g_2 as fsize * 0.5)) as u8;
+    let b = ((b_1 as fsize * 0.5) + (b_2 as fsize * 0.5)) as u8;
 
     Color(r, g, b)
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Color(u8, u8, u8);
+
 impl Display for Color {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "#{:02X}{:02X}{:02X}", self.0, self.1, self.2)

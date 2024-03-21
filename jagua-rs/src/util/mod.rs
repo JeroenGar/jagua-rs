@@ -6,7 +6,7 @@ pub mod assertions;
 /// Configuration options for the library
 pub mod config;
 
-pub mod f64a;
+pub mod fpa;
 
 /// Functions to simplify polygons in preprocessing
 pub mod polygon_simplification;

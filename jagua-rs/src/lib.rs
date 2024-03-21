@@ -12,3 +12,14 @@ pub mod io;
 
 /// Helper functions
 pub mod util;
+
+/// The floating point type used in jagua-rs.
+cfg_if::cfg_if! {
+    if #[cfg(feature = "double_precision")] {
+        pub type fsize = f64;
+        pub const PI : fsize = std::f64::consts::PI;
+    } else {
+        pub type fsize = f32;
+        pub const PI: fsize = std::f32::consts::PI;
+    }
+}

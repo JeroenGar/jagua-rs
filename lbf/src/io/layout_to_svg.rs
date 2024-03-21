@@ -5,6 +5,7 @@ use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::layout::Layout;
 use jagua_rs::entities::layout::LayoutSnapshot;
+use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::Transformable;
 use jagua_rs::geometry::primitives::circle::Circle;
 
@@ -33,7 +34,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
     );
 
     let stroke_width =
-        f64::min(vbox.width(), vbox.height()) * 0.001 * theme.stroke_width_multiplier;
+        fsize::min(vbox.width(), vbox.height()) * 0.001 * theme.stroke_width_multiplier;
 
     //draw bin
     let bin_group = {

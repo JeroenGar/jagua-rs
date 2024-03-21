@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use jagua_rs::fsize;
 use jagua_rs::util::config::{CDEConfig, SPSurrogateConfig};
 
 use crate::io::svg_util::SvgDrawOptions;
@@ -10,7 +11,7 @@ pub struct LBFConfig {
     /// Configuration of the Collision Detection Engine
     pub cde_config: CDEConfig,
     /// Max deviation from the original polygon area as a fraction. If undefined, the algorithm will run without simplification
-    pub poly_simpl_tolerance: Option<f64>,
+    pub poly_simpl_tolerance: Option<fsize>,
     /// Seed for the PRNG. If undefined, the algorithm will run in non-deterministic mode using entropy
     pub prng_seed: Option<u64>,
     /// Total budget of samples per item per layout

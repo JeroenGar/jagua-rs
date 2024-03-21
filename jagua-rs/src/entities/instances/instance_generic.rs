@@ -1,4 +1,5 @@
 use crate::entities::item::Item;
+use crate::fsize;
 
 /// Trait for shared functionality of all instance variants.
 pub trait InstanceGeneric {
@@ -12,5 +13,5 @@ pub trait InstanceGeneric {
     fn total_item_qty(&self) -> usize {
         self.items().iter().map(|(_, qty)| qty).sum()
     }
-    fn item_area(&self) -> f64;
+    fn item_area(&self) -> fsize;
 }

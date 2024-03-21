@@ -3,6 +3,7 @@ use ndarray::Array;
 use ordered_float::NotNan;
 use rand_distr::num_traits::FloatConst;
 
+use crate::fsize;
 use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
@@ -14,8 +15,8 @@ use crate::geometry::transformation::Transformation;
 static RAYS_PER_ANGLE: usize = if cfg!(debug_assertions) { 10 } else { 200 };
 static N_ANGLES: usize = if cfg!(debug_assertions) { 4 } else { 90 };
 static N_POINTS_PER_DIMENSION: usize = if cfg!(debug_assertions) { 10 } else { 100 };
-static CLIPPING_TRIM: f64 = 0.999;
-static ACTION_RADIUS_RATIO: f64 = 0.10;
+static CLIPPING_TRIM: fsize = 0.999;
+static ACTION_RADIUS_RATIO: fsize = 0.10;
 
 pub fn generate(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> {
     if n == 0 {
@@ -48,7 +49,7 @@ pub fn generate(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> 
     let mut selected_piers = Vec::new();
 
     let radius_of_ray_influence = ACTION_RADIUS_RATIO * expanded_bbox.width();
-    let forfeit_distance = f64::sqrt(bbox.width().powi(2) * bbox.height().powi(2));
+    let forfeit_distance = fsize::sqrt(bbox.width().powi(2) * bbox.height().powi(2));
 
     for _ in 0..n {
         let min_distance_selected_rays = min_distances_to_rays(
@@ -93,13 +94,13 @@ fn generate_ray_transformations(
     n_angles: usize,
 ) -> Vec<Transformation> {
     //translations
-    let dx = bbox.width() / rays_per_angle as f64;
+    let dx = bbox.width() / rays_per_angle as fsize;
     let translations = (0..rays_per_angle)
-        .map(|i| bbox.x_min + dx * i as f64)
+        .map(|i| bbox.x_min + dx * i as fsize)
         .map(|x| Transformation::from_translation((x, 0.0)))
         .collect_vec();
 
-    let angles = Array::linspace(0.0, f64::PI(), n_angles + 1).to_vec();
+    let angles = Array::linspace(0.0, fsize::PI(), n_angles + 1).to_vec();
     let angles_slice = &angles[0..n_angles]; //skip the last angle, which is the same as the first
 
     //rotate the translations by each angle
@@ -174,10 +175,10 @@ fn generate_unrepresented_point_grid(
 fn loss_function(
     new_ray: &Edge,
     point_grid: &[Point],
-    min_distance_to_rays: &[f64],
-    min_distance_to_poles: &[f64],
-    radius_of_ray_influence: f64,
-) -> f64 {
+    min_distance_to_rays: &[fsize],
+    min_distance_to_poles: &[fsize],
+    radius_of_ray_influence: fsize,
+) -> fsize {
     //every point in the grid gets a certain score, sum of all these scores is the loss function
     //the score depends on how close it is to being "represented" by either a pole or a ray
     //rays have a certain radius of influence, outside of which they don't count. Poles have no such radius
@@ -191,10 +192,10 @@ fn loss_function(
     .map(|(p, min_distance_to_existing_ray, min_distance_to_pole)| {
         let distance_to_new_ray = new_ray.distance(p);
 
-        let min_distance_to_ray = f64::min(*min_distance_to_existing_ray, distance_to_new_ray);
+        let min_distance_to_ray = fsize::min(*min_distance_to_existing_ray, distance_to_new_ray);
 
         match min_distance_to_ray < radius_of_ray_influence {
-            true => f64::min(*min_distance_to_pole, min_distance_to_ray),
+            true => fsize::min(*min_distance_to_pole, min_distance_to_ray),
             false => *min_distance_to_pole,
         }
     })
@@ -202,25 +203,29 @@ fn loss_function(
     .sum()
 }
 
-fn min_distances_to_rays(points: &[Point], rays: &[Edge], forfeit_distance: f64) -> Vec<f64> {
+fn min_distances_to_rays(points: &[Point], rays: &[Edge], forfeit_distance: fsize) -> Vec<fsize> {
     points
         .iter()
         .map(|p| {
             rays.iter()
                 .map(|r| r.distance(p))
-                .fold(forfeit_distance, f64::min)
+                .fold(forfeit_distance, fsize::min)
         })
         .collect_vec()
 }
 
-fn min_distances_to_poles(points: &[Point], poles: &[Circle], forfeit_distance: f64) -> Vec<f64> {
+fn min_distances_to_poles(
+    points: &[Point],
+    poles: &[Circle],
+    forfeit_distance: fsize,
+) -> Vec<fsize> {
     points
         .iter()
         .map(|p| {
             poles
                 .iter()
                 .map(|c| c.distance(p))
-                .fold(forfeit_distance, f64::min)
+                .fold(forfeit_distance, fsize::min)
         })
         .collect_vec()
 }
