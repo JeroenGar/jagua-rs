@@ -7,7 +7,7 @@ repository = "https://github.com/JeroenGar/jagua-rs"
 authors = ["Jeroen Gardeyn"]
 
 [dependencies]
-jagua-rs = { path = "../jagua-rs" , version = "0.1.1", features = ["double_precision"] }
+jagua-rs = { path = "../jagua-rs" , version = "0.1.1", features = ["double-precision"] }
 rand = { version = "0.8.5", features = [ "small_rng" ] }
 rand_distr = "0.4.3"
 serde = { version = "1.0", features = ["derive"] }

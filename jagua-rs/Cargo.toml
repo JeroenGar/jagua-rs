@@ -24,4 +24,5 @@ arr_macro = "0.2.1"
 cfg-if = "1.0.0"
 
 [features]
-double_precision = []
+# Switches from f32 to f64 for floating point numbers in the library
+double-precision = []
