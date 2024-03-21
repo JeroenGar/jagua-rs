@@ -105,12 +105,14 @@ impl SimplePolygon {
         let ch = convex_hull_from_points(points);
 
         //go through all pairs of points and find the pair with the largest distance
-        ch.iter()
+        let sq_diam = ch
+            .iter()
             .tuple_combinations()
             .map(|(p1, p2)| p1.sq_distance(p2))
-            .max_by_key(|d| NotNan::new(*d).unwrap())
-            .expect("convex hull is empty")
-            .into()
+            .max_by_key(|sq_d| NotNan::new(*sq_d).unwrap())
+            .expect("convex hull is empty");
+
+        sq_diam.sqrt()
     }
 
     pub fn generate_bounding_box(points: &[Point]) -> AARectangle {
