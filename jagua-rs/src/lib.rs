@@ -19,19 +19,20 @@ pub mod io;
 /// Helper functions
 pub mod util;
 
-/// The floating point type used in jagua-rs.
 cfg_if::cfg_if! {
     if #[cfg(feature = "double-precision")] {
         /// The floating point type used in jagua-rs.
         /// ```f32``` by default, ```f64``` when feature **double-precision** is enabled.
+        #[allow(non_camel_case_types)]
         pub type fsize = f64;
-        /// PI as [fsize].
+        /// π as [fsize].
         pub const PI : fsize = std::f64::consts::PI;
     } else {
         /// The floating point type used in jagua-rs.
         /// ```f32``` by default, ```f64``` when feature **double-precision** is enabled.
+        #[allow(non_camel_case_types)]
         pub type fsize = f32;
-        /// PI as [fsize].
+        /// π as [fsize].
         pub const PI: fsize = std::f32::consts::PI;
     }
 }
