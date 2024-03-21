@@ -23,15 +23,15 @@ pub mod util;
 cfg_if::cfg_if! {
     if #[cfg(feature = "double-precision")] {
         /// The floating point type used in jagua-rs.
-        /// ```f32``` by default, ```f64``` with feature **double-precision**.
+        /// ```f32``` by default, ```f64``` when feature **double-precision** is enabled.
         pub type fsize = f64;
-        /// The constant PI as [fsize].
+        /// PI as [fsize].
         pub const PI : fsize = std::f64::consts::PI;
     } else {
         /// The floating point type used in jagua-rs.
-        /// ```f32``` by default, ```f64``` with feature **double-precision**.
+        /// ```f32``` by default, ```f64``` when feature **double-precision** is enabled.
         pub type fsize = f32;
-        /// The constant PI as [fsize].
+        /// PI as [fsize].
         pub const PI: fsize = std::f32::consts::PI;
     }
 }
