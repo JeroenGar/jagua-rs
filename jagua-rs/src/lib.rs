@@ -1,3 +1,11 @@
+//!
+//! A fast and fearless Collision Detection Engine for 2D irregular cutting and packing problems.
+//!
+//!
+//! This crate can be configured to use single or double precision floating points:
+//! * By default, single precision is used: ```f32```
+//! * With feature ```double_precision```: ```f64```
+
 /// Everything collision detection engine related
 pub mod collision_detection;
 
