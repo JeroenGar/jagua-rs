@@ -187,6 +187,14 @@ impl AARectangle {
             None
         }
     }
+
+    pub fn from_union(a: &AARectangle, b: &AARectangle) -> AARectangle {
+        let x_min = fsize::min(a.x_min, b.x_min);
+        let y_min = fsize::min(a.y_min, b.y_min);
+        let x_max = fsize::max(a.x_max, b.x_max);
+        let y_max = fsize::max(a.y_max, b.y_max);
+        AARectangle::new(x_min, y_min, x_max, y_max)
+    }
 }
 
 impl Shape for AARectangle {
