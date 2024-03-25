@@ -1,6 +1,6 @@
 # Jagua-rs [![Rust CI](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml)[![Docs](https://github.com/JeroenGar/jagua-rs/actions/workflows/doc.yml/badge.svg)](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/)
 
-### A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems
+### A fast and fearless collision detection engine for 2D irregular cutting and packing problems
 
 <img src="img/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
@@ -8,24 +8,24 @@
 
 2D irregular cutting and packing (C&P) problems are a class of combinatorial optimization problems that involve placing irregular
 shaped items into containers in an efficient way.
-This class of problems contain two distinct challenges:
+These problems contain two distinct challenges:
 
 * **Optimization**: deciding which items to place in which configuration in order to optimize some objective function.
-* **Geometric**: determining the feasibility of a placement. Does the item fit in the container? Does it not collide
+* **Geometric**: ensuring a placement is feasible. Does the item fit in the container? Does it not collide
   with other items?
 
-Previously, those tackling these problems have had to address both challenges simultaneously,
-requiring two distinct sets of expertise and lots of research & development effort.
+Previously, those tackling these problems have had to address both challenges simultaneously.
+This is particulary demanding given that it requires two distinct sets of expertise and lots of research & development effort.
 
-**This project aims to decouple the two challenges by providing a Collision Detection Engine (CDE) that deals with the
+**This project aims to decouple the two challenges by providing a Collision Detection Engine (CDE) that can efficiently handle the geometric
 geometric aspects of 2D irregular C&P problems.**
-The CDE's main responsibility is determining if an item can be placed at a certain location without causing any *collisions* (infeasibility).
-The CDE embedded in `jagua-rs` is able to resolve millions of these collision queries every second.
+The CDE's main responsibility is determining if an item can be placed at a certain location without causing any *collisions*, which would render a solution infeasible.
+The CDE embedded in `jagua-rs` is powerful enough to resolve millions of these collision queries every second.
 
 `jagua-rs` enables you to confidently focus on the combinatorial aspects of the optimization challenge at hand, without
-worrying about the underlying geometry.
+having to worry about the underlying geometry.
 
-We also provide a reference implementation of a basic optimization algorithm built on top of `jagua-rs` in the `lbf` crate.
+In addition, a reference implementation of a basic optimization algorithm built on top of `jagua-rs` is provided in the `lbf` crate.
 
 ## `jagua-rs` 🐆
 
