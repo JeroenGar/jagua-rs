@@ -84,7 +84,7 @@ impl Layout {
             .iter()
             .position(|pi| &pi.uid == pi_uid)
             .expect("placed item does not exist");
-        let p_item = self.placed_items.swap_remove(pos);
+        let p_item = self.placed_items.remove(pos);
         // update the collision detection engine
 
         let hazard_entity = p_item.uid.clone().into();
