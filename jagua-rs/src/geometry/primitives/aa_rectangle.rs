@@ -188,7 +188,7 @@ impl AARectangle {
         }
     }
 
-    pub fn from_union(a: &AARectangle, b: &AARectangle) -> AARectangle {
+    pub fn bounding_rectangle(a: &AARectangle, b: &AARectangle) -> AARectangle {
         let x_min = fsize::min(a.x_min, b.x_min);
         let y_min = fsize::min(a.y_min, b.y_min);
         let x_max = fsize::max(a.x_max, b.x_max);

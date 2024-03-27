@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 
+use crate::{fsize, PI};
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
     CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom,
@@ -8,7 +9,6 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::transformation::Transformation;
-use crate::{fsize, PI};
 
 /// Geometric primitive representing a circle
 #[derive(Clone, Debug, PartialEq)]
@@ -33,30 +33,23 @@ impl Circle {
         Self { center, radius }
     }
 
+    /// Returns the smallest possible circle that fully contains all ```circles```
     pub fn bounding_circle(circles: &[Circle]) -> Circle {
-        //Returns the smallest possible circle that fully contains all in circles (including self)
         let mut circles_iter = circles.iter();
         let mut bounding_circle = circles_iter.next().expect("no circles provided").clone();
 
         for circle in circles_iter {
             let distance_between_centers = bounding_circle.center.distance(&circle.center);
-            match bounding_circle
-                .radius
-                .partial_cmp(&(distance_between_centers + circle.radius))
-                .unwrap()
-            {
-                Ordering::Less => {
-                    //bounding circle needs to expand
-                    let edge = Edge::new(bounding_circle.center, circle.center)
-                        .extend_at_front(bounding_circle.radius)
-                        .extend_at_back(circle.radius);
+            if bounding_circle.radius < distance_between_centers + circle.radius {
+                // circle not contained in bounding circle, expand
+                let diameter = Edge::new(bounding_circle.center, circle.center)
+                    .extend_at_front(bounding_circle.radius)
+                    .extend_at_back(circle.radius);
 
-                    let new_radius = edge.diameter() / 2.0;
-                    let new_center = edge.centroid();
+                let new_radius = diameter.diameter() / 2.0;
+                let new_center = diameter.centroid();
 
-                    bounding_circle = Circle::new(new_center, new_radius);
-                }
-                _ => (),
+                bounding_circle = Circle::new(new_center, new_radius);
             }
         }
         bounding_circle
