@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
 
-use crate::{fsize, PI};
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
     CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom,
@@ -9,6 +8,7 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::transformation::Transformation;
+use crate::{fsize, PI};
 
 /// Geometric primitive representing a circle
 #[derive(Clone, Debug, PartialEq)]
