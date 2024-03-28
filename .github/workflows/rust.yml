@@ -18,19 +18,6 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build targets
-        run: |
-          cd lbf
-          cargo build --all-targets
-      - name: Build docs
-        run: |
-          cd lbf
-          cargo doc
-
   formatting:
     runs-on: ubuntu-latest
     steps:
@@ -43,7 +30,32 @@ jobs:
         run: |
           cd lbf
           cargo fmt --all -- --check
-
+  build_jaguars:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Jagua-rs (f32)
+        run: |
+          cd jagua-rs
+          cargo build --all-targets
+          cargo doc
+      - name: Build Jagua-rs (f64)
+        run: |
+          cd jagua-rs
+          cargo build --all-targets --features double-precision
+          cargo doc
+  build_lbf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build LBF targets
+        run: |
+          cd lbf
+          cargo build --all-targets
+      - name: Build docs
+        run: |
+          cd lbf
+          cargo doc
   tests:
     runs-on: ubuntu-latest
     steps:
