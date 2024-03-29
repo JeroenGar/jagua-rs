@@ -220,16 +220,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                     &[
                         ("fill", "none"),
                         ("stroke", color),
-                        ("stroke-width", &*format!("{}", stroke_width)),
-                    ],
-                ));
-
-                group = group.add(svg_export::data_to_path(
-                    svg_export::aa_rect_data(&hp_cell.bbox),
-                    &[
-                        ("fill", "none"),
-                        ("stroke", color),
-                        ("stroke-width", &*format!("{}", stroke_width)),
+                        ("stroke-width", &*format!("{}", stroke_width / 2.0)),
                     ],
                 ));
             }
