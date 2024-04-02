@@ -22,8 +22,8 @@ pub struct Bin {
     pub outer: Arc<SimplePolygon>,
     /// The cost of using the bin
     pub value: u64,
-    /// Every bin is centered around its centroid (using this transformation)
-    pub centering_transform: Transformation,
+    /// Transformation applied to the shape with respect to the original shape in the input file (for example to center it).
+    pub pretransform: Transformation,
     /// Shapes of holes/defects in the bins, if any
     pub holes: Vec<Arc<SimplePolygon>>,
     /// Zones of different qualities in the bin, stored per quality.
@@ -38,7 +38,7 @@ impl Bin {
         id: usize,
         outer: SimplePolygon,
         value: u64,
-        centering_transform: Transformation,
+        pretransform: Transformation,
         holes: Vec<SimplePolygon>,
         quality_zones: Vec<InferiorQualityZone>,
         cde_config: CDEConfig,
@@ -76,7 +76,7 @@ impl Bin {
             id,
             outer,
             value,
-            centering_transform,
+            pretransform,
             holes,
             quality_zones,
             base_cde,
@@ -85,19 +85,15 @@ impl Bin {
     }
 
     /// Create a new `Bin` for a strip-packing problem. Instead of a shape, the bin is always rectangular.
-    pub fn from_strip(id: usize, width: fsize, height: fsize, cde_config: CDEConfig) -> Self {
-        let poly = SimplePolygon::from(AARectangle::new(0.0, 0.0, width, height));
+    pub fn from_strip(rect: AARectangle, cde_config: CDEConfig) -> Self {
+        let id = 0;
+        //The "original" x_min and y_min of the strip should always be at (0, 0)
+        let pretransform = Transformation::from_translation((rect.x_min, rect.y_min));
+
+        let poly = SimplePolygon::from(rect);
         let value = poly.area() as u64;
 
-        Bin::new(
-            id,
-            poly,
-            value,
-            Transformation::empty(),
-            vec![],
-            vec![],
-            cde_config,
-        )
+        Bin::new(id, poly, value, pretransform, vec![], vec![], cde_config)
     }
 
     pub fn bbox(&self) -> AARectangle {

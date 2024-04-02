@@ -1,7 +1,6 @@
 use std::{iter, slice};
 
 use itertools::Itertools;
-use ordered_float::NotNan;
 
 use crate::collision_detection::hazard_filter;
 use crate::entities::bin::Bin;
@@ -16,6 +15,7 @@ use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::fsize;
 use crate::geometry::geo_traits::{Shape, Transformable};
+use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
 use crate::util::fpa::FPA;
@@ -25,22 +25,22 @@ use crate::util::fpa::FPA;
 pub struct SPProblem {
     pub instance: SPInstance,
     pub layout: Layout,
-    strip_height: fsize,
-    strip_width: fsize,
+    pub strip_height: fsize,
+    pub strip_width: fsize,
     missing_item_qtys: Vec<isize>,
     solution_id_counter: usize,
 }
 
 impl SPProblem {
     pub fn new(instance: SPInstance, strip_width: fsize, cde_config: CDEConfig) -> Self {
-        let height = instance.strip_height;
+        let strip_height = instance.strip_height;
         let missing_item_qtys = instance
             .items
             .iter()
             .map(|(_, qty)| *qty as isize)
             .collect_vec();
-        let strip_bin = Bin::from_strip(0, strip_width, height, cde_config);
-        let strip_height = height;
+        let strip_rect = AARectangle::new(0.0, 0.0, strip_width, strip_height);
+        let strip_bin = Bin::from_strip(strip_rect, cde_config);
         let layout = Layout::new(0, strip_bin);
 
         Self {
@@ -53,7 +53,44 @@ impl SPProblem {
         }
     }
 
-    pub fn modify_strip_width(&mut self, new_width: fsize) {
+    /// Modifies the strip width by adding or removing width at the back of the strip.
+    pub fn modify_strip_in_back(&mut self, new_width: fsize) {
+        let bbox = self.layout.bin().outer.bbox();
+        let new_strip_shape =
+            AARectangle::new(bbox.x_min, bbox.y_min, bbox.x_min + new_width, bbox.y_max);
+        self.modify_strip(new_strip_shape);
+    }
+
+    /// Modifies the strip width by adding or removing width at the front of the strip.
+    pub fn modify_strip_in_front(&mut self, new_width: fsize) {
+        let bbox = self.layout.bin().outer.bbox();
+        let new_strip_shape =
+            AARectangle::new(bbox.x_max - new_width, bbox.y_min, bbox.x_max, bbox.y_max);
+        self.modify_strip(new_strip_shape);
+    }
+
+    /// Modifies the strip width by adding or removing width, dividing it equally to the left and right of the current items.
+    pub fn modify_strip_centered(&mut self, new_width: fsize) {
+        let current_range = self.occupied_range().unwrap_or((0.0, 0.0));
+        let current_width = self.occupied_width();
+
+        //divide the added or removed width to the left and right of the strip
+        let added_width = new_width - current_width;
+        let new_x_min = current_range.0 - added_width / 2.0;
+        let new_x_max = current_range.1 + added_width / 2.0;
+
+        let new_strip_shape = AARectangle::new(
+            new_x_min,
+            self.layout.bin().outer.bbox().y_min,
+            new_x_max,
+            self.layout.bin().outer.bbox().y_max,
+        );
+
+        self.modify_strip(new_strip_shape);
+    }
+
+    /// Modifies the strip to a new rectangle. All items that fit in the new strip are kept, the rest are removed.
+    pub fn modify_strip(&mut self, strip_rect: AARectangle) {
         let placed_items_uids = self
             .layout
             .placed_items()
@@ -67,17 +104,13 @@ impl SPProblem {
             .enumerate()
             .for_each(|(i, qty)| *qty = self.instance.item_qty(i) as isize);
 
+        self.strip_width = strip_rect.width();
+
         //Modifying the width causes the bin to change, so the layout must be replaced
         self.layout = Layout::new(
             self.layout.id() + 1,
-            Bin::from_strip(
-                self.layout.bin().id + 1,
-                new_width,
-                self.strip_height,
-                self.layout.bin().base_cde.config().clone(),
-            ),
+            Bin::from_strip(strip_rect, self.layout.bin().base_cde.config().clone()),
         );
-        self.strip_width = new_width;
 
         //place the items back in the new layout
         for p_uid in placed_items_uids {
@@ -87,65 +120,46 @@ impl SPProblem {
             });
             let shape = &item.shape;
             let transform = p_uid.d_transf.compose();
-            if !self.layout.cde().surrogate_collides(
-                shape.surrogate(),
-                &transform,
-                entities_to_ignore.as_slice(),
-            ) {
-                let transformed_shape = shape.transform_clone(&transform);
-                if !self
-                    .layout
-                    .cde()
-                    .shape_collides(&transformed_shape, entities_to_ignore.as_ref())
-                {
-                    let insert_opt = PlacingOption {
-                        layout_index: LayoutIndex::Real(0),
-                        item_id: p_uid.item_id,
-                        transform,
-                        d_transform: p_uid.d_transf.clone(),
-                    };
-                    self.place_item(&insert_opt);
-                }
+            let d_transform = transform.decompose();
+            let transformed_shape = shape.transform_clone(&transform);
+            if !self
+                .layout
+                .cde()
+                .shape_collides(&transformed_shape, entities_to_ignore.as_ref())
+            {
+                let insert_opt = PlacingOption {
+                    layout_index: LayoutIndex::Real(0),
+                    item_id: p_uid.item_id,
+                    transform,
+                    d_transform,
+                };
+                self.place_item(&insert_opt);
             }
         }
     }
 
-    /// Shrinks the strip to the minimum width that fits all the items
+    /// Shrinks the strip to the minimum width that fits all items.
     pub fn fit_strip(&mut self) {
         let n_items_in_old_strip = self.layout.placed_items().len();
 
-        let fitted_width = self.strip_width_fitted();
-        self.modify_strip_width(fitted_width);
+        let fitted_width = self.occupied_width() * (1.0 + FPA::tolerance()); //add some tolerance to avoid rounding errors or false collision positives
+        self.modify_strip_centered(fitted_width);
 
         assert_eq!(
             n_items_in_old_strip,
             self.layout.placed_items().len(),
-            "fit_strip() should not remove any items"
+            "fitting the strip should not remove any items"
         );
     }
 
-    pub fn strip_height(&self) -> fsize {
-        self.strip_height
+    /// Returns the horizontal range occupied by the placed items. If no items are placed, returns None.
+    pub fn occupied_range(&self) -> Option<(fsize, fsize)> {
+        occupied_range(&self.layout)
     }
 
-    pub fn strip_width(&self) -> fsize {
-        self.strip_width
-    }
-
-    /// Returns the minimum strip width able to fit all currently placed items.
-    pub fn strip_width_fitted(&self) -> fsize {
-        //get the maximum x coordinate of the placed items
-        let max_x = self
-            .layout
-            .placed_items()
-            .iter()
-            .map(|pi| pi.shape.bbox().x_max)
-            .map(|x| NotNan::new(x).unwrap())
-            .max()
-            .map_or(0.0, |x| x.into_inner());
-
-        //add a small tolerance to avoid floating point errors, and multiply by 2.0 to account for FPA false positives
-        max_x + FPA::tolerance() * 2.0
+    /// Returns the width occupied by the placed items.
+    pub fn occupied_width(&self) -> fsize {
+        occupied_width(&self.layout)
     }
 }
 
@@ -263,5 +277,30 @@ impl ProblemGenericPrivate for SPProblem {
 
     fn missing_item_qtys_mut(&mut self) -> &mut [isize] {
         &mut self.missing_item_qtys
+    }
+}
+
+pub fn occupied_range(layout: &Layout) -> Option<(fsize, fsize)> {
+    if layout.placed_items().is_empty() {
+        return None;
+    }
+
+    let mut min_x = fsize::MAX;
+    let mut max_x = fsize::MIN;
+
+    for pi in layout.placed_items() {
+        let bbox = pi.shape.bbox();
+        min_x = min_x.min(bbox.x_min);
+        max_x = max_x.max(bbox.x_max);
+    }
+
+    Some((min_x, max_x))
+}
+
+pub fn occupied_width(layout: &Layout) -> fsize {
+    let range = occupied_range(layout);
+    match range {
+        Some((min_x, max_x)) => max_x - min_x,
+        None => 0.0,
     }
 }

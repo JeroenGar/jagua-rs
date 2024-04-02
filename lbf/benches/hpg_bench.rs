@@ -61,7 +61,7 @@ fn hpg_query_bench(c: &mut Criterion) {
         let mut problem = match instance.clone() {
             Instance::BP(_) => panic!("Expected SPInstance"),
             Instance::SP(instance) => {
-                SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
+                SPProblem::new(instance, base_problem.strip_width, config.cde_config)
             }
         };
         // Place the items in exactly the same way as the base problem
@@ -150,7 +150,7 @@ fn hpg_update_bench(c: &mut Criterion) {
         let mut problem = match instance.clone() {
             Instance::BP(_) => panic!("Expected SPInstance"),
             Instance::SP(instance) => {
-                SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
+                SPProblem::new(instance, base_problem.strip_width, config.cde_config)
             }
         };
         // Place the items in exactly the same way as the base problem

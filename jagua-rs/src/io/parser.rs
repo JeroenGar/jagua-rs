@@ -116,7 +116,7 @@ impl Parser {
         json_layouts: &Vec<JsonLayout>,
     ) -> (Instance, Solution) {
         let instance = Arc::new(self.parse(json_instance));
-        let solution = build_solution_from_json(&json_layouts, instance.clone(), self.cde_config);
+        let solution = build_solution_from_json(instance.as_ref(), &json_layouts, self.cde_config);
         let instance =
             Arc::try_unwrap(instance).expect("Cannot unwrap instance, strong references present");
         (instance, solution)
@@ -274,70 +274,104 @@ impl Parser {
 }
 
 /// Builds a `Solution` from a set of `JsonLayout`s and an `Instance`.
-fn build_solution_from_json(
+pub fn build_solution_from_json(
+    instance: &Instance,
     json_layouts: &[JsonLayout],
-    instance: Arc<Instance>,
     cde_config: CDEConfig,
 ) -> Solution {
-    let mut problem: Problem = match instance.as_ref() {
-        Instance::BP(bp_i) => Problem::BP(BPProblem::new(bp_i.clone())),
+    match instance {
+        Instance::BP(bp_i) => build_bin_packing_solution(bp_i, json_layouts, cde_config),
         Instance::SP(sp_i) => {
             assert_eq!(json_layouts.len(), 1);
-            match json_layouts[0].container {
-                JsonContainer::Bin { .. } => panic!("Strip packing solution should not contain layouts with references to an Object"),
-                JsonContainer::Strip { width, height: _ } => {
-                    Problem::SP(SPProblem::new(sp_i.clone(), width, cde_config))
-                }
-            }
+            build_strip_packing_solution(sp_i, &json_layouts[0], cde_config)
+        }
+    }
+}
+
+pub fn build_strip_packing_solution(
+    instance: &SPInstance,
+    json_layout: &JsonLayout,
+    cde_config: CDEConfig,
+) -> Solution {
+    let mut problem = match json_layout.container {
+        JsonContainer::Bin { .. } => {
+            panic!("Strip packing solution should not contain layouts with references to an Object")
+        }
+        JsonContainer::Strip { width, height: _ } => {
+            SPProblem::new(instance.clone(), width, cde_config)
         }
     };
 
+    for json_item in json_layout.placed_items.iter() {
+        let item = instance.item(json_item.index);
+        let json_rotation = json_item.transformation.rotation;
+        let json_translation = json_item.transformation.translation;
+
+        let abs_transform = DTransformation::new(json_rotation, json_translation);
+        let transform = absolute_to_internal_transform(
+            &abs_transform,
+            &item.pretransform,
+            &problem.layout.bin().pretransform,
+        );
+
+        let d_transform = transform.decompose();
+
+        let placing_opt = PlacingOption {
+            layout_index: LayoutIndex::Real(0),
+            item_id: item.id,
+            transform,
+            d_transform,
+        };
+
+        problem.place_item(&placing_opt);
+        problem.flush_changes();
+    }
+
+    problem.create_solution(&None)
+}
+
+pub fn build_bin_packing_solution(
+    instance: &BPInstance,
+    json_layouts: &[JsonLayout],
+    cde_config: CDEConfig,
+) -> Solution {
+    let mut problem = BPProblem::new(instance.clone());
+
     for json_layout in json_layouts {
-        let bin = match (instance.as_ref(), &json_layout.container) {
-            (Instance::BP(bpi), JsonContainer::Bin { index }) => Some(&bpi.bins[*index].0),
-            (Instance::SP(_spi), JsonContainer::Strip { .. }) => None,
-            _ => panic!("Layout object type does not match packing type"),
+        let bin = match json_layout.container {
+            JsonContainer::Bin { index } => &instance.bins[index].0,
+            JsonContainer::Strip { .. } => {
+                panic!("Bin packing solution should not contain layouts with references to a Strip")
+            }
         };
         //Create the layout by inserting the first item
 
-        //Find the template layout matching the bin id in the JSON solution, 0 if strip packing instance.
-        let (template_layout_index, _) = problem
+        //Find the template layout matching the bin id in the JSON solution
+        let template_index = problem
             .template_layouts()
             .iter()
-            .enumerate()
-            .find(|(_, layout)| layout.bin().id == bin.map_or(0, |b| b.id))
-            .unwrap();
+            .position(|tl| tl.bin().id == bin.id)
+            .expect("no template layout found for bin");
 
-        let bin_centering = bin
-            .map_or(DTransformation::empty(), |b| {
-                DTransformation::from(&b.centering_transform)
-            })
-            .translation();
-
-        let json_first_item = json_layout.placed_items.get(0).unwrap();
+        let json_first_item = json_layout.placed_items.get(0).expect("no items in layout");
         let first_item = instance.item(json_first_item.index);
+        let abs_transform = DTransformation::new(
+            json_first_item.transformation.rotation,
+            json_first_item.transformation.translation,
+        );
 
-        //all items have a centering transformation applied during parsing.
-        //However, the transformation described in the JSON solution is relative to the item's original position, not the one after the centering transformation
-        let first_item_centering_correction = first_item
-            .centering_transform
-            .clone()
-            .inverse()
-            .decompose()
-            .translation();
-
-        let transf = Transformation::from_translation(first_item_centering_correction) //undo the item centering transformation
-            .rotate(json_first_item.transformation.rotation) //apply the rotation from the JSON solution
-            .translate(json_first_item.transformation.translation) //apply the translation from the JSON solution
-            .translate(bin_centering); //correct for the bin centering transformation
-
-        let d_transf = transf.decompose();
+        let transform = absolute_to_internal_transform(
+            &abs_transform,
+            &first_item.pretransform,
+            &bin.pretransform,
+        );
+        let d_transform = transform.decompose();
 
         let initial_insert_opt = PlacingOption {
-            layout_index: LayoutIndex::Template(template_layout_index),
+            layout_index: LayoutIndex::Template(template_index),
             item_id: first_item.id,
-            transform: transf,
-            d_transform: d_transf,
+            transform: transform,
+            d_transform: d_transform,
         };
         let layout_index = problem.place_item(&initial_insert_opt);
         problem.flush_changes();
@@ -345,24 +379,23 @@ fn build_solution_from_json(
         //Insert the rest of the items
         for json_item in json_layout.placed_items.iter().skip(1) {
             let item = instance.item(json_item.index);
-            let item_centering_correction = item
-                .centering_transform
-                .clone()
-                .inverse()
-                .decompose()
-                .translation();
-            let transf = Transformation::from_translation(item_centering_correction)
-                .rotate(json_item.transformation.rotation)
-                .translate(json_item.transformation.translation)
-                .translate(bin_centering);
+            let json_rotation = json_item.transformation.rotation;
+            let json_translation = json_item.transformation.translation;
 
-            let d_transf = transf.decompose();
+            let abs_transform = DTransformation::new(json_rotation, json_translation);
+            let transform = absolute_to_internal_transform(
+                &abs_transform,
+                &item.pretransform,
+                &bin.pretransform,
+            );
+
+            let d_transform = transform.decompose();
 
             let insert_opt = PlacingOption {
                 layout_index,
                 item_id: item.id,
-                transform: transf,
-                d_transform: d_transf,
+                transform,
+                d_transform,
             };
             problem.place_item(&insert_opt);
             problem.flush_changes();
@@ -389,44 +422,27 @@ pub fn compose_json_solution(
                     height: spi.strip_height,
                 },
             };
-            //JSON solution should have their bins back in their original position, so we need to correct for the centering transformation
-            let bin_centering_correction = match &instance {
-                Instance::BP(bpi) => {
-                    let bin = &bpi.bins[sl.bin.id].0;
-                    bin.centering_transform
-                        .clone()
-                        .inverse()
-                        .decompose()
-                        .translation()
-                }
-                Instance::SP(_) => (0.0, 0.0), //no bin, no correction
-            };
 
             let placed_items = sl
                 .placed_items
                 .iter()
-                .map(|pl| {
-                    let item_index = pl.item_id();
+                .map(|placed_item| {
+                    let item_index = placed_item.item_id();
                     let item = instance.item(item_index);
-                    let item_centering = item.centering_transform.decompose().translation();
 
-                    let pl_decomp_transf = pl.d_transformation();
+                    let abs_transf = internal_to_absolute_transform(
+                        placed_item.d_transformation(),
+                        &item.pretransform,
+                        &sl.bin.pretransform,
+                    )
+                    .decompose();
 
-                    //Both bins and items have centering transformations, however in the output file, we need to restore them to the original positions
-
-                    let transformation = Transformation::from_translation(item_centering)
-                        .rotate(pl_decomp_transf.rotation())
-                        .translate(pl_decomp_transf.translation())
-                        .translate(bin_centering_correction);
-
-                    let decomp_transf = transformation.decompose();
-                    let json_transform = JsonTransformation {
-                        rotation: decomp_transf.rotation(),
-                        translation: decomp_transf.translation(),
-                    };
                     JsonPlacedItem {
                         index: item_index,
-                        transformation: json_transform,
+                        transformation: JsonTransformation {
+                            rotation: abs_transf.rotation(),
+                            translation: abs_transf.translation(),
+                        },
                     }
                 })
                 .collect::<Vec<JsonPlacedItem>>();
@@ -477,4 +493,34 @@ fn json_simple_poly_to_points(jsp: &JsonSimplePoly) -> Vec<Point> {
     };
 
     (0..n_vertices).map(|i| Point::from(jsp.0[i])).collect_vec()
+}
+
+fn internal_to_absolute_transform(
+    placed_item_transf: &DTransformation,
+    item_pretransf: &Transformation,
+    bin_pretransf: &Transformation,
+) -> Transformation {
+    //1. apply the item pretransform
+    //2. apply the placement transformation
+    //3. undo the bin pretransformation
+
+    Transformation::empty()
+        .transform(item_pretransf)
+        .transform_from_decomposed(placed_item_transf)
+        .transform(&bin_pretransf.clone().inverse())
+}
+
+fn absolute_to_internal_transform(
+    abs_transf: &DTransformation,
+    item_pretransf: &Transformation,
+    bin_pretransf: &Transformation,
+) -> Transformation {
+    //1. undo the item pretransform
+    //2. do the absolute transformation
+    //3. apply the bin pretransform
+
+    Transformation::empty()
+        .transform(&item_pretransf.clone().inverse())
+        .transform_from_decomposed(&abs_transf)
+        .transform(bin_pretransf)
 }

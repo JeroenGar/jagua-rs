@@ -17,8 +17,8 @@ pub struct Item {
     /// The quality of the item, if `None` the item requires full quality
     pub base_quality: Option<usize>,
     pub value: u64,
-    /// The transformation to center the item around its centroid
-    pub centering_transform: Transformation,
+    /// Transformation applied to the shape with respect to the original shape in the input file (for example to center it).
+    pub pretransform: Transformation,
     /// Filter for hazards that the item is unaffected by
     pub hazard_filter: Option<QZHazardFilter>,
 }
@@ -29,7 +29,7 @@ impl Item {
         mut shape: SimplePolygon,
         value: u64,
         allowed_rotation: AllowedRotation,
-        centering_transform: Transformation,
+        pretransform: Transformation,
         base_quality: Option<usize>,
         surrogate_config: SPSurrogateConfig,
     ) -> Item {
@@ -42,7 +42,7 @@ impl Item {
             allowed_rotation,
             base_quality,
             value,
-            centering_transform,
+            pretransform,
             hazard_filter,
         }
     }

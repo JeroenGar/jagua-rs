@@ -158,7 +158,7 @@ fn modify_instance(instance: &Instance, multiplier: usize, config: LBFConfig) ->
                 modified_shape,
                 item.value,
                 item.allowed_rotation.clone(),
-                item.centering_transform.clone(),
+                item.pretransform.clone(),
                 item.base_quality,
                 config.cde_config.item_surrogate_config,
             );

@@ -22,7 +22,7 @@ use crate::util::assertions;
 use crate::util::config::CDEConfig;
 
 /// The Collision Detection Engine (CDE).
-/// It can resolve a range of collision queries
+/// The CDE can resolve a range of collision queries
 /// and update its state by registering and deregistering hazards.
 #[derive(Clone, Debug)]
 pub struct CDEngine {
