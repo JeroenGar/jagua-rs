@@ -10,7 +10,7 @@ use rand::prelude::SmallRng;
 use rand::SeedableRng;
 
 use jagua_rs::io::parser;
-use jagua_rs::io::parser::{build_bin_packing_solution, Parser};
+use jagua_rs::io::parser::Parser;
 use jagua_rs::util::polygon_simplification::PolySimplConfig;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;

@@ -15,7 +15,6 @@ use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::item::Item;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem::Problem;
 use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::quality_zone::InferiorQualityZone;
@@ -280,7 +279,7 @@ pub fn build_solution_from_json(
     cde_config: CDEConfig,
 ) -> Solution {
     match instance {
-        Instance::BP(bp_i) => build_bin_packing_solution(bp_i, json_layouts, cde_config),
+        Instance::BP(bp_i) => build_bin_packing_solution(bp_i, json_layouts),
         Instance::SP(sp_i) => {
             assert_eq!(json_layouts.len(), 1);
             build_strip_packing_solution(sp_i, &json_layouts[0], cde_config)
@@ -330,11 +329,7 @@ pub fn build_strip_packing_solution(
     problem.create_solution(&None)
 }
 
-pub fn build_bin_packing_solution(
-    instance: &BPInstance,
-    json_layouts: &[JsonLayout],
-    cde_config: CDEConfig,
-) -> Solution {
+pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLayout]) -> Solution {
     let mut problem = BPProblem::new(instance.clone());
 
     for json_layout in json_layouts {
