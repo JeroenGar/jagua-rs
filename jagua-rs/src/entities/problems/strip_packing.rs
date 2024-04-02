@@ -53,7 +53,7 @@ impl SPProblem {
         }
     }
 
-    /// Modifies the strip width by adding or removing width at the back of the strip.
+    /// Adds or removes width in the back of the strip.
     pub fn modify_strip_in_back(&mut self, new_width: fsize) {
         let bbox = self.layout.bin().outer.bbox();
         let new_strip_shape =
@@ -61,15 +61,15 @@ impl SPProblem {
         self.modify_strip(new_strip_shape);
     }
 
-    /// Modifies the strip width by adding or removing width at the front of the strip.
-    pub fn modify_strip_in_front(&mut self, new_width: fsize) {
+    /// Adds or removes width at the front of the strip.
+    pub fn modify_strip_at_front(&mut self, new_width: fsize) {
         let bbox = self.layout.bin().outer.bbox();
         let new_strip_shape =
             AARectangle::new(bbox.x_max - new_width, bbox.y_min, bbox.x_max, bbox.y_max);
         self.modify_strip(new_strip_shape);
     }
 
-    /// Modifies the strip width by adding or removing width, dividing it equally to the left and right of the current items.
+    /// Adds or removes width, dividing it equally at the front and back of the current items.
     pub fn modify_strip_centered(&mut self, new_width: fsize) {
         let current_range = self.occupied_range().unwrap_or((0.0, 0.0));
         let current_width = self.occupied_width();
@@ -89,8 +89,9 @@ impl SPProblem {
         self.modify_strip(new_strip_shape);
     }
 
-    /// Modifies the strip to a new rectangle. All items that fit in the new strip are kept, the rest are removed.
-    pub fn modify_strip(&mut self, strip_rect: AARectangle) {
+    /// Modifies the shape of the strip to a new rectangle.
+    /// All items that fit in the new strip are kept, the rest are removed.
+    pub fn modify_strip(&mut self, rect: AARectangle) {
         let placed_items_uids = self
             .layout
             .placed_items()
@@ -104,12 +105,12 @@ impl SPProblem {
             .enumerate()
             .for_each(|(i, qty)| *qty = self.instance.item_qty(i) as isize);
 
-        self.strip_width = strip_rect.width();
+        self.strip_width = rect.width();
 
         //Modifying the width causes the bin to change, so the layout must be replaced
         self.layout = Layout::new(
             self.layout.id() + 1,
-            Bin::from_strip(strip_rect, self.layout.bin().base_cde.config().clone()),
+            Bin::from_strip(rect, self.layout.bin().base_cde.config().clone()),
         );
 
         //place the items back in the new layout
