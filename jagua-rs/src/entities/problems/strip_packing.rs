@@ -9,8 +9,8 @@ use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem_generic::LayoutIndex;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
+use crate::entities::problems::problem_generic::LayoutIndex;
 use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::fsize;
@@ -261,7 +261,7 @@ impl ProblemGeneric for SPProblem {
         &self.missing_item_qtys
     }
 
-    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
+    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item = LayoutIndex> {
         iter::empty::<LayoutIndex>()
     }
 
