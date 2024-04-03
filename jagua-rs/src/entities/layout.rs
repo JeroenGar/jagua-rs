@@ -55,7 +55,7 @@ impl Layout {
     }
 
     pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
-        assert_eq!(self.bin.id, layout_snapshot.bin.id);
+        assert_eq!(self.id, layout_snapshot.id);
 
         self.placed_items = layout_snapshot.placed_items.clone();
         self.cde.restore(&layout_snapshot.cde_snapshot);

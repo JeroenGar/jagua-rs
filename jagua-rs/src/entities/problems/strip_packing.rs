@@ -40,13 +40,14 @@ impl SPProblem {
             .collect_vec();
         let strip_rect = AARectangle::new(0.0, 0.0, strip_width, strip_height);
         let strip_bin = Bin::from_strip(strip_rect, cde_config);
-        let layout = Layout::new(0, strip_bin);
+        let layout_id_counter = 0;
+        let layout = Layout::new(layout_id_counter, strip_bin);
 
         Self {
             instance,
             layout,
             missing_item_qtys,
-            layout_id_counter: 0,
+            layout_id_counter,
             solution_id_counter: 0,
         }
     }
@@ -119,11 +120,8 @@ impl SPProblem {
             let transform = p_uid.d_transf.compose();
             let d_transform = transform.decompose();
             let transformed_shape = shape.transform_clone(&transform);
-            if !self
-                .layout
-                .cde()
-                .shape_collides(&transformed_shape, entities_to_ignore.as_ref())
-            {
+            let cde = self.layout.cde();
+            if !cde.shape_collides(&transformed_shape, entities_to_ignore.as_ref()) {
                 let insert_opt = PlacingOption {
                     layout_index: LayoutIndex::Real(0),
                     item_id: p_uid.item_id,
@@ -227,14 +225,14 @@ impl ProblemGeneric for SPProblem {
     fn restore_to_solution(&mut self, solution: &Solution) {
         debug_assert!(solution.layout_snapshots.len() == 1);
 
+        //restore the layout
         let layout_snapshot = &solution.layout_snapshots[0];
-        let strip_unchanged = self.layout.id() == layout_snapshot.id;
-
-        match strip_unchanged {
+        match self.layout.id() == layout_snapshot.id {
             true => self.layout.restore(layout_snapshot),
             false => self.layout = Layout::from_snapshot(layout_snapshot),
         }
 
+        //restore the missing item quantities
         self.missing_item_qtys
             .iter_mut()
             .enumerate()
