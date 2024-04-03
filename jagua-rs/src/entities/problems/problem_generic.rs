@@ -104,6 +104,8 @@ pub(super) mod private {
     pub trait ProblemGenericPrivate: Clone {
         fn next_solution_id(&mut self) -> usize;
 
+        fn next_layout_id(&mut self) -> usize;
+
         fn missing_item_qtys_mut(&mut self) -> &mut [isize];
 
         fn register_included_item(&mut self, item_id: usize) {

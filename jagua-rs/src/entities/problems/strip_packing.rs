@@ -9,8 +9,8 @@ use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::LayoutIndex;
+use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::fsize;
@@ -25,9 +25,8 @@ use crate::util::fpa::FPA;
 pub struct SPProblem {
     pub instance: SPInstance,
     pub layout: Layout,
-    pub strip_height: fsize,
-    pub strip_width: fsize,
     missing_item_qtys: Vec<isize>,
+    layout_id_counter: usize,
     solution_id_counter: usize,
 }
 
@@ -46,9 +45,8 @@ impl SPProblem {
         Self {
             instance,
             layout,
-            strip_height,
-            strip_width,
             missing_item_qtys,
+            layout_id_counter: 0,
             solution_id_counter: 0,
         }
     }
@@ -105,11 +103,9 @@ impl SPProblem {
             .enumerate()
             .for_each(|(i, qty)| *qty = self.instance.item_qty(i) as isize);
 
-        self.strip_width = rect.width();
-
         //Modifying the width causes the bin to change, so the layout must be replaced
         self.layout = Layout::new(
-            self.layout.id() + 1,
+            self.next_layout_id(),
             Bin::from_strip(rect, self.layout.bin().base_cde.config().clone()),
         );
 
@@ -161,6 +157,14 @@ impl SPProblem {
     /// Returns the width occupied by the placed items.
     pub fn occupied_width(&self) -> fsize {
         occupied_width(&self.layout)
+    }
+
+    pub fn strip_width(&self) -> fsize {
+        self.layout.bin().outer.bbox().width()
+    }
+
+    pub fn strip_height(&self) -> fsize {
+        self.layout.bin().outer.bbox().height()
     }
 }
 
@@ -257,7 +261,7 @@ impl ProblemGeneric for SPProblem {
         &self.missing_item_qtys
     }
 
-    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item = LayoutIndex> {
+    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
         iter::empty::<LayoutIndex>()
     }
 
@@ -274,6 +278,11 @@ impl ProblemGenericPrivate for SPProblem {
     fn next_solution_id(&mut self) -> usize {
         self.solution_id_counter += 1;
         self.solution_id_counter
+    }
+
+    fn next_layout_id(&mut self) -> usize {
+        self.layout_id_counter += 1;
+        self.layout_id_counter
     }
 
     fn missing_item_qtys_mut(&mut self) -> &mut [isize] {

@@ -89,11 +89,6 @@ impl BPProblem {
         }
     }
 
-    fn next_layout_id(&mut self) -> usize {
-        self.layout_id_counter += 1;
-        self.layout_id_counter
-    }
-
     fn reset_unmodified_layouts(&mut self, ref_solution_id: usize) {
         self.unmodified_layout_ids = self.layouts.iter().map(|l| l.id()).collect();
         self.unmodified_layouts_ref_solution = Some(ref_solution_id);
@@ -331,6 +326,11 @@ impl ProblemGenericPrivate for BPProblem {
     fn next_solution_id(&mut self) -> usize {
         self.solution_id_counter += 1;
         self.solution_id_counter
+    }
+
+    fn next_layout_id(&mut self) -> usize {
+        self.layout_id_counter += 1;
+        self.layout_id_counter
     }
 
     fn missing_item_qtys_mut(&mut self) -> &mut [isize] {

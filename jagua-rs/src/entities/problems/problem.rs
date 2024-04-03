@@ -108,6 +108,13 @@ impl ProblemGenericPrivate for Problem {
         }
     }
 
+    fn next_layout_id(&mut self) -> usize {
+        match self {
+            Problem::BP(bp) => bp.next_layout_id(),
+            Problem::SP(sp) => sp.next_layout_id(),
+        }
+    }
+
     fn missing_item_qtys_mut(&mut self) -> &mut [isize] {
         match self {
             Problem::BP(bp) => bp.missing_item_qtys_mut(),
