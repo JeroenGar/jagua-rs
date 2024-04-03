@@ -281,6 +281,7 @@ impl ProblemGenericPrivate for SPProblem {
     }
 }
 
+/// Returns the horizontal range occupied by the placed items. If no items are placed, returns None.
 pub fn occupied_range(layout: &Layout) -> Option<(fsize, fsize)> {
     if layout.placed_items().is_empty() {
         return None;
@@ -298,6 +299,7 @@ pub fn occupied_range(layout: &Layout) -> Option<(fsize, fsize)> {
     Some((min_x, max_x))
 }
 
+/// Returns the total width occupied by the placed items.
 pub fn occupied_width(layout: &Layout) -> fsize {
     let range = occupied_range(layout);
     match range {
