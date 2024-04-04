@@ -105,11 +105,11 @@ impl CDEngine {
     }
 
     /// Removes a hazard from the CDE.
-    /// If `commit_instantly == true`, the deregistration is fully executed immediately.
-    /// If `commit_instantly == false`, the deregistration causes the hazard to be deactivated in the quadtree and
+    /// If `commit_instant` the deregistration is fully executed immediately.
+    /// If not, the deregistration causes the hazard to be deactivated in the quadtree and
     /// the hazard_proximity_grid to become dirty (and therefore inaccessible).
     /// <br>
-    /// Can be beneficial not to `commit_instantly` if multiple hazards are to be deregistered, or if the chance of
+    /// Can be beneficial not to `commit_instant` if multiple hazards are to be deregistered, or if the chance of
     /// restoring from a snapshot with the hazard present is high.
     /// <br>
     /// Call [`Self::commit_deregisters`] to commit all uncommitted deregisters in both quadtree & hazard proximity grid
@@ -250,7 +250,7 @@ impl CDEngine {
         }
     }
 
-    /// Flushes all uncommitted deregisters in the [HazardProximityGrid].
+    /// Flushes all uncommitted deregisters in the [`HazardProximityGrid`].
     pub fn flush_haz_prox_grid(&mut self) {
         self.haz_prox_grid
             .as_mut()

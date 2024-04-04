@@ -90,6 +90,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
 
     fn bin_qtys(&self) -> &[usize];
 
+    /// Makes sure that the all collision detection engines are completely updated with the changes made to the layouts.
     fn flush_changes(&mut self) {
         self.layouts_mut()
             .iter_mut()

@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use std::iter;
 
 use itertools::Itertools;
@@ -154,8 +155,11 @@ impl HazardProximityGrid {
 #[derive(Debug)]
 pub struct DirtyState;
 
-impl std::fmt::Display for DirtyState {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "HazardProximityGrid is in a dirty state. Call `flush_deregisters` before accessing the grid.")
+impl Display for DirtyState {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Dirty state detected. Make sure all changes are flushed before accessing the grid."
+        )
     }
 }
