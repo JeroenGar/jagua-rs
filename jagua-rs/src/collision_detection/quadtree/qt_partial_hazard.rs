@@ -4,7 +4,7 @@ use std::sync::{Arc, Weak};
 
 use crate::collision_detection::hazard::Hazard;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::circle::Circle;
+use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
@@ -55,50 +55,31 @@ impl PartialQTHaz {
     }
 }
 
-const BBOX_CHECK_THRESHOLD: usize = 4; //check bbox if number of edges is greater than this
+const BBOX_CHECK_THRESHOLD: usize = 4;
+//check bbox if number of edges is greater than this
 const BBOX_CHECK_THRESHOLD_PLUS_1: usize = BBOX_CHECK_THRESHOLD + 1;
-impl CollidesWith<Edge> for PartialQTHaz {
-    fn collides_with(&self, edge: &Edge) -> bool {
-        let shape = self.shape_arc();
-        match &self.edges {
-            RelevantEdges::All => match shape.bbox().collides_with(edge) {
-                false => false,
-                true => shape.edge_iter().any(|e| edge.collides_with(&e)),
-            },
-            RelevantEdges::Some(indices) => match indices.len() {
-                0 => unreachable!("edge indices should not be empty"),
-                1..=BBOX_CHECK_THRESHOLD => indices
-                    .iter()
-                    .any(|&i| edge.collides_with(&shape.get_edge(i))),
-                BBOX_CHECK_THRESHOLD_PLUS_1.. => match shape.bbox().collides_with(edge) {
-                    false => false,
-                    true => indices
-                        .iter()
-                        .any(|&i| edge.collides_with(&shape.get_edge(i))),
-                },
-            },
-        }
-    }
-}
 
-impl CollidesWith<Circle> for PartialQTHaz {
-    fn collides_with(&self, circle: &Circle) -> bool {
+impl<T> CollidesWith<T> for PartialQTHaz
+where
+    T: CollidesWith<AARectangle> + CollidesWith<Edge>,
+{
+    fn collides_with(&self, entity: &T) -> bool {
         let shape = self.shape_arc();
         match &self.edges {
-            RelevantEdges::All => match circle.collides_with(&shape.bbox()) {
+            RelevantEdges::All => match entity.collides_with(&shape.bbox()) {
                 false => false,
-                true => shape.edge_iter().any(|e| circle.collides_with(&e)),
+                true => shape.edge_iter().any(|e| entity.collides_with(&e)),
             },
             RelevantEdges::Some(indices) => match indices.len() {
                 0 => unreachable!("edge indices should not be empty"),
                 1..=BBOX_CHECK_THRESHOLD => indices
                     .iter()
-                    .any(|&i| circle.collides_with(&shape.get_edge(i))),
-                BBOX_CHECK_THRESHOLD_PLUS_1.. => match circle.collides_with(&shape.bbox()) {
+                    .any(|&i| entity.collides_with(&shape.get_edge(i))),
+                BBOX_CHECK_THRESHOLD_PLUS_1.. => match entity.collides_with(&shape.bbox()) {
                     false => false,
                     true => indices
                         .iter()
-                        .any(|&i| circle.collides_with(&shape.get_edge(i))),
+                        .any(|&i| entity.collides_with(&shape.get_edge(i))),
                 },
             },
         }

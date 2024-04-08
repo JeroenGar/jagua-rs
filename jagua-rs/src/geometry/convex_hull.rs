@@ -12,6 +12,19 @@ pub fn convex_hull_indices(shape: &SimplePolygon) -> Vec<usize> {
     indices
 }
 
+pub fn convex_hull_from_shapes<'a>(shapes: impl Iterator<Item = &'a SimplePolygon>) -> Vec<Point> {
+    let mut ch_points = vec![];
+    for shape in shapes {
+        if let Some(surr) = shape.surrogate.as_ref() {
+            ch_points.extend(surr.convex_hull_indices.iter().map(|&i| shape.points[i]));
+        } else {
+            ch_points.extend(convex_hull_indices(shape).iter().map(|&i| shape.points[i]));
+        }
+    }
+
+    convex_hull_from_points(ch_points)
+}
+
 /// Filters a set of points to only include the points that form the [convex hull](https://en.wikipedia.org/wiki/Convex_hull)
 pub fn convex_hull_from_points(mut points: Vec<Point>) -> Vec<Point> {
     //https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain

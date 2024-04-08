@@ -8,6 +8,7 @@ use crate::collision_detection::hpg::grid::Grid;
 use crate::collision_detection::hpg::hazard_proximity_grid::{DirtyState, HazardProximityGrid};
 use crate::collision_detection::hpg::hpg_cell::HPGCell;
 use crate::collision_detection::quadtree::qt_node::QTNode;
+use crate::collision_detection::quadtree::qt_partial_hazard::PartialQTHaz;
 use crate::fsize;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
@@ -391,25 +392,29 @@ impl CDEngine {
         }
     }
 
-    /// Returns all the (relevant) hazards present inside the circle.
-    pub fn entities_in_circle(
+    /// Returns all the (relevant) hazards present inside the shape ([`Circle`] or [`AARectangle`])
+    pub fn colliding_entities_in<T>(
         &self,
-        circle: &Circle,
+        shape: &T,
         irrelevant_hazards: &[HazardEntity],
-    ) -> Vec<HazardEntity> {
+    ) -> Vec<HazardEntity>
+    where
+        T: CollidesWith<AARectangle> + Shape,
+        PartialQTHaz: CollidesWith<T>,
+    {
         let mut colliding_entities = vec![];
         let mut irrelevant_hazards = irrelevant_hazards.iter().cloned().collect_vec();
 
         //Keep testing the quadtree for intersections until no (non-ignored) entities collide
-        while let Some(haz_entity) = self.quadtree.collides(circle, &irrelevant_hazards) {
+        while let Some(haz_entity) = self.quadtree.collides(shape, &irrelevant_hazards) {
             colliding_entities.push(haz_entity.clone());
             irrelevant_hazards.push(haz_entity.clone());
         }
 
-        let circle_center_in_qt = self.bbox.collides_with(&circle.center);
+        let centroid_in_qt = self.bbox.collides_with(&shape.centroid());
 
-        if !circle_center_in_qt && colliding_entities.is_empty() {
-            // The circle center is outside the quadtree
+        if !centroid_in_qt && colliding_entities.is_empty() {
+            // The shape centroid is outside the quadtree
             if !irrelevant_hazards.contains(&&HazardEntity::BinExterior) {
                 //Add the bin as a hazard, unless it is ignored
                 colliding_entities.push(HazardEntity::BinExterior);

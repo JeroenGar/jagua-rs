@@ -18,9 +18,16 @@ pub trait AlmostCollidesWith<T> {
 
 /// Trait for geometric primitives that can calculate distances to other primitives.
 pub trait DistanceFrom<T> {
+    /// Squared distance between the two primitives.
     fn sq_distance(&self, other: &T) -> fsize;
+
+    /// Distance between the two primitives.
     fn distance(&self, other: &T) -> fsize;
+
+    /// Distance from `other` to the boundary of `self` and whether `other` is in the interior or exterior of self.
     fn distance_from_border(&self, other: &T) -> (GeoPosition, fsize);
+
+    /// Squared distance from `other` to the boundary of `self` and whether `other` is in the interior or exterior of self.
     fn sq_distance_from_border(&self, other: &T) -> (GeoPosition, fsize);
 }
 
