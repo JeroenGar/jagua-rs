@@ -64,6 +64,33 @@ impl Edge {
         }
     }
 
+    /// Returns the closest point which lies on the edge to the given point
+    pub fn closest_point_on_edge(&self, point: &Point) -> Point {
+        //from https://stackoverflow.com/a/6853926
+        let Point(x1, y1) = self.start;
+        let Point(x2, y2) = self.end;
+        let Point(x, y) = point;
+
+        let a = x - x1;
+        let b = y - y1;
+        let c = x2 - x1;
+        let d = y2 - y1;
+
+        let dot = a * c + b * d;
+        let len_sq = c * c + d * d;
+        let mut param = -1.0;
+        if len_sq != 0.0 {
+            param = dot / len_sq;
+        }
+        let (xx, yy) = match param {
+            p if p < 0.0 => (x1, y1),              //start is the closest point
+            p if p > 1.0 => (x2, y2),              //end is the closest point
+            _ => (x1 + param * c, y1 + param * d), //closest point is on the edge
+        };
+
+        Point(xx, yy)
+    }
+
     pub fn x_min(&self) -> fsize {
         fsize::min(self.start.0, self.end.0)
     }
@@ -124,27 +151,8 @@ impl Shape for Edge {
 
 impl DistanceFrom<Point> for Edge {
     fn sq_distance(&self, point: &Point) -> fsize {
-        //from https://stackoverflow.com/a/6853926
-        let Point(x1, y1) = self.start;
-        let Point(x2, y2) = self.end;
         let Point(x, y) = point;
-
-        let a = x - x1;
-        let b = y - y1;
-        let c = x2 - x1;
-        let d = y2 - y1;
-
-        let dot = a * c + b * d;
-        let len_sq = c * c + d * d;
-        let mut param = -1.0;
-        if len_sq != 0.0 {
-            param = dot / len_sq;
-        }
-        let (xx, yy) = match param {
-            p if p < 0.0 => (x1, y1),              //start is closest point
-            p if p > 1.0 => (x2, y2),              //end is closest point
-            _ => (x1 + param * c, y1 + param * d), //closest point is on the edge
-        };
+        let Point(xx, yy) = self.closest_point_on_edge(point);
 
         let (dx, dy) = (x - xx, y - yy);
         dx.powi(2) + dy.powi(2)

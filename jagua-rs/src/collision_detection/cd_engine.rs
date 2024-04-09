@@ -402,6 +402,7 @@ impl CDEngine {
         T: CollidesWith<AARectangle> + Shape,
         PartialQTHaz: CollidesWith<T>,
     {
+        //TODO: not really efficient as currently implemented, but usually not a bottleneck
         let mut colliding_entities = vec![];
         let mut irrelevant_hazards = irrelevant_hazards.iter().cloned().collect_vec();
 
