@@ -12,7 +12,7 @@ pub fn convex_hull_indices(shape: &SimplePolygon) -> Vec<usize> {
     indices
 }
 
-pub fn convex_hull_from_shapes<'a>(shapes: impl Iterator<Item = &'a SimplePolygon>) -> Vec<Point> {
+pub fn convex_hull_from_shapes<'a>(shapes: impl IntoIterator<Item=&'a SimplePolygon>) -> Vec<Point> {
     let mut ch_points = vec![];
     for shape in shapes {
         if let Some(surr) = shape.surrogate.as_ref() {
