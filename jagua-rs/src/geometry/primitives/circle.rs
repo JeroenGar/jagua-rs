@@ -34,11 +34,11 @@ impl Circle {
     }
 
     /// Returns the smallest possible circle that fully contains all ```circles```
-    pub fn bounding_circle(circles: &[Circle]) -> Circle {
-        let mut circles_iter = circles.iter();
-        let mut bounding_circle = circles_iter.next().expect("no circles provided").clone();
+    pub fn bounding_circle<'a>(mut circles: impl IntoIterator<Item = &'a Circle>) -> Circle {
+        let mut circles = circles.into_iter();
+        let mut bounding_circle = circles.next().expect("no circles provided").clone();
 
-        for circle in circles_iter {
+        for circle in circles {
             let distance_between_centers = bounding_circle.center.distance(&circle.center);
             if bounding_circle.radius < distance_between_centers + circle.radius {
                 // circle not contained in bounding circle, expand
