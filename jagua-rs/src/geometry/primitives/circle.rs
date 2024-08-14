@@ -34,7 +34,7 @@ impl Circle {
     }
 
     /// Returns the smallest possible circle that fully contains all ```circles```
-    pub fn bounding_circle<'a>(mut circles: impl IntoIterator<Item = &'a Circle>) -> Circle {
+    pub fn bounding_circle<'a>(circles: impl IntoIterator<Item = &'a Circle>) -> Circle {
         let mut circles = circles.into_iter();
         let mut bounding_circle = circles.next().expect("no circles provided").clone();
 
