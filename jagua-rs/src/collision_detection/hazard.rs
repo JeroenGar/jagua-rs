@@ -50,7 +50,7 @@ impl HazardEntity {
     }
 
     /// Whether the entity is dynamic in nature, i.e. it can be modified in the layout
-    pub fn dynamic(&self) -> bool {
+    pub fn is_dynamic(&self) -> bool {
         match self {
             HazardEntity::PlacedItem(_) => true,
             HazardEntity::BinExterior => false,
@@ -60,7 +60,7 @@ impl HazardEntity {
     }
 
     /// Whether the entity universally applicable, i.e. all items need to be checked against it
-    pub fn universal(&self) -> bool {
+    pub fn is_universal(&self) -> bool {
         match self {
             HazardEntity::PlacedItem(_) => true,
             HazardEntity::BinExterior => true,

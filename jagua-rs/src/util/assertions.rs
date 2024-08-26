@@ -1,7 +1,8 @@
-use std::collections::HashSet;
-
 use itertools::Itertools;
 use log::error;
+use std::collections::HashSet;
+use std::iter;
+use std::ops::Range;
 
 use crate::collision_detection::cd_engine::CDEngine;
 use crate::collision_detection::hazard::Hazard;
@@ -18,6 +19,7 @@ use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::layout::Layout;
 use crate::entities::layout::LayoutSnapshot;
+use crate::entities::placed_item::PlacedItem;
 use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
@@ -153,6 +155,33 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
         }
     }
     return true;
+}
+
+pub fn placed_item_collides(
+    layout: &Layout,
+    placed_item: &PlacedItem,
+    ignored_range_idx: Range<usize>,
+) -> bool {
+    let ehf = EntityHazardFilter(
+        iter::once(placed_item.into())
+            .chain(ignored_range_idx.map(|i| (&layout.placed_items()[i]).into()))
+            .collect_vec(),
+    );
+
+    let combo_filter = match &placed_item.hazard_filter {
+        None => CombinedHazardFilter {
+            filters: vec![Box::new(&ehf)],
+        },
+        Some(hf) => CombinedHazardFilter {
+            filters: vec![Box::new(&ehf), Box::new(hf)],
+        },
+    };
+    let entities_to_ignore =
+        hazard_filter::generate_irrelevant_hazards(&combo_filter, layout.cde().all_hazards());
+
+    layout
+        .cde()
+        .shape_collides(&placed_item.shape, &entities_to_ignore)
 }
 
 pub fn qt_node_contains_no_deactivated_hazards<'a>(

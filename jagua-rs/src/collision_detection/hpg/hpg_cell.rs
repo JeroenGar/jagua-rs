@@ -122,7 +122,7 @@ impl HPGCell {
 
     pub fn register_hazard(&mut self, to_register: &Hazard) -> HPGCellUpdate {
         debug_assert!(
-            to_register.entity.universal(),
+            to_register.entity.is_universal(),
             "no support for dynamic non-universal hazards at this time"
         );
         let current_prox = self.uni_prox.0;
@@ -155,7 +155,7 @@ impl HPGCell {
 
     pub fn register_hazard_pole(&mut self, to_register: &Hazard, pole: &Circle) -> HPGCellUpdate {
         debug_assert!(
-            to_register.entity.universal(),
+            to_register.entity.is_universal(),
             "no support for dynamic non-universal hazards at this time"
         );
         let current_prox = self.uni_prox.0;

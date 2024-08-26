@@ -32,7 +32,7 @@ impl HazardProximityGrid {
             //all universal hazards are applicable for the grid generator
             let uni_hazards = static_hazards
                 .iter()
-                .filter(|h| h.entity.universal())
+                .filter(|h| h.entity.is_universal())
                 .map(|h| h.clone())
                 .collect_vec();
             grid_generator::generate(bbox, &uni_hazards, n_cells)

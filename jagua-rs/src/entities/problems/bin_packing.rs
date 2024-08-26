@@ -112,8 +112,8 @@ impl BPProblem {
 }
 
 impl ProblemGeneric for BPProblem {
-    fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex {
-        let layout_index = match &i_opt.layout_index {
+    fn place_item(&mut self, p_opt: &PlacingOption) -> LayoutIndex {
+        let layout_index = match &p_opt.layout_index {
             LayoutIndex::Real(i) => LayoutIndex::Real(*i),
             LayoutIndex::Template(i) => {
                 //Layout is empty, clone it and add it to `layouts`
@@ -127,11 +127,11 @@ impl ProblemGeneric for BPProblem {
             LayoutIndex::Real(i) => &mut self.layouts[i],
             LayoutIndex::Template(_) => unreachable!("cannot place item in template layout"),
         };
-        let item = self.instance.item(i_opt.item_id);
-        layout.place_item(item, &i_opt.d_transform);
+        let item = self.instance.item(p_opt.item_id);
+        layout.place_item(item, &p_opt.d_transform);
         let layout_id = layout.id();
 
-        self.register_included_item(i_opt.item_id);
+        self.register_included_item(p_opt.item_id);
         self.layout_has_changed(layout_id);
 
         layout_index

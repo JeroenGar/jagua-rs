@@ -10,8 +10,8 @@ use crate::entities::layout::Layout;
 use crate::entities::placed_item::PlacedItemUID;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
-use crate::entities::problems::problem_generic::LayoutIndex;
 use crate::entities::problems::problem_generic::ProblemGeneric;
+use crate::entities::problems::problem_generic::{LayoutIndex, STRIP_LAYOUT_IDX};
 use crate::entities::solution::Solution;
 use crate::fsize;
 use crate::geometry::geo_traits::{Shape, Transformable};
@@ -123,7 +123,7 @@ impl SPProblem {
             let cde = self.layout.cde();
             if !cde.shape_collides(&transformed_shape, entities_to_ignore.as_ref()) {
                 let insert_opt = PlacingOption {
-                    layout_index: LayoutIndex::Real(0),
+                    layout_index: STRIP_LAYOUT_IDX,
                     item_id: p_uid.item_id,
                     transform,
                     d_transform,
@@ -167,18 +167,17 @@ impl SPProblem {
 }
 
 impl ProblemGeneric for SPProblem {
-    fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex {
+    fn place_item(&mut self, p_opt: &PlacingOption) -> LayoutIndex {
         assert_eq!(
-            i_opt.layout_index,
-            LayoutIndex::Real(0),
+            p_opt.layout_index, STRIP_LAYOUT_IDX,
             "Strip packing problems only have a single layout"
         );
-        let item_id = i_opt.item_id;
+        let item_id = p_opt.item_id;
         let item = self.instance.item(item_id);
-        self.layout.place_item(item, &i_opt.d_transform);
+        self.layout.place_item(item, &p_opt.d_transform);
 
         self.register_included_item(item_id);
-        LayoutIndex::Real(0)
+        STRIP_LAYOUT_IDX
     }
 
     fn remove_item(
@@ -188,8 +187,7 @@ impl ProblemGeneric for SPProblem {
         commit_instantly: bool,
     ) {
         assert_eq!(
-            layout_index,
-            LayoutIndex::Real(0),
+            layout_index, STRIP_LAYOUT_IDX,
             "strip packing problems only have a single layout"
         );
         self.layout.remove_item(pi_uid, commit_instantly);

@@ -15,7 +15,7 @@ use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::item::Item;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric, STRIP_LAYOUT_IDX};
 use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::quality_zone::InferiorQualityZone;
 use crate::entities::quality_zone::N_QUALITIES;
@@ -316,7 +316,7 @@ pub fn build_strip_packing_solution(
         let d_transform = transform.decompose();
 
         let placing_opt = PlacingOption {
-            layout_index: LayoutIndex::Real(0),
+            layout_index: STRIP_LAYOUT_IDX,
             item_id: item.id,
             transform,
             d_transform,

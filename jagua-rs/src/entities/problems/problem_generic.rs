@@ -12,7 +12,7 @@ use crate::fsize;
 pub trait ProblemGeneric: ProblemGenericPrivate {
     /// Places an item into the problem instance according to the given `PlacingOption`.
     /// Returns the index of the layout where the item was placed.
-    fn place_item(&mut self, i_opt: &PlacingOption) -> LayoutIndex;
+    fn place_item(&mut self, p_opt: &PlacingOption) -> LayoutIndex;
 
     /// Removes an item with a specific `PlacedItemUID` from a specific `Layout`
     /// For more information about `commit_instantly`, see [`crate::collision_detection::cd_engine::CDEngine::deregister_hazard`].
@@ -118,6 +118,8 @@ pub(super) mod private {
         }
     }
 }
+
+pub const STRIP_LAYOUT_IDX: LayoutIndex = LayoutIndex::Real(0);
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 /// Unique index for a `Layout` in a problem instance.
