@@ -210,7 +210,7 @@ pub fn sample_layout(
                 (None, _) => true,
             };
 
-            if worth_testing && !cde.shape_collides(&buffer, &irrel_hazards) {
+            if worth_testing && !cde.poly_collides(&buffer, &irrel_hazards) {
                 //sample is valid and improves on the current best
                 let p_opt = PlacingOption::from_transform(l_index, item.id, transform);
                 hpg_sampler.tighten(cost);
@@ -247,7 +247,7 @@ pub fn sample_layout(
             //only validate the sample if it possibly can replace the current best
             let worth_testing = cost < *best_cost;
 
-            if worth_testing && !cde.shape_collides(&buffer, &irrel_hazards) {
+            if worth_testing && !cde.poly_collides(&buffer, &irrel_hazards) {
                 //sample is valid and improves on the current best
                 let p_opt = PlacingOption::from_transform(l_index, item.id, transform);
                 ls_sampler.shift_mean(&p_opt.d_transform);

@@ -126,7 +126,7 @@ pub fn item_to_place_does_not_collide(
     if layout
         .cde()
         .surrogate_collides(shape.surrogate(), transformation, &entities_to_ignore)
-        || layout.cde().shape_collides(&t_shape, &entities_to_ignore)
+        || layout.cde().poly_collides(&t_shape, &entities_to_ignore)
     {
         return false;
     }
@@ -148,7 +148,7 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
         let entities_to_ignore =
             hazard_filter::generate_irrelevant_hazards(&combo_filter, layout.cde().all_hazards());
 
-        if layout.cde().shape_collides(&pi.shape, &entities_to_ignore) {
+        if layout.cde().poly_collides(&pi.shape, &entities_to_ignore) {
             println!("Collision detected for item {:.?}", pi.uid);
             util::print_layout(layout);
             return false;
@@ -181,7 +181,7 @@ pub fn placed_item_collides(
 
     layout
         .cde()
-        .shape_collides(&placed_item.shape, &entities_to_ignore)
+        .poly_collides(&placed_item.shape, &entities_to_ignore)
 }
 
 pub fn qt_node_contains_no_deactivated_hazards<'a>(

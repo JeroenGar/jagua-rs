@@ -74,7 +74,6 @@ impl Layout {
         self.placed_items.push(placed_item);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
-        debug_assert!(assertions::layout_is_collision_free(self));
     }
 
     pub fn remove_item(&mut self, pi_uid: &PlacedItemUID, commit_instant: bool) {

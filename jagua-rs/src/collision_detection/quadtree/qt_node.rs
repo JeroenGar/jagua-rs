@@ -168,12 +168,56 @@ impl QTNode {
                                     QTHazPresence::Entire => {
                                         unreachable!("should have been handled above")
                                     }
-                                    QTHazPresence::Partial(p_haz) => {
-                                        !irrelevant_hazards.contains(&hz.entity)
-                                            && p_haz.collides_with(entity)
-                                    }
+                                    QTHazPresence::Partial(p_haz) => p_haz.collides_with(entity),
                                 })
                                 .map(|hz| &hz.entity)
+                        }
+                    },
+                },
+            },
+        }
+    }
+
+    ///TODO: document
+    pub fn collides_with<T>(&self, entity: &T, irrelevant_hazards: &mut Vec<HazardEntity>)
+    where
+        T: CollidesWith<AARectangle>,
+        PartialQTHaz: CollidesWith<T>,
+    {
+        match self.hazards.strongest(irrelevant_hazards) {
+            None => (),
+            Some(strongest_hazard) => match entity.collides_with(&self.bbox) {
+                false => (),
+                true => match strongest_hazard.presence {
+                    QTHazPresence::None => (),
+                    QTHazPresence::Entire => {
+                        irrelevant_hazards.push(strongest_hazard.entity.clone())
+                    }
+                    QTHazPresence::Partial(_) => match &self.children {
+                        Some(children) => {
+                            //Check if any of the children intersect with the entity
+                            children
+                                .iter()
+                                .for_each(|child| child.collides_with(entity, irrelevant_hazards))
+                        }
+                        None => {
+                            //Check if any of the partially present (and active) hazards collide with the entity
+                            self.hazards
+                                .active_hazards()
+                                .iter()
+                                .for_each(|hz| match &hz.presence {
+                                    QTHazPresence::None => (),
+                                    QTHazPresence::Entire => {
+                                        unreachable!("should have been handled above")
+                                    }
+                                    QTHazPresence::Partial(p_haz) => {
+                                        if !irrelevant_hazards.contains(&hz.entity)
+                                            && p_haz.collides_with(entity)
+                                        {
+                                            irrelevant_hazards.push(hz.entity.clone());
+                                        }
+                                    }
+                                })
                         }
                     },
                 },

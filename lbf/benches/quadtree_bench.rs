@@ -131,7 +131,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
                 let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, transf);
-                    let collides = layout.cde().shape_collides(&buffer_shape, &[]);
+                    let collides = layout.cde().poly_collides(&buffer_shape, &[]);
                     if collides {
                         n_invalid += 1;
                     } else {
@@ -197,7 +197,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, &transf);
-                    let collides = layout.cde().shape_collides(&buffer_shape, &[]);
+                    let collides = layout.cde().poly_collides(&buffer_shape, &[]);
                     criterion::black_box(collides); //prevent the compiler from optimizing the loop away
                 }
 

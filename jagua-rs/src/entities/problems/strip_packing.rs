@@ -121,7 +121,7 @@ impl SPProblem {
             let d_transform = transform.decompose();
             let transformed_shape = shape.transform_clone(&transform);
             let cde = self.layout.cde();
-            if !cde.shape_collides(&transformed_shape, entities_to_ignore.as_ref()) {
+            if !cde.poly_collides(&transformed_shape, entities_to_ignore.as_ref()) {
                 let insert_opt = PlacingOption {
                     layout_index: STRIP_LAYOUT_IDX,
                     item_id: p_uid.item_id,

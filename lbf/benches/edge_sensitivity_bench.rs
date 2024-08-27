@@ -127,7 +127,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                             true => true,
                             false => {
                                 buffer_shape.transform_from(&item.shape, transf);
-                                layout.cde().shape_collides(&buffer_shape, &[])
+                                layout.cde().poly_collides(&buffer_shape, &[])
                             }
                         };
                         match collides {
