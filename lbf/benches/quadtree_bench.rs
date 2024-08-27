@@ -60,25 +60,25 @@ fn quadtree_update_bench(c: &mut Criterion) {
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
                 // Remove an item from the layout
-                let pi_uid = problem
+                let (pi_key, pi) = problem
                     .get_layout(&layout_index)
                     .placed_items()
-                    .values()
-                    .map(|p_i| p_i.uid.clone())
+                    .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
 
+                let p_opt = PlacingOption {
+                    layout_index,
+                    item_id: pi.item_id,
+                    d_transf: pi.d_transf,
+                };
+
                 //println!("Removing item with id: {}\n", pi_uid.item_id);
-                problem.remove_item(layout_index, &pi_uid, true);
+                problem.remove_item(layout_index, pi_key, true);
 
                 problem.flush_changes();
 
-                problem.place_item(&PlacingOption {
-                    layout_index,
-                    item_id: pi_uid.item_id,
-                    transform: pi_uid.d_transf.compose(),
-                    d_transform: pi_uid.d_transf,
-                });
+                problem.place_item(p_opt);
             })
         });
     }
@@ -178,20 +178,27 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
 
         let mut sample_cycler = samples.chunks(N_SAMPLES_PER_ITER).cycle();
 
+        let layout_index = LayoutIndex::Real(0);
+
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
-                let pi_uid = problem
-                    .get_layout(LayoutIndex::Real(0))
+                let (pi_key, pi) = problem
+                    .get_layout(layout_index)
                     .placed_items()
-                    .values()
-                    .map(|p_i| p_i.uid.clone())
+                    .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
 
-                problem.remove_item(LayoutIndex::Real(0), &pi_uid, true);
+                let p_opt = PlacingOption {
+                    layout_index,
+                    item_id: pi.item_id,
+                    d_transf: pi.d_transf,
+                };
+
+                problem.remove_item(layout_index, pi_key, true);
                 problem.flush_changes();
 
-                let item_id = pi_uid.item_id;
+                let item_id = p_opt.item_id;
                 let item = instance.item(item_id);
                 let layout = problem.get_layout(LayoutIndex::Real(0));
                 let mut buffer_shape = item.shape.as_ref().clone();
@@ -201,12 +208,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                     criterion::black_box(collides); //prevent the compiler from optimizing the loop away
                 }
 
-                problem.place_item(&PlacingOption {
-                    layout_index: LayoutIndex::Real(0),
-                    item_id: pi_uid.item_id,
-                    transform: pi_uid.d_transf.compose(),
-                    d_transform: pi_uid.d_transf,
-                })
+                problem.place_item(p_opt)
             })
         });
     }

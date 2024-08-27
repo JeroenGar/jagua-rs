@@ -1,8 +1,7 @@
-use std::sync::Arc;
-
-use crate::entities::placed_item::PlacedItemUID;
+use crate::entities::placed_item::PIKey;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use std::sync::Arc;
 
 /// Defines a certain spatial constraint that affects the feasibility of a placement.
 #[derive(Clone, Debug)]
@@ -25,11 +24,11 @@ impl Hazard {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 /// Entity inducing the `Hazard`. All entities are uniquely identified.
 pub enum HazardEntity {
     /// An item placed in the layout.
-    PlacedItem(PlacedItemUID),
+    PlacedItem(PIKey),
     /// Represents all regions outside the bin
     BinExterior,
     /// Represents a hole in the bin.
@@ -70,8 +69,8 @@ impl HazardEntity {
     }
 }
 
-impl From<PlacedItemUID> for HazardEntity {
-    fn from(p_uid: PlacedItemUID) -> Self {
-        HazardEntity::PlacedItem(p_uid)
+impl From<PIKey> for HazardEntity {
+    fn from(k: PIKey) -> Self {
+        HazardEntity::PlacedItem(k)
     }
 }

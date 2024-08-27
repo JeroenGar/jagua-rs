@@ -313,16 +313,15 @@ pub fn build_strip_packing_solution(
             &problem.layout.bin().pretransform,
         );
 
-        let d_transform = transform.decompose();
+        let d_transf = transform.decompose();
 
         let placing_opt = PlacingOption {
             layout_index: STRIP_LAYOUT_IDX,
             item_id: item.id,
-            transform,
-            d_transform,
+            d_transf,
         };
 
-        problem.place_item(&placing_opt);
+        problem.place_item(placing_opt);
         problem.flush_changes();
     }
 
@@ -360,15 +359,14 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
             &first_item.pretransform,
             &bin.pretransform,
         );
-        let d_transform = transform.decompose();
+        let d_transf = transform.decompose();
 
         let initial_insert_opt = PlacingOption {
             layout_index: LayoutIndex::Template(template_index),
             item_id: first_item.id,
-            transform: transform,
-            d_transform: d_transform,
+            d_transf,
         };
-        let layout_index = problem.place_item(&initial_insert_opt);
+        let (layout_index, _) = problem.place_item(initial_insert_opt);
         problem.flush_changes();
 
         //Insert the rest of the items
@@ -384,15 +382,14 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
                 &bin.pretransform,
             );
 
-            let d_transform = transform.decompose();
+            let d_transf = transform.decompose();
 
             let insert_opt = PlacingOption {
                 layout_index,
                 item_id: item.id,
-                transform,
-                d_transform,
+                d_transf,
             };
-            problem.place_item(&insert_opt);
+            problem.place_item(insert_opt);
             problem.flush_changes();
         }
     }
@@ -422,11 +419,11 @@ pub fn compose_json_solution(
                 .placed_items
                 .values()
                 .map(|placed_item| {
-                    let item_index = placed_item.item_id();
+                    let item_index = placed_item.item_id;
                     let item = instance.item(item_index);
 
                     let abs_transf = internal_to_absolute_transform(
-                        placed_item.d_transformation(),
+                        &placed_item.d_transf,
                         &item.pretransform,
                         &sl.bin.pretransform,
                     )

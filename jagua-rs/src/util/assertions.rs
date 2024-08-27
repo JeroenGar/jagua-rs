@@ -68,7 +68,7 @@ pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool 
         if layout
             .placed_items()
             .values()
-            .find(|pi| pi.uid == placed_item.uid)
+            .find(|pi| pi.item_id == placed_item.item_id && pi.d_transf == placed_item.d_transf)
             .is_none()
         {
             return false;
@@ -131,8 +131,8 @@ pub fn item_to_place_does_not_collide(
 }
 
 pub fn layout_is_collision_free(layout: &Layout) -> bool {
-    for pi in layout.placed_items().values() {
-        let ehf = EntityHazardFilter(vec![pi.into()]);
+    for (key, pi) in layout.placed_items().iter() {
+        let ehf = EntityHazardFilter(vec![key.into()]);
 
         let combo_filter = match &pi.hazard_filter {
             None => CombinedHazardFilter {
@@ -146,7 +146,7 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
             hazard_filter::generate_irrelevant_hazards(&combo_filter, layout.cde().all_hazards());
 
         if layout.cde().poly_collides(&pi.shape, &entities_to_ignore) {
-            println!("Collision detected for item {:.?}", pi.uid);
+            println!("Collision detected for item {:.?}", pi.item_id);
             util::print_layout(layout);
             return false;
         }
@@ -276,8 +276,9 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
     //rebuild the quadtree
     let bin = layout.bin();
     let mut fresh_cde = bin.base_cde.as_ref().clone();
-    for pi in layout.placed_items().values() {
-        fresh_cde.register_hazard(pi.into());
+    for (pi_key, pi) in layout.placed_items().iter() {
+        let hazard = Hazard::new(pi_key.into(), pi.shape.clone());
+        fresh_cde.register_hazard(hazard);
     }
 
     qt_nodes_match(Some(layout.cde().quadtree()), Some(fresh_cde.quadtree()))

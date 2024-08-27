@@ -1,12 +1,12 @@
-use std::path::Path;
-
+use itertools::Itertools;
 use log::info;
 use rand::prelude::{IteratorRandom, SmallRng};
 use rand::SeedableRng;
+use std::path::Path;
 
 use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
-use jagua_rs::entities::placed_item::PlacedItemUID;
+use jagua_rs::entities::placing_option::PlacingOption;
 use jagua_rs::entities::problems::problem::Problem;
 use jagua_rs::entities::problems::problem_generic::{ProblemGeneric, STRIP_LAYOUT_IDX};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
@@ -43,7 +43,7 @@ pub fn create_blf_problem(
     instance: Instance,
     config: LBFConfig,
     n_items_removed: usize,
-) -> (SPProblem, Vec<PlacedItemUID>) {
+) -> (SPProblem, Vec<PlacingOption>) {
     assert!(matches!(&instance, &Instance::SP(_)));
     let mut lbf_optimizer = LBFOptimizer::new(instance.clone(), config, SmallRng::seed_from_u64(0));
     lbf_optimizer.solve();
@@ -55,21 +55,34 @@ pub fn create_blf_problem(
 
     let mut rng = SmallRng::seed_from_u64(0);
     // Remove some items from the layout
-    let removed_pi_uids = problem
+    let pi_keys_to_remove = problem
         .get_layout(&STRIP_LAYOUT_IDX)
         .placed_items()
-        .values()
-        .map(|p_i| p_i.uid.clone())
+        .iter()
+        .map(|(pi_key, _)| (pi_key))
         .choose_multiple(&mut rng, n_items_removed);
 
-    for pi_uid in removed_pi_uids.iter() {
-        problem.remove_item(STRIP_LAYOUT_IDX, pi_uid, true);
+    let p_opts = pi_keys_to_remove
+        .iter()
+        .map(|k| {
+            let pi = &problem.layout.placed_items()[*k];
+            PlacingOption {
+                layout_index: STRIP_LAYOUT_IDX,
+                item_id: pi.item_id,
+                d_transf: pi.d_transf,
+            }
+        })
+        .collect_vec();
+
+    for pi_key in pi_keys_to_remove {
+        let item_id = problem.layout.placed_items()[pi_key].item_id;
+        problem.remove_item(STRIP_LAYOUT_IDX, pi_key, true);
         info!(
             "Removed item: {} with {} edges",
-            pi_uid.item_id,
+            item_id,
             lbf_optimizer
                 .instance
-                .item(pi_uid.item_id)
+                .item(item_id)
                 .shape
                 .number_of_points()
         );
@@ -91,7 +104,7 @@ pub fn create_blf_problem(
         io::write_svg(&svg, Path::new("bench_layout.svg"));
     }
 
-    (problem, removed_pi_uids)
+    (problem, p_opts)
 }
 
 pub fn create_base_config() -> LBFConfig {

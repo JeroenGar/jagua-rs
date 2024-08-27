@@ -1,15 +1,13 @@
 use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
+use crate::collision_detection::hazard::Hazard;
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
-use crate::entities::placed_item::PlacedItem;
-use crate::entities::placed_item::PlacedItemUID;
+use crate::entities::placed_item::{PIKey, PlacedItem};
 use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
-use slotmap::{new_key_type, SlotMap};
-
-new_key_type! { pub struct PIKey; }
+use slotmap::SlotMap;
 
 ///A Layout is made out of a [Bin] with a set of [Item]s positioned inside of it in a specific way.
 ///It is a mutable representation, and can be modified by placing or removing items.
@@ -73,36 +71,28 @@ impl Layout {
 
     pub fn place_item(&mut self, item: &Item, d_transformation: &DTransformation) -> PIKey {
         let placed_item = PlacedItem::new(item, d_transformation.clone());
-        self.cde.register_hazard((&placed_item).into());
         let pi_key = self.placed_items.insert(placed_item);
+
+        let hazard = Hazard::new(pi_key.into(), self.placed_items[pi_key].shape.clone());
+        self.cde.register_hazard(hazard);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
 
         pi_key
     }
 
-    pub fn remove_item_with_uid(&mut self, pi_uid: &PlacedItemUID, commit_instant: bool) {
-        // Find the placed item and remove it
-        let key = self
-            .placed_items
-            .iter()
-            .find(|(_, pi)| &pi.uid == pi_uid)
-            .map(|(k, _)| k)
-            .expect("placed item does not exist");
-        self.remove_item_with_key(key, commit_instant)
-    }
-
-    pub fn remove_item_with_key(&mut self, key: PIKey, commit_instant: bool) {
+    pub fn remove_item(&mut self, key: PIKey, commit_instant: bool) -> PlacedItem {
         let p_item = self
             .placed_items
             .remove(key)
             .expect("key is not valid anymore");
 
         // update the collision detection engine
-        let hazard_entity = p_item.uid.clone().into();
-        self.cde.deregister_hazard(&hazard_entity, commit_instant);
+        self.cde.deregister_hazard(key.into(), commit_instant);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
+
+        p_item
     }
 
     /// True if no items are placed

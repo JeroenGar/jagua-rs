@@ -55,17 +55,20 @@ mod tests {
             for _ in 0..N_ITEMS_TO_REMOVE {
                 //pick random existing layout
                 let layout_index = LayoutIndex::Real(rng.gen_range(0..problem.layouts().len()));
-                let random_placed_item = match problem
+                let random_placed_item = problem
                     .get_layout(&layout_index)
                     .placed_items()
-                    .values()
+                    .iter()
                     .choose(&mut rng)
-                {
-                    Some(pi) => pi.uid.clone(),
-                    None => break,
-                };
-                // remove the item
-                problem.remove_item(layout_index, &random_placed_item, false);
+                    .map(|(key, _)| key);
+
+                if let Some(random_placed_item) = random_placed_item {
+                    // remove the item
+                    problem.remove_item(layout_index, random_placed_item, false);
+                } else {
+                    // no items to remove
+                    break;
+                }
             }
             // flush changes
             problem.flush_changes();

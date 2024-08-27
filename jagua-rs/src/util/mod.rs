@@ -21,15 +21,14 @@ pub fn print_layout(layout: &Layout) {
 
     for pi in layout.placed_items().values() {
         let transformation_str = {
-            let t_decomp = &pi.uid.d_transf;
+            let t_decomp = &pi.d_transf;
             let (tr, (tx, ty)) = (t_decomp.rotation(), t_decomp.translation());
             format!("&DTransformation::new({:.6},({:.6},{:.6}))", tr, tx, ty)
         };
 
         println!(
             "layout.place_item(instance.item({}), {});",
-            pi.item_id(),
-            transformation_str
+            pi.item_id, transformation_str
         );
     }
 }

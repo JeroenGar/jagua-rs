@@ -88,7 +88,7 @@ impl CDEngine {
         let hazard = match hazard_in_uncommitted_deregs {
             Some(index) => {
                 let unc_hazard = self.uncommitted_deregisters.swap_remove(index);
-                self.quadtree.activate_hazard(&unc_hazard.entity);
+                self.quadtree.activate_hazard(unc_hazard.entity);
                 unc_hazard
             }
             None => {
@@ -114,11 +114,11 @@ impl CDEngine {
     /// <br>
     /// Call [`Self::commit_deregisters`] to commit all uncommitted deregisters in both quadtree & hazard proximity grid
     /// or [`Self::flush_haz_prox_grid`] to just clear the hazard proximity grid.
-    pub fn deregister_hazard(&mut self, hazard_entity: &HazardEntity, commit_instant: bool) {
+    pub fn deregister_hazard(&mut self, hazard_entity: HazardEntity, commit_instant: bool) {
         let haz_index = self
             .dynamic_hazards
             .iter()
-            .position(|h| &h.entity == hazard_entity)
+            .position(|h| h.entity == hazard_entity)
             .expect("Hazard not found");
 
         let hazard = self.dynamic_hazards.swap_remove(haz_index);
@@ -174,7 +174,7 @@ impl CDEngine {
                 .position(|h| &h.entity == haz_entity)
                 .expect("Hazard not found");
             self.dynamic_hazards.swap_remove(haz_index);
-            self.quadtree.deregister_hazard(&haz_entity);
+            self.quadtree.deregister_hazard(*haz_entity);
         }
 
         //Some of the uncommitted deregisters might be in present in snapshot, if so we can just reactivate them
@@ -184,12 +184,12 @@ impl CDEngine {
                 .position(|h| &h.entity == &unc_haz.entity)
             {
                 //the uncommitted removed hazard needs to be activated again
-                self.quadtree.activate_hazard(&unc_haz.entity);
+                self.quadtree.activate_hazard(unc_haz.entity);
                 self.dynamic_hazards.push(unc_haz);
                 hazards_to_add.swap_remove(pos);
             } else {
                 //uncommitted deregister is not preset in the snapshot, delete it from the quadtree
-                self.quadtree.deregister_hazard(&unc_haz.entity);
+                self.quadtree.deregister_hazard(unc_haz.entity);
             }
         }
 
@@ -210,7 +210,7 @@ impl CDEngine {
     /// and flushing the hazard proximity grid.
     pub fn commit_deregisters(&mut self) {
         for uc_haz in self.uncommitted_deregisters.drain(..) {
-            self.quadtree.deregister_hazard(&uc_haz.entity);
+            self.quadtree.deregister_hazard(uc_haz.entity);
         }
         self.haz_prox_grid
             .as_mut()
@@ -359,7 +359,7 @@ impl CDEngine {
 
     /// Checks whether a point definitely collides with any of the (relevant) hazards.
     /// Only fully hazardous nodes in the quadtree are considered.
-    pub fn point_definitely_collides_with(&self, point: &Point, entity: &HazardEntity) -> Tribool {
+    pub fn point_definitely_collides_with(&self, point: &Point, entity: HazardEntity) -> Tribool {
         match self.bbox.collides_with(point) {
             false => Tribool::Indeterminate, //point is outside the quadtree, so no information available
             true => self.quadtree.point_definitely_collides_with(point, entity),
@@ -439,7 +439,7 @@ impl CDEngine {
             //maybe the quadtree can help us.
             match self
                 .quadtree
-                .point_definitely_collides_with(&s_mu.poi.center, &haz.entity)
+                .point_definitely_collides_with(&s_mu.poi.center, haz.entity)
                 .try_into()
             {
                 Ok(collides) => return collides,

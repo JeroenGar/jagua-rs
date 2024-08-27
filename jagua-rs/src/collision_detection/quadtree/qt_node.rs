@@ -62,7 +62,7 @@ impl QTNode {
         self.hazards.add(hazard);
     }
 
-    pub fn deregister_hazard(&mut self, hazard_entity: &HazardEntity) {
+    pub fn deregister_hazard(&mut self, hazard_entity: HazardEntity) {
         let removed_ch = self.hazards.remove(hazard_entity);
 
         if removed_ch.is_some() && self.has_children() {
@@ -80,7 +80,7 @@ impl QTNode {
         }
     }
 
-    pub fn activate_hazard(&mut self, entity: &HazardEntity) {
+    pub fn activate_hazard(&mut self, entity: HazardEntity) {
         let modified = self.hazards.activate_hazard(entity);
         if modified {
             match &mut self.children {
@@ -90,7 +90,7 @@ impl QTNode {
         }
     }
 
-    pub fn deactivate_hazard(&mut self, entity: &HazardEntity) {
+    pub fn deactivate_hazard(&mut self, entity: HazardEntity) {
         let modified = self.hazards.deactivate_hazard(entity);
         if modified {
             match &mut self.children {
@@ -254,7 +254,7 @@ impl QTNode {
         }
     }
 
-    pub fn point_definitely_collides_with(&self, point: &Point, entity: &HazardEntity) -> Tribool {
+    pub fn point_definitely_collides_with(&self, point: &Point, entity: HazardEntity) -> Tribool {
         match self.hazards.get(entity) {
             None => Tribool::False, //Node does not contain entity
             Some(hazard) => match self.bbox.collides_with(point) {

@@ -6,7 +6,7 @@ use ordered_float::NotNan;
 use crate::fsize;
 use crate::geometry::transformation::Transformation;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Copy)]
 /// A proper rigid transformation, decomposed into a rotation followed by a translation.
 pub struct DTransformation {
     /// The rotation in radians

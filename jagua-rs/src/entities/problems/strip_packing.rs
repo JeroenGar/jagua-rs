@@ -7,7 +7,7 @@ use crate::entities::bin::Bin;
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::layout::Layout;
-use crate::entities::placed_item::PlacedItemUID;
+use crate::entities::placed_item::PIKey;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::ProblemGeneric;
@@ -91,11 +91,11 @@ impl SPProblem {
     /// Modifies the shape of the strip to a new rectangle.
     /// All items that fit in the new strip are kept, the rest are removed.
     pub fn modify_strip(&mut self, rect: AARectangle) {
-        let placed_items_uids = self
+        let placed_items = self
             .layout
             .placed_items()
             .iter()
-            .map(|(_, pi)| pi.uid.clone())
+            .map(|(_, pi)| (pi.item_id, pi.d_transf))
             .collect_vec();
 
         //reset the missing item quantities
@@ -111,24 +111,22 @@ impl SPProblem {
         );
 
         //place the items back in the new layout
-        for p_uid in placed_items_uids {
-            let item = self.instance.item(p_uid.item_id);
+        for (item_id, d_transf) in placed_items {
+            let item = self.instance.item(item_id);
             let entities_to_ignore = item.hazard_filter.as_ref().map_or(vec![], |f| {
                 hazard_filter::generate_irrelevant_hazards(f, self.layout.cde().all_hazards())
             });
             let shape = &item.shape;
-            let transform = p_uid.d_transf.compose();
-            let d_transform = transform.decompose();
+            let transform = d_transf.compose();
             let transformed_shape = shape.transform_clone(&transform);
             let cde = self.layout.cde();
             if !cde.poly_collides(&transformed_shape, entities_to_ignore.as_ref()) {
                 let insert_opt = PlacingOption {
                     layout_index: STRIP_LAYOUT_IDX,
-                    item_id: p_uid.item_id,
-                    transform,
-                    d_transform,
+                    item_id,
+                    d_transf,
                 };
-                self.place_item(&insert_opt);
+                self.place_item(insert_opt);
             }
         }
     }
@@ -167,31 +165,26 @@ impl SPProblem {
 }
 
 impl ProblemGeneric for SPProblem {
-    fn place_item(&mut self, p_opt: &PlacingOption) -> LayoutIndex {
+    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PIKey) {
         assert_eq!(
             p_opt.layout_index, STRIP_LAYOUT_IDX,
             "Strip packing problems only have a single layout"
         );
         let item_id = p_opt.item_id;
         let item = self.instance.item(item_id);
-        self.layout.place_item(item, &p_opt.d_transform);
+        let placed_item_key = self.layout.place_item(item, &p_opt.d_transf);
 
         self.register_included_item(item_id);
-        STRIP_LAYOUT_IDX
+        (STRIP_LAYOUT_IDX, placed_item_key)
     }
 
-    fn remove_item(
-        &mut self,
-        layout_index: LayoutIndex,
-        pi_uid: &PlacedItemUID,
-        commit_instantly: bool,
-    ) {
+    fn remove_item(&mut self, layout_index: LayoutIndex, pi_key: PIKey, commit_instantly: bool) {
         assert_eq!(
             layout_index, STRIP_LAYOUT_IDX,
             "strip packing problems only have a single layout"
         );
-        self.layout.remove_item_with_uid(pi_uid, commit_instantly);
-        self.deregister_included_item(pi_uid.item_id);
+        let pi = self.layout.remove_item(pi_key, commit_instantly);
+        self.deregister_included_item(pi.item_id);
     }
 
     fn create_solution(&mut self, _old_solution: &Option<Solution>) -> Solution {

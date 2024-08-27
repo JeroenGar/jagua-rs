@@ -87,13 +87,13 @@ impl LBFOptimizer {
                     &mut self.sample_counter,
                 ) {
                     Some(i_opt) => {
-                        let l_index = self.problem.place_item(&i_opt);
+                        let l_index = self.problem.place_item(i_opt);
                         info!(
                             "[LBF] placing item {}/{} with id {} at [{}] in Layout {:?}",
                             self.problem.placed_item_qtys().sum::<usize>(),
                             self.instance.total_item_qty(),
                             i_opt.item_id,
-                            i_opt.d_transform,
+                            i_opt.d_transf,
                             l_index
                         );
                         if self.problem.placed_item_qtys().sum::<usize>() >= ITEM_LIMIT {
@@ -165,13 +165,13 @@ pub fn find_lbf_placement(
 
 pub fn sample_layout(
     problem: &Problem,
-    l_index: LayoutIndex,
+    layout_index: LayoutIndex,
     item: &Item,
     config: &LBFConfig,
     rng: &mut impl Rng,
     sample_counter: &mut usize,
 ) -> Option<PlacingOption> {
-    let layout: &Layout = problem.get_layout(&l_index);
+    let layout: &Layout = problem.get_layout(&layout_index);
     let cde = layout.cde();
     let irrel_hazards = match item.hazard_filter.as_ref() {
         None => vec![],
@@ -212,11 +212,15 @@ pub fn sample_layout(
 
             if worth_testing && !cde.poly_collides(&buffer, &irrel_hazards) {
                 //sample is valid and improves on the current best
-                let p_opt = PlacingOption::from_transform(l_index, item.id, transform);
+                let p_opt = PlacingOption {
+                    layout_index,
+                    item_id: item.id,
+                    d_transf: transform.decompose(),
+                };
                 hpg_sampler.tighten(cost);
                 debug!(
                     "[UNI: {i}/{uni_sample_budget}] better: {} ",
-                    &p_opt.d_transform
+                    &p_opt.d_transf
                 );
 
                 best = Some((p_opt, cost));
@@ -235,13 +239,13 @@ pub fn sample_layout(
     And the standard deviation tightens, to focus the search around the best sample.
      */
 
-    let mut ls_sampler =
-        LSSampler::from_defaults(item, &best_opt.d_transform, &layout.bin().bbox());
+    let mut ls_sampler = LSSampler::from_defaults(item, &best_opt.d_transf, &layout.bin().bbox());
 
     for i in 0..ls_sample_budget {
-        let transform = ls_sampler.sample(rng);
-        if !cde.surrogate_collides(surrogate, &transform, &irrel_hazards) {
-            buffer.transform_from(&item.shape, &transform);
+        let d_transf = ls_sampler.sample(rng);
+        let transf = d_transf.compose();
+        if !cde.surrogate_collides(surrogate, &transf, &irrel_hazards) {
+            buffer.transform_from(&item.shape, &transf);
             let cost = LBFPlacingCost::from_shape(&buffer);
 
             //only validate the sample if it possibly can replace the current best
@@ -249,9 +253,13 @@ pub fn sample_layout(
 
             if worth_testing && !cde.poly_collides(&buffer, &irrel_hazards) {
                 //sample is valid and improves on the current best
-                let p_opt = PlacingOption::from_transform(l_index, item.id, transform);
-                ls_sampler.shift_mean(&p_opt.d_transform);
-                debug!("[LS: {i}/{ls_sample_budget}] better: {}", p_opt.d_transform);
+                let p_opt = PlacingOption {
+                    layout_index,
+                    item_id: item.id,
+                    d_transf,
+                };
+                ls_sampler.shift_mean(&p_opt.d_transf);
+                debug!("[LS: {i}/{ls_sample_budget}] better: {}", &p_opt.d_transf);
                 (*best_opt, *best_cost) = (p_opt, cost);
             }
         }

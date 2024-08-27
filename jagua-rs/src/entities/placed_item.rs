@@ -1,29 +1,27 @@
-use std::sync::Arc;
-
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::hazard_filter::QZHazardFilter;
 use crate::entities::item::Item;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use slotmap::new_key_type;
+use std::sync::Arc;
+
+new_key_type! {
+    /// Unique key for each `PlacedItem` in a layout.
+    pub struct PIKey;
+}
 
 /// Represents an `Item` that has been placed in a `Layout`
 #[derive(Clone, Debug)]
 pub struct PlacedItem {
-    /// Unique identifier for the placed item
-    pub uid: PlacedItemUID,
+    /// ID of the type of `Item` that was placed
+    pub item_id: usize,
+    /// The transformation that was applied to the `Item` before it was placed
+    pub d_transf: DTransformation,
     /// The filter for hazards that the `Item` is unaffected by
     pub hazard_filter: Option<QZHazardFilter>,
     /// The shape of the `Item` after it has been transformed and placed in a `Layout`
     pub shape: Arc<SimplePolygon>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-/// Unique identifier for a placed item
-pub struct PlacedItemUID {
-    pub item_id: usize,
-    pub d_transf: DTransformation,
 }
 
 impl PlacedItem {
@@ -31,34 +29,12 @@ impl PlacedItem {
         let transf = d_transf.compose();
         let shape = Arc::new(item.shape.transform_clone(&transf));
         let qz_haz_filter = item.hazard_filter.clone();
-        let pi_uid = PlacedItemUID {
+
+        PlacedItem {
             item_id: item.id,
             d_transf,
-        };
-        PlacedItem {
-            uid: pi_uid,
             shape,
             hazard_filter: qz_haz_filter,
         }
-    }
-
-    pub fn item_id(&self) -> usize {
-        self.uid.item_id
-    }
-
-    pub fn d_transformation(&self) -> &DTransformation {
-        &self.uid.d_transf
-    }
-}
-
-impl Into<Hazard> for &PlacedItem {
-    fn into(self) -> Hazard {
-        Hazard::new(self.into(), self.shape.clone())
-    }
-}
-
-impl Into<HazardEntity> for &PlacedItem {
-    fn into(self) -> HazardEntity {
-        HazardEntity::PlacedItem(self.uid.clone())
     }
 }
