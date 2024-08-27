@@ -67,8 +67,8 @@ impl BPProblem {
         self.register_bin(layout.bin().id);
         layout
             .placed_items()
-            .iter()
-            .for_each(|p_i| self.register_included_item(p_i.item_id()));
+            .values()
+            .for_each(|pi| self.register_included_item(pi.item_id()));
         self.layouts.push(layout);
         LayoutIndex::Real(self.layouts.len() - 1)
     }
@@ -81,8 +81,8 @@ impl BPProblem {
                 self.deregister_bin(layout.bin().id);
                 layout
                     .placed_items()
-                    .iter()
-                    .for_each(|v| self.deregister_included_item(v.item_id()));
+                    .values()
+                    .for_each(|pi| self.deregister_included_item(pi.item_id()));
                 self.uncommitted_removed_layouts.push(layout);
             }
             LayoutIndex::Template(_) => unreachable!("cannot remove template layout"),
@@ -147,7 +147,7 @@ impl ProblemGeneric for BPProblem {
             LayoutIndex::Real(i) => {
                 self.layout_has_changed(self.layouts[i].id());
                 let layout = &mut self.layouts[i];
-                layout.remove_item(pi_uid, commit_instantly);
+                layout.remove_item_with_uid(pi_uid, commit_instantly);
                 if layout.is_empty() {
                     //if layout is empty, remove it
                     self.deregister_layout(layout_index);

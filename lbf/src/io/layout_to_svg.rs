@@ -93,7 +93,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
     //draw items
     let items_group = {
         let mut items_group = Group::new();
-        for pi in layout.placed_items() {
+        for pi in layout.placed_items().values() {
             let mut group = Group::new();
             let item = instance.item(pi.item_id());
             let shape = &pi.shape;

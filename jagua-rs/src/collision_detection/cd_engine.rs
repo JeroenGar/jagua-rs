@@ -272,7 +272,7 @@ impl CDEngine {
     }
 
     /// Returns all hazards in the CDE, both static and dynamic.
-    pub fn all_hazards(&self) -> impl Iterator<Item=&Hazard> {
+    pub fn all_hazards(&self) -> impl Iterator<Item = &Hazard> {
         self.static_hazards
             .iter()
             .chain(self.dynamic_hazards.iter())
@@ -508,13 +508,11 @@ impl CDEngine {
             .for_each(|e| self.quadtree.collides_with(&e, &mut buffer));
 
         //collect all colliding entities due to containment
-        self.all_hazards()
-            .filter(|h| h.active)
-            .for_each(|h| {
-                if !buffer.contains(&h.entity) && self.poly_or_hazard_are_contained(shape, h) {
-                    buffer.push(h.entity.clone());
-                }
-            });
+        self.all_hazards().filter(|h| h.active).for_each(|h| {
+            if !buffer.contains(&h.entity) && self.poly_or_hazard_are_contained(shape, h) {
+                buffer.push(h.entity.clone());
+            }
+        });
 
         //drain the irrelevant hazards, leaving only the colliding entities
         buffer.drain(0..n_irrelevant);

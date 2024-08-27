@@ -58,7 +58,7 @@ mod tests {
                 let random_placed_item = match problem
                     .get_layout(&layout_index)
                     .placed_items()
-                    .iter()
+                    .values()
                     .choose(&mut rng)
                 {
                     Some(pi) => pi.uid.clone(),

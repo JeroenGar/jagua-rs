@@ -8,9 +8,7 @@ use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::placed_item::PlacedItemUID;
 use jagua_rs::entities::problems::problem::Problem;
-use jagua_rs::entities::problems::problem_generic::{
-    LayoutIndex, ProblemGeneric, STRIP_LAYOUT_IDX,
-};
+use jagua_rs::entities::problems::problem_generic::{ProblemGeneric, STRIP_LAYOUT_IDX};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::fsize;
 use jagua_rs::io::json_instance::JsonInstance;
@@ -60,7 +58,7 @@ pub fn create_blf_problem(
     let removed_pi_uids = problem
         .get_layout(&STRIP_LAYOUT_IDX)
         .placed_items()
-        .iter()
+        .values()
         .map(|p_i| p_i.uid.clone())
         .choose_multiple(&mut rng, n_items_removed);
 

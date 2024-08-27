@@ -1,8 +1,6 @@
 use itertools::Itertools;
 use log::error;
 use std::collections::HashSet;
-use std::iter;
-use std::ops::Range;
 
 use crate::collision_detection::cd_engine::CDEngine;
 use crate::collision_detection::hazard::Hazard;
@@ -19,7 +17,6 @@ use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::layout::Layout;
 use crate::entities::layout::LayoutSnapshot;
-use crate::entities::placed_item::PlacedItem;
 use crate::entities::problems::problem_generic::ProblemGeneric;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
@@ -67,11 +64,11 @@ pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool 
     if layout.bin().id != layout_snapshot.bin.id {
         return false;
     }
-    for sp_item in layout_snapshot.placed_items.iter() {
+    for placed_item in layout_snapshot.placed_items.values() {
         if layout
             .placed_items()
-            .iter()
-            .find(|sp| sp.uid == sp_item.uid)
+            .values()
+            .find(|pi| pi.uid == placed_item.uid)
             .is_none()
         {
             return false;
@@ -134,7 +131,7 @@ pub fn item_to_place_does_not_collide(
 }
 
 pub fn layout_is_collision_free(layout: &Layout) -> bool {
-    for pi in layout.placed_items() {
+    for pi in layout.placed_items().values() {
         let ehf = EntityHazardFilter(vec![pi.into()]);
 
         let combo_filter = match &pi.hazard_filter {
@@ -155,33 +152,6 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
         }
     }
     return true;
-}
-
-pub fn placed_item_collides(
-    layout: &Layout,
-    placed_item: &PlacedItem,
-    ignored_range_idx: Range<usize>,
-) -> bool {
-    let ehf = EntityHazardFilter(
-        iter::once(placed_item.into())
-            .chain(ignored_range_idx.map(|i| (&layout.placed_items()[i]).into()))
-            .collect_vec(),
-    );
-
-    let combo_filter = match &placed_item.hazard_filter {
-        None => CombinedHazardFilter {
-            filters: vec![Box::new(&ehf)],
-        },
-        Some(hf) => CombinedHazardFilter {
-            filters: vec![Box::new(&ehf), Box::new(hf)],
-        },
-    };
-    let entities_to_ignore =
-        hazard_filter::generate_irrelevant_hazards(&combo_filter, layout.cde().all_hazards());
-
-    layout
-        .cde()
-        .poly_collides(&placed_item.shape, &entities_to_ignore)
 }
 
 pub fn qt_node_contains_no_deactivated_hazards<'a>(
@@ -306,7 +276,7 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
     //rebuild the quadtree
     let bin = layout.bin();
     let mut fresh_cde = bin.base_cde.as_ref().clone();
-    for pi in layout.placed_items() {
+    for pi in layout.placed_items().values() {
         fresh_cde.register_hazard(pi.into());
     }
 

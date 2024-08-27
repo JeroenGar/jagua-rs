@@ -19,7 +19,7 @@ pub fn print_layout(layout: &Layout) {
     );
     println!();
 
-    for pi in layout.placed_items() {
+    for pi in layout.placed_items().values() {
         let transformation_str = {
             let t_decomp = &pi.uid.d_transf;
             let (tr, (tx, ty)) = (t_decomp.rotation(), t_decomp.translation());

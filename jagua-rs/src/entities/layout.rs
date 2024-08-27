@@ -7,6 +7,9 @@ use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
+use slotmap::{new_key_type, SlotMap};
+
+new_key_type! { pub struct PIKey; }
 
 ///A Layout is made out of a [Bin] with a set of [Item]s positioned inside of it in a specific way.
 ///It is a mutable representation, and can be modified by placing or removing items.
@@ -20,7 +23,7 @@ pub struct Layout {
     /// The bin used for this layout
     bin: Bin,
     /// How the items are placed in the bin
-    placed_items: Vec<PlacedItem>,
+    placed_items: SlotMap<PIKey, PlacedItem>,
     /// The collision detection engine for this layout
     cde: CDEngine,
 }
@@ -31,7 +34,7 @@ impl Layout {
         Layout {
             id,
             bin,
-            placed_items: vec![],
+            placed_items: SlotMap::with_key(),
             cde,
         }
     }
@@ -68,24 +71,34 @@ impl Layout {
         Layout { id, ..self.clone() }
     }
 
-    pub fn place_item(&mut self, item: &Item, d_transformation: &DTransformation) {
+    pub fn place_item(&mut self, item: &Item, d_transformation: &DTransformation) -> PIKey {
         let placed_item = PlacedItem::new(item, d_transformation.clone());
         self.cde.register_hazard((&placed_item).into());
-        self.placed_items.push(placed_item);
+        let pi_key = self.placed_items.insert(placed_item);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
+
+        pi_key
     }
 
-    pub fn remove_item(&mut self, pi_uid: &PlacedItemUID, commit_instant: bool) {
+    pub fn remove_item_with_uid(&mut self, pi_uid: &PlacedItemUID, commit_instant: bool) {
         // Find the placed item and remove it
-        let pos = self
+        let key = self
             .placed_items
             .iter()
-            .position(|pi| &pi.uid == pi_uid)
+            .find(|(_, pi)| &pi.uid == pi_uid)
+            .map(|(k, _)| k)
             .expect("placed item does not exist");
-        let p_item = self.placed_items.remove(pos);
-        // update the collision detection engine
+        self.remove_item_with_key(key, commit_instant)
+    }
 
+    pub fn remove_item_with_key(&mut self, key: PIKey, commit_instant: bool) {
+        let p_item = self
+            .placed_items
+            .remove(key)
+            .expect("key is not valid anymore");
+
+        // update the collision detection engine
         let hazard_entity = p_item.uid.clone().into();
         self.cde.deregister_hazard(&hazard_entity, commit_instant);
 
@@ -101,7 +114,7 @@ impl Layout {
         &self.bin
     }
 
-    pub fn placed_items(&self) -> &Vec<PlacedItem> {
+    pub fn placed_items(&self) -> &SlotMap<PIKey, PlacedItem> {
         &self.placed_items
     }
 
@@ -112,7 +125,7 @@ impl Layout {
         let item_area = self
             .placed_items
             .iter()
-            .map(|p_i| p_i.shape.area())
+            .map(|(_, pi)| pi.shape.area())
             .sum::<fsize>();
 
         item_area / bin_area
@@ -142,7 +155,7 @@ pub struct LayoutSnapshot {
     /// The bin used for this layout
     pub bin: Bin,
     /// How the items are placed in the bin
-    pub placed_items: Vec<PlacedItem>,
+    pub placed_items: SlotMap<PIKey, PlacedItem>,
     /// The collision detection engine snapshot for this layout
     pub cde_snapshot: CDESnapshot,
     /// The usage of the bin with the items placed

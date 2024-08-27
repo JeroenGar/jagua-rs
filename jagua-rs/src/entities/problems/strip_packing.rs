@@ -95,7 +95,7 @@ impl SPProblem {
             .layout
             .placed_items()
             .iter()
-            .map(|p_i| p_i.uid.clone())
+            .map(|(_, pi)| pi.uid.clone())
             .collect_vec();
 
         //reset the missing item quantities
@@ -190,7 +190,7 @@ impl ProblemGeneric for SPProblem {
             layout_index, STRIP_LAYOUT_IDX,
             "strip packing problems only have a single layout"
         );
-        self.layout.remove_item(pi_uid, commit_instantly);
+        self.layout.remove_item_with_uid(pi_uid, commit_instantly);
         self.deregister_included_item(pi_uid.item_id);
     }
 
@@ -295,7 +295,7 @@ pub fn occupied_range(layout: &Layout) -> Option<(fsize, fsize)> {
     let mut min_x = fsize::MAX;
     let mut max_x = fsize::MIN;
 
-    for pi in layout.placed_items() {
+    for pi in layout.placed_items().values() {
         let bbox = pi.shape.bbox();
         min_x = min_x.min(bbox.x_min);
         max_x = max_x.max(bbox.x_max);

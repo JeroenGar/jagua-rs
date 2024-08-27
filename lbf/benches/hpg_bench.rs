@@ -44,7 +44,7 @@ fn hpg_query_bench(c: &mut Criterion) {
     let base_pi_uids = base_problem
         .get_layout(LayoutIndex::Real(0))
         .placed_items()
-        .iter()
+        .values()
         .map(|pi| pi.uid.clone())
         .collect_vec();
 
@@ -133,7 +133,7 @@ fn hpg_update_bench(c: &mut Criterion) {
     let base_pi_uids = base_problem
         .get_layout(LayoutIndex::Real(0))
         .placed_items()
-        .iter()
+        .values()
         .map(|pi| pi.uid.clone())
         .collect_vec();
 

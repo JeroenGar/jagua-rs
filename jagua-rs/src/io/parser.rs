@@ -420,7 +420,7 @@ pub fn compose_json_solution(
 
             let placed_items = sl
                 .placed_items
-                .iter()
+                .values()
                 .map(|placed_item| {
                     let item_index = placed_item.item_id();
                     let item = instance.item(item_index);

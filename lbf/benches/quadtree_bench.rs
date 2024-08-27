@@ -63,7 +63,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
                 let pi_uid = problem
                     .get_layout(&layout_index)
                     .placed_items()
-                    .iter()
+                    .values()
                     .map(|p_i| p_i.uid.clone())
                     .choose(&mut rng)
                     .expect("No items in layout");
@@ -183,7 +183,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 let pi_uid = problem
                     .get_layout(LayoutIndex::Real(0))
                     .placed_items()
-                    .iter()
+                    .values()
                     .map(|p_i| p_i.uid.clone())
                     .choose(&mut rng)
                     .expect("No items in layout");
