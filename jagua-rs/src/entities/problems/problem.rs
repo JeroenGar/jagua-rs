@@ -1,6 +1,6 @@
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
-use crate::entities::placed_item::PIKey;
+use crate::entities::placed_item::PItemKey;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
@@ -24,14 +24,14 @@ pub enum Problem {
 }
 
 impl ProblemGeneric for Problem {
-    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PIKey) {
+    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey) {
         match self {
             Problem::BP(bp) => bp.place_item(p_opt),
             Problem::SP(sp) => sp.place_item(p_opt),
         }
     }
 
-    fn remove_item(&mut self, layout_index: LayoutIndex, pi_key: PIKey, commit_instantly: bool) {
+    fn remove_item(&mut self, layout_index: LayoutIndex, pi_key: PItemKey, commit_instantly: bool) {
         match self {
             Problem::BP(bp) => bp.remove_item(layout_index, pi_key, commit_instantly),
             Problem::SP(sp) => sp.remove_item(layout_index, pi_key, commit_instantly),

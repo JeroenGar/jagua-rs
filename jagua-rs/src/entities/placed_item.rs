@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 new_key_type! {
     /// Unique key for each `PlacedItem` in a layout.
-    pub struct PIKey;
+    pub struct PItemKey;
 }
 
 /// Represents an `Item` that has been placed in a `Layout`

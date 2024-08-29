@@ -1,4 +1,4 @@
-use crate::entities::placed_item::PIKey;
+use crate::entities::placed_item::PItemKey;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use std::sync::Arc;
@@ -28,7 +28,7 @@ impl Hazard {
 /// Entity inducing the `Hazard`. All entities are uniquely identified.
 pub enum HazardEntity {
     /// An item placed in the layout.
-    PlacedItem(PIKey),
+    PlacedItem(PItemKey),
     /// Represents all regions outside the bin
     BinExterior,
     /// Represents a hole in the bin.
@@ -69,8 +69,8 @@ impl HazardEntity {
     }
 }
 
-impl From<PIKey> for HazardEntity {
-    fn from(k: PIKey) -> Self {
+impl From<PItemKey> for HazardEntity {
+    fn from(k: PItemKey) -> Self {
         HazardEntity::PlacedItem(k)
     }
 }

@@ -2,7 +2,7 @@ use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
 use crate::collision_detection::hazard::Hazard;
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
-use crate::entities::placed_item::{PIKey, PlacedItem};
+use crate::entities::placed_item::{PItemKey, PlacedItem};
 use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
@@ -21,7 +21,7 @@ pub struct Layout {
     /// The bin used for this layout
     bin: Bin,
     /// How the items are placed in the bin
-    placed_items: SlotMap<PIKey, PlacedItem>,
+    placed_items: SlotMap<PItemKey, PlacedItem>,
     /// The collision detection engine for this layout
     cde: CDEngine,
 }
@@ -69,7 +69,7 @@ impl Layout {
         Layout { id, ..self.clone() }
     }
 
-    pub fn place_item(&mut self, item: &Item, d_transformation: &DTransformation) -> PIKey {
+    pub fn place_item(&mut self, item: &Item, d_transformation: &DTransformation) -> PItemKey {
         let placed_item = PlacedItem::new(item, d_transformation.clone());
         let pi_key = self.placed_items.insert(placed_item);
 
@@ -81,7 +81,7 @@ impl Layout {
         pi_key
     }
 
-    pub fn remove_item(&mut self, key: PIKey, commit_instant: bool) -> PlacedItem {
+    pub fn remove_item(&mut self, key: PItemKey, commit_instant: bool) -> PlacedItem {
         let p_item = self
             .placed_items
             .remove(key)
@@ -104,7 +104,7 @@ impl Layout {
         &self.bin
     }
 
-    pub fn placed_items(&self) -> &SlotMap<PIKey, PlacedItem> {
+    pub fn placed_items(&self) -> &SlotMap<PItemKey, PlacedItem> {
         &self.placed_items
     }
 
@@ -145,7 +145,7 @@ pub struct LayoutSnapshot {
     /// The bin used for this layout
     pub bin: Bin,
     /// How the items are placed in the bin
-    pub placed_items: SlotMap<PIKey, PlacedItem>,
+    pub placed_items: SlotMap<PItemKey, PlacedItem>,
     /// The collision detection engine snapshot for this layout
     pub cde_snapshot: CDESnapshot,
     /// The usage of the bin with the items placed

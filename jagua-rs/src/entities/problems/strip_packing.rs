@@ -7,7 +7,7 @@ use crate::entities::bin::Bin;
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::layout::Layout;
-use crate::entities::placed_item::PIKey;
+use crate::entities::placed_item::PItemKey;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::ProblemGeneric;
@@ -165,7 +165,7 @@ impl SPProblem {
 }
 
 impl ProblemGeneric for SPProblem {
-    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PIKey) {
+    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey) {
         assert_eq!(
             p_opt.layout_index, STRIP_LAYOUT_IDX,
             "Strip packing problems only have a single layout"
@@ -178,7 +178,7 @@ impl ProblemGeneric for SPProblem {
         (STRIP_LAYOUT_IDX, placed_item_key)
     }
 
-    fn remove_item(&mut self, layout_index: LayoutIndex, pi_key: PIKey, commit_instantly: bool) {
+    fn remove_item(&mut self, layout_index: LayoutIndex, pi_key: PItemKey, commit_instantly: bool) {
         assert_eq!(
             layout_index, STRIP_LAYOUT_IDX,
             "strip packing problems only have a single layout"
@@ -250,7 +250,7 @@ impl ProblemGeneric for SPProblem {
         &self.missing_item_qtys
     }
 
-    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item = LayoutIndex> {
+    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
         iter::empty::<LayoutIndex>()
     }
 

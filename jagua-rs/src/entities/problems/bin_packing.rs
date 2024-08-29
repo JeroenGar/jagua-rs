@@ -3,7 +3,7 @@ use itertools::Itertools;
 use crate::entities::instances::bin_packing::BPInstance;
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
-use crate::entities::placed_item::PIKey;
+use crate::entities::placed_item::PItemKey;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
@@ -112,7 +112,7 @@ impl BPProblem {
 }
 
 impl ProblemGeneric for BPProblem {
-    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PIKey) {
+    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey) {
         let layout_index = match &p_opt.layout_index {
             LayoutIndex::Real(i) => LayoutIndex::Real(*i),
             LayoutIndex::Template(i) => {
@@ -137,7 +137,7 @@ impl ProblemGeneric for BPProblem {
         (layout_index, pi_key)
     }
 
-    fn remove_item(&mut self, layout_index: LayoutIndex, pi_key: PIKey, commit_instantly: bool) {
+    fn remove_item(&mut self, layout_index: LayoutIndex, pi_key: PItemKey, commit_instantly: bool) {
         match layout_index {
             LayoutIndex::Real(i) => {
                 self.layout_has_changed(self.layouts[i].id());

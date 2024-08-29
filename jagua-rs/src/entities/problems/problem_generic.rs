@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
-use crate::entities::placed_item::PIKey;
+use crate::entities::placed_item::PItemKey;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::solution::Solution;
@@ -12,11 +12,11 @@ use crate::fsize;
 pub trait ProblemGeneric: ProblemGenericPrivate {
     /// Places an item into the problem instance according to the given `PlacingOption`.
     /// Returns the index of the layout where the item was placed.
-    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PIKey);
+    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey);
 
     /// Removes an item with a specific `PIKey` from a specific `Layout`
     /// For more information about `commit_instantly`, see [`crate::collision_detection::cd_engine::CDEngine::deregister_hazard`].
-    fn remove_item(&mut self, layout_index: LayoutIndex, pi_key: PIKey, commit_instantly: bool);
+    fn remove_item(&mut self, layout_index: LayoutIndex, pi_key: PItemKey, commit_instantly: bool);
 
     /// Saves the current state of the problem as a `Solution`.
     fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution;
@@ -37,7 +37,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     fn missing_item_qtys(&self) -> &[isize];
 
     /// The quantity of each item that is currently placed in the problem instance, indexed by item id.
-    fn placed_item_qtys(&self) -> impl Iterator<Item = usize> {
+    fn placed_item_qtys(&self) -> impl Iterator<Item=usize> {
         self.missing_item_qtys()
             .iter()
             .enumerate()
@@ -59,14 +59,14 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     }
 
     /// Returns the `LayoutIndex` of all layouts.
-    fn layout_indices(&self) -> impl Iterator<Item = LayoutIndex> {
+    fn layout_indices(&self) -> impl Iterator<Item=LayoutIndex> {
         (0..self.layouts().len())
             .into_iter()
             .map(|i| LayoutIndex::Real(i))
     }
 
     /// Returns the `LayoutIndex` of all template layouts that have remaining stock.
-    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item = LayoutIndex> {
+    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
         self.template_layouts()
             .iter()
             .enumerate()
