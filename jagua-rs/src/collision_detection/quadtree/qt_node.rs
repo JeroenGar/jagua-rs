@@ -202,22 +202,21 @@ impl QTNode {
                         }
                         None => {
                             //Check if any of the partially present (and active) hazards collide with the entity
-                            self.hazards
-                                .active_hazards()
-                                .iter()
-                                .for_each(|hz| match &hz.presence {
-                                    QTHazPresence::None => (),
-                                    QTHazPresence::Entire => {
-                                        unreachable!("should have been handled above")
-                                    }
-                                    QTHazPresence::Partial(p_haz) => {
-                                        if !irrelevant_hazards.contains(&hz.entity)
-                                            && p_haz.collides_with(entity)
-                                        {
-                                            irrelevant_hazards.push(hz.entity.clone());
+                            self.hazards.active_hazards().iter().for_each(|hz| {
+                                if !irrelevant_hazards.contains(&hz.entity) {
+                                    match &hz.presence {
+                                        QTHazPresence::None => (),
+                                        QTHazPresence::Entire => {
+                                            unreachable!("should have been handled above")
+                                        }
+                                        QTHazPresence::Partial(p_haz) => {
+                                            if p_haz.collides_with(entity) {
+                                                irrelevant_hazards.push(hz.entity.clone());
+                                            }
                                         }
                                     }
-                                })
+                                }
+                            })
                         }
                     },
                 },

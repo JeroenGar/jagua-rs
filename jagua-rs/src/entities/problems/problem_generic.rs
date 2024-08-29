@@ -37,7 +37,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     fn missing_item_qtys(&self) -> &[isize];
 
     /// The quantity of each item that is currently placed in the problem instance, indexed by item id.
-    fn placed_item_qtys(&self) -> impl Iterator<Item=usize> {
+    fn placed_item_qtys(&self) -> impl Iterator<Item = usize> {
         self.missing_item_qtys()
             .iter()
             .enumerate()
@@ -59,14 +59,14 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     }
 
     /// Returns the `LayoutIndex` of all layouts.
-    fn layout_indices(&self) -> impl Iterator<Item=LayoutIndex> {
+    fn layout_indices(&self) -> impl Iterator<Item = LayoutIndex> {
         (0..self.layouts().len())
             .into_iter()
             .map(|i| LayoutIndex::Real(i))
     }
 
     /// Returns the `LayoutIndex` of all template layouts that have remaining stock.
-    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
+    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item = LayoutIndex> {
         self.template_layouts()
             .iter()
             .enumerate()
