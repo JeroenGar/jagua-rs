@@ -128,7 +128,7 @@ impl ProblemGeneric for BPProblem {
             LayoutIndex::Template(_) => unreachable!("cannot place item in template layout"),
         };
         let item = self.instance.item(p_opt.item_id);
-        let pi_key = layout.place_item(item, &p_opt.d_transf);
+        let pi_key = layout.place_item(item, p_opt.d_transf);
         let layout_id = layout.id();
 
         self.register_included_item(p_opt.item_id);

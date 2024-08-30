@@ -172,7 +172,7 @@ impl ProblemGeneric for SPProblem {
         );
         let item_id = p_opt.item_id;
         let item = self.instance.item(item_id);
-        let placed_item_key = self.layout.place_item(item, &p_opt.d_transf);
+        let placed_item_key = self.layout.place_item(item, p_opt.d_transf);
 
         self.register_included_item(item_id);
         (STRIP_LAYOUT_IDX, placed_item_key)
@@ -250,7 +250,7 @@ impl ProblemGeneric for SPProblem {
         &self.missing_item_qtys
     }
 
-    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item = LayoutIndex> {
+    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
         iter::empty::<LayoutIndex>()
     }
 

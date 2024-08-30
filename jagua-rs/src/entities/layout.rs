@@ -69,8 +69,8 @@ impl Layout {
         Layout { id, ..self.clone() }
     }
 
-    pub fn place_item(&mut self, item: &Item, d_transformation: &DTransformation) -> PItemKey {
-        let placed_item = PlacedItem::new(item, d_transformation.clone());
+    pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation) -> PItemKey {
+        let placed_item = PlacedItem::new(item, d_transformation);
         let pi_key = self.placed_items.insert(placed_item);
 
         let hazard = Hazard::new(pi_key.into(), self.placed_items[pi_key].shape.clone());
