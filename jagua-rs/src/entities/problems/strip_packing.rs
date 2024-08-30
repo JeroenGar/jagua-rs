@@ -250,7 +250,7 @@ impl ProblemGeneric for SPProblem {
         &self.missing_item_qtys
     }
 
-    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item=LayoutIndex> {
+    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item = LayoutIndex> {
         iter::empty::<LayoutIndex>()
     }
 
