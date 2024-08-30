@@ -55,14 +55,14 @@ pub fn create_blf_problem(
 
     let mut rng = SmallRng::seed_from_u64(0);
     // Remove some items from the layout
-    let pi_keys_to_remove = problem
+    let placed_items_to_remove = problem
         .get_layout(&STRIP_LAYOUT_IDX)
         .placed_items()
         .iter()
-        .map(|(pi_key, _)| (pi_key))
+        .map(|(k, _)| k)
         .choose_multiple(&mut rng, n_items_removed);
 
-    let p_opts = pi_keys_to_remove
+    let p_opts = placed_items_to_remove
         .iter()
         .map(|k| {
             let pi = &problem.layout.placed_items()[*k];
@@ -74,9 +74,9 @@ pub fn create_blf_problem(
         })
         .collect_vec();
 
-    for pi_key in pi_keys_to_remove {
-        let item_id = problem.layout.placed_items()[pi_key].item_id;
-        problem.remove_item(STRIP_LAYOUT_IDX, pi_key, true);
+    for pik in placed_items_to_remove {
+        let item_id = problem.layout.placed_items()[pik].item_id;
+        problem.remove_item(STRIP_LAYOUT_IDX, pik, true);
         info!(
             "Removed item: {} with {} edges",
             item_id,

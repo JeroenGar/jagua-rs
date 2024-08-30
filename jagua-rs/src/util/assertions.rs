@@ -276,8 +276,8 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
     //rebuild the quadtree
     let bin = layout.bin();
     let mut fresh_cde = bin.base_cde.as_ref().clone();
-    for (pi_key, pi) in layout.placed_items().iter() {
-        let hazard = Hazard::new(pi_key.into(), pi.shape.clone());
+    for (pik, pi) in layout.placed_items().iter() {
+        let hazard = Hazard::new(pik.into(), pi.shape.clone());
         fresh_cde.register_hazard(hazard);
     }
 

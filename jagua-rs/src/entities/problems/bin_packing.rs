@@ -128,21 +128,21 @@ impl ProblemGeneric for BPProblem {
             LayoutIndex::Template(_) => unreachable!("cannot place item in template layout"),
         };
         let item = self.instance.item(p_opt.item_id);
-        let pi_key = layout.place_item(item, p_opt.d_transf);
+        let pik = layout.place_item(item, p_opt.d_transf);
         let layout_id = layout.id();
 
         self.register_included_item(p_opt.item_id);
         self.layout_has_changed(layout_id);
 
-        (layout_index, pi_key)
+        (layout_index, pik)
     }
 
-    fn remove_item(&mut self, layout_index: LayoutIndex, pi_key: PItemKey, commit_instantly: bool) {
+    fn remove_item(&mut self, layout_index: LayoutIndex, pik: PItemKey, commit_instantly: bool) {
         match layout_index {
             LayoutIndex::Real(i) => {
                 self.layout_has_changed(self.layouts[i].id());
                 let layout = &mut self.layouts[i];
-                let pi = layout.remove_item(pi_key, commit_instantly);
+                let pi = layout.remove_item(pik, commit_instantly);
                 if layout.is_empty() {
                     //if layout is empty, remove it
                     self.deregister_layout(layout_index);

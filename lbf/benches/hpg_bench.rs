@@ -208,8 +208,8 @@ fn hpg_update_bench(c: &mut Criterion) {
         group.bench_function(BenchmarkId::from_parameter(n_hpg_cells), |b| {
             b.iter(|| {
                 let opt = valid_samples_cycler.next().unwrap();
-                let (l_idx, pi_key) = problem.place_item(*opt);
-                problem.remove_item(l_idx, pi_key, true);
+                let (l_idx, pik) = problem.place_item(*opt);
+                problem.remove_item(l_idx, pik, true);
                 problem.flush_changes();
             })
         });

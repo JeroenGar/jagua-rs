@@ -71,14 +71,14 @@ impl Layout {
 
     pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation) -> PItemKey {
         let placed_item = PlacedItem::new(item, d_transformation);
-        let pi_key = self.placed_items.insert(placed_item);
+        let pik = self.placed_items.insert(placed_item);
 
-        let hazard = Hazard::new(pi_key.into(), self.placed_items[pi_key].shape.clone());
+        let hazard = Hazard::new(pik.into(), self.placed_items[pik].shape.clone());
         self.cde.register_hazard(hazard);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
 
-        pi_key
+        pik
     }
 
     pub fn remove_item(&mut self, key: PItemKey, commit_instant: bool) -> PlacedItem {

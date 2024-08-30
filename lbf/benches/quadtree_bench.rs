@@ -60,7 +60,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
                 // Remove an item from the layout
-                let (pi_key, pi) = problem
+                let (pik, pi) = problem
                     .get_layout(&layout_index)
                     .placed_items()
                     .iter()
@@ -74,7 +74,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
                 };
 
                 //println!("Removing item with id: {}\n", pi_uid.item_id);
-                problem.remove_item(layout_index, pi_key, true);
+                problem.remove_item(layout_index, pik, true);
 
                 problem.flush_changes();
 
@@ -182,7 +182,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
-                let (pi_key, pi) = problem
+                let (pik, pi) = problem
                     .get_layout(layout_index)
                     .placed_items()
                     .iter()
@@ -195,7 +195,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                     d_transf: pi.d_transf,
                 };
 
-                problem.remove_item(layout_index, pi_key, true);
+                problem.remove_item(layout_index, pik, true);
                 problem.flush_changes();
 
                 let item_id = p_opt.item_id;
