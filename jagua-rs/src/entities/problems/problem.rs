@@ -31,7 +31,12 @@ impl ProblemGeneric for Problem {
         }
     }
 
-    fn remove_item(&mut self, layout_index: LayoutIndex, pik: PItemKey, commit_instantly: bool) {
+    fn remove_item(
+        &mut self,
+        layout_index: LayoutIndex,
+        pik: PItemKey,
+        commit_instantly: bool,
+    ) -> PlacingOption {
         match self {
             Problem::BP(bp) => bp.remove_item(layout_index, pik, commit_instantly),
             Problem::SP(sp) => sp.remove_item(layout_index, pik, commit_instantly),

@@ -178,13 +178,20 @@ impl ProblemGeneric for SPProblem {
         (STRIP_LAYOUT_IDX, placed_item_key)
     }
 
-    fn remove_item(&mut self, layout_index: LayoutIndex, pik: PItemKey, commit_instantly: bool) {
+    fn remove_item(
+        &mut self,
+        layout_index: LayoutIndex,
+        pik: PItemKey,
+        commit_instantly: bool,
+    ) -> PlacingOption {
         assert_eq!(
             layout_index, STRIP_LAYOUT_IDX,
             "strip packing problems only have a single layout"
         );
         let pi = self.layout.remove_item(pik, commit_instantly);
         self.deregister_included_item(pi.item_id);
+
+        PlacingOption::from_placed_item(layout_index, &pi)
     }
 
     fn create_solution(&mut self, _old_solution: &Option<Solution>) -> Solution {

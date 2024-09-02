@@ -1,3 +1,4 @@
+use crate::entities::placed_item::PlacedItem;
 use crate::entities::problems::problem_generic::LayoutIndex;
 use crate::geometry::d_transformation::DTransformation;
 
@@ -10,4 +11,14 @@ pub struct PlacingOption {
     pub item_id: usize,
     /// The decomposition of the transformation
     pub d_transf: DTransformation,
+}
+
+impl PlacingOption {
+    pub fn from_placed_item(layout_index: LayoutIndex, placed_item: &PlacedItem) -> Self {
+        PlacingOption {
+            layout_index,
+            item_id: placed_item.item_id,
+            d_transf: placed_item.d_transf,
+        }
+    }
 }

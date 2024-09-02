@@ -14,9 +14,15 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     /// Returns the index of the layout where the item was placed.
     fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey);
 
-    /// Removes a placed item (with its unique key) from a specific `Layout`
+    /// Removes a placed item (with its unique key) from a specific `Layout`.
+    /// Returns a `PlacingOption` that can be used to place the item back in the same configuration.
     /// For more information about `commit_instantly`, see [`crate::collision_detection::cd_engine::CDEngine::deregister_hazard`].
-    fn remove_item(&mut self, layout_index: LayoutIndex, pik: PItemKey, commit_instantly: bool);
+    fn remove_item(
+        &mut self,
+        layout_index: LayoutIndex,
+        pik: PItemKey,
+        commit_instantly: bool,
+    ) -> PlacingOption;
 
     /// Saves the current state of the problem as a `Solution`.
     fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution;

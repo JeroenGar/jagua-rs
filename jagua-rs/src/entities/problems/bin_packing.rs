@@ -137,7 +137,12 @@ impl ProblemGeneric for BPProblem {
         (layout_index, pik)
     }
 
-    fn remove_item(&mut self, layout_index: LayoutIndex, pik: PItemKey, commit_instantly: bool) {
+    fn remove_item(
+        &mut self,
+        layout_index: LayoutIndex,
+        pik: PItemKey,
+        commit_instantly: bool,
+    ) -> PlacingOption {
         match layout_index {
             LayoutIndex::Real(i) => {
                 self.layout_has_changed(self.layouts[i].id());
@@ -148,6 +153,7 @@ impl ProblemGeneric for BPProblem {
                     self.deregister_layout(layout_index);
                 }
                 self.deregister_included_item(pi.item_id);
+                PlacingOption::from_placed_item(layout_index, &pi)
             }
             LayoutIndex::Template(_) => panic!("cannot remove item from template layout"),
         }
