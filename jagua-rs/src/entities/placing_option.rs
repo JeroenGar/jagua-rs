@@ -6,7 +6,7 @@ use crate::geometry::d_transformation::DTransformation;
 /// Encapsulates all required information to place an `Item` in a `Problem`
 pub struct PlacingOption {
     /// Which layout to place the item in
-    pub layout_index: LayoutIndex,
+    pub layout_idx: LayoutIndex,
     /// The id of the item to be placed
     pub item_id: usize,
     /// The decomposition of the transformation
@@ -14,9 +14,9 @@ pub struct PlacingOption {
 }
 
 impl PlacingOption {
-    pub fn from_placed_item(layout_index: LayoutIndex, placed_item: &PlacedItem) -> Self {
+    pub fn from_placed_item(layout_idx: LayoutIndex, placed_item: &PlacedItem) -> Self {
         PlacingOption {
-            layout_index,
+            layout_idx,
             item_id: placed_item.item_id,
             d_transf: placed_item.d_transf,
         }

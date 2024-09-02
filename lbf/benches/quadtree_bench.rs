@@ -54,27 +54,27 @@ fn quadtree_update_bench(c: &mut Criterion) {
         );
         let (mut problem, _) = util::create_blf_problem(instance.clone(), config, 0);
 
-        let layout_index = LayoutIndex::Real(0);
+        let layout_idx = LayoutIndex::Real(0);
         let mut rng = SmallRng::seed_from_u64(0);
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
                 // Remove an item from the layout
                 let (pik, pi) = problem
-                    .get_layout(&layout_index)
+                    .get_layout(&layout_idx)
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
 
                 let p_opt = PlacingOption {
-                    layout_index,
+                    layout_idx,
                     item_id: pi.item_id,
                     d_transf: pi.d_transf,
                 };
 
                 //println!("Removing item with id: {}\n", pi_uid.item_id);
-                problem.remove_item(layout_index, pik, true);
+                problem.remove_item(layout_idx, pik, true);
 
                 problem.flush_changes();
 
@@ -178,24 +178,24 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
 
         let mut sample_cycler = samples.chunks(N_SAMPLES_PER_ITER).cycle();
 
-        let layout_index = LayoutIndex::Real(0);
+        let layout_idx = LayoutIndex::Real(0);
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
                 let (pik, pi) = problem
-                    .get_layout(layout_index)
+                    .get_layout(layout_idx)
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
 
                 let p_opt = PlacingOption {
-                    layout_index,
+                    layout_idx,
                     item_id: pi.item_id,
                     d_transf: pi.d_transf,
                 };
 
-                problem.remove_item(layout_index, pik, true);
+                problem.remove_item(layout_idx, pik, true);
                 problem.flush_changes();
 
                 let item_id = p_opt.item_id;

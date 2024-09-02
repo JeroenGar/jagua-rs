@@ -67,7 +67,7 @@ pub fn create_blf_problem(
         .map(|k| {
             let pi = &problem.layout.placed_items()[*k];
             PlacingOption {
-                layout_index: STRIP_LAYOUT_IDX,
+                layout_idx: STRIP_LAYOUT_IDX,
                 item_id: pi.item_id,
                 d_transf: pi.d_transf,
             }

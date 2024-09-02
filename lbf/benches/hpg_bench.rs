@@ -45,7 +45,7 @@ fn hpg_query_bench(c: &mut Criterion) {
         .placed_items()
         .values()
         .map(|pi| PlacingOption {
-            layout_index: LayoutIndex::Real(0),
+            layout_idx: LayoutIndex::Real(0),
             item_id: pi.item_id,
             d_transf: pi.d_transf,
         })
@@ -133,7 +133,7 @@ fn hpg_update_bench(c: &mut Criterion) {
         .placed_items()
         .values()
         .map(|pi| PlacingOption {
-            layout_index: LayoutIndex::Real(0),
+            layout_idx: LayoutIndex::Real(0),
             item_id: pi.item_id,
             d_transf: pi.d_transf,
         })
@@ -195,7 +195,7 @@ fn hpg_update_bench(c: &mut Criterion) {
                 if !layout.cde().poly_collides(&buffer_shape, &[]) {
                     let d_transf = transf.decompose();
                     valid_placements.push(PlacingOption {
-                        layout_index: LayoutIndex::Real(0),
+                        layout_idx: LayoutIndex::Real(0),
                         item_id: SELECTED_ITEM_ID,
                         d_transf,
                     });

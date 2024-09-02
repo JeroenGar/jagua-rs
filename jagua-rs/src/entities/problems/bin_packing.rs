@@ -113,7 +113,7 @@ impl BPProblem {
 
 impl ProblemGeneric for BPProblem {
     fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey) {
-        let layout_index = match &p_opt.layout_index {
+        let layout_index = match &p_opt.layout_idx {
             LayoutIndex::Real(i) => LayoutIndex::Real(*i),
             LayoutIndex::Template(i) => {
                 //Layout is empty, clone it and add it to `layouts`

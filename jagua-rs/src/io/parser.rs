@@ -316,7 +316,7 @@ pub fn build_strip_packing_solution(
         let d_transf = transform.decompose();
 
         let placing_opt = PlacingOption {
-            layout_index: STRIP_LAYOUT_IDX,
+            layout_idx: STRIP_LAYOUT_IDX,
             item_id: item.id,
             d_transf,
         };
@@ -362,11 +362,11 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
         let d_transf = transform.decompose();
 
         let initial_insert_opt = PlacingOption {
-            layout_index: LayoutIndex::Template(template_index),
+            layout_idx: LayoutIndex::Template(template_index),
             item_id: first_item.id,
             d_transf,
         };
-        let (layout_index, _) = problem.place_item(initial_insert_opt);
+        let (layout_idx, _) = problem.place_item(initial_insert_opt);
         problem.flush_changes();
 
         //Insert the rest of the items
@@ -385,7 +385,7 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
             let d_transf = transform.decompose();
 
             let insert_opt = PlacingOption {
-                layout_index,
+                layout_idx,
                 item_id: item.id,
                 d_transf,
             };

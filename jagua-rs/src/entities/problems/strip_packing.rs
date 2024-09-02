@@ -122,7 +122,7 @@ impl SPProblem {
             let cde = self.layout.cde();
             if !cde.poly_collides(&transformed_shape, entities_to_ignore.as_ref()) {
                 let insert_opt = PlacingOption {
-                    layout_index: STRIP_LAYOUT_IDX,
+                    layout_idx: STRIP_LAYOUT_IDX,
                     item_id,
                     d_transf,
                 };
@@ -167,7 +167,7 @@ impl SPProblem {
 impl ProblemGeneric for SPProblem {
     fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey) {
         assert_eq!(
-            p_opt.layout_index, STRIP_LAYOUT_IDX,
+            p_opt.layout_idx, STRIP_LAYOUT_IDX,
             "Strip packing problems only have a single layout"
         );
         let item_id = p_opt.item_id;

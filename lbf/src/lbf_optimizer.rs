@@ -165,13 +165,13 @@ pub fn find_lbf_placement(
 
 pub fn sample_layout(
     problem: &Problem,
-    layout_index: LayoutIndex,
+    layout_idx: LayoutIndex,
     item: &Item,
     config: &LBFConfig,
     rng: &mut impl Rng,
     sample_counter: &mut usize,
 ) -> Option<PlacingOption> {
-    let layout: &Layout = problem.get_layout(&layout_index);
+    let layout: &Layout = problem.get_layout(&layout_idx);
     let cde = layout.cde();
     let irrel_hazards = match item.hazard_filter.as_ref() {
         None => vec![],
@@ -213,7 +213,7 @@ pub fn sample_layout(
             if worth_testing && !cde.poly_collides(&buffer, &irrel_hazards) {
                 //sample is valid and improves on the current best
                 let p_opt = PlacingOption {
-                    layout_index,
+                    layout_idx,
                     item_id: item.id,
                     d_transf: transform.decompose(),
                 };
@@ -254,7 +254,7 @@ pub fn sample_layout(
             if worth_testing && !cde.poly_collides(&buffer, &irrel_hazards) {
                 //sample is valid and improves on the current best
                 let p_opt = PlacingOption {
-                    layout_index,
+                    layout_idx,
                     item_id: item.id,
                     d_transf,
                 };
