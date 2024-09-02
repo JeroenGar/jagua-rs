@@ -195,14 +195,14 @@ impl HPGCell {
         }
     }
 
-    pub fn deregister_hazards<'a, 'b, I, J>(
+    pub fn deregister_hazards<'a, I, J>(
         &mut self,
         mut to_deregister: J,
         remaining: I,
     ) -> HPGCellUpdate
     where
         I: Iterator<Item = &'a Hazard>,
-        J: Iterator<Item = &'b HazardEntity>,
+        J: Iterator<Item = HazardEntity>,
     {
         if to_deregister.contains(&self.uni_prox.1) {
             //closest current hazard has to be deregistered

@@ -114,7 +114,7 @@ impl HazardProximityGrid {
 
     pub fn deregister_hazard<'a, I>(
         &mut self,
-        to_deregister: &HazardEntity,
+        to_deregister: HazardEntity,
         remaining: I,
         process_now: bool,
     ) where
@@ -135,7 +135,7 @@ impl HazardProximityGrid {
     {
         if self.is_dirty() {
             //deregister all pending hazards at once
-            let to_deregister = self.uncommitted_deregisters.iter();
+            let to_deregister = self.uncommitted_deregisters.iter().cloned();
             for cell in self.grid.cells.iter_mut().flatten() {
                 cell.deregister_hazards(to_deregister.clone(), remaining.clone());
             }

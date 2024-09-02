@@ -43,17 +43,17 @@ impl QTHazardVec {
         }
     }
 
-    pub fn remove(&mut self, haz_entity: &HazardEntity) -> Option<QTHazard> {
+    pub fn remove(&mut self, haz_entity: HazardEntity) -> Option<QTHazard> {
         debug_assert!(
             self.hazards
                 .iter()
-                .filter(|ch| &ch.entity == haz_entity
+                .filter(|ch| ch.entity == haz_entity
                     && matches!(ch.entity, HazardEntity::PlacedItem(_)))
                 .count()
                 <= 1,
             "More than one hazard from same item entity in the vector! (This should never happen!)"
         );
-        let pos = self.hazards.iter().position(|ch| &ch.entity == haz_entity);
+        let pos = self.hazards.iter().position(|ch| ch.entity == haz_entity);
         let removed_hazard = match pos {
             Some(pos) => {
                 let haz = self.hazards.remove(pos);
@@ -90,15 +90,15 @@ impl QTHazardVec {
         }
     }
 
-    pub fn get(&self, entity: &HazardEntity) -> Option<&QTHazard> {
+    pub fn get(&self, entity: HazardEntity) -> Option<&QTHazard> {
         self.hazards
             .iter()
             .filter(|hz| hz.active)
-            .find(|hz| &hz.entity == entity)
+            .find(|hz| hz.entity == entity)
     }
 
-    pub fn activate_hazard(&mut self, entity: &HazardEntity) -> bool {
-        match self.hazards.iter_mut().position(|hz| &hz.entity == entity) {
+    pub fn activate_hazard(&mut self, entity: HazardEntity) -> bool {
+        match self.hazards.iter_mut().position(|hz| hz.entity == entity) {
             Some(index) => {
                 let mut hazard = self.hazards.remove(index);
                 debug_assert!(!hazard.active);
@@ -110,8 +110,8 @@ impl QTHazardVec {
         }
     }
 
-    pub fn deactivate_hazard(&mut self, entity: &HazardEntity) -> bool {
-        match self.hazards.iter_mut().position(|hz| &hz.entity == entity) {
+    pub fn deactivate_hazard(&mut self, entity: HazardEntity) -> bool {
+        match self.hazards.iter_mut().position(|hz| hz.entity == entity) {
             Some(index) => {
                 let mut hazard = self.hazards.remove(index);
                 debug_assert!(hazard.active);
