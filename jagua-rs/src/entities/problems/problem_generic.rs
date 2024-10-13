@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
-use crate::entities::placed_item::PlacedItemUID;
+use crate::entities::placed_item::PItemKey;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::solution::Solution;
@@ -12,19 +12,20 @@ use crate::fsize;
 pub trait ProblemGeneric: ProblemGenericPrivate {
     /// Places an item into the problem instance according to the given `PlacingOption`.
     /// Returns the index of the layout where the item was placed.
-    fn place_item(&mut self, p_opt: &PlacingOption) -> LayoutIndex;
+    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey);
 
-    /// Removes an item with a specific `PlacedItemUID` from a specific `Layout`
+    /// Removes a placed item (with its unique key) from a specific `Layout`.
+    /// Returns a `PlacingOption` that can be used to place the item back in the same configuration.
     /// For more information about `commit_instantly`, see [`crate::collision_detection::cd_engine::CDEngine::deregister_hazard`].
     fn remove_item(
         &mut self,
         layout_index: LayoutIndex,
-        pi_uid: &PlacedItemUID,
+        pik: PItemKey,
         commit_instantly: bool,
-    );
+    ) -> PlacingOption;
 
     /// Saves the current state of the problem as a `Solution`.
-    fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution;
+    fn create_solution(&mut self, old_solution: Option<&Solution>) -> Solution;
 
     /// Restores the state of the problem to a previous `Solution`.
     fn restore_to_solution(&mut self, solution: &Solution);

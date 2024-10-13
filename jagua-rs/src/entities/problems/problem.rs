@@ -1,6 +1,6 @@
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
-use crate::entities::placed_item::PlacedItemUID;
+use crate::entities::placed_item::PItemKey;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::bin_packing::BPProblem;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
@@ -24,7 +24,7 @@ pub enum Problem {
 }
 
 impl ProblemGeneric for Problem {
-    fn place_item(&mut self, p_opt: &PlacingOption) -> LayoutIndex {
+    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey) {
         match self {
             Problem::BP(bp) => bp.place_item(p_opt),
             Problem::SP(sp) => sp.place_item(p_opt),
@@ -34,16 +34,16 @@ impl ProblemGeneric for Problem {
     fn remove_item(
         &mut self,
         layout_index: LayoutIndex,
-        pi_uid: &PlacedItemUID,
+        pik: PItemKey,
         commit_instantly: bool,
-    ) {
+    ) -> PlacingOption {
         match self {
-            Problem::BP(bp) => bp.remove_item(layout_index, pi_uid, commit_instantly),
-            Problem::SP(sp) => sp.remove_item(layout_index, pi_uid, commit_instantly),
+            Problem::BP(bp) => bp.remove_item(layout_index, pik, commit_instantly),
+            Problem::SP(sp) => sp.remove_item(layout_index, pik, commit_instantly),
         }
     }
 
-    fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution {
+    fn create_solution(&mut self, old_solution: Option<&Solution>) -> Solution {
         match self {
             Problem::BP(bp) => bp.create_solution(old_solution),
             Problem::SP(sp) => sp.create_solution(old_solution),

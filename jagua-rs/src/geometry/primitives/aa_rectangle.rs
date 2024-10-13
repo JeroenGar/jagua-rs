@@ -61,11 +61,12 @@ impl AARectangle {
         ]
     }
 
+    /// Returns the four corners in the following order: NW,NE,SW,SE
     pub fn corners(&self) -> [Point; 4] {
         [
-            Point(self.x_min, self.y_max),
             Point(self.x_min, self.y_min),
             Point(self.x_max, self.y_min),
+            Point(self.x_min, self.y_max),
             Point(self.x_max, self.y_max),
         ]
     }

@@ -5,7 +5,6 @@ use rand_distr::Normal;
 use jagua_rs::entities::item::Item;
 use jagua_rs::geometry::d_transformation::DTransformation;
 use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
-use jagua_rs::geometry::transformation::Transformation;
 use jagua_rs::{fsize, PI};
 
 use crate::samplers::rotation_distr::NormalRotDistr;
@@ -97,13 +96,12 @@ impl LSSampler {
     }
 
     /// Samples a transformation from the distribution.
-    pub fn sample(&mut self, rng: &mut impl Rng) -> Transformation {
+    pub fn sample(&mut self, rng: &mut impl Rng) -> DTransformation {
         self.n_samples += 1;
 
         DTransformation::new(
             self.normal_r.sample(rng),
             (self.normal_x.sample(rng), self.normal_y.sample(rng)),
         )
-        .compose()
     }
 }

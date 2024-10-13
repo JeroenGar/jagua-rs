@@ -1,12 +1,13 @@
 use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
+use crate::collision_detection::hazard::Hazard;
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
-use crate::entities::placed_item::PlacedItem;
-use crate::entities::placed_item::PlacedItemUID;
+use crate::entities::placed_item::{PItemKey, PlacedItem};
 use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
+use slotmap::SlotMap;
 
 ///A Layout is made out of a [Bin] with a set of [Item]s positioned inside of it in a specific way.
 ///It is a mutable representation, and can be modified by placing or removing items.
@@ -16,11 +17,11 @@ use crate::util::assertions;
 #[derive(Clone)]
 pub struct Layout {
     /// The unique identifier of the layout, used only to match with a [LayoutSnapshot].
-    id: usize,
+    pub id: usize,
     /// The bin used for this layout
-    bin: Bin,
+    pub bin: Bin,
     /// How the items are placed in the bin
-    placed_items: Vec<PlacedItem>,
+    pub placed_items: SlotMap<PItemKey, PlacedItem>,
     /// The collision detection engine for this layout
     cde: CDEngine,
 }
@@ -31,7 +32,7 @@ impl Layout {
         Layout {
             id,
             bin,
-            placed_items: vec![],
+            placed_items: SlotMap::with_key(),
             cde,
         }
     }
@@ -42,9 +43,18 @@ impl Layout {
         layout
     }
 
-    pub fn create_snapshot(&mut self) -> LayoutSnapshot {
-        debug_assert!(assertions::layout_is_collision_free(self));
+    pub fn change_bin(&mut self, bin: Bin) {
+        // swap the bin
+        self.bin = bin;
+        // update the CDE
+        self.cde = self.bin.base_cde.as_ref().clone();
+        for (pik, pi) in self.placed_items.iter() {
+            let hazard = Hazard::new(pik.into(), pi.shape.clone());
+            self.cde.register_hazard(hazard);
+        }
+    }
 
+    pub fn create_snapshot(&mut self) -> LayoutSnapshot {
         LayoutSnapshot {
             id: self.id,
             bin: self.bin.clone(),
@@ -68,29 +78,30 @@ impl Layout {
         Layout { id, ..self.clone() }
     }
 
-    pub fn place_item(&mut self, item: &Item, d_transformation: &DTransformation) {
-        let placed_item = PlacedItem::new(item, d_transformation.clone());
-        self.cde.register_hazard((&placed_item).into());
-        self.placed_items.push(placed_item);
+    pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation) -> PItemKey {
+        let placed_item = PlacedItem::new(item, d_transformation);
+        let pik = self.placed_items.insert(placed_item);
+
+        let hazard = Hazard::new(pik.into(), self.placed_items[pik].shape.clone());
+        self.cde.register_hazard(hazard);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
-        debug_assert!(assertions::layout_is_collision_free(self));
+
+        pik
     }
 
-    pub fn remove_item(&mut self, pi_uid: &PlacedItemUID, commit_instant: bool) {
-        // Find the placed item and remove it
-        let pos = self
+    pub fn remove_item(&mut self, key: PItemKey, commit_instant: bool) -> PlacedItem {
+        let p_item = self
             .placed_items
-            .iter()
-            .position(|pi| &pi.uid == pi_uid)
-            .expect("placed item does not exist");
-        let p_item = self.placed_items.remove(pos);
-        // update the collision detection engine
+            .remove(key)
+            .expect("key is not valid anymore");
 
-        let hazard_entity = p_item.uid.clone().into();
-        self.cde.deregister_hazard(&hazard_entity, commit_instant);
+        // update the collision detection engine
+        self.cde.deregister_hazard(key.into(), commit_instant);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
+
+        p_item
     }
 
     /// True if no items are placed
@@ -102,7 +113,7 @@ impl Layout {
         &self.bin
     }
 
-    pub fn placed_items(&self) -> &Vec<PlacedItem> {
+    pub fn placed_items(&self) -> &SlotMap<PItemKey, PlacedItem> {
         &self.placed_items
     }
 
@@ -113,7 +124,7 @@ impl Layout {
         let item_area = self
             .placed_items
             .iter()
-            .map(|p_i| p_i.shape.area())
+            .map(|(_, pi)| pi.shape.area())
             .sum::<fsize>();
 
         item_area / bin_area
@@ -143,7 +154,7 @@ pub struct LayoutSnapshot {
     /// The bin used for this layout
     pub bin: Bin,
     /// How the items are placed in the bin
-    pub placed_items: Vec<PlacedItem>,
+    pub placed_items: SlotMap<PItemKey, PlacedItem>,
     /// The collision detection engine snapshot for this layout
     pub cde_snapshot: CDESnapshot,
     /// The usage of the bin with the items placed

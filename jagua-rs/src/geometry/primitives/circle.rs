@@ -39,7 +39,7 @@ impl Circle {
         let mut bounding_circle = circles.next().expect("no circles provided").clone();
 
         for circle in circles {
-            let distance_between_centers = bounding_circle.center.distance(&circle.center);
+            let distance_between_centers = bounding_circle.center.distance(circle.center);
             if bounding_circle.radius < distance_between_centers + circle.radius {
                 // circle not contained in bounding circle, expand
                 let diameter = Edge::new(bounding_circle.center, circle.center)
@@ -108,7 +108,7 @@ impl CollidesWith<AARectangle> for Circle {
 
 impl CollidesWith<Point> for Circle {
     fn collides_with(&self, point: &Point) -> bool {
-        point.sq_distance(&self.center) <= self.radius.powi(2)
+        point.sq_distance(self.center) <= self.radius.powi(2)
     }
 }
 

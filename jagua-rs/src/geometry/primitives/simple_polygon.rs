@@ -108,7 +108,7 @@ impl SimplePolygon {
         let sq_diam = ch
             .iter()
             .tuple_combinations()
-            .map(|(p1, p2)| p1.sq_distance(p2))
+            .map(|(p1, p2)| p1.sq_distance(*p2))
             .max_by_key(|sq_d| NotNan::new(*sq_d).unwrap())
             .expect("convex hull is empty");
 
