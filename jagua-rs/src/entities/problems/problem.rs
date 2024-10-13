@@ -43,7 +43,7 @@ impl ProblemGeneric for Problem {
         }
     }
 
-    fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution {
+    fn create_solution(&mut self, old_solution: Option<&Solution>) -> Solution {
         match self {
             Problem::BP(bp) => bp.create_solution(old_solution),
             Problem::SP(sp) => sp.create_solution(old_solution),

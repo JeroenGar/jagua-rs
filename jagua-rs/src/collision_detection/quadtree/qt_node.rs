@@ -4,7 +4,7 @@ use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
-use crate::collision_detection::quadtree::qt_partial_hazard::PartialQTHaz;
+use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
@@ -135,8 +135,7 @@ impl QTNode {
         irrelevant_hazards: &[HazardEntity],
     ) -> Option<&HazardEntity>
     where
-        T: CollidesWith<AARectangle>,
-        PartialQTHaz: CollidesWith<T>,
+        T: QTQueryable,
     {
         match self.hazards.strongest(irrelevant_hazards) {
             None => None,
@@ -178,32 +177,31 @@ impl QTNode {
         }
     }
 
-    ///TODO: document
-    pub fn collides_with<T>(&self, entity: &T, irrelevant_hazards: &mut Vec<HazardEntity>)
+    /// Gathers all hazards that collide with the entity in the `detected` vector.
+    /// All hazards already present in the `detected` vector are ignored.
+    /// In practice T is usually an `Edge` or `Circle`
+    pub fn collect_collisions<T>(&self, entity: &T, detected: &mut Vec<HazardEntity>)
     where
-        T: CollidesWith<AARectangle>,
-        PartialQTHaz: CollidesWith<T>,
+        T: QTQueryable,
     {
-        match self.hazards.strongest(irrelevant_hazards) {
+        match self.hazards.strongest(detected) {
             None => (),
             Some(strongest_hazard) => match entity.collides_with(&self.bbox) {
                 false => (),
                 true => match strongest_hazard.presence {
                     QTHazPresence::None => (),
-                    QTHazPresence::Entire => {
-                        irrelevant_hazards.push(strongest_hazard.entity.clone())
-                    }
+                    QTHazPresence::Entire => detected.push(strongest_hazard.entity.clone()),
                     QTHazPresence::Partial(_) => match &self.children {
                         Some(children) => {
                             //Check if any of the children intersect with the entity
                             children
                                 .iter()
-                                .for_each(|child| child.collides_with(entity, irrelevant_hazards))
+                                .for_each(|child| child.collect_collisions(entity, detected))
                         }
                         None => {
                             //Check if any of the partially present (and active) hazards collide with the entity
                             self.hazards.active_hazards().iter().for_each(|hz| {
-                                if !irrelevant_hazards.contains(&hz.entity) {
+                                if !detected.contains(&hz.entity) {
                                     match &hz.presence {
                                         QTHazPresence::None => (),
                                         QTHazPresence::Entire => {
@@ -211,7 +209,7 @@ impl QTNode {
                                         }
                                         QTHazPresence::Partial(p_haz) => {
                                             if p_haz.collides_with(entity) {
-                                                irrelevant_hazards.push(hz.entity.clone());
+                                                detected.push(hz.entity.clone());
                                             }
                                         }
                                     }
@@ -226,7 +224,7 @@ impl QTNode {
 
     pub fn definitely_collides<T>(&self, entity: &T, irrelevant_hazards: &[HazardEntity]) -> Tribool
     where
-        T: CollidesWith<AARectangle>,
+        T: QTQueryable,
     {
         match self.hazards.strongest(irrelevant_hazards) {
             None => Tribool::False,

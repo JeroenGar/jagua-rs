@@ -145,7 +145,7 @@ impl Shape for Edge {
     }
 
     fn diameter(&self) -> fsize {
-        self.start.distance(&self.end)
+        self.start.distance(self.end)
     }
 }
 

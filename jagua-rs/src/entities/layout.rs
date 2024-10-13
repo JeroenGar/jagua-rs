@@ -17,11 +17,11 @@ use slotmap::SlotMap;
 #[derive(Clone)]
 pub struct Layout {
     /// The unique identifier of the layout, used only to match with a [LayoutSnapshot].
-    id: usize,
+    pub id: usize,
     /// The bin used for this layout
-    bin: Bin,
+    pub bin: Bin,
     /// How the items are placed in the bin
-    placed_items: SlotMap<PItemKey, PlacedItem>,
+    pub placed_items: SlotMap<PItemKey, PlacedItem>,
     /// The collision detection engine for this layout
     cde: CDEngine,
 }
@@ -43,9 +43,18 @@ impl Layout {
         layout
     }
 
-    pub fn create_snapshot(&mut self) -> LayoutSnapshot {
-        debug_assert!(assertions::layout_is_collision_free(self));
+    pub fn change_bin(&mut self, bin: Bin) {
+        // swap the bin
+        self.bin = bin;
+        // update the CDE
+        self.cde = self.bin.base_cde.as_ref().clone();
+        for (pik, pi) in self.placed_items.iter() {
+            let hazard = Hazard::new(pik.into(), pi.shape.clone());
+            self.cde.register_hazard(hazard);
+        }
+    }
 
+    pub fn create_snapshot(&mut self) -> LayoutSnapshot {
         LayoutSnapshot {
             id: self.id,
             bin: self.bin.clone(),

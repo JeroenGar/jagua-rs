@@ -159,7 +159,7 @@ impl ProblemGeneric for BPProblem {
         }
     }
 
-    fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution {
+    fn create_solution(&mut self, old_solution: Option<&Solution>) -> Solution {
         let id = self.next_solution_id();
         let included_item_qtys = self.placed_item_qtys().collect_vec();
         let bin_qtys = self.bin_qtys().to_vec();

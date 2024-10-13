@@ -325,7 +325,7 @@ pub fn build_strip_packing_solution(
         problem.flush_changes();
     }
 
-    problem.create_solution(&None)
+    problem.create_solution(None)
 }
 
 pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLayout]) -> Solution {
@@ -394,7 +394,7 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
         }
     }
 
-    problem.create_solution(&None)
+    problem.create_solution(None)
 }
 
 /// Composes a `JsonSolution` from a `Solution` and an `Instance`.

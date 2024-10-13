@@ -74,3 +74,14 @@ impl From<PItemKey> for HazardEntity {
         HazardEntity::PlacedItem(k)
     }
 }
+
+impl TryInto<PItemKey> for &HazardEntity {
+    type Error = ();
+
+    fn try_into(self) -> Result<PItemKey, Self::Error> {
+        match self {
+            HazardEntity::PlacedItem(k) => Ok(*k),
+            _ => Err(()),
+        }
+    }
+}

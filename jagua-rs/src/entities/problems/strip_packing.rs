@@ -1,7 +1,6 @@
 use std::{iter, slice};
 
-use itertools::Itertools;
-
+use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::hazard_filter;
 use crate::entities::bin::Bin;
 use crate::entities::instances::instance_generic::InstanceGeneric;
@@ -19,6 +18,8 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
 use crate::util::fpa::FPA;
+use itertools::Itertools;
+use log::error;
 
 /// Strip Packing Problem
 #[derive(Clone)]
@@ -113,9 +114,13 @@ impl SPProblem {
         //place the items back in the new layout
         for (item_id, d_transf) in placed_items {
             let item = self.instance.item(item_id);
-            let entities_to_ignore = item.hazard_filter.as_ref().map_or(vec![], |f| {
-                hazard_filter::generate_irrelevant_hazards(f, self.layout.cde().all_hazards())
-            });
+            let entities_to_ignore = self
+                .layout
+                .cde()
+                .all_hazards()
+                .filter(|h| h.entity != HazardEntity::BinExterior)
+                .map(|h| h.entity)
+                .collect_vec();
             let shape = &item.shape;
             let transform = d_transf.compose();
             let transformed_shape = shape.transform_clone(&transform);
@@ -127,6 +132,13 @@ impl SPProblem {
                     d_transf,
                 };
                 self.place_item(insert_opt);
+            } else {
+                let collisions = cde.collect_poly_collisions(
+                    &transformed_shape,
+                    entities_to_ignore.as_ref(),
+                    vec![],
+                );
+                error!("Item {} could not be placed back in the strip after resizing. Collisions: {:?}", item_id, collisions);
             }
         }
     }
@@ -194,7 +206,7 @@ impl ProblemGeneric for SPProblem {
         PlacingOption::from_placed_item(layout_index, &pi)
     }
 
-    fn create_solution(&mut self, _old_solution: &Option<Solution>) -> Solution {
+    fn create_solution(&mut self, _old_solution: Option<&Solution>) -> Solution {
         let id = self.next_solution_id();
         let included_item_qtys = self.placed_item_qtys().collect_vec();
         let bin_qtys = self.bin_qtys().to_vec();

@@ -3,9 +3,8 @@ use std::hash::Hash;
 use std::sync::{Arc, Weak};
 
 use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
 /// Defines a set of edges from a hazard that is partially active in the [QTNode].
@@ -61,7 +60,7 @@ const BBOX_CHECK_THRESHOLD_PLUS_1: usize = BBOX_CHECK_THRESHOLD + 1;
 
 impl<T> CollidesWith<T> for PartialQTHaz
 where
-    T: CollidesWith<AARectangle> + CollidesWith<Edge>,
+    T: QTQueryable,
 {
     fn collides_with(&self, entity: &T) -> bool {
         let shape = self.shape_arc();

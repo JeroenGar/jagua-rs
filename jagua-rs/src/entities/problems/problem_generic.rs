@@ -25,7 +25,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     ) -> PlacingOption;
 
     /// Saves the current state of the problem as a `Solution`.
-    fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution;
+    fn create_solution(&mut self, old_solution: Option<&Solution>) -> Solution;
 
     /// Restores the state of the problem to a previous `Solution`.
     fn restore_to_solution(&mut self, solution: &Solution);

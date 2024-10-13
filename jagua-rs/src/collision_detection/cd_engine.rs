@@ -7,7 +7,7 @@ use crate::collision_detection::hpg::grid::Grid;
 use crate::collision_detection::hpg::hazard_proximity_grid::{DirtyState, HazardProximityGrid};
 use crate::collision_detection::hpg::hpg_cell::HPGCell;
 use crate::collision_detection::quadtree::qt_node::QTNode;
-use crate::collision_detection::quadtree::qt_partial_hazard::PartialQTHaz;
+use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::fsize;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
@@ -272,7 +272,7 @@ impl CDEngine {
     }
 
     /// Returns all hazards in the CDE, both static and dynamic.
-    pub fn all_hazards(&self) -> impl Iterator<Item = &Hazard> {
+    pub fn all_hazards(&self) -> impl Iterator<Item=&Hazard> {
         self.static_hazards
             .iter()
             .chain(self.dynamic_hazards.iter())
@@ -457,29 +457,30 @@ impl CDEngine {
     /// Returns all the (relevant) hazards present inside the shape ([`Circle`] or [`AARectangle`])
     pub fn hazards_within<T>(
         &self,
-        shape: &T,
+        entity: &T,
         irrelevant_hazards: &[HazardEntity],
         mut buffer: Vec<HazardEntity>,
     ) -> Vec<HazardEntity>
     where
-        T: CollidesWith<AARectangle> + Shape,
-        PartialQTHaz: CollidesWith<T>,
+        T: QTQueryable,
     {
         let mut colliding_entities = {
+            debug_assert!(buffer.is_empty());
+
+            //temporarily add the irrelevant hazards to the buffer
             buffer.extend(irrelevant_hazards.iter().cloned());
             let n_irrelevant = irrelevant_hazards.len();
 
-            //collects all colliding hazards in the irrelevant_hazards vec
-            self.quadtree.collides_with(shape, &mut buffer);
+            self.quadtree.collect_collisions(entity, &mut buffer);
 
-            //drain the irrelevant hazards, leaving only the colliding entities
+            //drain the irrelevant hazards, leaving only the non-ignored colliding entities
             buffer.drain(0..n_irrelevant);
 
             buffer
         };
 
         //Check if the shape is outside the quadtree
-        let centroid_in_qt = self.bbox.collides_with(&shape.centroid());
+        let centroid_in_qt = self.bbox.collides_with(&entity.centroid());
         if !centroid_in_qt && colliding_entities.is_empty() {
             // The shape centroid is outside the quadtree
             if !irrelevant_hazards.contains(&&HazardEntity::BinExterior) {
@@ -492,22 +493,24 @@ impl CDEngine {
     }
 
     /// TODO: document
-    pub fn poly_collides_with(
+    pub fn collect_poly_collisions(
         &self,
         shape: &SimplePolygon,
         irrelevant_hazards: &[HazardEntity],
         mut buffer: Vec<HazardEntity>,
     ) -> Vec<HazardEntity> {
-        //add the irrelevant hazards to the buffer
-        let n_irrelevant = irrelevant_hazards.len();
+        //temporarily add the irrelevant hazards to the buffer
+        debug_assert!(buffer.is_empty());
         buffer.extend(irrelevant_hazards.iter().cloned());
+        let n_irrelevant = buffer.len();
 
         //collect all colliding entities due to edge intersection
         shape
             .edge_iter()
-            .for_each(|e| self.quadtree.collides_with(&e, &mut buffer));
+            .for_each(|e| self.quadtree.collect_collisions(&e, &mut buffer));
 
         //collect all colliding entities due to containment
+        //TODO: check if gathering the hazards inside the bbox using the quadtree is faster
         self.all_hazards().filter(|h| h.active).for_each(|h| {
             if !buffer.contains(&h.entity) && self.poly_or_hazard_are_contained(shape, h) {
                 buffer.push(h.entity.clone());
