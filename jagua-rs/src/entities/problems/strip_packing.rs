@@ -1,7 +1,6 @@
 use std::{iter, slice};
 
 use crate::collision_detection::hazard::HazardEntity;
-use crate::collision_detection::hazard_filter;
 use crate::entities::bin::Bin;
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::instances::strip_packing::SPInstance;

@@ -272,7 +272,7 @@ impl CDEngine {
     }
 
     /// Returns all hazards in the CDE, both static and dynamic.
-    pub fn all_hazards(&self) -> impl Iterator<Item=&Hazard> {
+    pub fn all_hazards(&self) -> impl Iterator<Item = &Hazard> {
         self.static_hazards
             .iter()
             .chain(self.dynamic_hazards.iter())

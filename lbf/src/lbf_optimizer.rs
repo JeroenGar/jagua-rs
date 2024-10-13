@@ -124,7 +124,7 @@ impl LBFOptimizer {
             }
         }
 
-        let solution: Solution = self.problem.create_solution(&None);
+        let solution: Solution = self.problem.create_solution(None);
 
         info!(
             "[LBF] optimization finished in {:.3}ms ({} samples)",
