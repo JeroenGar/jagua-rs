@@ -7,7 +7,6 @@ use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::point::Point;
 
 /// A node in the quadtree
 #[derive(Clone, Debug)]
@@ -126,9 +125,9 @@ impl QTNode {
         self.children.is_some()
     }
 
-    /// Returns None if no collision between the entity and any hazard is detected,
-    /// otherwise returns the first encountered hazard that collides with the entity
-    /// In practice T is usually an `Edge` or `Circle`
+    /// Used to detect collisions in a binary fashion: either there is a collision or there isn't.
+    /// Returns `None` if no collision between the entity and any hazard is detected,
+    /// otherwise the first encountered hazard that collides with the entity is returned.
     pub fn collides<T>(
         &self,
         entity: &T,
@@ -177,9 +176,8 @@ impl QTNode {
         }
     }
 
-    /// Gathers all hazards that collide with the entity in the `detected` vector.
+    /// Gathers all hazards that collide with the entity and stores them in the `detected` vector.
     /// All hazards already present in the `detected` vector are ignored.
-    /// In practice T is usually an `Edge` or `Circle`
     pub fn collect_collisions<T>(&self, entity: &T, detected: &mut Vec<HazardEntity>)
     where
         T: QTQueryable,
@@ -222,9 +220,13 @@ impl QTNode {
         }
     }
 
+    /// Used to detect collisions in a broad fashion:
+    /// Returns `Tribool::True` if the entity definitely collides with a hazard,
+    /// `Tribool::False` if the entity definitely does not collide with any hazard,
+    /// and `Tribool::Indeterminate` if it is not possible to determine whether the entity collides with any hazard.
     pub fn definitely_collides<T>(&self, entity: &T, irrelevant_hazards: &[HazardEntity]) -> Tribool
     where
-        T: QTQueryable,
+        T: CollidesWith<AARectangle>,
     {
         match self.hazards.strongest(irrelevant_hazards) {
             None => Tribool::False,
@@ -251,10 +253,17 @@ impl QTNode {
         }
     }
 
-    pub fn point_definitely_collides_with(&self, point: &Point, entity: HazardEntity) -> Tribool {
-        match self.hazards.get(entity) {
+    /// Used to detect collisions with a single
+    /// Returns `Tribool::True` if the entity definitely collides with a hazard,
+    /// `Tribool::False` if the entity definitely does not collide with any hazard,
+    /// and `Tribool::Indeterminate` if it is not possible to determine whether the entity collides with any hazard.
+    pub fn definitely_collides_with<T>(&self, entity: &T, hazard_entity: HazardEntity) -> Tribool
+    where
+        T: CollidesWith<AARectangle>,
+    {
+        match self.hazards.get(hazard_entity) {
             None => Tribool::False, //Node does not contain entity
-            Some(hazard) => match self.bbox.collides_with(point) {
+            Some(hazard) => match entity.collides_with(&self.bbox) {
                 false => Tribool::False, //Hazard present, but the point is fully outside the node
                 true => match hazard.presence {
                     QTHazPresence::None => Tribool::False, //The hazard is of type None, a collision is impossible
@@ -265,7 +274,7 @@ impl QTNode {
                             let mut result = Tribool::False; //Assume no collision
                             for i in 0..4 {
                                 let child = &children[i];
-                                match child.point_definitely_collides_with(point, entity) {
+                                match child.definitely_collides_with(entity, hazard_entity) {
                                     Tribool::True => return Tribool::True, //If a child for sure collides, we can immediately return Yes
                                     Tribool::Indeterminate => result = Tribool::Indeterminate, //If a child might collide, switch from to Maybe
                                     Tribool::False => {} //If child does not collide, do nothing

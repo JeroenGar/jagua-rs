@@ -3,8 +3,10 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
 
-/// Trait for all geometric primitives that can be directly queried in the quadtree for collisions
-pub trait QTQueryable: CollidesWith<AARectangle> + CollidesWith<Edge> + Shape {}
+/// Common trait for all geometric primitives that can be directly queried in the quadtree
+/// for collisions with the edges of the registered hazards.
+/// These include: [AARectangle], [Edge] and [Circle].
+pub trait QTQueryable: Shape + CollidesWith<Edge> + CollidesWith<AARectangle> {}
 
 impl QTQueryable for AARectangle {}
 impl QTQueryable for Edge {}

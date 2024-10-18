@@ -362,7 +362,7 @@ impl CDEngine {
     pub fn point_definitely_collides_with(&self, point: &Point, entity: HazardEntity) -> Tribool {
         match self.bbox.collides_with(point) {
             false => Tribool::Indeterminate, //point is outside the quadtree, so no information available
-            true => self.quadtree.point_definitely_collides_with(point, entity),
+            true => self.quadtree.definitely_collides_with(point, entity),
         }
     }
 
@@ -439,7 +439,7 @@ impl CDEngine {
             //maybe the quadtree can help us.
             match self
                 .quadtree
-                .point_definitely_collides_with(&s_mu.poi.center, haz.entity)
+                .definitely_collides_with(&s_mu.poi.center, haz.entity)
                 .try_into()
             {
                 Ok(collides) => return collides,
@@ -454,7 +454,7 @@ impl CDEngine {
         }
     }
 
-    /// Returns all the (relevant) hazards present inside the shape ([`Circle`] or [`AARectangle`])
+    /// Returns all the (relevant) hazards present inside any [QTQueryable] entity
     pub fn hazards_within<T>(
         &self,
         entity: &T,
@@ -492,7 +492,8 @@ impl CDEngine {
         colliding_entities
     }
 
-    /// TODO: document
+    /// Collects all hazards with which the polygon collides and stores them in the detected buffer.
+    /// Any hazards in `irrelevant_hazards` are ignored, as well as hazards present in the buffer before the call.
     pub fn collect_poly_collisions(
         &self,
         shape: &SimplePolygon,
@@ -521,6 +522,8 @@ impl CDEngine {
         detected.drain(irrelevant_range);
     }
 
+    /// Collects all hazards with which the surrogate collides and stores them in the detected buffer.
+    /// Any hazards in `irrelevant_hazards` are ignored, as well as hazards present in the buffer before the call.
     pub fn collect_surrogate_collisions(
         &self,
         base_surrogate: &SPSurrogate,
