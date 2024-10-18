@@ -497,29 +497,52 @@ impl CDEngine {
         &self,
         shape: &SimplePolygon,
         irrelevant_hazards: &[HazardEntity],
-        mut buffer: Vec<HazardEntity>,
-    ) -> Vec<HazardEntity> {
+        detected: &mut Vec<HazardEntity>,
+    ) {
         //temporarily add the irrelevant hazards to the buffer
-        debug_assert!(buffer.is_empty());
-        buffer.extend(irrelevant_hazards.iter().cloned());
-        let n_irrelevant = buffer.len();
+        let n_init_detected = detected.len();
+        detected.extend(irrelevant_hazards.iter().cloned());
+        let irrelevant_range = n_init_detected..detected.len();
 
         //collect all colliding entities due to edge intersection
         shape
             .edge_iter()
-            .for_each(|e| self.quadtree.collect_collisions(&e, &mut buffer));
+            .for_each(|e| self.quadtree.collect_collisions(&e, detected));
 
         //collect all colliding entities due to containment
         //TODO: check if gathering the hazards inside the bbox using the quadtree is faster
         self.all_hazards().filter(|h| h.active).for_each(|h| {
-            if !buffer.contains(&h.entity) && self.poly_or_hazard_are_contained(shape, h) {
-                buffer.push(h.entity.clone());
+            if !detected.contains(&h.entity) && self.poly_or_hazard_are_contained(shape, h) {
+                detected.push(h.entity.clone());
             }
         });
 
         //drain the irrelevant hazards, leaving only the colliding entities
-        buffer.drain(0..n_irrelevant);
+        detected.drain(irrelevant_range);
+    }
 
-        buffer
+    pub fn collect_surrogate_collisions(
+        &self,
+        base_surrogate: &SPSurrogate,
+        transform: &Transformation,
+        irrelevant_hazards: &[HazardEntity],
+        detected: &mut Vec<HazardEntity>,
+    ) {
+        //temporarily add the irrelevant hazards to the buffer
+        let n_init_detected = detected.len();
+        detected.extend(irrelevant_hazards.iter().cloned());
+        let irrelevant_range = n_init_detected..detected.len();
+
+        for pole in base_surrogate.ff_poles() {
+            let t_pole = pole.transform_clone(transform);
+            self.quadtree.collect_collisions(&t_pole, detected)
+        }
+        for pier in base_surrogate.ff_piers() {
+            let t_pier = pier.transform_clone(transform);
+            self.quadtree.collect_collisions(&t_pier, detected);
+        }
+
+        //drain the irrelevant hazards, leaving only the colliding entities
+        detected.drain(irrelevant_range);
     }
 }
