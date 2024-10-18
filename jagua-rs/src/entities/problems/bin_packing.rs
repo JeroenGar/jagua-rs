@@ -3,7 +3,7 @@ use itertools::Itertools;
 use crate::entities::instances::bin_packing::BPInstance;
 use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::layout::Layout;
-use crate::entities::placed_item::PlacedItemUID;
+use crate::entities::placed_item::PItemKey;
 use crate::entities::placing_option::PlacingOption;
 use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
@@ -67,8 +67,8 @@ impl BPProblem {
         self.register_bin(layout.bin().id);
         layout
             .placed_items()
-            .iter()
-            .for_each(|p_i| self.register_included_item(p_i.item_id()));
+            .values()
+            .for_each(|pi| self.register_included_item(pi.item_id));
         self.layouts.push(layout);
         LayoutIndex::Real(self.layouts.len() - 1)
     }
@@ -81,8 +81,8 @@ impl BPProblem {
                 self.deregister_bin(layout.bin().id);
                 layout
                     .placed_items()
-                    .iter()
-                    .for_each(|v| self.deregister_included_item(v.item_id()));
+                    .values()
+                    .for_each(|pi| self.deregister_included_item(pi.item_id));
                 self.uncommitted_removed_layouts.push(layout);
             }
             LayoutIndex::Template(_) => unreachable!("cannot remove template layout"),
@@ -112,8 +112,8 @@ impl BPProblem {
 }
 
 impl ProblemGeneric for BPProblem {
-    fn place_item(&mut self, p_opt: &PlacingOption) -> LayoutIndex {
-        let layout_index = match &p_opt.layout_index {
+    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey) {
+        let layout_index = match &p_opt.layout_idx {
             LayoutIndex::Real(i) => LayoutIndex::Real(*i),
             LayoutIndex::Template(i) => {
                 //Layout is empty, clone it and add it to `layouts`
@@ -128,37 +128,38 @@ impl ProblemGeneric for BPProblem {
             LayoutIndex::Template(_) => unreachable!("cannot place item in template layout"),
         };
         let item = self.instance.item(p_opt.item_id);
-        layout.place_item(item, &p_opt.d_transform);
+        let pik = layout.place_item(item, p_opt.d_transf);
         let layout_id = layout.id();
 
         self.register_included_item(p_opt.item_id);
         self.layout_has_changed(layout_id);
 
-        layout_index
+        (layout_index, pik)
     }
 
     fn remove_item(
         &mut self,
         layout_index: LayoutIndex,
-        pi_uid: &PlacedItemUID,
+        pik: PItemKey,
         commit_instantly: bool,
-    ) {
+    ) -> PlacingOption {
         match layout_index {
             LayoutIndex::Real(i) => {
                 self.layout_has_changed(self.layouts[i].id());
                 let layout = &mut self.layouts[i];
-                layout.remove_item(pi_uid, commit_instantly);
+                let pi = layout.remove_item(pik, commit_instantly);
                 if layout.is_empty() {
                     //if layout is empty, remove it
                     self.deregister_layout(layout_index);
                 }
-                self.deregister_included_item(pi_uid.item_id);
+                self.deregister_included_item(pi.item_id);
+                PlacingOption::from_placed_item(layout_index, &pi)
             }
             LayoutIndex::Template(_) => panic!("cannot remove item from template layout"),
         }
     }
 
-    fn create_solution(&mut self, old_solution: &Option<Solution>) -> Solution {
+    fn create_solution(&mut self, old_solution: Option<&Solution>) -> Solution {
         let id = self.next_solution_id();
         let included_item_qtys = self.placed_item_qtys().collect_vec();
         let bin_qtys = self.bin_qtys().to_vec();

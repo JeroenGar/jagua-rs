@@ -313,20 +313,19 @@ pub fn build_strip_packing_solution(
             &problem.layout.bin().pretransform,
         );
 
-        let d_transform = transform.decompose();
+        let d_transf = transform.decompose();
 
         let placing_opt = PlacingOption {
-            layout_index: STRIP_LAYOUT_IDX,
+            layout_idx: STRIP_LAYOUT_IDX,
             item_id: item.id,
-            transform,
-            d_transform,
+            d_transf,
         };
 
-        problem.place_item(&placing_opt);
+        problem.place_item(placing_opt);
         problem.flush_changes();
     }
 
-    problem.create_solution(&None)
+    problem.create_solution(None)
 }
 
 pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLayout]) -> Solution {
@@ -360,15 +359,14 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
             &first_item.pretransform,
             &bin.pretransform,
         );
-        let d_transform = transform.decompose();
+        let d_transf = transform.decompose();
 
         let initial_insert_opt = PlacingOption {
-            layout_index: LayoutIndex::Template(template_index),
+            layout_idx: LayoutIndex::Template(template_index),
             item_id: first_item.id,
-            transform: transform,
-            d_transform: d_transform,
+            d_transf,
         };
-        let layout_index = problem.place_item(&initial_insert_opt);
+        let (layout_idx, _) = problem.place_item(initial_insert_opt);
         problem.flush_changes();
 
         //Insert the rest of the items
@@ -384,20 +382,19 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
                 &bin.pretransform,
             );
 
-            let d_transform = transform.decompose();
+            let d_transf = transform.decompose();
 
             let insert_opt = PlacingOption {
-                layout_index,
+                layout_idx,
                 item_id: item.id,
-                transform,
-                d_transform,
+                d_transf,
             };
-            problem.place_item(&insert_opt);
+            problem.place_item(insert_opt);
             problem.flush_changes();
         }
     }
 
-    problem.create_solution(&None)
+    problem.create_solution(None)
 }
 
 /// Composes a `JsonSolution` from a `Solution` and an `Instance`.
@@ -420,13 +417,13 @@ pub fn compose_json_solution(
 
             let placed_items = sl
                 .placed_items
-                .iter()
+                .values()
                 .map(|placed_item| {
-                    let item_index = placed_item.item_id();
+                    let item_index = placed_item.item_id;
                     let item = instance.item(item_index);
 
                     let abs_transf = internal_to_absolute_transform(
-                        placed_item.d_transformation(),
+                        &placed_item.d_transf,
                         &item.pretransform,
                         &sl.bin.pretransform,
                     )

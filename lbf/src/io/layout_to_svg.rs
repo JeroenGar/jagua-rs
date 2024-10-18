@@ -93,9 +93,9 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
     //draw items
     let items_group = {
         let mut items_group = Group::new();
-        for pi in layout.placed_items() {
+        for pi in layout.placed_items().values() {
             let mut group = Group::new();
-            let item = instance.item(pi.item_id());
+            let item = instance.item(pi.item_id);
             let shape = &pi.shape;
             let color = match item.base_quality {
                 None => theme.item_fill.to_owned(),
@@ -139,7 +139,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 let transformed_surrogate = item
                     .shape
                     .surrogate()
-                    .transform_clone(&pi.d_transformation().compose());
+                    .transform_clone(&pi.d_transf.compose());
                 let poi = &transformed_surrogate.poles[0];
                 let ff_poles = transformed_surrogate.ff_poles();
 

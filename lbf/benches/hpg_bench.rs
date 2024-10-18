@@ -8,7 +8,6 @@ use rand::SeedableRng;
 
 use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
-use jagua_rs::entities::placed_item::PlacedItemUID;
 use jagua_rs::entities::placing_option::PlacingOption;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
@@ -41,11 +40,15 @@ fn hpg_query_bench(c: &mut Criterion) {
     );
     let (base_problem, _) =
         util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
-    let base_pi_uids = base_problem
+    let base_p_opts = base_problem
         .get_layout(LayoutIndex::Real(0))
         .placed_items()
-        .iter()
-        .map(|pi| pi.uid.clone())
+        .values()
+        .map(|pi| PlacingOption {
+            layout_idx: LayoutIndex::Real(0),
+            item_id: pi.item_id,
+            d_transf: pi.d_transf,
+        })
         .collect_vec();
 
     let mut group = c.benchmark_group("hpg_bench_query");
@@ -65,13 +68,8 @@ fn hpg_query_bench(c: &mut Criterion) {
             }
         };
         // Place the items in exactly the same way as the base problem
-        for pi_uid in base_pi_uids.iter() {
-            problem.place_item(&PlacingOption {
-                layout_index: LayoutIndex::Real(0),
-                item_id: pi_uid.item_id,
-                transform: pi_uid.d_transf.compose(),
-                d_transform: pi_uid.d_transf.clone(),
-            });
+        for p_opt in base_p_opts.iter() {
+            problem.place_item(*p_opt);
         }
 
         /*{
@@ -107,7 +105,7 @@ fn hpg_query_bench(c: &mut Criterion) {
                     let transf = sampler.sample(&mut rng);
                     if !layout.cde().surrogate_collides(surrogate, &transf, &[]) {
                         buffer_shape.transform_from(&item.shape, &transf);
-                        if !layout.cde().shape_collides(&buffer_shape, &[]) {
+                        if !layout.cde().poly_collides(&buffer_shape, &[]) {
                             n_valid_samples += 1;
                         }
                     }
@@ -130,11 +128,15 @@ fn hpg_update_bench(c: &mut Criterion) {
     );
     let (base_problem, _) =
         util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
-    let base_pi_uids = base_problem
+    let base_p_opts = base_problem
         .get_layout(LayoutIndex::Real(0))
         .placed_items()
-        .iter()
-        .map(|pi| pi.uid.clone())
+        .values()
+        .map(|pi| PlacingOption {
+            layout_idx: LayoutIndex::Real(0),
+            item_id: pi.item_id,
+            d_transf: pi.d_transf,
+        })
         .collect_vec();
 
     let mut group = c.benchmark_group("hpg_bench_update");
@@ -154,13 +156,8 @@ fn hpg_update_bench(c: &mut Criterion) {
             }
         };
         // Place the items in exactly the same way as the base problem
-        for pi_uid in base_pi_uids.iter() {
-            problem.place_item(&PlacingOption {
-                layout_index: LayoutIndex::Real(0),
-                item_id: pi_uid.item_id,
-                transform: pi_uid.d_transf.compose(),
-                d_transform: pi_uid.d_transf.clone(),
-            });
+        for p_opt in base_p_opts.iter() {
+            problem.place_item(*p_opt);
         }
 
         /*{
@@ -195,13 +192,12 @@ fn hpg_update_bench(c: &mut Criterion) {
             let transf = sampler.sample(&mut rng);
             if !layout.cde().surrogate_collides(surrogate, &transf, &[]) {
                 buffer_shape.transform_from(&item.shape, &transf);
-                if !layout.cde().shape_collides(&buffer_shape, &[]) {
+                if !layout.cde().poly_collides(&buffer_shape, &[]) {
                     let d_transf = transf.decompose();
                     valid_placements.push(PlacingOption {
-                        layout_index: LayoutIndex::Real(0),
+                        layout_idx: LayoutIndex::Real(0),
                         item_id: SELECTED_ITEM_ID,
-                        transform: transf,
-                        d_transform: d_transf,
+                        d_transf,
                     });
                 }
             }
@@ -212,15 +208,8 @@ fn hpg_update_bench(c: &mut Criterion) {
         group.bench_function(BenchmarkId::from_parameter(n_hpg_cells), |b| {
             b.iter(|| {
                 let opt = valid_samples_cycler.next().unwrap();
-                problem.place_item(opt);
-                problem.remove_item(
-                    LayoutIndex::Real(0),
-                    &PlacedItemUID {
-                        item_id: opt.item_id,
-                        d_transf: opt.d_transform.clone(),
-                    },
-                    true,
-                );
+                let (l_idx, pik) = problem.place_item(*opt);
+                problem.remove_item(l_idx, pik, true);
                 problem.flush_changes();
             })
         });

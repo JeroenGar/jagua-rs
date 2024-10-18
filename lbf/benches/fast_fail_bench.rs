@@ -12,7 +12,7 @@ use jagua_rs::fsize;
 use jagua_rs::geometry::convex_hull;
 use jagua_rs::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use jagua_rs::geometry::fail_fast::{piers, poi};
-use jagua_rs::geometry::geo_traits::TransformableFrom;
+use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::circle::Circle;
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 use jagua_rs::io::json_instance::JsonInstance;
@@ -128,7 +128,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
                             true => true,
                             false => {
                                 buffer_shape.transform_from(&item.shape, transf);
-                                layout.cde().shape_collides(&buffer_shape, &[])
+                                layout.cde().poly_collides(&buffer_shape, &[])
                             }
                         };
                         match collides {
@@ -164,6 +164,13 @@ pub fn create_custom_surrogate(
     let n_ff_poles = usize::min(n_poles, poles.len());
     let relevant_poles_for_piers = &poles[0..n_ff_poles];
     let piers = piers::generate(simple_poly, n_piers, relevant_poles_for_piers);
+    let convex_hull_area = SimplePolygon::new(
+        convex_hull_indices
+            .iter()
+            .map(|&i| simple_poly.points[i])
+            .collect(),
+    )
+    .area();
 
     let surrogate = SPSurrogate {
         convex_hull_indices,
@@ -171,6 +178,7 @@ pub fn create_custom_surrogate(
         piers,
         poles_bounding_circle,
         n_ff_poles,
+        convex_hull_area,
     };
 
     surrogate

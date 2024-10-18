@@ -33,11 +33,11 @@ const TRANSFORM_FORMULA: fn(fsize, fsize, &Transformation) -> (fsize, fsize) =
     };
 
 impl Point {
-    pub fn distance(&self, other: &Point) -> fsize {
+    pub fn distance(&self, other: Point) -> fsize {
         ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()
     }
 
-    pub fn sq_distance(&self, other: &Point) -> fsize {
+    pub fn sq_distance(&self, other: Point) -> fsize {
         (self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)
     }
 }
