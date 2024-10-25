@@ -1,13 +1,13 @@
 [package]
 name = "jagua-rs"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 license = "Mozilla Public License 2.0"
 repository = "https://github.com/JeroenGar/jagua-rs"
 authors = ["Jeroen Gardeyn"]
 
 [dependencies]
-ndarray = "0.15.6"
+ndarray = "0.16.1"
 rand = { version = "0.8.5", features = [ "small_rng" ] }
 rand_distr = "0.4.3"
 num-integer = "0.1.46"
@@ -16,7 +16,7 @@ ordered-float = "4.2.0"
 indexmap = "2.2.3"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-itertools = "0.12.1"
+itertools = "0.13.0"
 tribool = "0.3.0"
 arr_macro = "0.2.1"
 cfg-if = "1.0.0"
