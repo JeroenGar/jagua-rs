@@ -2,6 +2,7 @@ use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::item::Item;
 use crate::fsize;
 use crate::geometry::geo_traits::Shape;
+use crate::util::assertions;
 
 /// Strip-packing problem instance: a set of items to be packed into a single strip.
 /// The items are to be packed in such a way that the total width of the strip used is minimized.
@@ -17,6 +18,8 @@ pub struct SPInstance {
 
 impl SPInstance {
     pub fn new(items: Vec<(Item, usize)>, strip_height: fsize) -> Self {
+        assert!(assertions::instance_item_bin_ids_correct(&items, &vec![]));
+
         let item_area = items
             .iter()
             .map(|(item, qty)| item.shape.area() * *qty as fsize)

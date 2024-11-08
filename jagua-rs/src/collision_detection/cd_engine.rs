@@ -459,37 +459,28 @@ impl CDEngine {
         &self,
         entity: &T,
         irrelevant_hazards: &[HazardEntity],
-        mut buffer: Vec<HazardEntity>,
-    ) -> Vec<HazardEntity>
-    where
+        detected: &mut Vec<HazardEntity>,
+    ) where
         T: QTQueryable,
     {
-        let mut colliding_entities = {
-            debug_assert!(buffer.is_empty());
+        let n_init_detected = detected.len();
+        detected.extend(irrelevant_hazards.iter().cloned());
+        let irrelevant_range = n_init_detected..detected.len();
 
-            //temporarily add the irrelevant hazards to the buffer
-            buffer.extend(irrelevant_hazards.iter().cloned());
-            let n_irrelevant = irrelevant_hazards.len();
+        self.quadtree.collect_collisions(entity, detected);
 
-            self.quadtree.collect_collisions(entity, &mut buffer);
-
-            //drain the irrelevant hazards, leaving only the non-ignored colliding entities
-            buffer.drain(0..n_irrelevant);
-
-            buffer
-        };
+        //drain the irrelevant hazards, leaving only the non-ignored colliding entities
+        detected.drain(irrelevant_range);
 
         //Check if the shape is outside the quadtree
         let centroid_in_qt = self.bbox.collides_with(&entity.centroid());
-        if !centroid_in_qt && colliding_entities.is_empty() {
+        if !centroid_in_qt && detected.is_empty() {
             // The shape centroid is outside the quadtree
             if !irrelevant_hazards.contains(&&HazardEntity::BinExterior) {
                 //Add the bin as a hazard, unless it is ignored
-                colliding_entities.push(HazardEntity::BinExterior);
+                detected.push(HazardEntity::BinExterior);
             }
         }
-
-        colliding_entities
     }
 
     /// Collects all hazards with which the polygon collides and stores them in the detected buffer.
