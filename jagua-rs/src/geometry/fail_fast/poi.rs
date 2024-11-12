@@ -13,7 +13,7 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 pub fn generate_next_pole(shape: &SimplePolygon, poles: &[Circle]) -> Circle {
     //Based on Mapbox's "Polylabel" algorithm: <https://github.com/mapbox/polylabel>
     let square_bbox = shape.bbox().inflate_to_square();
-    let root = POINode::new(square_bbox, MAX_POI_TREE_DEPTH, shape, &poles);
+    let root = POINode::new(square_bbox, MAX_POI_TREE_DEPTH, shape, poles);
     let mut queue = VecDeque::from([root]);
     let mut best: Option<Circle> = None;
     let distance = |circle: &Option<Circle>| circle.as_ref().map_or(0.0, |c| c.radius);
@@ -26,7 +26,7 @@ pub fn generate_next_pole(shape: &SimplePolygon, poles: &[Circle]) -> Circle {
 
         //see if worth it to split
         if node.distance_upperbound() > distance(&best) {
-            if let Some(children) = node.split(shape, &poles) {
+            if let Some(children) = node.split(shape, poles) {
                 queue.extend(children);
             }
         }

@@ -47,7 +47,7 @@ impl HPGCell {
             match &hazard.entity {
                 HazardEntity::BinExterior | HazardEntity::BinHole { .. } => {
                     if prox < static_uni_prox.0 {
-                        static_uni_prox = (prox, hazard.entity.clone());
+                        static_uni_prox = (prox, hazard.entity);
                     }
                 }
                 HazardEntity::InferiorQualityZone { quality, .. } => {
@@ -61,7 +61,7 @@ impl HPGCell {
             bbox,
             centroid,
             radius,
-            uni_prox: static_uni_prox.clone(),
+            uni_prox: static_uni_prox,
             static_uni_prox,
             qz_prox,
         }
@@ -140,7 +140,7 @@ impl HPGCell {
         match haz_prox.partial_cmp(&current_prox).unwrap() {
             Ordering::Less => {
                 //new hazard is closer
-                self.uni_prox = (haz_prox, to_register.entity.clone());
+                self.uni_prox = (haz_prox, to_register.entity);
                 HPGCellUpdate::Affected
             }
             _ => {
@@ -174,7 +174,7 @@ impl HPGCell {
         match new_prox.partial_cmp(&current_prox).unwrap() {
             Ordering::Less => {
                 //new hazard is closer
-                self.uni_prox = (new_prox, to_register.entity.clone());
+                self.uni_prox = (new_prox, to_register.entity);
                 HPGCellUpdate::Affected
             }
             _ => {
@@ -206,7 +206,7 @@ impl HPGCell {
     {
         if to_deregister.contains(&self.uni_prox.1) {
             //closest current hazard has to be deregistered
-            self.uni_prox = self.static_uni_prox.clone();
+            self.uni_prox = self.static_uni_prox;
 
             self.register_hazards(remaining);
             HPGCellUpdate::Affected

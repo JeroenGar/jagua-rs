@@ -18,7 +18,7 @@ pub struct SPInstance {
 
 impl SPInstance {
     pub fn new(items: Vec<(Item, usize)>, strip_height: fsize) -> Self {
-        assert!(assertions::instance_item_bin_ids_correct(&items, &vec![]));
+        assert!(assertions::instance_item_bin_ids_correct(&items, &[]));
 
         let item_area = items
             .iter()

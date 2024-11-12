@@ -171,7 +171,7 @@ pub fn sample_layout(
     rng: &mut impl Rng,
     sample_counter: &mut usize,
 ) -> Option<PlacingOption> {
-    let layout: &Layout = problem.get_layout(&layout_idx);
+    let layout: &Layout = problem.get_layout(layout_idx);
     let cde = layout.cde();
     let irrel_hazards = match item.hazard_filter.as_ref() {
         None => vec![],
@@ -269,8 +269,5 @@ pub fn sample_layout(
 
     *sample_counter += ls_sampler.n_samples;
 
-    match best {
-        Some((p_opt, _)) => Some(p_opt),
-        None => None,
-    }
+    best.map(|(p_opt, _)| p_opt)
 }

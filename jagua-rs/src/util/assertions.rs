@@ -27,22 +27,12 @@ use crate::util;
 //Various checks to verify correctness of the state of the system
 //Used in debug_assertion!() blocks
 
-pub fn instance_item_bin_ids_correct(items: &Vec<(Item, usize)>, bins: &Vec<(Bin, usize)>) -> bool {
-    let mut id = 0;
-    for (parttype, _qty) in items {
-        if parttype.id != id {
-            return false;
-        }
-        id += 1;
-    }
-    let mut id = 0;
-    for (bin, _qty) in bins {
-        if bin.id != id {
-            return false;
-        }
-        id += 1;
-    }
-    true
+pub fn instance_item_bin_ids_correct(items: &[(Item, usize)], bins: &[(Bin, usize)]) -> bool {
+    items
+        .iter()
+        .enumerate()
+        .all(|(i, (item, _qty))| item.id == i)
+        && bins.iter().enumerate().all(|(i, (bin, _qty))| bin.id == i)
 }
 
 pub fn problem_matches_solution<P: ProblemGeneric>(problem: &P, solution: &Solution) -> bool {
@@ -65,11 +55,10 @@ pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool 
         return false;
     }
     for placed_item in layout_snapshot.placed_items.values() {
-        if layout
+        if !layout
             .placed_items()
             .values()
-            .find(|pi| pi.item_id == placed_item.item_id && pi.d_transf == placed_item.d_transf)
-            .is_none()
+            .any(|pi| pi.item_id == placed_item.item_id && pi.d_transf == placed_item.d_transf)
         {
             return false;
         }
@@ -78,7 +67,7 @@ pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool 
     true
 }
 
-pub fn collision_hazards_sorted_correctly(hazards: &Vec<QTHazard>) -> bool {
+pub fn collision_hazards_sorted_correctly(hazards: &[QTHazard]) -> bool {
     let mut partial_hazard_detected = false;
     for hazard in hazards.iter() {
         match hazard.presence {
@@ -95,10 +84,10 @@ pub fn collision_hazards_sorted_correctly(hazards: &Vec<QTHazard>) -> bool {
             }
         };
     }
-    return true;
+    true
 }
 
-pub fn all_bins_and_items_centered(items: &Vec<(Item, usize)>, bins: &Vec<(Bin, usize)>) -> bool {
+pub fn all_bins_and_items_centered(items: &[(Item, usize)], bins: &[(Bin, usize)]) -> bool {
     items
         .iter()
         .map(|(i, _)| i.shape.centroid())
@@ -127,7 +116,7 @@ pub fn item_to_place_does_not_collide(
     {
         return false;
     }
-    return true;
+    true
 }
 
 pub fn layout_is_collision_free(layout: &Layout) -> bool {
@@ -151,7 +140,7 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
             return false;
         }
     }
-    return true;
+    true
 }
 
 pub fn qt_node_contains_no_deactivated_hazards<'a>(
@@ -166,18 +155,15 @@ pub fn qt_node_contains_no_deactivated_hazards<'a>(
         return (false, stacktrace);
     }
 
-    match &node.children {
-        Some(children) => {
-            for child in children.as_ref() {
-                let result = qt_node_contains_no_deactivated_hazards(child, stacktrace);
-                stacktrace = result.1;
-                let contains_no_deactivated_hazards = result.0;
-                if !contains_no_deactivated_hazards {
-                    return (false, stacktrace);
-                }
+    if let Some(children) = &node.children {
+        for child in children.as_ref() {
+            let result = qt_node_contains_no_deactivated_hazards(child, stacktrace);
+            stacktrace = result.1;
+            let contains_no_deactivated_hazards = result.0;
+            if !contains_no_deactivated_hazards {
+                return (false, stacktrace);
             }
         }
-        None => {}
     }
 
     stacktrace.pop();
@@ -214,15 +200,12 @@ fn qt_node_contains_no_dangling_hazards(node: &QTNode, parent: &QTNode) -> bool 
         return false;
     }
 
-    match &node.children {
-        Some(children) => {
-            for child in children.as_ref() {
-                if !qt_node_contains_no_dangling_hazards(child, node) {
-                    return false;
-                }
+    if let Some(children) = &node.children {
+        for child in children.as_ref() {
+            if !qt_node_contains_no_dangling_hazards(child, node) {
+                return false;
             }
         }
-        None => {}
     }
 
     true
@@ -237,7 +220,7 @@ pub fn qt_hz_entity_activation_consistent(cde: &CDEngine) -> bool {
         .map(|h| (h.active, &h.entity))
         .unique()
     {
-        if !hz_entity_same_everywhere(cde.quadtree(), &hz_entity, active) {
+        if !hz_entity_same_everywhere(cde.quadtree(), hz_entity, active) {
             return false;
         }
     }
@@ -245,19 +228,16 @@ pub fn qt_hz_entity_activation_consistent(cde: &CDEngine) -> bool {
 }
 
 pub fn hz_entity_same_everywhere(qt_node: &QTNode, hz_entity: &HazardEntity, active: bool) -> bool {
-    match qt_node
+    if let Some(h) = qt_node
         .hazards
         .all_hazards()
         .iter()
         .find(|h| &h.entity == hz_entity)
     {
-        Some(h) => {
-            if h.active != active {
-                println!("Hazard entity activation inconsistent");
-                return false;
-            }
+        if h.active != active {
+            println!("Hazard entity activation inconsistent");
+            return false;
         }
-        None => {}
     }
     if let Some(children) = &qt_node.children {
         for child in children.as_ref() {
@@ -267,7 +247,7 @@ pub fn hz_entity_same_everywhere(qt_node: &QTNode, hz_entity: &HazardEntity, act
         }
     }
 
-    return true;
+    true
 }
 
 pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {

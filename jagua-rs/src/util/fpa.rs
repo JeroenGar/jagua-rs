@@ -16,7 +16,7 @@ impl FPA {
     }
 
     pub fn is_zero(&self) -> bool {
-        almost::zero::<fsize>(self.0.into())
+        almost::zero::<fsize>(self.0)
     }
 
     pub fn tolerance() -> fsize {

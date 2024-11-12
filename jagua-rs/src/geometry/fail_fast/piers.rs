@@ -42,7 +42,7 @@ pub fn generate(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> 
         .collect_vec();
 
     //clip the lines to the shape
-    let clipped_rays = rays.iter().map(|l| clip(shape, l)).flatten().collect_vec();
+    let clipped_rays = rays.iter().flat_map(|l| clip(shape, l)).collect_vec();
     let grid_of_unrepresented_points =
         generate_unrepresented_point_grid(&expanded_bbox, shape, poles, N_POINTS_PER_DIMENSION);
 
@@ -58,7 +58,7 @@ pub fn generate(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> 
             forfeit_distance,
         );
         let min_distance_poles =
-            min_distances_to_poles(&grid_of_unrepresented_points, &poles, forfeit_distance);
+            min_distances_to_poles(&grid_of_unrepresented_points, poles, forfeit_distance);
 
         let loss_values = clipped_rays
             .iter()
@@ -106,13 +106,12 @@ fn generate_ray_transformations(
     //rotate the translations by each angle
     angles_slice
         .iter()
-        .map(|angle| {
+        .flat_map(|angle| {
             translations
                 .iter()
                 .cloned()
                 .map(move |translation| translation.rotate(*angle))
         })
-        .flatten()
         .collect_vec()
 }
 
@@ -159,16 +158,13 @@ fn generate_unrepresented_point_grid(
 
     x_range
         .iter()
-        .map(
-            |x| {
-                y_range
-                    .iter()
-                    .map(move |y| Point::from((*x, *y))) //create the points
-                    .filter(|p| shape.collides_with(p)) //make sure they are in the shape
-                    .filter(|p| poles.iter().all(|c| !c.collides_with(p)))
-            }, //and not in any pole
-        )
-        .flatten()
+        .flat_map(|x| {
+            y_range
+                .iter()
+                .map(move |y| Point::from((*x, *y))) //create the points
+                .filter(|p| shape.collides_with(p)) //make sure they are in the shape
+                .filter(|p| poles.iter().all(|c| !c.collides_with(p)))
+        })
         .collect_vec()
 }
 
@@ -181,7 +177,7 @@ fn loss_function(
 ) -> fsize {
     //every point in the grid gets a certain score, sum of all these scores is the loss function
     //the score depends on how close it is to being "represented" by either a pole or a ray
-    //rays have a certain radius of influence, outside of which they don't count. Poles have no such radius
+    //rays have a certain radius of influence, outside which they don't count. Poles have no such radius
     //the score is the squared distance to the closest ray or pole
 
     izip!(

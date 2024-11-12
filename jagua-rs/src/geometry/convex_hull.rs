@@ -55,7 +55,7 @@ pub fn convex_hull_from_points(mut points: Vec<Point>) -> Vec<Point> {
 
 fn grow_convex_hull(mut h: Vec<Point>, np: &Point) -> Vec<Point> {
     //pop all points from the hull which will be made irrelevant due to the new point
-    while h.len() >= 2 && cross(&h[h.len() - 2], &h[h.len() - 1], &np) <= 0.0 {
+    while h.len() >= 2 && cross(&h[h.len() - 2], &h[h.len() - 1], np) <= 0.0 {
         h.pop();
     }
     h.push(*np);

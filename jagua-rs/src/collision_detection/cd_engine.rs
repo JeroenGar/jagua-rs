@@ -74,10 +74,10 @@ impl CDEngine {
     /// Registers a new hazard in the CDE.
     pub fn register_hazard(&mut self, hazard: Hazard) {
         debug_assert!(
-            self.dynamic_hazards
+            !self
+                .dynamic_hazards
                 .iter()
-                .find(|h| h.entity == hazard.entity)
-                .is_none(),
+                .any(|h| h.entity == hazard.entity),
             "Hazard already registered"
         );
         let hazard_in_uncommitted_deregs = self
@@ -96,12 +96,12 @@ impl CDEngine {
                 hazard
             }
         };
-        self.haz_prox_grid
-            .as_mut()
-            .map(|hpg| hpg.register_hazard(&hazard));
+        if let Some(hpg) = self.haz_prox_grid.as_mut() {
+            hpg.register_hazard(&hazard)
+        }
         self.dynamic_hazards.push(hazard);
 
-        debug_assert!(assertions::qt_contains_no_dangling_hazards(&self));
+        debug_assert!(assertions::qt_contains_no_dangling_hazards(self));
     }
 
     /// Removes a hazard from the CDE.
@@ -130,10 +130,10 @@ impl CDEngine {
                 self.uncommitted_deregisters.push(hazard);
             }
         }
-        self.haz_prox_grid.as_mut().map(|hpg| {
+        if let Some(hpg) = self.haz_prox_grid.as_mut() {
             hpg.deregister_hazard(hazard_entity, self.dynamic_hazards.iter(), commit_instant)
-        });
-        debug_assert!(assertions::qt_contains_no_dangling_hazards(&self));
+        }
+        debug_assert!(assertions::qt_contains_no_dangling_hazards(self));
     }
 
     pub fn create_snapshot(&mut self) -> CDESnapshot {
@@ -154,7 +154,7 @@ impl CDEngine {
         let mut hazards_to_remove = self
             .dynamic_hazards
             .iter()
-            .map(|h| h.entity.clone())
+            .map(|h| h.entity)
             .collect::<IndexSet<HazardEntity>>();
         debug_assert!(hazards_to_remove.len() == self.dynamic_hazards.len());
         let mut hazards_to_add = vec![];
@@ -181,7 +181,7 @@ impl CDEngine {
         for unc_haz in self.uncommitted_deregisters.drain(..) {
             if let Some(pos) = hazards_to_add
                 .iter()
-                .position(|h| &h.entity == &unc_haz.entity)
+                .position(|h| h.entity == unc_haz.entity)
             {
                 //the uncommitted removed hazard needs to be activated again
                 self.quadtree.activate_hazard(unc_haz.entity);
@@ -199,9 +199,9 @@ impl CDEngine {
         }
 
         //Hazard proximity grid
-        self.haz_prox_grid.as_mut().map(|hpg| {
+        if let Some(hpg) = self.haz_prox_grid.as_mut() {
             hpg.restore(snapshot.grid.clone().expect("no hpg in snapshot"));
-        });
+        }
 
         debug_assert!(self.dynamic_hazards.len() == snapshot.dynamic_hazards.len());
     }
@@ -212,9 +212,9 @@ impl CDEngine {
         for uc_haz in self.uncommitted_deregisters.drain(..) {
             self.quadtree.deregister_hazard(uc_haz.entity);
         }
-        self.haz_prox_grid
-            .as_mut()
-            .map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
+        if let Some(hpg) = self.haz_prox_grid.as_mut() {
+            hpg.flush_deregisters(self.dynamic_hazards.iter())
+        }
     }
 
     pub fn quadtree(&self) -> &QTNode {
@@ -252,13 +252,13 @@ impl CDEngine {
 
     /// Flushes all uncommitted deregisters in the [`HazardProximityGrid`].
     pub fn flush_haz_prox_grid(&mut self) {
-        self.haz_prox_grid
-            .as_mut()
-            .map(|hpg| hpg.flush_deregisters(self.dynamic_hazards.iter()));
+        if let Some(hpg) = self.haz_prox_grid.as_mut() {
+            hpg.flush_deregisters(self.dynamic_hazards.iter())
+        }
     }
 
     pub fn has_uncommitted_deregisters(&self) -> bool {
-        self.uncommitted_deregisters.len() > 0
+        !self.uncommitted_deregisters.is_empty()
     }
 
     /// Returns all hazards in the CDE, which can change during the lifetime of the CDE.
@@ -412,7 +412,7 @@ impl CDEngine {
         //collect all active and non-ignored hazards
         self.all_hazards()
             .filter(|h| h.active && !irrelevant_hazards.contains(&h.entity))
-            .any(|haz| self.poly_or_hazard_are_contained(shape, &haz))
+            .any(|haz| self.poly_or_hazard_are_contained(shape, haz))
     }
 
     fn poly_or_hazard_are_contained(&self, shape: &SimplePolygon, haz: &Hazard) -> bool {
@@ -437,13 +437,12 @@ impl CDEngine {
         if std::ptr::eq(haz_shape, s_omega) {
             //s_omega is registered in the quadtree.
             //maybe the quadtree can help us.
-            match self
+            if let Ok(collides) = self
                 .quadtree
                 .definitely_collides_with(&s_mu.poi.center, haz.entity)
                 .try_into()
             {
-                Ok(collides) => return collides,
-                Err(_) => (), //no definitive answer
+                return collides;
             }
         }
         let inclusion = s_omega.collides_with(&s_mu.poi.center);
@@ -476,7 +475,7 @@ impl CDEngine {
         let centroid_in_qt = self.bbox.collides_with(&entity.centroid());
         if !centroid_in_qt && detected.is_empty() {
             // The shape centroid is outside the quadtree
-            if !irrelevant_hazards.contains(&&HazardEntity::BinExterior) {
+            if !irrelevant_hazards.contains(&HazardEntity::BinExterior) {
                 //Add the bin as a hazard, unless it is ignored
                 detected.push(HazardEntity::BinExterior);
             }
@@ -505,7 +504,7 @@ impl CDEngine {
         //TODO: check if gathering the hazards inside the bbox using the quadtree is faster
         self.all_hazards().filter(|h| h.active).for_each(|h| {
             if !detected.contains(&h.entity) && self.poly_or_hazard_are_contained(shape, h) {
-                detected.push(h.entity.clone());
+                detected.push(h.entity);
             }
         });
 

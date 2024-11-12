@@ -6,7 +6,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use jagua_rs::entities::quality_zone::N_QUALITIES;
 use jagua_rs::fsize;
 
-#[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy, Default)]
 pub struct SvgDrawOptions {
     ///The theme to use for the svg
     #[serde(default)]
@@ -20,17 +20,6 @@ pub struct SvgDrawOptions {
     ///Draw the fail fast surrogate on top of each item
     #[serde(default)]
     pub surrogate: bool,
-}
-
-impl Default for SvgDrawOptions {
-    fn default() -> Self {
-        Self {
-            theme: SvgLayoutTheme::default(),
-            quadtree: false,
-            haz_prox_grid: false,
-            surrogate: false,
-        }
-    }
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
@@ -148,7 +137,7 @@ impl Serialize for Color {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&*format!("{self}"))
+        serializer.serialize_str(&format!("{self}"))
     }
 }
 

@@ -66,9 +66,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
 
     /// Returns the `LayoutIndex` of all layouts.
     fn layout_indices(&self) -> impl Iterator<Item = LayoutIndex> {
-        (0..self.layouts().len())
-            .into_iter()
-            .map(|i| LayoutIndex::Real(i))
+        (0..self.layouts().len()).map(LayoutIndex::Real)
     }
 
     /// Returns the `LayoutIndex` of all template layouts that have remaining stock.

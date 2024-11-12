@@ -44,7 +44,7 @@ impl Bin {
         cde_config: CDEConfig,
     ) -> Self {
         let outer = Arc::new(outer);
-        let holes = holes.into_iter().map(|z| Arc::new(z)).collect_vec();
+        let holes = holes.into_iter().map(Arc::new).collect_vec();
         assert_eq!(
             quality_zones.len(),
             quality_zones.iter().map(|qz| qz.quality).unique().count(),

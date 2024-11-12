@@ -82,9 +82,8 @@ impl QTNode {
     pub fn activate_hazard(&mut self, entity: HazardEntity) {
         let modified = self.hazards.activate_hazard(entity);
         if modified {
-            match &mut self.children {
-                Some(children) => children.iter_mut().for_each(|c| c.activate_hazard(entity)),
-                None => (),
+            if let Some(children) = &mut self.children {
+                children.iter_mut().for_each(|c| c.activate_hazard(entity))
             }
         }
     }
@@ -92,11 +91,10 @@ impl QTNode {
     pub fn deactivate_hazard(&mut self, entity: HazardEntity) {
         let modified = self.hazards.deactivate_hazard(entity);
         if modified {
-            match &mut self.children {
-                Some(children) => children
+            if let Some(children) = &mut self.children {
+                children
                     .iter_mut()
-                    .for_each(|c| c.deactivate_hazard(entity)),
-                None => (),
+                    .for_each(|c| c.deactivate_hazard(entity))
             }
         }
     }
@@ -188,7 +186,7 @@ impl QTNode {
                 false => (),
                 true => match strongest_hazard.presence {
                     QTHazPresence::None => (),
-                    QTHazPresence::Entire => detected.push(strongest_hazard.entity.clone()),
+                    QTHazPresence::Entire => detected.push(strongest_hazard.entity),
                     QTHazPresence::Partial(_) => match &self.children {
                         Some(children) => {
                             //Check if any of the children intersect with the entity
@@ -207,7 +205,7 @@ impl QTNode {
                                         }
                                         QTHazPresence::Partial(p_haz) => {
                                             if p_haz.collides_with(entity) {
-                                                detected.push(hz.entity.clone());
+                                                detected.push(hz.entity);
                                             }
                                         }
                                     }

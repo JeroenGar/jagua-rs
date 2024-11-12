@@ -112,10 +112,10 @@ impl Parser {
     pub fn parse_and_build_solution(
         &self,
         json_instance: &JsonInstance,
-        json_layouts: &Vec<JsonLayout>,
+        json_layouts: &[JsonLayout],
     ) -> (Instance, Solution) {
         let instance = Arc::new(self.parse(json_instance));
-        let solution = build_solution_from_json(instance.as_ref(), &json_layouts, self.cde_config);
+        let solution = build_solution_from_json(instance.as_ref(), json_layouts, self.cde_config);
         let instance =
             Arc::try_unwrap(instance).expect("Cannot unwrap instance, strong references present");
         (instance, solution)
@@ -163,7 +163,7 @@ impl Parser {
                 allowed_orientations,
                 centering_transf,
                 base_quality,
-                self.cde_config.item_surrogate_config.clone(),
+                self.cde_config.item_surrogate_config,
             ),
             json_item.demand as usize,
         )
@@ -347,7 +347,10 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
             .position(|tl| tl.bin().id == bin.id)
             .expect("no template layout found for bin");
 
-        let json_first_item = json_layout.placed_items.get(0).expect("no items in layout");
+        let json_first_item = json_layout
+            .placed_items
+            .first()
+            .expect("no items in layout");
         let first_item = instance.item(json_first_item.index);
         let abs_transform = DTransformation::new(
             json_first_item.transformation.rotation,
@@ -513,6 +516,6 @@ fn absolute_to_internal_transform(
 
     Transformation::empty()
         .transform(&item_pretransf.clone().inverse())
-        .transform_from_decomposed(&abs_transf)
+        .transform_from_decomposed(abs_transf)
         .transform(bin_pretransf)
 }

@@ -65,8 +65,7 @@ impl Solution {
             .enumerate()
             .map(|(i, qty)| instance.item(i).shape.area() * *qty as fsize)
             .sum::<fsize>();
-        let completeness = included_item_area / total_item_area;
-        completeness
+        included_item_area / total_item_area
     }
 
     /// Returns the quantities of the items that still need to be placed to reach a complete solution.

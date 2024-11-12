@@ -16,7 +16,7 @@ pub fn generate_irrelevant_hazards<'a>(
 ) -> Vec<HazardEntity> {
     hazards
         .filter_map(|h| match filter.is_irrelevant(&h.entity) {
-            true => Some(h.entity.clone()),
+            true => Some(h.entity),
             false => None,
         })
         .collect_vec()

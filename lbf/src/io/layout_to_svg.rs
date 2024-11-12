@@ -102,7 +102,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 Some(q) => svg_util::blend_colors(theme.item_fill, theme.qz_fill[q]),
             };
             group = group.add(svg_export::data_to_path(
-                svg_export::simple_polygon_data(&shape),
+                svg_export::simple_polygon_data(shape),
                 &[
                     ("fill", &*format!("{}", color)),
                     ("stroke-width", &*format!("{}", stroke_width)),
@@ -148,7 +148,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                     if pole == poi {
                         group = group.add(svg_export::circle(pole, &poi_style));
                     }
-                    if ff_poles.contains(&pole) {
+                    if ff_poles.contains(pole) {
                         group = group.add(svg_export::circle(pole, &ff_style));
                     } else {
                         group = group.add(svg_export::circle(pole, &no_ff_style));

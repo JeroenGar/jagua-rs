@@ -56,7 +56,7 @@ impl Corner {
         std::mem::swap(&mut self.0, &mut self.2);
     }
 
-    pub fn to_points(&self, points: &[Point]) -> [Point; 3] {
+    pub fn to_points(self, points: &[Point]) -> [Point; 3] {
         [points[self.0], points[self.1], points[self.2]]
     }
 }
@@ -148,8 +148,7 @@ pub fn simplify_shape(
                 calculate_area_delta(&ref_points, c)
                     .unwrap_or_else(|_| NotNan::new(fsize::INFINITY).expect("area delta is NaN"))
             })
-            .filter(|c| candidate_is_valid(&ref_points, &c))
-            .next();
+            .find(|c| candidate_is_valid(&ref_points, c));
 
         //if it is within the area change constraints, execute the candidate
         if let Some(best_candidate) = best_candidate {
@@ -185,7 +184,7 @@ pub fn simplify_shape(
         info!("[PS] no simplification possible within area change constraints");
     }
 
-    return simpl_shape;
+    simpl_shape
 }
 
 fn calculate_area_delta(
@@ -313,18 +312,9 @@ fn calculate_intersection_in_front(l1: &Edge, l2: &Edge) -> Option<Point> {
     let u_nom = (x2 - x4) * (y2 - y1) - (y2 - y4) * (x2 - x1);
     let u_denom = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
 
-    let t;
-    if t_denom != 0.0 {
-        t = t_nom / t_denom;
-    } else {
-        t = 0.0;
-    }
-    let u;
-    if u_denom != 0.0 {
-        u = u_nom / u_denom;
-    } else {
-        u = 0.0;
-    }
+    let t = if t_denom != 0.0 { t_nom / t_denom } else { 0.0 };
+
+    let u = if u_denom != 0.0 { u_nom / u_denom } else { 0.0 };
 
     if t < 0.0 && u < 0.0 {
         //intersection is in front both vectors

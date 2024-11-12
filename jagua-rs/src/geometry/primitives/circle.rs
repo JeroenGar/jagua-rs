@@ -121,12 +121,12 @@ impl DistanceFrom<Point> for Circle {
         let Point(x, y) = point;
         let Point(cx, cy) = self.center;
         let sq_d = (x - cx).powi(2) + (y - cy).powi(2);
-        return if sq_d < self.radius.powi(2) {
+        if sq_d < self.radius.powi(2) {
             0.0 //point is inside circle
         } else {
             //point is outside circle
             fsize::sqrt(sq_d) - self.radius
-        };
+        }
     }
 
     fn distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
@@ -147,7 +147,7 @@ impl DistanceFrom<Point> for Circle {
 
 impl Shape for Circle {
     fn centroid(&self) -> Point {
-        self.center.clone()
+        self.center
     }
 
     fn area(&self) -> fsize {

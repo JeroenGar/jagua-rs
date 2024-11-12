@@ -20,7 +20,7 @@ impl InferiorQualityZone {
             quality < N_QUALITIES,
             "Quality must be in range of N_QUALITIES"
         );
-        let zones = shapes.into_iter().map(|z| Arc::new(z)).collect();
+        let zones = shapes.into_iter().map(Arc::new).collect();
         Self { quality, zones }
     }
 }

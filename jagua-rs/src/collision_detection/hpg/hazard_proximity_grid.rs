@@ -34,7 +34,7 @@ impl HazardProximityGrid {
             let uni_hazards = static_hazards
                 .iter()
                 .filter(|h| h.entity.is_universal())
-                .map(|h| h.clone())
+                .cloned()
                 .collect_vec();
             grid_generator::generate(bbox.clone(), &uni_hazards, n_cells)
         };
@@ -122,7 +122,7 @@ impl HazardProximityGrid {
                 cell.deregister_hazards(iter::once(to_deregister), remaining.clone());
             }
         } else {
-            self.uncommitted_deregisters.push(to_deregister.clone());
+            self.uncommitted_deregisters.push(to_deregister);
         }
     }
 

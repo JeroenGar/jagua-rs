@@ -107,7 +107,7 @@ impl SPProblem {
         //Modifying the width causes the bin to change, so the layout must be replaced
         self.layout = Layout::new(
             self.next_layout_id(),
-            Bin::from_strip(rect, self.layout.bin().base_cde.config().clone()),
+            Bin::from_strip(rect, self.layout.bin().base_cde.config()),
         );
 
         //place the items back in the new layout

@@ -43,10 +43,10 @@ impl Edge {
 
     pub fn scale(mut self, factor: fsize) -> Self {
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
-        self.start.0 = self.start.0 - (dx * (factor - 1.0) / 2.0);
-        self.start.1 = self.start.1 - (dy * (factor - 1.0) / 2.0);
-        self.end.0 = self.end.0 + (dx * (factor - 1.0) / 2.0);
-        self.end.1 = self.end.1 + (dy * (factor - 1.0) / 2.0);
+        self.start.0 -= dx * (factor - 1.0) / 2.0;
+        self.start.1 -= dy * (factor - 1.0) / 2.0;
+        self.end.0 += dx * (factor - 1.0) / 2.0;
+        self.end.1 += dy * (factor - 1.0) / 2.0;
         self
     }
 

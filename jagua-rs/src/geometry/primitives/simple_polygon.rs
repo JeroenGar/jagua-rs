@@ -1,5 +1,4 @@
 use std::borrow::Borrow;
-use std::usize;
 
 use itertools::Itertools;
 use num_integer::Integer;
@@ -145,7 +144,7 @@ impl SimplePolygon {
         0.5 * sigma
     }
 
-    pub fn calculate_poi(points: &Vec<Point>, diameter: fsize) -> Circle {
+    pub fn calculate_poi(points: &[Point], diameter: fsize) -> Circle {
         //need to make a dummy simple polygon, because the pole generation algorithm
         //relies on many of the methods provided by the simple polygon struct
         let dummy_sp = {
@@ -154,7 +153,7 @@ impl SimplePolygon {
             let dummy_poi = Circle::new(Point(fsize::MAX, fsize::MAX), fsize::MAX);
 
             SimplePolygon {
-                points: points.clone(),
+                points: points.to_vec(),
                 bbox,
                 area,
                 diameter,
@@ -269,7 +268,7 @@ impl TransformableFrom for SimplePolygon {
             surrogate.transform_from(reference.surrogate(), t);
         }
         //regenerate bounding box
-        *bbox = SimplePolygon::generate_bounding_box(&points);
+        *bbox = SimplePolygon::generate_bounding_box(points);
 
         self
     }

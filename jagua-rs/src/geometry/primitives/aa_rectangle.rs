@@ -154,12 +154,7 @@ impl AARectangle {
     /// Returns the 4 quadrants of the rectangle, in the order NW, NE, SW, SE
     pub fn quadrants(&self) -> [Self; 4] {
         let Point(x_mid, y_mid) = self.centroid();
-        let (x_min, y_min, x_max, y_max) = (
-            self.x_min.into(),
-            self.y_min.into(),
-            self.x_max.into(),
-            self.y_max.into(),
-        );
+        let (x_min, y_min, x_max, y_max) = (self.x_min, self.y_min, self.x_max, self.y_max);
 
         let rect_nw = AARectangle::new(x_min, y_mid, x_mid, y_max);
         let rect_ne = AARectangle::new(x_mid, y_mid, x_max, y_max);

@@ -54,15 +54,14 @@ impl QTHazardVec {
             "More than one hazard from same item entity in the vector! (This should never happen!)"
         );
         let pos = self.hazards.iter().position(|ch| ch.entity == haz_entity);
-        let removed_hazard = match pos {
+        match pos {
             Some(pos) => {
                 let haz = self.hazards.remove(pos);
                 self.n_active -= haz.active as usize;
                 Some(haz)
             }
             None => None,
-        };
-        removed_hazard
+        }
     }
 
     #[inline(always)]
@@ -150,11 +149,12 @@ impl QTHazardVec {
 
 fn order_by_descending_strength(qth1: &QTHazard, qth2: &QTHazard) -> Ordering {
     //sort in descending order of active (true > false) then by presence (Entire > Partial > None)
-    match qth1.active.cmp(&qth2.active).reverse() {
-        Ordering::Equal => {
-            let (p1, p2): (u8, u8) = ((&qth1.presence).into(), (&qth2.presence).into());
-            p1.cmp(&p2).reverse()
-        }
-        other => other,
-    }
+    qth1.active
+        .cmp(&qth2.active)
+        .then({
+            let pres1: u8 = (&qth1.presence).into();
+            let pres2: u8 = (&qth2.presence).into();
+            pres1.cmp(&pres2)
+        })
+        .reverse()
 }

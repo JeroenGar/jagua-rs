@@ -47,7 +47,7 @@ pub fn write_svg(document: &Document, path: &Path) {
     svg::save(path, document).expect("failed to write svg file");
     info!(
         "Solution SVG written to file://{}",
-        fs::canonicalize(&path)
+        fs::canonicalize(path)
             .expect("could not canonicalize path")
             .to_str()
             .unwrap()

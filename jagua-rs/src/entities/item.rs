@@ -35,7 +35,7 @@ impl Item {
     ) -> Item {
         shape.generate_surrogate(surrogate_config);
         let shape = Arc::new(shape);
-        let hazard_filter = base_quality.map(|q| QZHazardFilter(q));
+        let hazard_filter = base_quality.map(QZHazardFilter);
         Item {
             id,
             shape,
