@@ -99,6 +99,7 @@ impl CollidesWith<AARectangle> for Circle {
 
         let Point(c_x, c_y) = self.center;
 
+        //x and y coordinates inside the rectangle, closest to the circle center
         let nearest_x = fsize::max(rect.x_min, fsize::min(c_x, rect.x_max));
         let nearest_y = fsize::max(rect.y_min, fsize::min(c_y, rect.y_max));
 

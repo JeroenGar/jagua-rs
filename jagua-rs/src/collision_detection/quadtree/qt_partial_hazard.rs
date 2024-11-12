@@ -54,9 +54,10 @@ impl PartialQTHaz {
     }
 }
 
-const BBOX_CHECK_THRESHOLD: usize = 4;
-//check bbox if number of edges is greater than this
-const BBOX_CHECK_THRESHOLD_PLUS_1: usize = BBOX_CHECK_THRESHOLD + 1;
+//check bbox if number of edges is this or greater
+const BBOX_CHECK_THRESHOLD: usize = 10;
+
+const BBOX_CHECK_THRESHOLD_MINUS_1: usize = BBOX_CHECK_THRESHOLD - 1;
 
 impl<T> CollidesWith<T> for PartialQTHaz
 where
@@ -71,15 +72,17 @@ where
             },
             RelevantEdges::Some(indices) => match indices.len() {
                 0 => unreachable!("edge indices should not be empty"),
-                1..=BBOX_CHECK_THRESHOLD => indices
+                1..=BBOX_CHECK_THRESHOLD_MINUS_1 => indices
                     .iter()
                     .any(|&i| entity.collides_with(&shape.get_edge(i))),
-                BBOX_CHECK_THRESHOLD_PLUS_1.. => match entity.collides_with(&shape.bbox()) {
-                    false => false,
-                    true => indices
+                BBOX_CHECK_THRESHOLD.. => {
+                    if !entity.collides_with(&shape.bbox()) {
+                        return false;
+                    }
+                    indices
                         .iter()
-                        .any(|&i| entity.collides_with(&shape.get_edge(i))),
-                },
+                        .any(|&i| entity.collides_with(&shape.get_edge(i)))
+                }
             },
         }
     }
