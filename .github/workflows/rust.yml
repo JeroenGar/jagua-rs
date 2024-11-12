@@ -34,12 +34,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Jagua-rs (f32)
+      - name: Build jagua-rs (f32)
         run: |
           cd jagua-rs
           cargo build --all-targets
           cargo doc
-      - name: Build Jagua-rs (f64)
+      - name: Build jagua-rs (f64)
         run: |
           cd jagua-rs
           cargo build --all-targets --features double-precision

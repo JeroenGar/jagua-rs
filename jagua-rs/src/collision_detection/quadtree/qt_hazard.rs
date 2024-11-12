@@ -12,7 +12,7 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::util::assertions;
 
-/// Represents the manifestation of a [Hazard] in a [QTNode]
+/// Represents the manifestation of a [Hazard] in a [QTNode](crate::collision_detection::quadtree::qt_node::QTNode)
 #[derive(Clone, Debug)]
 pub struct QTHazard {
     pub entity: HazardEntity,
@@ -20,7 +20,7 @@ pub struct QTHazard {
     pub active: bool,
 }
 
-/// How a [Hazard] is present in a [QTNode]
+/// How a [Hazard] is present in a [QTNode](crate::collision_detection::quadtree::qt_node::QTNode)
 #[derive(Clone, Debug)]
 pub enum QTHazPresence {
     /// The hazard is entirely absent from the node

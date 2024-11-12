@@ -7,7 +7,7 @@ use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 
-/// Defines a set of edges from a hazard that is partially active in the [QTNode].
+/// Defines a set of edges from a hazard that is partially active in the [QTNode](crate::collision_detection::quadtree::qt_node::QTNode).
 #[derive(Clone, Debug)]
 pub struct PartialQTHaz {
     pub shape: Weak<SimplePolygon>,
