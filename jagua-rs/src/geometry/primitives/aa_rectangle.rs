@@ -1,13 +1,11 @@
-use std::cmp::Ordering;
-
-use ordered_float::NotNan;
-
 use crate::fsize;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{AlmostCollidesWith, CollidesWith, DistanceFrom, Shape};
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::util::fpa::FPA;
+use ordered_float::NotNan;
+use std::cmp::Ordering;
 
 ///Geometric primitive representing an axis-aligned rectangle
 #[derive(Clone, Debug, PartialEq)]
@@ -232,7 +230,7 @@ impl AlmostCollidesWith<AARectangle> for AARectangle {
 
 impl CollidesWith<Point> for AARectangle {
     fn collides_with(&self, point: &Point) -> bool {
-        let (x, y) = (*point).into();
+        let Point(x, y) = *point;
         x >= self.x_min && x <= self.x_max && y >= self.y_min && y <= self.y_max
     }
 }
@@ -252,68 +250,45 @@ impl CollidesWith<Edge> for AARectangle {
     fn collides_with(&self, edge: &Edge) -> bool {
         //inspired by: https://stackoverflow.com/questions/99353/how-to-test-if-a-line-segment-intersects-an-axis-aligned-rectange-in-2d
 
-        let Point(x1, y1) = edge.start;
-        let Point(x2, y2) = edge.end;
+        let x_min = edge.x_min();
+        let x_max = edge.x_max();
+        let y_min = edge.y_min();
+        let y_max = edge.y_max();
+
+        //If both end points of the line are entirely outside the range of the rectangle
+        if x_max < self.x_min || x_min > self.x_max || y_max < self.y_min || y_min > self.y_max {
+            return false;
+        }
 
         //If either end point of the line is inside the rectangle
         if self.collides_with(&edge.start) || self.collides_with(&edge.end) {
             return true;
         }
 
-        //If both end points of the line are entirely outside the range of the rectangle
-        if x1 < self.x_min && x2 < self.x_min {
-            return false; //edge entirely left of rectangle
-        }
-        if x1 > self.x_max && x2 > self.x_max {
-            return false; //edge entirely right of rectangle
-        }
-        if y1 < self.y_min && y2 < self.y_min {
-            return false; //edge entirely above rectangle
-        }
-        if y1 > self.y_max && y2 > self.y_max {
-            return false; //edge entirely below rectangle
-        }
+        //If all corners of rectangle are on the same side of the edge, no collision is possible
+        const POINT_EDGE_RELATION: fn(Point, &Edge) -> Ordering =
+            |p: Point, edge: &Edge| -> Ordering {
+                let Point(p_x, p_y) = p;
+                let Point(s_x, s_y) = edge.start;
+                let Point(e_x, e_y) = edge.end;
+                // if 0.0, the point is on the line
+                // if > 0.0, the point is "above" of the line
+                // if < 0.0, the point is "below" the line
+                let v = (p_x - s_x) * (e_y - s_y) - (p_y - s_y) * (e_x - s_x);
+                v.partial_cmp(&0.0).unwrap()
+            };
 
-        const POINT_EDGE_RELATION: fn(Point, &Edge) -> fsize = |p: Point, edge: &Edge| -> fsize {
-            // if 0.0, the point is on the line
-            // if > 0.0, the point is "above" of the line
-            // if < 0.0, the point is "below" the line
-            let (p_x, p_y) = p.into();
-            let (s_x, s_y) = edge.start.into();
-            let (e_x, e_y) = edge.end.into();
-            (p_x - s_x) * (e_y - s_y) - (p_y - s_y) * (e_x - s_x)
-        };
+        let all_corners_same_side = self
+            .corners()
+            .map(|corner| POINT_EDGE_RELATION(corner, edge))
+            .windows(2)
+            .all(|w| w[0] == w[1]);
 
-        //if all 4 corners of the rectangle are on the same side of the line, there is no intersection
-        let mut ordering = None;
-        for corner in self.corners() {
-            match (
-                ordering,
-                POINT_EDGE_RELATION(corner, edge).partial_cmp(&0.0).unwrap(),
-            ) {
-                (Some(Ordering::Greater), Ordering::Greater) => (), //same side as previous corner,
-                (Some(Ordering::Less), Ordering::Less) => (),       //same side as previous corner,
-                (_, Ordering::Equal) => {
-                    //corner is on the extended line, but not on the edge itself
-                    ordering = None;
-                    break;
-                }
-                (Some(_), _) => {
-                    //not all corners are on the same side of the line
-                    ordering = None;
-                    break;
-                }
-                (None, rel) => ordering = Some(rel), //first corner, set the ordering
-            }
-        }
-        if ordering.is_some() {
-            //all points of the AARectangle reside on the same side of the edge, so there is no collision
+        if all_corners_same_side {
             return false;
         }
 
         //The only possible that remains is that the edge collides with one of the edges of the AARectangle
-
-        //If the line intersects with one of the edges of the rectangle
         edge.collides_with(&self.top_edge())
             || edge.collides_with(&self.bottom_edge())
             || edge.collides_with(&self.right_edge())
