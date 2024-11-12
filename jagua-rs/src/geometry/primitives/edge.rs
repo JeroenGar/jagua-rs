@@ -202,9 +202,8 @@ fn edge_intersection(e1: &Edge, e2: &Edge, calculate_location: bool) -> Intersec
 
     let t_nom = (x2 - x4) * (y4 - y3) - (y2 - y4) * (x4 - x3);
     let t_denom = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
-
-    let t_nom = t_nom;
-    let t_denom = t_denom;
+    let u_nom = (x2 - x4) * (y2 - y1) - (y2 - y4) * (x2 - x1);
+    let u_denom = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
 
     if t_denom == 0.0 {
         //parallel edges
@@ -218,12 +217,6 @@ fn edge_intersection(e1: &Edge, e2: &Edge, calculate_location: bool) -> Intersec
             return Intersection::No;
         }
     }
-
-    let u_nom = (x2 - x4) * (y2 - y1) - (y2 - y4) * (x2 - x1);
-    let u_denom = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
-
-    let u_nom = u_nom;
-    let u_denom = u_denom;
 
     if u_denom == 0.0 {
         //parallel edges
