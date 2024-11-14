@@ -20,9 +20,10 @@ use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};
 criterion_main!(benches);
 criterion_group!(
     benches,
-    quadtree_query_update_1000_1,
-    quadtree_query_bench,
-    quadtree_update_bench
+    //quadtree_query_update_1000_1,
+    //quadtree_query_bench,
+    //quadtree_update_bench,
+    quadtree_collect_query_bench
 );
 
 mod util;
@@ -211,6 +212,77 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 problem.place_item(p_opt)
             })
         });
+    }
+    group.finish();
+}
+
+/// Benchmark the query operation of the quadtree for different depths
+/// Instead of merely detecting whether any collisions occur for collisions, we collect all entities that collide
+/// We validate 1000 sampled transformations for each of the 5 removed items
+fn quadtree_collect_query_bench(c: &mut Criterion) {
+    let json_instance: JsonInstance =
+        serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
+    let mut config = create_base_config();
+    //disable fail fast surrogates
+    config.cde_config.item_surrogate_config.n_ff_poles = 0;
+    config.cde_config.item_surrogate_config.n_ff_piers = 0;
+    //disable haz prox grid
+    config.cde_config.hpg_n_cells = 1;
+
+    let mut group = c.benchmark_group("quadtree_collect_query");
+    for depth in QT_DEPTHS {
+        config.cde_config.quadtree_depth = depth;
+        let instance = util::create_instance(
+            &json_instance,
+            config.cde_config,
+            config.poly_simpl_tolerance,
+        );
+        let (problem, selected_pi_uids) =
+            util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
+
+        let layout = problem.get_layout(LayoutIndex::Real(0));
+        let sampler = UniformAARectSampler::new(layout.bin().bbox(), instance.item(0));
+        let mut rng = SmallRng::seed_from_u64(0);
+
+        let samples = (0..N_TOTAL_SAMPLES)
+            .map(|_| sampler.sample(&mut rng).compose())
+            .collect_vec();
+
+        let mut sample_cycler = samples.chunks(N_SAMPLES_PER_ITER).cycle();
+
+        let mut n_invalid: i64 = 0;
+        let mut n_valid: i64 = 0;
+        let mut n_detected: i64 = 0;
+
+        let mut item_id_cycler = selected_pi_uids.iter().map(|pi_uid| pi_uid.item_id).cycle();
+
+        group.bench_function(BenchmarkId::from_parameter(depth), |b| {
+            b.iter(|| {
+                let item_id = item_id_cycler.next().unwrap();
+                let item = instance.item(item_id);
+                let layout = problem.get_layout(LayoutIndex::Real(0));
+                let mut buffer_shape = item.shape.as_ref().clone();
+                let mut detected = vec![];
+                for transf in sample_cycler.next().unwrap() {
+                    buffer_shape.transform_from(&item.shape, transf);
+                    layout
+                        .cde()
+                        .collect_poly_collisions(&buffer_shape, &[], &mut detected);
+                    if !detected.is_empty() {
+                        n_invalid += 1;
+                    } else {
+                        n_valid += 1;
+                    }
+                    n_detected += detected.len() as i64;
+                    detected.clear();
+                }
+            })
+        });
+        println!(
+            "valid: {:.3}%, avg # detected: {:.3}",
+            n_valid as fsize / (n_valid + n_invalid) as fsize * 100.0,
+            n_detected as fsize / (n_valid + n_invalid) as fsize
+        );
     }
     group.finish();
 }
