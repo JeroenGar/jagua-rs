@@ -252,7 +252,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
         }
         group.set(
             "transform",
-            to_svg_transform_matrix(&internal_bin.pretransform),
+            to_svg_transform_matrix(&inverse_bin_pretransform),
         )
     };
 
@@ -280,7 +280,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
         }
         group.set(
             "transform",
-            to_svg_transform_matrix(&internal_bin.pretransform),
+            to_svg_transform_matrix(&inverse_bin_pretransform),
         )
     };
 
