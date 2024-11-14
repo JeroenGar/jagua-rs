@@ -21,16 +21,18 @@ pub struct Item {
     pub pretransform: Transformation,
     /// Filter for hazards that the item is unaffected by
     pub hazard_filter: Option<QZHazardFilter>,
+    /// Configuration for the surrogate generation
+    pub surrogate_config: SPSurrogateConfig,
 }
 
 impl Item {
     pub fn new(
         id: usize,
         mut shape: SimplePolygon,
-        value: u64,
         allowed_rotation: AllowedRotation,
-        pretransform: Transformation,
         base_quality: Option<usize>,
+        value: u64,
+        pretransform: Transformation,
         surrogate_config: SPSurrogateConfig,
     ) -> Item {
         shape.generate_surrogate(surrogate_config);
@@ -44,10 +46,7 @@ impl Item {
             value,
             pretransform,
             hazard_filter,
+            surrogate_config,
         }
-    }
-
-    pub fn clone_with_id(&self, id: usize) -> Item {
-        Item { id, ..self.clone() }
     }
 }

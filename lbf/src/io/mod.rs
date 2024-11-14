@@ -14,6 +14,7 @@ use crate::EPOCH;
 pub mod cli;
 pub mod json_output;
 pub mod layout_to_svg;
+pub mod layout_to_svg_2;
 pub mod svg_export;
 pub mod svg_util;
 
