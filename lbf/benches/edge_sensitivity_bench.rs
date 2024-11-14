@@ -156,10 +156,10 @@ fn modify_instance(instance: &Instance, multiplier: usize, config: LBFConfig) ->
             let modified_item = Item::new(
                 item.id,
                 modified_shape,
-                item.value,
                 item.allowed_rotation.clone(),
-                item.pretransform.clone(),
                 item.base_quality,
+                item.value,
+                item.pretransform.clone(),
                 config.cde_config.item_surrogate_config,
             );
             (modified_item, *qty)
