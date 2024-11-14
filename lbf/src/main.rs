@@ -15,7 +15,6 @@ use jagua_rs::util::polygon_simplification::PolySimplConfig;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
 use lbf::io::layout_to_svg::s_layout_to_svg;
-use lbf::io::layout_to_svg_2::s_layout_to_svg_experimental;
 use lbf::lbf_config::LBFConfig;
 use lbf::lbf_optimizer::LBFOptimizer;
 use lbf::{io, EPOCH};
@@ -94,7 +93,7 @@ fn main() {
             .solution_folder
             .join(format!("sol_{}_{}.svg", input_file_stem, i));
         io::write_svg(
-            &s_layout_to_svg_experimental(s_layout, &instance, config.svg_draw_options),
+            &s_layout_to_svg(s_layout, &instance, config.svg_draw_options),
             Path::new(&svg_path),
         );
     }
