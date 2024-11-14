@@ -22,26 +22,19 @@ pub fn s_layout_to_svg(
 
 pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptions) -> Document {
     let internal_bin = layout.bin();
-    let inverse_bin_pretransform = internal_bin.pretransform.clone().inverse();
-    let bin = parser::pretransform_bin(internal_bin, &inverse_bin_pretransform);
+    let inv_bin_transf = internal_bin.pretransform.clone().inverse();
+    let bin = parser::pretransform_bin(internal_bin, &inv_bin_transf);
 
     let vbox = bin.bbox().clone().scale(1.05);
 
     let theme = &options.theme;
-
-    let doc = Document::new()
-        .set(
-            "viewBox",
-            (vbox.x_min, vbox.y_min, vbox.width(), vbox.height()),
-        )
-        .set("xmlns:xlink", "http://www.w3.org/1999/xlink");
 
     let stroke_width =
         fsize::min(vbox.width(), vbox.height()) * 0.001 * theme.stroke_width_multiplier;
 
     //draw bin
     let bin_group = {
-        let mut group = Group::new();
+        let mut bin_group = Group::new().set("id", format!("bin_{}", bin.id));
         let bbox = bin.bbox();
         let title = Title::new(format!(
             "bin, id: {}, bbox: [x_min: {:.3}, y_min: {:.3}, x_max: {:.3}, y_max: {:.3}]",
@@ -49,7 +42,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
         ));
 
         //outer
-        group = group
+        bin_group = bin_group
             .add(svg_export::data_to_path(
                 svg_export::simple_polygon_data(&bin.outer),
                 &[
@@ -62,7 +55,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
 
         //holes
         for (hole_idx, hole) in bin.holes.iter().enumerate() {
-            group = group.add(
+            bin_group = bin_group.add(
                 svg_export::data_to_path(
                     svg_export::simple_polygon_data(hole),
                     &[
@@ -74,18 +67,18 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 .add(Title::new(format!("hole #{}", hole_idx))),
             );
         }
-        group
+        bin_group
     };
 
     let qz_group = {
-        let mut group = Group::new();
+        let mut qz_group = Group::new().set("id", "quality_zones");
 
         //quality zones
         for qz in bin.quality_zones.iter().rev().flatten() {
             let color = theme.qz_fill[qz.quality];
             let stroke_color = svg_util::change_brightness(color, 0.5);
             for qz_shape in qz.zones.iter() {
-                group = group.add(
+                qz_group = qz_group.add(
                     svg_export::data_to_path(
                         svg_export::simple_polygon_data(qz_shape),
                         &[
@@ -103,7 +96,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 );
             }
         }
-        group
+        qz_group
     };
 
     //draw items
@@ -183,8 +176,8 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 surrogate_defs = surrogate_defs.add(surrogate_group)
             }
         }
-        let mut items_group = Group::new().add(item_defs);
-        let mut surrogate_group = Group::new().add(surrogate_defs);
+        let mut items_group = Group::new().set("id", "items").add(item_defs);
+        let mut surrogate_group = Group::new().set("id", "surrogates").add(surrogate_defs);
 
         for pi in layout.placed_items().values() {
             let abs_transf = parser::internal_to_absolute_transform(
@@ -198,7 +191,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 abs_transf.decompose()
             ));
             let pi_ref = Use::new()
-                .set("transform", to_svg_transform_matrix(&abs_transf))
+                .set("transform", transform_to_svg(&abs_transf))
                 .set("xlink:href", format!("#item_{}", pi.item_id))
                 .add(title);
 
@@ -206,94 +199,107 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
 
             if options.surrogate {
                 let pi_surr_ref = Use::new()
-                    .set("transform", to_svg_transform_matrix(&abs_transf))
+                    .set("transform", transform_to_svg(&abs_transf))
                     .set("xlink:href", format!("#surrogate_{}", pi.item_id));
 
                 surrogate_group = surrogate_group.add(pi_surr_ref);
             }
         }
 
-        (items_group, surrogate_group)
-    };
-
-    let quadtree_group = {
-        let mut group = Group::new();
-        if options.quadtree {
-            let qt_data = svg_export::quad_tree_data(layout.cde().quadtree(), &[]);
-            group = group.add(svg_export::data_to_path(
-                qt_data.0,
-                &[
-                    ("fill", "red"),
-                    ("stroke-width", &*format!("{}", stroke_width * 0.25)),
-                    ("fill-rule", "nonzero"),
-                    ("fill-opacity", "0.6"),
-                    ("stroke", "black"),
-                ],
-            ));
-            group = group.add(svg_export::data_to_path(
-                qt_data.1,
-                &[
-                    ("fill", "none"),
-                    ("stroke-width", &*format!("{}", stroke_width * 0.25)),
-                    ("fill-rule", "nonzero"),
-                    ("fill-opacity", "0.3"),
-                    ("stroke", "black"),
-                ],
-            ));
-            group = group.add(svg_export::data_to_path(
-                qt_data.2,
-                &[
-                    ("fill", "green"),
-                    ("fill-opacity", "0.6"),
-                    ("stroke-width", &*format!("{}", stroke_width * 0.25)),
-                    ("stroke", "black"),
-                ],
-            ));
+        match options.surrogate {
+            false => (items_group, None),
+            true => (items_group, Some(surrogate_group)),
         }
-        group.set(
-            "transform",
-            to_svg_transform_matrix(&inverse_bin_pretransform),
-        )
     };
 
-    let haz_prox_grid_group = {
-        let mut group = Group::new();
-        if options.haz_prox_grid {
+    let qt_group = match options.quadtree {
+        false => None,
+        true => {
+            let qt_data = svg_export::quad_tree_data(layout.cde().quadtree(), &[]);
+            let qt_group = Group::new()
+                .set("id", "quadtree")
+                .set("transform", transform_to_svg(&inv_bin_transf))
+                .add(svg_export::data_to_path(
+                    qt_data.0,
+                    &[
+                        ("fill", "red"),
+                        ("stroke-width", &*format!("{}", stroke_width * 0.25)),
+                        ("fill-rule", "nonzero"),
+                        ("fill-opacity", "0.6"),
+                        ("stroke", "black"),
+                    ],
+                ))
+                .add(svg_export::data_to_path(
+                    qt_data.1,
+                    &[
+                        ("fill", "none"),
+                        ("stroke-width", &*format!("{}", stroke_width * 0.25)),
+                        ("fill-rule", "nonzero"),
+                        ("fill-opacity", "0.3"),
+                        ("stroke", "black"),
+                    ],
+                ))
+                .add(svg_export::data_to_path(
+                    qt_data.2,
+                    &[
+                        ("fill", "green"),
+                        ("fill-opacity", "0.6"),
+                        ("stroke-width", &*format!("{}", stroke_width * 0.25)),
+                        ("stroke", "black"),
+                    ],
+                ));
+            Some(qt_group)
+        }
+    };
+
+    let hpg_group = match options.haz_prox_grid {
+        false => None,
+        true => {
+            let mut hpg_group = Group::new()
+                .set("id", "haz_prox_grid")
+                .set("transform", transform_to_svg(&inv_bin_transf));
             let hpg = layout.cde().haz_prox_grid().unwrap();
             for hp_cell in hpg.grid.cells.iter().flatten() {
                 let center = hp_cell.centroid;
                 let prox = hp_cell.hazard_proximity(None);
-
                 let color = if prox == 0.0 { "red" } else { "blue" };
 
-                group = group.add(svg_export::point(center, Some(color), Some(stroke_width)));
-
-                group = group.add(svg_export::circle(
-                    &Circle::new(center, prox),
-                    &[
-                        ("fill", "none"),
-                        ("stroke", color),
-                        ("stroke-width", &*format!("{}", stroke_width / 2.0)),
-                    ],
-                ));
+                hpg_group = hpg_group
+                    .add(svg_export::point(center, Some(color), Some(stroke_width)))
+                    .add(svg_export::circle(
+                        &Circle::new(center, prox),
+                        &[
+                            ("fill", "none"),
+                            ("stroke", color),
+                            ("stroke-width", &*format!("{}", stroke_width / 2.0)),
+                        ],
+                    ));
             }
+            Some(hpg_group)
         }
-        group.set(
-            "transform",
-            to_svg_transform_matrix(&inverse_bin_pretransform),
-        )
     };
 
-    doc.add(bin_group)
+    let vbox_svg = (vbox.x_min, vbox.y_min, vbox.width(), vbox.height());
+
+    let optionals = [surrogate_group, qt_group, hpg_group]
+        .into_iter()
+        .flatten()
+        .fold(Group::new().set("id", "optionals"), |g, opt| g.add(opt));
+
+    Document::new()
+        .set("viewBox", vbox_svg)
+        .set("xmlns:xlink", "http://www.w3.org/1999/xlink")
+        .add(bin_group)
         .add(items_group)
-        .add(surrogate_group)
         .add(qz_group)
-        .add(quadtree_group)
-        .add(haz_prox_grid_group)
+        .add(optionals)
 }
 
-fn to_svg_transform_matrix(t: &Transformation) -> String {
-    //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#matrix
-    let [[a, c, e], [b, d, f], [_, _, _]] = t.matrix();
-    format!("matrix({a} {b} {c} {d} {e} {f})")
+fn transform_to_svg(t: &Transformation) -> String {
+    //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform
+    //operations are effectively applied from right to left
+    let dt = t.decompose();
+    let (tx, ty) = dt.translation();
+    let r = dt.rotation().to_degrees();
+    format!("translate({tx} {ty}), rotate({r})")
 }
