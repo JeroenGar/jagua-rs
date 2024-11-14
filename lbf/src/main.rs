@@ -68,8 +68,8 @@ fn main() {
 
     let json_output = JsonOutput {
         instance: json_instance.clone(),
-        solution: parser::compose_json_solution(&solution, &instance, EPOCH.clone()),
-        config: config.clone(),
+        solution: parser::compose_json_solution(&solution, &instance, *EPOCH),
+        config,
     };
 
     if !args.solution_folder.exists() {

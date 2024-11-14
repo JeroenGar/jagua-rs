@@ -96,6 +96,7 @@ impl LBFOptimizer {
                             i_opt.d_transf,
                             l_index
                         );
+                        #[allow(clippy::absurd_extreme_comparisons)]
                         if self.problem.placed_item_qtys().sum::<usize>() >= ITEM_LIMIT {
                             break 'outer;
                         }
