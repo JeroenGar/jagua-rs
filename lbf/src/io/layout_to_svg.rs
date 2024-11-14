@@ -5,7 +5,6 @@ use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::layout::Layout;
 use jagua_rs::entities::layout::LayoutSnapshot;
 use jagua_rs::fsize;
-use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::primitives::circle::Circle;
 use jagua_rs::geometry::transformation::Transformation;
 use jagua_rs::io::parser;
@@ -109,12 +108,10 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
 
     //draw items
     let (items_group, surrogate_group) = {
-        let mut items_group = Group::new();
-        let mut surrogate_group = Group::new();
-        //define all the items in the group
+        //define all the items and their surrogates (if enabled)
         let mut item_defs = Definitions::new();
         let mut surrogate_defs = Definitions::new();
-        for (internal_item, qty) in instance.items() {
+        for (internal_item, _) in instance.items() {
             let item = parser::pretransform_item(
                 internal_item,
                 &internal_item.pretransform.clone().inverse(),
@@ -166,7 +163,7 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 let poi = &surrogate.poles[0];
                 let ff_poles = surrogate.ff_poles();
 
-                for (i, pole) in surrogate.poles.iter().enumerate() {
+                for pole in surrogate.poles.iter() {
                     if pole == poi {
                         surrogate_group = surrogate_group.add(svg_export::circle(pole, &poi_style));
                     }
@@ -186,8 +183,8 @@ pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptio
                 surrogate_defs = surrogate_defs.add(surrogate_group)
             }
         }
-        items_group = items_group.add(item_defs);
-        surrogate_group = surrogate_group.add(surrogate_defs);
+        let mut items_group = Group::new().add(item_defs);
+        let mut surrogate_group = Group::new().add(surrogate_defs);
 
         for pi in layout.placed_items().values() {
             let abs_transf = parser::internal_to_absolute_transform(

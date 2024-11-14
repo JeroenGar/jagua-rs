@@ -159,10 +159,16 @@ impl Parser {
             Transformation::empty(),
             self.cde_config.item_surrogate_config,
         );
-        let centering_transform = centering_transformation(&base_item.shape);
-        let centered_item = pretransform_item(&base_item, &centering_transform.compose());
 
-        (centered_item, json_item.demand as usize)
+        let item = match self.center_polygons {
+            false => base_item,
+            true => {
+                let centering_transform = centering_transformation(&base_item.shape);
+                pretransform_item(&base_item, &centering_transform.compose())
+            }
+        };
+
+        (item, json_item.demand as usize)
     }
 
     fn parse_bin(&self, json_bin: &JsonBin, bin_id: usize) -> (Bin, usize) {
@@ -239,12 +245,18 @@ impl Parser {
             quality_zones,
             self.cde_config,
         );
-        let centering_transform = centering_transformation(&base_bin.outer);
-        let centered_bin = pretransform_bin(&base_bin, &centering_transform.compose());
+
+        let bin = match self.center_polygons {
+            false => base_bin,
+            true => {
+                let centering_transform = centering_transformation(&base_bin.outer);
+                pretransform_bin(&base_bin, &centering_transform.compose())
+            }
+        };
 
         let stock = json_bin.stock.unwrap_or(u64::MAX) as usize;
 
-        (centered_bin, stock)
+        (bin, stock)
     }
 }
 
@@ -498,8 +510,7 @@ pub fn pretransform_bin(bin: &Bin, extra_pretransf: &Transformation) -> Bin {
         pretransform,
         holes,
         quality_zones,
-        base_cde,
-        area,
+        ..
     } = bin;
 
     Bin::new(
@@ -536,8 +547,8 @@ pub fn pretransform_item(item: &Item, extra_pretransf: &Transformation) -> Item 
         base_quality,
         value,
         pretransform,
-        hazard_filter,
         surrogate_config,
+        ..
     } = item;
 
     Item::new(
