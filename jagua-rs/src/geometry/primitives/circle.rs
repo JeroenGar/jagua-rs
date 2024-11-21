@@ -146,6 +146,36 @@ impl DistanceFrom<Point> for Circle {
     }
 }
 
+impl DistanceFrom<Circle> for Circle {
+    fn sq_distance(&self, other: &Circle) -> fsize {
+        self.distance(other).powi(2)
+    }
+
+    fn distance(&self, other: &Circle) -> fsize {
+        match self.distance_from_border(other) {
+            (GeoPosition::Interior, _) => 0.0,
+            (GeoPosition::Exterior, d) => d,
+        }
+    }
+
+    fn distance_from_border(&self, other: &Circle) -> (GeoPosition, fsize) {
+        let sq_center_dist = self.center.sq_distance(other.center);
+        let sq_radii_sum = (self.radius + other.radius).powi(2);
+        if sq_center_dist < sq_radii_sum {
+            let dist = sq_radii_sum.sqrt() - sq_center_dist.sqrt();
+            (GeoPosition::Interior, dist)
+        } else {
+            let dist = sq_center_dist.sqrt() - sq_radii_sum.sqrt();
+            (GeoPosition::Exterior, dist)
+        }
+    }
+
+    fn sq_distance_from_border(&self, other: &Circle) -> (GeoPosition, fsize) {
+        let (pos, distance) = self.distance_from_border(other);
+        (pos, distance.powi(2))
+    }
+}
+
 impl Shape for Circle {
     fn centroid(&self) -> Point {
         self.center

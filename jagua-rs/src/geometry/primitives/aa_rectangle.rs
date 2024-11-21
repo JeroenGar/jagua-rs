@@ -4,7 +4,7 @@ use crate::geometry::geo_traits::{AlmostCollidesWith, CollidesWith, DistanceFrom
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::util::fpa::FPA;
-use ordered_float::NotNan;
+use ordered_float::{NotNan, OrderedFloat};
 use std::cmp::Ordering;
 
 ///Geometric primitive representing an axis-aligned rectangle
@@ -327,17 +327,16 @@ impl DistanceFrom<Point> for AARectangle {
             false => (GeoPosition::Exterior, self.sq_distance(point)),
             true => {
                 let (x, y) = (NotNan::new(point.0).unwrap(), NotNan::new(point.1).unwrap());
-                let distances = [
+                let min_distance = [
                     (x - self.x_min).abs(),
                     (x - self.x_max).abs(),
                     (y - self.y_min).abs(),
                     (y - self.y_max).abs(),
-                ];
-                let min = distances
-                    .iter()
-                    .min_by(|a, b| a.partial_cmp(b).unwrap())
-                    .unwrap();
-                (GeoPosition::Interior, *min)
+                ]
+                .into_iter()
+                .min_by_key(|&d| OrderedFloat(d))
+                .unwrap();
+                (GeoPosition::Interior, min_distance)
             }
         }
     }
