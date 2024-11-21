@@ -53,7 +53,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     fn usage(&mut self) -> fsize {
         let (total_bin_area, total_used_area) =
             self.layouts_mut().iter_mut().fold((0.0, 0.0), |acc, l| {
-                let bin_area = l.bin().area;
+                let bin_area = l.bin.area;
                 let used_area = bin_area * l.usage();
                 (acc.0 + bin_area, acc.1 + used_area)
             });
@@ -61,7 +61,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
     }
 
     fn used_bin_cost(&self) -> u64 {
-        self.layouts().iter().map(|l| l.bin().value).sum()
+        self.layouts().iter().map(|l| l.bin.value).sum()
     }
 
     /// Returns the `LayoutIndex` of all layouts.
@@ -74,7 +74,7 @@ pub trait ProblemGeneric: ProblemGenericPrivate {
         self.template_layouts()
             .iter()
             .enumerate()
-            .filter_map(|(i, l)| match self.bin_qtys()[l.bin().id] {
+            .filter_map(|(i, l)| match self.bin_qtys()[l.bin.id] {
                 0 => None,
                 _ => Some(LayoutIndex::Template(i)),
             })

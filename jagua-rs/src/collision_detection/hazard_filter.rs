@@ -41,7 +41,7 @@ pub struct CombinedHazardFilter<'a> {
 impl HazardFilter for BinHazardFilter {
     fn is_irrelevant(&self, entity: &HazardEntity) -> bool {
         match entity {
-            HazardEntity::PlacedItem(_) => false,
+            HazardEntity::PlacedItem { .. } => false,
             HazardEntity::BinExterior => true,
             HazardEntity::BinHole { .. } => true,
             HazardEntity::InferiorQualityZone { .. } => true,

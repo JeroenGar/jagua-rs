@@ -64,7 +64,7 @@ impl BPProblem {
     }
 
     pub fn register_layout(&mut self, layout: Layout) -> LayoutIndex {
-        self.register_bin(layout.bin().id);
+        self.register_bin(layout.bin.id);
         layout
             .placed_items()
             .values()
@@ -78,7 +78,7 @@ impl BPProblem {
             LayoutIndex::Real(i) => {
                 let layout = self.layouts.remove(i);
                 self.layout_has_changed(layout.id());
-                self.deregister_bin(layout.bin().id);
+                self.deregister_bin(layout.bin.id);
                 layout
                     .placed_items()
                     .values()

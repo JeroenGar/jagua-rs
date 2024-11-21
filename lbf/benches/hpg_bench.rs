@@ -94,7 +94,7 @@ fn hpg_query_bench(c: &mut Criterion) {
         println!(
             "[{}] sampler coverage: {:.3}% with {} samplers",
             n_hpg_cells,
-            sampler.coverage_area / layout.bin().bbox().area() * 100.0,
+            sampler.coverage_area / layout.bin.bbox().area() * 100.0,
             sampler.cell_samplers.len()
         );
 
@@ -182,7 +182,7 @@ fn hpg_update_bench(c: &mut Criterion) {
         println!(
             "[{}] sampler coverage: {:.3}% with {} samplers",
             n_hpg_cells,
-            sampler.coverage_area / layout.bin().bbox().area() * 100.0,
+            sampler.coverage_area / layout.bin.bbox().area() * 100.0,
             sampler.cell_samplers.len()
         );
 

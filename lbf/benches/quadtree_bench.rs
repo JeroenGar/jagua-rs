@@ -20,9 +20,9 @@ use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};
 criterion_main!(benches);
 criterion_group!(
     benches,
-    //quadtree_query_update_1000_1,
-    //quadtree_query_bench,
-    //quadtree_update_bench,
+    quadtree_query_update_1000_1,
+    quadtree_query_bench,
+    quadtree_update_bench,
     quadtree_collect_query_bench
 );
 
@@ -110,7 +110,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
             util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = problem.get_layout(LayoutIndex::Real(0));
-        let sampler = UniformAARectSampler::new(layout.bin().bbox(), instance.item(0));
+        let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -170,7 +170,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         let (mut problem, _) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = problem.get_layout(LayoutIndex::Real(0));
-        let sampler = UniformAARectSampler::new(layout.bin().bbox(), instance.item(0));
+        let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -241,7 +241,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
             util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = problem.get_layout(LayoutIndex::Real(0));
-        let sampler = UniformAARectSampler::new(layout.bin().bbox(), instance.item(0));
+        let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)

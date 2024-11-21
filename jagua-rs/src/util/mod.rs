@@ -15,7 +15,7 @@ pub mod polygon_simplification;
 pub fn print_layout(layout: &Layout) {
     println!(
         "let mut layout = Layout::new(0, instance.bin({}).clone());",
-        layout.bin().id
+        layout.bin.id
     );
     println!();
 
