@@ -27,7 +27,7 @@ impl QTHazardVec {
             self.hazards
                 .iter()
                 .filter(|other| other.entity == haz.entity
-                    && matches!(haz.entity, HazardEntity::PlacedItem(_)))
+                    && matches!(haz.entity, HazardEntity::PlacedItem { .. }))
                 .count()
                 == 0,
             "More than one hazard from same item entity in the vector! (This should never happen!)"
@@ -48,7 +48,7 @@ impl QTHazardVec {
             self.hazards
                 .iter()
                 .filter(|ch| ch.entity == haz_entity
-                    && matches!(ch.entity, HazardEntity::PlacedItem(_)))
+                    && matches!(ch.entity, HazardEntity::PlacedItem { .. }))
                 .count()
                 <= 1,
             "More than one hazard from same item entity in the vector! (This should never happen!)"

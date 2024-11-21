@@ -240,7 +240,7 @@ pub fn sample_layout(
     And the standard deviation tightens, to focus the search around the best sample.
      */
 
-    let mut ls_sampler = LSSampler::from_defaults(item, &best_opt.d_transf, &layout.bin().bbox());
+    let mut ls_sampler = LSSampler::from_defaults(item, &best_opt.d_transf, &layout.bin.bbox());
 
     for i in 0..ls_sample_budget {
         let d_transf = ls_sampler.sample(rng);

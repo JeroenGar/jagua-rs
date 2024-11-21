@@ -298,7 +298,7 @@ pub fn build_strip_packing_solution(
         let transform = absolute_to_internal_transform(
             &abs_transform,
             &item.pretransform,
-            &problem.layout.bin().pretransform,
+            &problem.layout.bin.pretransform,
         );
 
         let d_transf = transform.decompose();
@@ -332,7 +332,7 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
         let template_index = problem
             .template_layouts()
             .iter()
-            .position(|tl| tl.bin().id == bin.id)
+            .position(|tl| tl.bin.id == bin.id)
             .expect("no template layout found for bin");
 
         let json_first_item = json_layout

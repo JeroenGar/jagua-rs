@@ -1,5 +1,5 @@
 use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
-use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazard::{Hazard, HazardEntity};
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::placed_item::{PItemKey, PlacedItem};
@@ -48,8 +48,8 @@ impl Layout {
         self.bin = bin;
         // update the CDE
         self.cde = self.bin.base_cde.as_ref().clone();
-        for (pik, pi) in self.placed_items.iter() {
-            let hazard = Hazard::new(pik.into(), pi.shape.clone());
+        for (_, pi) in self.placed_items.iter() {
+            let hazard = Hazard::new(pi.into(), pi.shape.clone());
             self.cde.register_hazard(hazard);
         }
     }
@@ -79,10 +79,10 @@ impl Layout {
     }
 
     pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation) -> PItemKey {
-        let placed_item = PlacedItem::new(item, d_transformation);
-        let pik = self.placed_items.insert(placed_item);
+        let pi = PlacedItem::new(item, d_transformation);
+        let hazard = Hazard::new(HazardEntity::from(&pi), pi.shape.clone());
 
-        let hazard = Hazard::new(pik.into(), self.placed_items[pik].shape.clone());
+        let pik = self.placed_items.insert(pi);
         self.cde.register_hazard(hazard);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
@@ -91,17 +91,18 @@ impl Layout {
     }
 
     pub fn remove_item(&mut self, key: PItemKey, commit_instant: bool) -> PlacedItem {
-        let p_item = self
+        let pi = self
             .placed_items
             .remove(key)
             .expect("key is not valid anymore");
 
         // update the collision detection engine
-        self.cde.deregister_hazard(key.into(), commit_instant);
+        self.cde
+            .deregister_hazard(HazardEntity::from(&pi), commit_instant);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
 
-        p_item
+        pi
     }
 
     /// True if no items are placed
@@ -109,18 +110,21 @@ impl Layout {
         self.placed_items.is_empty()
     }
 
-    pub fn bin(&self) -> &Bin {
-        &self.bin
-    }
-
     pub fn placed_items(&self) -> &SlotMap<PItemKey, PlacedItem> {
         &self.placed_items
+    }
+
+    pub fn hazard_to_p_item_key(&self, hz: &HazardEntity) -> Option<PItemKey> {
+        self.placed_items
+            .iter()
+            .find(|(_, pi)| HazardEntity::from(*pi) == *hz)
+            .map(|(k, _)| k)
     }
 
     /// Returns the usage of the bin with the items placed.
     /// It is the ratio of the area of the items placed to the area of the bin.
     pub fn usage(&self) -> fsize {
-        let bin_area = self.bin().area;
+        let bin_area = self.bin.area;
         let item_area = self
             .placed_items
             .iter()

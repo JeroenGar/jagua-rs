@@ -3,7 +3,13 @@ use crate::entities::item::Item;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use slotmap::new_key_type;
 use std::sync::Arc;
+
+new_key_type! {
+    /// Unique key for each `PlacedItem` in a layout.
+    pub struct PItemKey;
+}
 
 /// Represents an `Item` that has been placed in a `Layout`
 #[derive(Clone, Debug)]

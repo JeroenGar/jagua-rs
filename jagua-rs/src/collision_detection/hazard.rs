@@ -1,6 +1,8 @@
+use crate::entities::placed_item::PlacedItem;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use std::borrow::Borrow;
 use std::sync::Arc;
 
 /// Defines a certain spatial constraint that affects the feasibility of a placement.
@@ -65,6 +67,18 @@ impl HazardEntity {
             HazardEntity::BinExterior => true,
             HazardEntity::BinHole { .. } => true,
             HazardEntity::InferiorQualityZone { .. } => false,
+        }
+    }
+}
+
+impl<T> From<T> for HazardEntity
+where
+    T: Borrow<PlacedItem>,
+{
+    fn from(pi: T) -> Self {
+        HazardEntity::PlacedItem {
+            id: pi.borrow().item_id,
+            dt: pi.borrow().d_transf,
         }
     }
 }

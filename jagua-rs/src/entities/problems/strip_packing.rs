@@ -54,7 +54,7 @@ impl SPProblem {
 
     /// Adds or removes width in the back of the strip.
     pub fn modify_strip_in_back(&mut self, new_width: fsize) {
-        let bbox = self.layout.bin().outer.bbox();
+        let bbox = self.layout.bin.outer.bbox();
         let new_strip_shape =
             AARectangle::new(bbox.x_min, bbox.y_min, bbox.x_min + new_width, bbox.y_max);
         self.modify_strip(new_strip_shape);
@@ -62,7 +62,7 @@ impl SPProblem {
 
     /// Adds or removes width at the front of the strip.
     pub fn modify_strip_at_front(&mut self, new_width: fsize) {
-        let bbox = self.layout.bin().outer.bbox();
+        let bbox = self.layout.bin.outer.bbox();
         let new_strip_shape =
             AARectangle::new(bbox.x_max - new_width, bbox.y_min, bbox.x_max, bbox.y_max);
         self.modify_strip(new_strip_shape);
@@ -80,9 +80,9 @@ impl SPProblem {
 
         let new_strip_shape = AARectangle::new(
             new_x_min,
-            self.layout.bin().outer.bbox().y_min,
+            self.layout.bin.outer.bbox().y_min,
             new_x_max,
-            self.layout.bin().outer.bbox().y_max,
+            self.layout.bin.outer.bbox().y_max,
         );
 
         self.modify_strip(new_strip_shape);
@@ -107,7 +107,7 @@ impl SPProblem {
         //Modifying the width causes the bin to change, so the layout must be replaced
         self.layout = Layout::new(
             self.next_layout_id(),
-            Bin::from_strip(rect, self.layout.bin().base_cde.config()),
+            Bin::from_strip(rect, self.layout.bin.base_cde.config()),
         );
 
         //place the items back in the new layout
@@ -168,11 +168,11 @@ impl SPProblem {
     }
 
     pub fn strip_width(&self) -> fsize {
-        self.layout.bin().outer.bbox().width()
+        self.layout.bin.outer.bbox().width()
     }
 
     pub fn strip_height(&self) -> fsize {
-        self.layout.bin().outer.bbox().height()
+        self.layout.bin.outer.bbox().height()
     }
 }
 

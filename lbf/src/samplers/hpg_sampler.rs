@@ -29,7 +29,7 @@ pub struct HPGSampler<'a> {
 impl<'a> HPGSampler<'a> {
     pub fn new(item: &'a Item, layout: &Layout) -> Option<HPGSampler<'a>> {
         let poi = &item.shape.poi;
-        let bin_bbox = layout.bin().bbox();
+        let bin_bbox = layout.bin.bbox();
 
         //create a pre-transformation which centers the shape around its Pole of Inaccessibility.
         let pretransform = Transformation::from_translation((-poi.center.0, -poi.center.1));
