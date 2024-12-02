@@ -16,11 +16,14 @@ pub struct Grid<T> {
     pub cols: Vec<NotNan<fsize>>,
     pub n_rows: usize,
     pub n_cols: usize,
+    pub n_elements: usize,
 }
 
 impl<T> Grid<T> {
     /// Creates a new grid from a vector of values of type T and their coordinates
     pub fn new(elements: Vec<(T, Point)>) -> Self {
+        let n_elements = elements.len();
+
         //find all unique rows and columns from the element's coordinates
         let rows = elements
             .iter()
@@ -64,6 +67,7 @@ impl<T> Grid<T> {
             cols,
             n_rows,
             n_cols,
+            n_elements,
         }
     }
 
