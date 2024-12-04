@@ -40,6 +40,14 @@ impl Point {
     pub fn sq_distance(&self, other: Point) -> fsize {
         (self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)
     }
+
+    pub fn x(&self) -> fsize {
+        self.0
+    }
+
+    pub fn y(&self) -> fsize {
+        self.1
+    }
 }
 
 impl Eq for Point {}
