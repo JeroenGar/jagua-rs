@@ -34,18 +34,22 @@ impl AARectangle {
         }
     }
 
+    /// Returns the top-edge along y_max
     pub fn top_edge(&self) -> Edge {
         Edge::new(Point(self.x_max, self.y_max), Point(self.x_min, self.y_max))
     }
 
+    /// Returns the bottom-edge along y_min
     pub fn bottom_edge(&self) -> Edge {
         Edge::new(Point(self.x_min, self.y_min), Point(self.x_max, self.y_min))
     }
 
+    /// Returns the left-edge along x_min
     pub fn left_edge(&self) -> Edge {
         Edge::new(Point(self.x_min, self.y_max), Point(self.x_min, self.y_min))
     }
 
+    /// Returns the right-edge along x_max
     pub fn right_edge(&self) -> Edge {
         Edge::new(Point(self.x_max, self.y_min), Point(self.x_max, self.y_max))
     }
