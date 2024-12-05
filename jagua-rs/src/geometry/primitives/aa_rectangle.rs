@@ -111,25 +111,25 @@ impl AARectangle {
         self
     }
 
-    /// For all quadrants, contains indices of the two neighbors of the quadrant at that index
-    pub const QUADRANT_NEIGHBOR_LAYOUT: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
+    /// For all quadrants, contains indices of the two neighbors of the quadrant at that index.
+    pub const QUADRANT_NEIGHBOR_LAYOUT: [[usize; 2]; 4] = [[1, 3], [0, 2], [1, 3], [0, 2]];
 
-    /// Returns the 4 quadrants of the rectangle in the same order as:
-    /// https://en.wikipedia.org/wiki/Quadrant_(plane_geometry)
+    /// Returns the 4 quadrants of the rectangle.
+    /// Ordered in the same way as quadrants in a cartesian plane:
+    /// <https://en.wikipedia.org/wiki/Quadrant_(plane_geometry)>
     pub fn quadrants(&self) -> [Self; 4] {
-        let Point(x_mid, y_mid) = self.centroid();
-        let (x_min, y_min, x_max, y_max) = (self.x_min, self.y_min, self.x_max, self.y_max);
+        let mid = self.centroid();
+        let corners = self.corners();
 
-        let q1 = AARectangle::new(x_mid, y_mid, x_max, y_max);
-        let q2 = AARectangle::new(x_min, y_mid, x_mid, y_max);
-        let q3 = AARectangle::new(x_min, y_min, x_mid, y_mid);
-        let q4 = AARectangle::new(x_mid, y_min, x_max, y_mid);
+        let q1 = Edge::new(corners[0], mid).bbox();
+        let q2 = Edge::new(corners[1], mid).bbox();
+        let q3 = Edge::new(corners[2], mid).bbox();
+        let q4 = Edge::new(corners[3], mid).bbox();
 
         [q1, q2, q3, q4]
     }
 
-    /// Returns the four corners, in the order of the quadrants
-    /// https://en.wikipedia.org/wiki/Quadrant_(plane_geometry)
+    /// Returns the four corners, in the same order as [AARectangle::quadrants].
     pub fn corners(&self) -> [Point; 4] {
         [
             Point(self.x_max, self.y_max),
@@ -139,15 +139,14 @@ impl AARectangle {
         ]
     }
 
-    /// Returns the four edges of the rectangle in the order of:
-    /// Going from corner to corner in the order of the quadrants
+    /// Returns the four edges of the rectangle, in the same order as [AARectangle::quadrants].
     pub fn edges(&self) -> [Edge; 4] {
-        let corners = self.corners();
+        let c = self.corners();
         [
-            Edge::new(corners[0], corners[1]),
-            Edge::new(corners[1], corners[2]),
-            Edge::new(corners[2], corners[3]),
-            Edge::new(corners[3], corners[0]),
+            Edge::new(c[0], c[1]),
+            Edge::new(c[1], c[2]),
+            Edge::new(c[2], c[3]),
+            Edge::new(c[3], c[0]),
         ]
     }
 
