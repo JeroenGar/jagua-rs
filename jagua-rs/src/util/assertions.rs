@@ -437,21 +437,30 @@ pub fn hpg_update_no_affected_cells_remain(
     }
 }
 
+/// Checks if the quadrants follow the layout set in [AARectangle::QUADRANT_NEIGHBOR_LAYOUT]
 pub fn quadrants_have_valid_layout(quadrants: &[&AARectangle; 4]) -> bool {
-    //check top border
-    let [nw, ne, sw, se] = quadrants;
+    let layout = AARectangle::QUADRANT_NEIGHBOR_LAYOUT;
+    for (idx, q) in quadrants.iter().enumerate() {
+        //make sure they share two points (an edge) with each neighbor
+        let [n_0, n_1] = layout[idx];
+        let q_corners = q.corners();
+        let n_0_corners = quadrants[n_0].corners();
+        let n_1_corners = quadrants[n_1].corners();
 
-    //check exterior borders
-    assert_eq!(nw.y_max, ne.y_max, "Top border does not match");
-    assert_eq!(sw.y_min, se.y_min, "Bottom border does not match");
-    assert_eq!(nw.x_min, sw.x_min, "Left border does not match");
-    assert_eq!(ne.x_max, se.x_max, "Right border does not match");
-
-    //check interior borders
-    assert_eq!(nw.x_max, ne.x_min, "Top interior border does not match");
-    assert_eq!(sw.x_max, se.x_min, "Bottom interior border does not match");
-    assert_eq!(nw.y_min, sw.y_max, "Left interior border does not match");
-    assert_eq!(ne.y_min, se.y_max, "Right interior border does not match");
-
+        assert_eq!(
+            2,
+            n_0_corners
+                .iter()
+                .filter(|c| q_corners.iter().find(|qc| qc == c).is_some())
+                .count()
+        );
+        assert_eq!(
+            2,
+            n_1_corners
+                .iter()
+                .filter(|c| q_corners.iter().find(|qc| qc == c).is_some())
+                .count()
+        );
+    }
     true
 }

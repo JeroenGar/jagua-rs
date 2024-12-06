@@ -34,45 +34,6 @@ impl AARectangle {
         }
     }
 
-    /// Returns the top-edge along y_max
-    pub fn top_edge(&self) -> Edge {
-        Edge::new(Point(self.x_max, self.y_max), Point(self.x_min, self.y_max))
-    }
-
-    /// Returns the bottom-edge along y_min
-    pub fn bottom_edge(&self) -> Edge {
-        Edge::new(Point(self.x_min, self.y_min), Point(self.x_max, self.y_min))
-    }
-
-    /// Returns the left-edge along x_min
-    pub fn left_edge(&self) -> Edge {
-        Edge::new(Point(self.x_min, self.y_max), Point(self.x_min, self.y_min))
-    }
-
-    /// Returns the right-edge along x_max
-    pub fn right_edge(&self) -> Edge {
-        Edge::new(Point(self.x_max, self.y_min), Point(self.x_max, self.y_max))
-    }
-
-    pub fn edges(&self) -> [Edge; 4] {
-        [
-            self.top_edge(),
-            self.bottom_edge(),
-            self.left_edge(),
-            self.right_edge(),
-        ]
-    }
-
-    /// Returns the four corners in the following order: NW,NE,SW,SE
-    pub fn corners(&self) -> [Point; 4] {
-        [
-            Point(self.x_min, self.y_min),
-            Point(self.x_max, self.y_min),
-            Point(self.x_min, self.y_max),
-            Point(self.x_max, self.y_max),
-        ]
-    }
-
     /// Returns the relation between self and another AARectangle
     pub fn relation_to(&self, other: &AARectangle) -> GeoRelation {
         if self.collides_with(other) {
@@ -150,20 +111,43 @@ impl AARectangle {
         self
     }
 
-    /// For all quadrants, contains indices of the two neighbors of the quadrant at that index
-    pub const QUADRANT_NEIGHBOR_LAYOUT: [[usize; 2]; 4] = [[1, 2], [0, 3], [0, 3], [1, 2]];
+    /// For all quadrants, contains indices of the two neighbors of the quadrant at that index.
+    pub const QUADRANT_NEIGHBOR_LAYOUT: [[usize; 2]; 4] = [[1, 3], [0, 2], [1, 3], [0, 2]];
 
-    /// Returns the 4 quadrants of the rectangle, in the order NW, NE, SW, SE
+    /// Returns the 4 quadrants of the rectangle.
+    /// Ordered in the same way as quadrants in a cartesian plane:
+    /// <https://en.wikipedia.org/wiki/Quadrant_(plane_geometry)>
     pub fn quadrants(&self) -> [Self; 4] {
-        let Point(x_mid, y_mid) = self.centroid();
-        let (x_min, y_min, x_max, y_max) = (self.x_min, self.y_min, self.x_max, self.y_max);
+        let mid = self.centroid();
+        let corners = self.corners();
 
-        let rect_nw = AARectangle::new(x_min, y_mid, x_mid, y_max);
-        let rect_ne = AARectangle::new(x_mid, y_mid, x_max, y_max);
-        let rect_sw = AARectangle::new(x_min, y_min, x_mid, y_mid);
-        let rect_se = AARectangle::new(x_mid, y_min, x_max, y_mid);
+        let q1 = Edge::new(corners[0], mid).bbox();
+        let q2 = Edge::new(corners[1], mid).bbox();
+        let q3 = Edge::new(corners[2], mid).bbox();
+        let q4 = Edge::new(corners[3], mid).bbox();
 
-        [rect_nw, rect_ne, rect_sw, rect_se]
+        [q1, q2, q3, q4]
+    }
+
+    /// Returns the four corners, in the same order as [AARectangle::quadrants].
+    pub fn corners(&self) -> [Point; 4] {
+        [
+            Point(self.x_max, self.y_max),
+            Point(self.x_min, self.y_max),
+            Point(self.x_min, self.y_min),
+            Point(self.x_max, self.y_min),
+        ]
+    }
+
+    /// Returns the four edges of the rectangle, in the same order as [AARectangle::quadrants].
+    pub fn edges(&self) -> [Edge; 4] {
+        let c = self.corners();
+        [
+            Edge::new(c[0], c[1]),
+            Edge::new(c[1], c[2]),
+            Edge::new(c[2], c[3]),
+            Edge::new(c[3], c[0]),
+        ]
     }
 
     pub fn width(&self) -> fsize {
@@ -293,10 +277,9 @@ impl CollidesWith<Edge> for AARectangle {
         }
 
         //The only possible that remains is that the edge collides with one of the edges of the AARectangle
-        edge.collides_with(&self.top_edge())
-            || edge.collides_with(&self.bottom_edge())
-            || edge.collides_with(&self.right_edge())
-            || edge.collides_with(&self.left_edge())
+        self.edges()
+            .iter()
+            .any(|rect_edge| edge.collides_with(rect_edge))
     }
 }
 
