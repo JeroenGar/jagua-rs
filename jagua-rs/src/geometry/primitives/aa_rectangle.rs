@@ -313,7 +313,7 @@ impl DistanceFrom<Point> for AARectangle {
         match self.collides_with(point) {
             false => (GeoPosition::Exterior, self.sq_distance(point)),
             true => {
-                let (x, y) = (NotNan::new(point.0).unwrap(), NotNan::new(point.1).unwrap());
+                let Point(x, y) = *point;
                 let min_distance = [
                     (x - self.x_min).abs(),
                     (x - self.x_max).abs(),
@@ -323,7 +323,7 @@ impl DistanceFrom<Point> for AARectangle {
                 .into_iter()
                 .min_by_key(|&d| OrderedFloat(d))
                 .unwrap();
-                (GeoPosition::Interior, min_distance)
+                (GeoPosition::Interior, min_distance.powi(2))
             }
         }
     }
