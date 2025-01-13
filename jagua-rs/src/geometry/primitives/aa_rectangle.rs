@@ -4,7 +4,7 @@ use crate::geometry::geo_traits::{AlmostCollidesWith, CollidesWith, DistanceFrom
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::util::fpa::FPA;
-use ordered_float::{NotNan, OrderedFloat};
+use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
 
 ///Geometric primitive representing an axis-aligned rectangle
