@@ -181,28 +181,34 @@ impl QTNode {
         T: QTQueryable,
     {
         match self.hazards.strongest(detected) {
-            None => (),
-            Some(strongest_hazard) => match entity.collides_with(&self.bbox) {
-                false => (),
-                true => match strongest_hazard.presence {
-                    QTHazPresence::None => (),
-                    QTHazPresence::Entire => detected.push(strongest_hazard.entity),
-                    QTHazPresence::Partial(_) => match &self.children {
+            None => (), //No more hazards to check
+            Some(_) => match entity.collides_with(&self.bbox) {
+                false => (), //Entity does not collide with the node
+                true => {
+                    let active_hazards = self.hazards.active_hazards().iter();
+                    match self.children.as_ref() {
                         Some(children) => {
-                            //Check if any of the children intersect with the entity
+                            //Children present, detect all Entire hazards now, wait with the Partial ones
+                            for hz in active_hazards {
+                                if let QTHazPresence::Entire = hz.presence {
+                                    if !detected.contains(&hz.entity) {
+                                        detected.push(hz.entity);
+                                    }
+                                }
+                            }
+
+                            //Check all children
                             children
                                 .iter()
-                                .for_each(|child| child.collect_collisions(entity, detected))
+                                .for_each(|child| child.collect_collisions(entity, detected));
                         }
                         None => {
-                            //Check if any of the partially present (and active) hazards collide with the entity
-                            self.hazards.active_hazards().iter().for_each(|hz| {
+                            //No children, detect all Entire hazards and check the Partial ones
+                            for hz in active_hazards {
                                 if !detected.contains(&hz.entity) {
                                     match &hz.presence {
                                         QTHazPresence::None => (),
-                                        QTHazPresence::Entire => {
-                                            unreachable!("should have been handled above")
-                                        }
+                                        QTHazPresence::Entire => detected.push(hz.entity),
                                         QTHazPresence::Partial(p_haz) => {
                                             if p_haz.collides_with(entity) {
                                                 detected.push(hz.entity);
@@ -210,10 +216,10 @@ impl QTNode {
                                         }
                                     }
                                 }
-                            })
+                            }
                         }
-                    },
-                },
+                    }
+                }
             },
         }
     }
