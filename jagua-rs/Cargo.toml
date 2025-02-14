@@ -5,18 +5,22 @@ edition = "2021"
 license = "Mozilla Public License 2.0"
 repository = "https://github.com/JeroenGar/jagua-rs"
 authors = ["Jeroen Gardeyn"]
+description = "A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems"
+readme = "../README.md"
+keywords = ["nesting", "packing", "geometry", "strip", "bin", "irregular", "2D", "collision", "detection", "optimization", "trigonometry"]
+homepage = "https://github.com/JeroenGar/jagua-rs"
 
 [dependencies]
 ndarray = "0.16.1"
-rand = { version = "0.8.5", features = [ "small_rng" ] }
-rand_distr = "0.4.3"
+rand = { version = "0.9.0", features = [ "small_rng" ] }
+rand_distr = "0.5.0"
 num-integer = "0.1.46"
 almost = "0.2.0"
-ordered-float = "4.2.0"
-indexmap = "2.2.3"
+ordered-float = "4.6.0"
+indexmap = "2.7.1"
 serde = { version = "1.0", features = ["derive"] }
-log = "0.4"
-itertools = "0.13.0"
+log = "0.4.25"
+itertools = "0.14.0"
 tribool = "0.3.0"
 arr_macro = "0.2.1"
 cfg-if = "1.0.0"
