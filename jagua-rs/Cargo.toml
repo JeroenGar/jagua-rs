@@ -7,7 +7,7 @@ repository = "https://github.com/JeroenGar/jagua-rs"
 authors = ["Jeroen Gardeyn"]
 description = "A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems"
 readme = "../README.md"
-keywords = ["nesting", "packing", "geometry", "strip", "bin", "irregular", "2D", "collision", "detection", "optimization", "trigonometry"]
+keywords = ["nesting", "packing", "strip", "bin", "irregular"]
 homepage = "https://github.com/JeroenGar/jagua-rs"
 
 [dependencies]
