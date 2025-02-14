@@ -9,7 +9,7 @@ use crate::entities::item::Item;
 use crate::entities::quality_zone::N_QUALITIES;
 use crate::fsize;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::geo_traits::{DistanceFrom, Shape};
+use crate::geometry::geo_traits::{SeparationDistance, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::point::Point;
@@ -39,7 +39,7 @@ impl HPGCell {
         let mut qz_prox = [fsize::MAX; N_QUALITIES];
 
         for hazard in static_hazards {
-            let (pos, distance) = hazard.shape.distance_from_border(&centroid);
+            let (pos, distance) = hazard.shape.separation_distance(&centroid);
             let prox = match pos == hazard.entity.position() {
                 true => 0.0, //cells centroid is inside the hazard
                 false => distance,
@@ -80,7 +80,7 @@ impl HPGCell {
                     GeoPosition::Exterior => (haz, None), //bounding poles only applicable for hazard inside the shape
                     GeoPosition::Interior => {
                         let pole_bounding_circle = &haz.shape.surrogate().poles_bounding_circle;
-                        let proximity = pole_bounding_circle.distance_from_border(&self.centroid);
+                        let proximity = pole_bounding_circle.separation_distance(&self.centroid);
                         match proximity {
                             (GeoPosition::Interior, _) => (haz, Some(0.0)),
                             (GeoPosition::Exterior, dist) => (haz, Some(dist.abs())),
@@ -162,7 +162,7 @@ impl HPGCell {
 
         //For dynamic hazards, the surrogate poles are used to calculate the distance to the hazard (overestimation, but fast)
         let new_prox = match to_register.entity.position() {
-            GeoPosition::Interior => match pole.distance_from_border(&self.centroid) {
+            GeoPosition::Interior => match pole.separation_distance(&self.centroid) {
                 (GeoPosition::Interior, _) => 0.0,
                 (GeoPosition::Exterior, dist) => dist.abs(),
             },
@@ -246,7 +246,7 @@ impl HPGCell {
 pub fn distance_to_surrogate_poles_border(hp_cell: &HPGCell, poles: &[Circle]) -> fsize {
     poles
         .iter()
-        .map(|p| p.distance_from_border(&hp_cell.centroid))
+        .map(|p| p.separation_distance(&hp_cell.centroid))
         .map(|(pos, dist)| match pos {
             GeoPosition::Interior => 0.0,
             GeoPosition::Exterior => dist.abs(),

@@ -4,7 +4,7 @@ use ordered_float::NotNan;
 use rand_distr::num_traits::FloatConst;
 
 use crate::fsize;
-use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape, Transformable};
+use crate::geometry::geo_traits::{CollidesWith, Distance, Shape, Transformable};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;

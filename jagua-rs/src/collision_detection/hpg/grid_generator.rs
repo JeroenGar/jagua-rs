@@ -4,7 +4,7 @@ use log::debug;
 
 use crate::collision_detection::hazard::Hazard;
 use crate::fsize;
-use crate::geometry::geo_traits::{DistanceFrom, Shape};
+use crate::geometry::geo_traits::{SeparationDistance, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
 
@@ -84,7 +84,7 @@ where
 {
     hazards
         .map(|haz| {
-            let (pos, prox) = haz.shape.distance_from_border(point);
+            let (pos, prox) = haz.shape.separation_distance(point);
             match pos == haz.entity.position() {
                 true => -prox, //cell in hazard, negative distance
                 false => prox,

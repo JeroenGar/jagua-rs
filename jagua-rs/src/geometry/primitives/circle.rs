@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
-    CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom,
+    CollidesWith, Distance, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::edge::Edge;
@@ -113,7 +113,7 @@ impl CollidesWith<Point> for Circle {
     }
 }
 
-impl DistanceFrom<Point> for Circle {
+impl Distance<Point> for Circle {
     fn sq_distance(&self, other: &Point) -> fsize {
         self.distance(other).powi(2)
     }
@@ -129,8 +129,10 @@ impl DistanceFrom<Point> for Circle {
             fsize::sqrt(sq_d) - self.radius
         }
     }
+}
 
-    fn distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
+impl SeparationDistance<Point> for Circle {
+    fn separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
         let Point(x, y) = point;
         let Point(cx, cy) = self.center;
         let d_center = fsize::sqrt((x - cx).powi(2) + (y - cy).powi(2));
@@ -140,25 +142,27 @@ impl DistanceFrom<Point> for Circle {
         }
     }
 
-    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
-        let (pos, distance) = self.distance_from_border(point);
+    fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
+        let (pos, distance) = self.separation_distance(point);
         (pos, distance.powi(2))
     }
 }
 
-impl DistanceFrom<Circle> for Circle {
+impl Distance<Circle> for Circle {
     fn sq_distance(&self, other: &Circle) -> fsize {
         self.distance(other).powi(2)
     }
 
     fn distance(&self, other: &Circle) -> fsize {
-        match self.distance_from_border(other) {
+        match self.separation_distance(other) {
             (GeoPosition::Interior, _) => 0.0,
             (GeoPosition::Exterior, d) => d,
         }
     }
+}
 
-    fn distance_from_border(&self, other: &Circle) -> (GeoPosition, fsize) {
+impl SeparationDistance<Circle> for Circle {
+    fn separation_distance(&self, other: &Circle) -> (GeoPosition, fsize) {
         let sq_center_dist = self.center.sq_distance(other.center);
         let sq_radii_sum = (self.radius + other.radius).powi(2);
         if sq_center_dist < sq_radii_sum {
@@ -170,25 +174,27 @@ impl DistanceFrom<Circle> for Circle {
         }
     }
 
-    fn sq_distance_from_border(&self, other: &Circle) -> (GeoPosition, fsize) {
-        let (pos, distance) = self.distance_from_border(other);
+    fn sq_separation_distance(&self, other: &Circle) -> (GeoPosition, fsize) {
+        let (pos, distance) = self.separation_distance(other);
         (pos, distance.powi(2))
     }
 }
 
-impl DistanceFrom<Edge> for Circle {
+impl Distance<Edge> for Circle {
     fn sq_distance(&self, e: &Edge) -> fsize {
         self.distance(e).powi(2)
     }
 
     fn distance(&self, e: &Edge) -> fsize {
-        match self.distance_from_border(e) {
+        match self.separation_distance(e) {
             (GeoPosition::Interior, _) => 0.0,
             (GeoPosition::Exterior, d) => d,
         }
     }
+}
 
-    fn distance_from_border(&self, e: &Edge) -> (GeoPosition, fsize) {
+impl SeparationDistance<Edge> for Circle {
+    fn separation_distance(&self, e: &Edge) -> (GeoPosition, fsize) {
         let distance_to_center = e.distance(&self.center);
         if distance_to_center < self.radius {
             (GeoPosition::Interior, self.radius - distance_to_center)
@@ -197,8 +203,8 @@ impl DistanceFrom<Edge> for Circle {
         }
     }
 
-    fn sq_distance_from_border(&self, e: &Edge) -> (GeoPosition, fsize) {
-        let (pos, distance) = self.distance_from_border(e);
+    fn sq_separation_distance(&self, e: &Edge) -> (GeoPosition, fsize) {
+        let (pos, distance) = self.separation_distance(e);
         (pos, distance.powi(2))
     }
 }

@@ -17,18 +17,23 @@ pub trait AlmostCollidesWith<T> {
 }
 
 /// Trait for geometric primitives that can calculate distances to other primitives.
-pub trait DistanceFrom<T> {
-    /// Squared distance between the two primitives.
-    fn sq_distance(&self, other: &T) -> fsize;
-
-    /// Distance between the two primitives.
+pub trait Distance<T> {
+    /// Minimum distance between two primitives. 0.0 if the primitives collide
     fn distance(&self, other: &T) -> fsize;
 
-    /// Distance from `other` to the boundary of `self` and whether `other` is in the interior or exterior of self.
-    fn distance_from_border(&self, other: &T) -> (GeoPosition, fsize);
+    /// Squared version of [Distance::distance]
+    fn sq_distance(&self, other: &T) -> fsize;
+}
 
-    /// Squared distance from `other` to the boundary of `self` and whether `other` is in the interior or exterior of self.
-    fn sq_distance_from_border(&self, other: &T) -> (GeoPosition, fsize);
+/// Trait for geometric primitives that can calculate the minimum distance to separate from another primitive.
+/// In case they are already separated, the minimum distance between them is returned
+pub trait SeparationDistance<T>: Distance<T> {
+    /// In case of a collision between `self` and `other`, returns [GeoPosition::Interior] and the minimum distance to separate the two primitives.
+    /// Otherwise, returns [GeoPosition::Exterior] and the minimum distance between the two primitives. (similar to [Distance::distance])
+    fn separation_distance(&self, other: &T) -> (GeoPosition, fsize);
+
+    /// Squared version of [SeparationDistance::separation_distance]
+    fn sq_separation_distance(&self, other: &T) -> (GeoPosition, fsize);
 }
 
 /// Trait for types that can be transformed by a Transformation.
