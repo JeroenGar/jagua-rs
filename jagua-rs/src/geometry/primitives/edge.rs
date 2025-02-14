@@ -1,7 +1,6 @@
 use crate::fsize;
-use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
-    CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom,
+    CollidesWith, Distance, Shape, Transformable, TransformableFrom,
 };
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::point::Point;
@@ -149,7 +148,7 @@ impl Shape for Edge {
     }
 }
 
-impl DistanceFrom<Point> for Edge {
+impl Distance<Point> for Edge {
     fn sq_distance(&self, point: &Point) -> fsize {
         let Point(x, y) = point;
         let Point(xx, yy) = self.closest_point_on_edge(point);
@@ -160,14 +159,6 @@ impl DistanceFrom<Point> for Edge {
 
     fn distance(&self, point: &Point) -> fsize {
         fsize::sqrt(self.sq_distance(point))
-    }
-
-    fn distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
-        (GeoPosition::Exterior, self.distance(point))
-    }
-
-    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
-        (GeoPosition::Exterior, self.sq_distance(point))
     }
 }
 

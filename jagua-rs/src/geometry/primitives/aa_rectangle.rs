@@ -1,6 +1,8 @@
 use crate::fsize;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
-use crate::geometry::geo_traits::{AlmostCollidesWith, CollidesWith, DistanceFrom, Shape};
+use crate::geometry::geo_traits::{
+    AlmostCollidesWith, CollidesWith, Distance, SeparationDistance, Shape,
+};
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::util::fpa::FPA;
@@ -283,7 +285,7 @@ impl CollidesWith<Edge> for AARectangle {
     }
 }
 
-impl DistanceFrom<Point> for AARectangle {
+impl Distance<Point> for AARectangle {
     fn sq_distance(&self, point: &Point) -> fsize {
         let Point(x, y) = *point;
         let mut distance: fsize = 0.0;
@@ -303,13 +305,15 @@ impl DistanceFrom<Point> for AARectangle {
     fn distance(&self, point: &Point) -> fsize {
         self.sq_distance(point).sqrt()
     }
+}
 
-    fn distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
-        let (position, sq_distance) = self.sq_distance_from_border(point);
+impl SeparationDistance<Point> for AARectangle {
+    fn separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
+        let (position, sq_distance) = self.sq_separation_distance(point);
         (position, sq_distance.sqrt())
     }
 
-    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
+    fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
         match self.collides_with(point) {
             false => (GeoPosition::Exterior, self.sq_distance(point)),
             true => {

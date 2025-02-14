@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 
 use itertools::Itertools;
 use num_integer::Integer;
-use ordered_float::NotNan;
+use ordered_float::{NotNan, OrderedFloat};
 
 use crate::fsize;
 use crate::geometry::convex_hull::convex_hull_from_points;
@@ -10,7 +10,7 @@ use crate::geometry::fail_fast::poi;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
-    CollidesWith, DistanceFrom, Shape, Transformable, TransformableFrom,
+    CollidesWith, Distance, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
@@ -311,7 +311,7 @@ impl CollidesWith<Point> for SimplePolygon {
     }
 }
 
-impl DistanceFrom<Point> for SimplePolygon {
+impl Distance<Point> for SimplePolygon {
     fn sq_distance(&self, point: &Point) -> fsize {
         match self.collides_with(point) {
             true => 0.0,
@@ -325,22 +325,24 @@ impl DistanceFrom<Point> for SimplePolygon {
     fn distance(&self, point: &Point) -> fsize {
         self.sq_distance(point).sqrt()
     }
+}
 
-    fn distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
-        let (position, sq_distance) = self.sq_distance_from_border(point);
+impl SeparationDistance<Point> for SimplePolygon {
+    fn separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
+        let (position, sq_distance) = self.sq_separation_distance(point);
         (position, sq_distance.sqrt())
     }
 
-    fn sq_distance_from_border(&self, point: &Point) -> (GeoPosition, fsize) {
-        let distance_to_border = self
+    fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
+        let distance_to_closest_edge = self
             .edge_iter()
             .map(|edge| edge.sq_distance(point))
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .min_by_key(|sq_d| OrderedFloat(*sq_d))
             .unwrap();
 
         match self.collides_with(point) {
-            true => (GeoPosition::Interior, distance_to_border),
-            false => (GeoPosition::Exterior, distance_to_border),
+            true => (GeoPosition::Interior, distance_to_closest_edge),
+            false => (GeoPosition::Exterior, distance_to_closest_edge),
         }
     }
 }

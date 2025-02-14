@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use ordered_float::NotNan;
 
 use crate::fsize;
-use crate::geometry::geo_traits::{CollidesWith, DistanceFrom, Shape};
+use crate::geometry::geo_traits::{CollidesWith, Distance, SeparationDistance, Shape};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
@@ -74,7 +74,7 @@ pub fn generate_additional_surrogate_poles(
                 let prior_poles = sorted_poles.iter().chain([&shape.poi]);
 
                 let min_distance_prior_poles = prior_poles
-                    .map(|prior| prior.distance_from_border(&p.centroid()).1)
+                    .map(|prior| prior.separation_distance(&p.centroid()).1)
                     .min_by(|a, b| a.partial_cmp(b).unwrap())
                     .unwrap();
                 (i, p.radius.powi(2) * min_distance_prior_poles)
@@ -108,7 +108,7 @@ impl POINode {
 
             let distance_to_poles = poles
                 .iter()
-                .map(|c| c.distance_from_border(&bbox.centroid()).1);
+                .map(|c| c.separation_distance(&bbox.centroid()).1);
 
             let distance_to_border = distance_to_edges
                 .chain(distance_to_poles)
