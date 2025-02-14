@@ -2,7 +2,7 @@
 name = "jagua-rs"
 version = "0.2.1"
 edition = "2021"
-license = "Mozilla Public License 2.0"
+license = "MPL-2.0"
 repository = "https://github.com/JeroenGar/jagua-rs"
 authors = ["Jeroen Gardeyn"]
 description = "A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems"
