@@ -177,6 +177,7 @@ Alternatively, you can compile and view the docs of older versions locally by us
 
 ## Testing
 
+The `jagua-rs` codebase contains a suite of assertion checks which verify the correctness of the engine.
 These `debug_asserts` are enabled by default in debug and test builds, but are omitted in release builds to maximize performance.
 
 Additionally, `lbf` contains some basic integration tests to validate the general correctness of the engine.
