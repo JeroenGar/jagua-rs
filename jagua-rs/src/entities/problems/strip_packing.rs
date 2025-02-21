@@ -132,12 +132,8 @@ impl SPProblem {
                 };
                 self.place_item(insert_opt);
             } else {
-                let mut collisions = vec![];
-                cde.collect_poly_collisions(
-                    &transformed_shape,
-                    entities_to_ignore.as_ref(),
-                    &mut collisions,
-                );
+                let collisions =
+                    cde.collect_poly_collisions(&transformed_shape, entities_to_ignore.as_ref());
                 error!(
                     "Item {} could not be placed back in the strip after resizing. Collisions: {:?}",
                     item_id, collisions
