@@ -7,12 +7,6 @@ on:
       - '**.rs'
       - '**.toml'
       - '**.yml'
-  pull_request:
-    branches: [ "main" ]
-    paths:
-      - '**.rs'
-      - '**.toml'
-      - '**.yml'
 
 env:
   CARGO_TERM_COLOR: always
