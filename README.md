@@ -64,6 +64,9 @@ most position.
 The code is thoroughly documented and should provide a good starting point for anyone interested building their own optimization algorithm on top
 of `jagua-rs`.
 
+⚠️ *Please note that `lbf` should probably not be used as an optimization algorithm for any real-world use case.
+Read the [Important note](#important-note) section for more information.* ⚠️
+
 ### How to run LBF
 
 Ensure [Rust and Cargo](https://www.rust-lang.org/learn/get-started) are installed and up to date.
@@ -164,7 +167,7 @@ Seemingly superior configurations (such as increased `n_samples`), for example, 
 Omitting `prng_seed` in the config file disables the deterministic behavior and will demonstrate this variation in solution quality.
 
 **This heuristic merely serves as a reference implementation of how to use `jagua-rs` 
-and should probably not be used as an optimization algorithm for any real-world use case.**
+and should  not be used as an optimization algorithm for any real-world use case.**
 
 ## Documentation
 
