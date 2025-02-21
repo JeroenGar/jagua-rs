@@ -267,7 +267,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
                     buffer_shape.transform_from(&item.shape, transf);
                     layout
                         .cde()
-                        .collect_poly_collisions(&buffer_shape, &[], &mut detected);
+                        .collect_poly_collisions_in_buffer(&buffer_shape, &[], &mut detected);
                     if !detected.is_empty() {
                         n_invalid += 1;
                     } else {
