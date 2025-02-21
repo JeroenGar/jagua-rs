@@ -8,8 +8,8 @@ use jagua_rs::fsize;
 use jagua_rs::geometry::primitives::circle::Circle;
 use jagua_rs::geometry::transformation::Transformation;
 use jagua_rs::io::parser;
-use svg::node::element::{Definitions, Group, Title, Use};
 use svg::Document;
+use svg::node::element::{Definitions, Group, Title, Use};
 
 pub fn s_layout_to_svg(
     s_layout: &LayoutSnapshot,

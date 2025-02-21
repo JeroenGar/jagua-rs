@@ -46,7 +46,11 @@ pub fn generate(bbox: AARectangle, hazards: &[Hazard], target_n_cells: usize) ->
         }
 
         if n_iters >= MAX_ITERATIONS {
-            debug!("terminating grid generation after {MAX_ITERATIONS} iterations ({} cells vs {} targeted)", cells.len(), target_n_cells);
+            debug!(
+                "terminating grid generation after {MAX_ITERATIONS} iterations ({} cells vs {} targeted)",
+                cells.len(),
+                target_n_cells
+            );
             break;
         }
 

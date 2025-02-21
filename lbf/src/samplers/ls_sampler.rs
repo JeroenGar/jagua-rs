@@ -1,11 +1,11 @@
-use rand::distributions::Distribution;
 use rand::Rng;
+use rand_distr::Distribution;
 use rand_distr::Normal;
 
 use jagua_rs::entities::item::Item;
 use jagua_rs::geometry::d_transformation::DTransformation;
 use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
-use jagua_rs::{fsize, PI};
+use jagua_rs::{PI, fsize};
 
 use crate::samplers::rotation_distr::NormalRotDistr;
 

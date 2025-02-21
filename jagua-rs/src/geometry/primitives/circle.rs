@@ -8,7 +8,7 @@ use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::point::Point;
 use crate::geometry::transformation::Transformation;
-use crate::{fsize, PI};
+use crate::{PI, fsize};
 
 /// Geometric primitive representing a circle
 #[derive(Clone, Debug, PartialEq)]

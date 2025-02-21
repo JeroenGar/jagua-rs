@@ -1,10 +1,10 @@
 use std::fs::File;
 use std::io::BufReader;
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use rand::prelude::SmallRng;
 use rand::SeedableRng;
+use rand::prelude::SmallRng;
 
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
@@ -18,7 +18,7 @@ use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::hpg_sampler::HPGSampler;
 
-use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};
+use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
 
 criterion_main!(benches);
 criterion_group!(benches, fast_fail_query_bench);

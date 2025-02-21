@@ -138,10 +138,11 @@ impl CDEngine {
 
     pub fn create_snapshot(&mut self) -> CDESnapshot {
         self.commit_deregisters();
-        assert!(self
-            .haz_prox_grid
-            .as_ref()
-            .map_or(true, |hpg| !hpg.is_dirty()));
+        assert!(
+            self.haz_prox_grid
+                .as_ref()
+                .map_or(true, |hpg| !hpg.is_dirty())
+        );
         CDESnapshot {
             dynamic_hazards: self.dynamic_hazards.clone(),
             grid: self.haz_prox_grid.as_ref().map(|hpg| hpg.grid.clone()),

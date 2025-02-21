@@ -1,4 +1,4 @@
-use itertools::{izip, Itertools};
+use itertools::{Itertools, izip};
 use ndarray::Array;
 use ordered_float::NotNan;
 use rand_distr::num_traits::FloatConst;

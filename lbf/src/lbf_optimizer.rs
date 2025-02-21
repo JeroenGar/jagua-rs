@@ -4,8 +4,8 @@ use std::time::Instant;
 use itertools::Itertools;
 use log::{debug, info};
 use ordered_float::NotNan;
-use rand::prelude::SmallRng;
 use rand::Rng;
+use rand::prelude::SmallRng;
 use thousands::Separable;
 
 use jagua_rs::collision_detection::hazard_filter;
@@ -101,16 +101,17 @@ impl LBFOptimizer {
                             break 'outer;
                         }
                     }
-                    None => {
-                        match &mut self.problem {
-                            Problem::BP(_) => break,
-                            Problem::SP(sp_problem) => {
-                                let new_width = sp_problem.strip_width() * 1.1;
-                                info!("[LBF] no placement found, extending strip width by 10% to {:.3}", new_width);
-                                sp_problem.modify_strip_in_back(new_width);
-                            }
+                    None => match &mut self.problem {
+                        Problem::BP(_) => break,
+                        Problem::SP(sp_problem) => {
+                            let new_width = sp_problem.strip_width() * 1.1;
+                            info!(
+                                "[LBF] no placement found, extending strip width by 10% to {:.3}",
+                                new_width
+                            );
+                            sp_problem.modify_strip_in_back(new_width);
                         }
-                    }
+                    },
                 }
             }
         }

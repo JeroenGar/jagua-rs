@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use log::info;
-use rand::prelude::{IteratorRandom, SmallRng};
 use rand::SeedableRng;
+use rand::prelude::{IteratorRandom, SmallRng};
 use std::path::Path;
 
 use jagua_rs::entities::instances::instance::Instance;

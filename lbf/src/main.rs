@@ -6,8 +6,8 @@ use std::path::Path;
 use clap::Parser as ClapParser;
 use log::{error, warn};
 use mimalloc::MiMalloc;
-use rand::prelude::SmallRng;
 use rand::SeedableRng;
+use rand::prelude::SmallRng;
 
 use jagua_rs::io::parser;
 use jagua_rs::io::parser::Parser;
@@ -17,7 +17,7 @@ use lbf::io::json_output::JsonOutput;
 use lbf::io::layout_to_svg::s_layout_to_svg;
 use lbf::lbf_config::LBFConfig;
 use lbf::lbf_optimizer::LBFOptimizer;
-use lbf::{io, EPOCH};
+use lbf::{EPOCH, io};
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -60,7 +60,7 @@ fn main() {
 
     let rng = match config.prng_seed {
         Some(seed) => SmallRng::seed_from_u64(seed),
-        None => SmallRng::from_entropy(),
+        None => SmallRng::from_os_rng(),
     };
 
     let mut optimizer = LBFOptimizer::new(instance.clone(), config, rng);

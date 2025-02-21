@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use log::debug;
-use rand::prelude::SliceRandom;
 use rand::Rng;
+use rand::prelude::IndexedRandom;
 
 use jagua_rs::entities::item::Item;
 use jagua_rs::entities::layout::Layout;

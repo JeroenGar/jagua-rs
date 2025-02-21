@@ -1,12 +1,12 @@
-use rand::distributions::Uniform;
-use rand::prelude::Distribution;
-use rand::seq::SliceRandom;
 use rand::Rng;
+use rand::prelude::Distribution;
+use rand::prelude::IndexedRandom;
 use rand_distr::Normal;
+use rand_distr::Uniform;
 
 use jagua_rs::entities::item::Item;
 use jagua_rs::geometry::geo_enums::AllowedRotation;
-use jagua_rs::{fsize, PI};
+use jagua_rs::{PI, fsize};
 
 /// Samples a rotation (radians).
 pub trait RotationSampler {
@@ -32,7 +32,9 @@ impl UniformRotDistr {
     pub fn from_item(item: &Item) -> Self {
         match &item.allowed_rotation {
             AllowedRotation::None => UniformRotDistr::None,
-            AllowedRotation::Continuous => UniformRotDistr::Range(Uniform::new(0.0, 2.0 * PI)),
+            AllowedRotation::Continuous => {
+                UniformRotDistr::Range(Uniform::new(0.0, 2.0 * PI).unwrap())
+            }
             AllowedRotation::Discrete(a_o) => UniformRotDistr::Discrete(a_o.clone()),
         }
     }

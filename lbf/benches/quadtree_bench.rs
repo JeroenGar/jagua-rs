@@ -1,11 +1,11 @@
 use std::fs::File;
 use std::io::BufReader;
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
+use rand::SeedableRng;
 use rand::prelude::SmallRng;
 use rand::seq::IteratorRandom;
-use rand::SeedableRng;
 
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::placing_option::PlacingOption;
@@ -15,7 +15,7 @@ use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
 
-use crate::util::{create_base_config, N_ITEMS_REMOVED, SWIM_PATH};
+use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
 
 criterion_main!(benches);
 criterion_group!(

@@ -3,10 +3,10 @@ use std::io::BufReader;
 use std::path::Path;
 
 use criterion::measurement::WallTime;
-use criterion::{criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion};
+use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use rand::prelude::SmallRng;
 use rand::SeedableRng;
+use rand::prelude::SmallRng;
 
 use jagua_rs::entities::instances::bin_packing::BPInstance;
 use jagua_rs::entities::instances::instance::Instance;

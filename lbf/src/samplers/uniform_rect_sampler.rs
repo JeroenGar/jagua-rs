@@ -1,5 +1,6 @@
-use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
+use rand_distr::Distribution;
+use rand_distr::Uniform;
 
 use jagua_rs::entities::item::Item;
 use jagua_rs::fsize;
@@ -18,8 +19,8 @@ pub struct UniformAARectSampler {
 
 impl UniformAARectSampler {
     pub fn new(bbox: AARectangle, item: &Item) -> Self {
-        let uniform_x = Uniform::new(bbox.x_min, bbox.x_max);
-        let uniform_y = Uniform::new(bbox.y_min, bbox.y_max);
+        let uniform_x = Uniform::new(bbox.x_min, bbox.x_max).unwrap();
+        let uniform_y = Uniform::new(bbox.y_min, bbox.y_max).unwrap();
         let uniform_r = UniformRotDistr::from_item(item);
         Self {
             bbox,

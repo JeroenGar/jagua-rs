@@ -7,8 +7,8 @@ use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::layout::Layout;
 use crate::entities::placed_item::PItemKey;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::ProblemGeneric;
+use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
 use crate::entities::problems::problem_generic::{LayoutIndex, STRIP_LAYOUT_IDX};
 use crate::entities::solution::Solution;
 use crate::fsize;
@@ -138,7 +138,10 @@ impl SPProblem {
                     entities_to_ignore.as_ref(),
                     &mut collisions,
                 );
-                error!("Item {} could not be placed back in the strip after resizing. Collisions: {:?}", item_id, collisions);
+                error!(
+                    "Item {} could not be placed back in the strip after resizing. Collisions: {:?}",
+                    item_id, collisions
+                );
             }
         }
     }
