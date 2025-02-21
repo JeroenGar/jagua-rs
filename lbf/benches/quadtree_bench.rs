@@ -265,9 +265,11 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
                 let mut detected = vec![];
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, transf);
-                    layout
-                        .cde()
-                        .collect_poly_collisions_in_buffer(&buffer_shape, &[], &mut detected);
+                    layout.cde().collect_poly_collisions_in_buffer(
+                        &buffer_shape,
+                        &[],
+                        &mut detected,
+                    );
                     if !detected.is_empty() {
                         n_invalid += 1;
                     } else {
