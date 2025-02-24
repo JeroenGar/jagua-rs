@@ -102,7 +102,7 @@ impl AARectangle {
         )
     }
 
-    pub fn scale(mut self, factor: fsize) -> Self {
+    pub fn scale(self, factor: fsize) -> Self {
         let dx = (self.x_max - self.x_min) * (factor - 1.0) / 2.0;
         let dy = (self.y_max - self.y_min) * (factor - 1.0) / 2.0;
         self.resize_by(dx, dy)
