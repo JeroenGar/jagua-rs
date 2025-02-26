@@ -323,3 +323,8 @@ pub fn occupied_width(layout: &Layout) -> fsize {
         None => 0.0,
     }
 }
+
+/// Returns the width of the strip in the solution.
+pub fn strip_width(solution: &Solution) -> fsize {
+    solution.layout_snapshots[0].bin.outer.bbox().width()
+}
