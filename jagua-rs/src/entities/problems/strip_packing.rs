@@ -16,7 +16,6 @@ use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
-use crate::util::fpa::FPA;
 use itertools::Itertools;
 use log::error;
 
@@ -146,7 +145,7 @@ impl SPProblem {
     pub fn fit_strip(&mut self) {
         let n_items_in_old_strip = self.layout.placed_items().len();
 
-        let fitted_width = self.occupied_width() * (1.0 + FPA::tolerance()); //add some tolerance to avoid rounding errors or false collision positives
+        let fitted_width = self.occupied_width() * 1.00001; //add some tolerance to avoid rounding errors or false collision positives
         self.modify_strip_centered(fitted_width);
 
         assert_eq!(
