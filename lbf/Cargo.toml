@@ -7,21 +7,20 @@ repository = "https://github.com/JeroenGar/jagua-rs"
 authors = ["Jeroen Gardeyn"]
 
 [dependencies]
-jagua-rs = { path = "../jagua-rs" , version = "0.2.1", features = [] }
-rand = { version = "0.9.0", features = [ "small_rng" ] }
-rand_distr = "0.5.1"
+jagua-rs = { path = "../jagua-rs" , features = [] }
+rand = { version = "0.9", features = [ "small_rng" ] }
+rand_distr = "0.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-once_cell = { version = "1.19.0", features = [] }
-fern = "0.7.0"
-log = "0.4.20"
-humantime = "2.1.0"
-itertools = "0.14.0"
-svg = "0.18.0"
+once_cell = { version = "1.20", features = [] }
+fern = "0.7"
+log = "0.4"
+humantime = "2.1"
+itertools = "0.14"
+svg = "0.18"
 ordered-float = "5.0.0"
-clap = { version = "4.4.18", features = ["derive"] }
-mimalloc = "0.1.39"
-tribool = "0.3.0"
+clap = { version = "4.5", features = ["derive"] }
+mimalloc = "0.1"
 almost = "0.2.0"
 test-case = "3.3.1"
 thousands = "0.2.0"
