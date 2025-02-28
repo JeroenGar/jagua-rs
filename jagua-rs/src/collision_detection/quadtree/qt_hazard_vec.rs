@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-
+use crate::collision_detection::hazard_helpers::HazardIgnorer;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
@@ -67,7 +67,7 @@ impl QTHazardVec {
     #[inline(always)]
     /// Returns the strongest hazard (if any), meaning the first active hazard with the highest [QTHazPresence] (`Entire` > `Partial` > `None`)
     /// Ignores any hazard present in `irrelevant_hazards`.
-    pub fn strongest(&self, irrelevant_hazards: &[HazardEntity]) -> Option<&QTHazard> {
+    pub fn strongest(&self, h_i: &impl HazardIgnorer) -> Option<&QTHazard> {
         debug_assert!(
             self.hazards.iter().filter(|hz| hz.active).count() == self.n_active,
             "Active hazards count is not correct!"
@@ -78,16 +78,8 @@ impl QTHazardVec {
                 .all(|w| order_by_descending_strength(&w[0], &w[1]) != Ordering::Greater),
             "Hazards are not sorted correctly!"
         );
-        match (self.n_active, irrelevant_hazards) {
-            //no active hazards
-            (0, _) => None,
-            //no ignored entities
-            (_, []) => Some(&self.hazards[0]),
-            //Some ignored entities
-            (_, _) => self.hazards[0..self.n_active]
-                .iter()
-                .find(|hz| !irrelevant_hazards.contains(&hz.entity)),
-        }
+        self.hazards[0..self.n_active].iter()
+            .find(|hz| !h_i.is_irrelevant(&hz.entity))
     }
 
     pub fn get(&self, entity: HazardEntity) -> Option<&QTHazard> {

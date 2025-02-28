@@ -1,4 +1,4 @@
-use crate::entities::placed_item::PlacedItem;
+use crate::entities::placed_item::{PItemKey, PlacedItem};
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
@@ -29,8 +29,8 @@ impl Hazard {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 /// Entity inducing the `Hazard`. All entities are uniquely identified.
 pub enum HazardEntity {
-    /// An item placed in the layout, defined by its id and applied transformation.
-    PlacedItem { id: usize, dt: DTransformation },
+    /// An item placed in the layout, defined by its id, applied transformation and key
+    PlacedItem { id: usize, dt: DTransformation, pk: PItemKey },
     /// Represents all regions outside the bin
     BinExterior,
     /// Represents a hole in the bin.
@@ -71,14 +71,15 @@ impl HazardEntity {
     }
 }
 
-impl<T> From<T> for HazardEntity
+impl<T> From<(PItemKey, T)> for HazardEntity
 where
     T: Borrow<PlacedItem>,
 {
-    fn from(pi: T) -> Self {
+    fn from((pk, pi): (PItemKey, T)) -> Self {
         HazardEntity::PlacedItem {
             id: pi.borrow().item_id,
             dt: pi.borrow().d_transf,
+            pk,
         }
     }
 }

@@ -120,8 +120,8 @@ pub fn item_to_place_does_not_collide(
 }
 
 pub fn layout_is_collision_free(layout: &Layout) -> bool {
-    for (_, pi) in layout.placed_items().iter() {
-        let ehf = EntityHazardFilter(vec![pi.into()]);
+    for (pk, pi) in layout.placed_items().iter() {
+        let ehf = EntityHazardFilter(vec![(pk, pi).into()]);
 
         let combo_filter = match &pi.hazard_filter {
             None => CombinedHazardFilter {
@@ -256,8 +256,8 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
     //rebuild the quadtree
     let bin = &layout.bin;
     let mut fresh_cde = bin.base_cde.as_ref().clone();
-    for (_, pi) in layout.placed_items().iter() {
-        let hazard = Hazard::new(pi.into(), pi.shape.clone());
+    for (pk, pi) in layout.placed_items().iter() {
+        let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
         fresh_cde.register_hazard(hazard);
     }
 

@@ -1,5 +1,5 @@
 use tribool::Tribool;
-
+use crate::collision_detection::hazard_helpers::{HazardDetector, DetectionMap};
 use crate::collision_detection::hazard::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
@@ -134,7 +134,7 @@ impl QTNode {
     where
         T: QTQueryable,
     {
-        match self.hazards.strongest(irrelevant_hazards) {
+        match self.hazards.strongest(&irrelevant_hazards) {
             None => None,
             Some(strongest_hazard) => match entity.collides_with(&self.bbox) {
                 false => None,
@@ -176,7 +176,7 @@ impl QTNode {
 
     /// Gathers all hazards that collide with the entity and stores them in the `detected` vector.
     /// All hazards already present in the `detected` vector are ignored.
-    pub fn collect_collisions<T>(&self, entity: &T, detected: &mut Vec<HazardEntity>)
+    pub fn collect_collisions<T>(&self, entity: &T, detected: &mut impl HazardDetector)
     where
         T: QTQueryable,
     {
@@ -232,7 +232,7 @@ impl QTNode {
     where
         T: CollidesWith<AARectangle>,
     {
-        match self.hazards.strongest(irrelevant_hazards) {
+        match self.hazards.strongest(&irrelevant_hazards) {
             None => Tribool::False,
             Some(hazard) => match (entity.collides_with(&self.bbox), &hazard.presence) {
                 (false, _) | (_, QTHazPresence::None) => Tribool::False,
