@@ -1,5 +1,5 @@
 use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
-use crate::collision_detection::hazard::{Hazard, HazardEntity};
+use crate::collision_detection::hazard::Hazard;
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::placed_item::{PItemKey, PlacedItem};
@@ -79,7 +79,9 @@ impl Layout {
     }
 
     pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation) -> PItemKey {
-        let pk = self.placed_items.insert(PlacedItem::new(item, d_transformation));
+        let pk = self
+            .placed_items
+            .insert(PlacedItem::new(item, d_transformation));
         let pi = &self.placed_items[pk];
         let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
 
@@ -97,8 +99,7 @@ impl Layout {
             .expect("key is not valid anymore");
 
         // update the collision detection engine
-        self.cde
-            .deregister_hazard((pk, &pi).into(), commit_instant);
+        self.cde.deregister_hazard((pk, &pi).into(), commit_instant);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
 

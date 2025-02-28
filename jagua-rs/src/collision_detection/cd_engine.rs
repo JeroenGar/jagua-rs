@@ -1,8 +1,6 @@
-use indexmap::IndexSet;
-use tribool::Tribool;
-use crate::collision_detection::hazard_helpers::{HazardDetector, DetectionMap};
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
+use crate::collision_detection::hazard_helpers::{DetectionMap, HazardDetector};
 use crate::collision_detection::hpg::grid::Grid;
 use crate::collision_detection::hpg::hazard_proximity_grid::{DirtyState, HazardProximityGrid};
 use crate::collision_detection::hpg::hpg_cell::HPGCell;
@@ -20,6 +18,8 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
+use indexmap::IndexSet;
+use tribool::Tribool;
 
 /// The Collision Detection Engine (CDE).
 /// The CDE can resolve a range of collision queries
@@ -463,9 +463,13 @@ impl CDEngine {
     ) where
         T: QTQueryable,
     {
-        irrelevant_hazards.iter().for_each(|i_haz| detected.push(i_haz.clone()));
+        irrelevant_hazards
+            .iter()
+            .for_each(|i_haz| detected.push(i_haz.clone()));
         self.quadtree.collect_collisions(entity, detected);
-        irrelevant_hazards.iter().for_each(|i_haz| detected.remove(i_haz));
+        irrelevant_hazards
+            .iter()
+            .for_each(|i_haz| detected.remove(i_haz));
 
         //Check if the shape is outside the quadtree
         let centroid_in_qt = self.bbox.collides_with(&entity.centroid());
@@ -499,7 +503,9 @@ impl CDEngine {
         detector: &mut impl HazardDetector,
     ) {
         //temporarily add the irrelevant hazards to the detector
-        irrelevant_hazards.iter().for_each(|i_haz| detector.push(i_haz.clone()));
+        irrelevant_hazards
+            .iter()
+            .for_each(|i_haz| detector.push(i_haz.clone()));
 
         //collect all colliding entities due to edge intersection
         shape
@@ -515,7 +521,9 @@ impl CDEngine {
         });
 
         //drain the irrelevant hazards, leaving only the colliding entities
-        irrelevant_hazards.iter().for_each(|i_haz| detector.remove(i_haz));
+        irrelevant_hazards
+            .iter()
+            .for_each(|i_haz| detector.remove(i_haz));
     }
 
     /// Collects all hazards with which the surrogate collides.
@@ -546,7 +554,9 @@ impl CDEngine {
         detector: &mut impl HazardDetector,
     ) {
         //temporarily add the irrelevant hazards to the buffer
-        irrelevant_hazards.iter().for_each(|i_haz| detector.push(i_haz.clone()));
+        irrelevant_hazards
+            .iter()
+            .for_each(|i_haz| detector.push(i_haz.clone()));
 
         for pole in base_surrogate.ff_poles() {
             let t_pole = pole.transform_clone(transform);
@@ -558,6 +568,8 @@ impl CDEngine {
         }
 
         //drain the irrelevant hazards, leaving only the colliding entities
-        irrelevant_hazards.iter().for_each(|i_haz| detector.remove(i_haz));
+        irrelevant_hazards
+            .iter()
+            .for_each(|i_haz| detector.remove(i_haz));
     }
 }

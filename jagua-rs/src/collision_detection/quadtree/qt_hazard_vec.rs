@@ -1,8 +1,8 @@
-use std::cmp::Ordering;
-use crate::collision_detection::hazard_helpers::HazardIgnorer;
 use crate::collision_detection::hazard::HazardEntity;
+use crate::collision_detection::hazard_helpers::HazardIgnorer;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
+use std::cmp::Ordering;
 
 /// Vector of `QTHazard`s, which always remains sorted by activeness then presence.
 /// <br>
@@ -78,7 +78,8 @@ impl QTHazardVec {
                 .all(|w| order_by_descending_strength(&w[0], &w[1]) != Ordering::Greater),
             "Hazards are not sorted correctly!"
         );
-        self.hazards[0..self.n_active].iter()
+        self.hazards[0..self.n_active]
+            .iter()
             .find(|hz| !h_i.is_irrelevant(&hz.entity))
     }
 

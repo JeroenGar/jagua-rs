@@ -30,7 +30,11 @@ impl Hazard {
 /// Entity inducing the `Hazard`. All entities are uniquely identified.
 pub enum HazardEntity {
     /// An item placed in the layout, defined by its id, applied transformation and key
-    PlacedItem { id: usize, dt: DTransformation, pk: PItemKey },
+    PlacedItem {
+        id: usize,
+        dt: DTransformation,
+        pk: PItemKey,
+    },
     /// Represents all regions outside the bin
     BinExterior,
     /// Represents a hole in the bin.

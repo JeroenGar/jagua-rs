@@ -1,6 +1,6 @@
-use slotmap::SecondaryMap;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::entities::placed_item::PItemKey;
+use slotmap::SecondaryMap;
 
 /// Trait for structs that can be used to filter out irrelevant hazards.
 /// Basically only used in [`QTHazardVec::strongest()`](crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec::strongest).
@@ -19,7 +19,7 @@ pub trait HazardDetector: HazardIgnorer {
 
     fn len(&self) -> usize;
 
-    fn iter(&self) -> impl Iterator<Item=&HazardEntity>;
+    fn iter(&self) -> impl Iterator<Item = &HazardEntity>;
 }
 
 /// HazardEntity's caused by placed items are stored in a SecondaryMap for fast access.
@@ -47,25 +47,25 @@ impl DetectionMap {
 impl HazardDetector for DetectionMap {
     fn contains(&self, haz: &HazardEntity) -> bool {
         match haz {
-            HazardEntity::PlacedItem{pk, ..} => self.pi_hazards.contains_key(*pk),
+            HazardEntity::PlacedItem { pk, .. } => self.pi_hazards.contains_key(*pk),
             _ => self.other.contains(&haz),
         }
     }
 
     fn push(&mut self, haz: HazardEntity) {
         match haz {
-            HazardEntity::PlacedItem{pk, ..} => {
+            HazardEntity::PlacedItem { pk, .. } => {
                 self.pi_hazards.insert(pk, haz);
-            },
+            }
             _ => self.other.push(haz.clone()),
         }
     }
 
     fn remove(&mut self, haz: &HazardEntity) {
         match haz {
-            HazardEntity::PlacedItem{pk, ..} => {
+            HazardEntity::PlacedItem { pk, .. } => {
                 self.pi_hazards.remove(*pk);
-            },
+            }
             _ => self.other.retain(|h| h != haz),
         }
     }
@@ -74,7 +74,7 @@ impl HazardDetector for DetectionMap {
         self.pi_hazards.len() + self.other.len()
     }
 
-    fn iter(&self) -> impl Iterator<Item=&HazardEntity> {
+    fn iter(&self) -> impl Iterator<Item = &HazardEntity> {
         self.pi_hazards.values().chain(self.other.iter())
     }
 }
