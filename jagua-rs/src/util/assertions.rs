@@ -1,7 +1,3 @@
-use itertools::Itertools;
-use log::error;
-use std::collections::HashSet;
-use float_cmp::approx_eq;
 use crate::collision_detection::cd_engine::CDEngine;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
@@ -23,6 +19,10 @@ use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::transformation::Transformation;
 use crate::{fsize, util};
+use float_cmp::approx_eq;
+use itertools::Itertools;
+use log::error;
+use std::collections::HashSet;
 
 //Various checks to verify correctness of the state of the system
 //Used in debug_assertion!() blocks
