@@ -75,7 +75,10 @@ impl SimplePolygon {
     }
 
     pub fn generate_surrogate(&mut self, config: SPSurrogateConfig) {
-        self.surrogate = Some(SPSurrogate::new(self, config));
+        match &self.surrogate {
+            Some(surrogate) if surrogate.config == config => {}
+            _ => self.surrogate = Some(SPSurrogate::new(self, config)),
+        }
     }
 
     pub fn get_point(&self, i: usize) -> Point {
@@ -87,7 +90,7 @@ impl SimplePolygon {
         Edge::new(self.points[i], self.points[j])
     }
 
-    pub fn edge_iter(&self) -> impl Iterator<Item = Edge> + '_ {
+    pub fn edge_iter(&self) -> impl Iterator<Item=Edge> + '_ {
         (0..self.number_of_points()).map(move |i| self.get_edge(i))
     }
 

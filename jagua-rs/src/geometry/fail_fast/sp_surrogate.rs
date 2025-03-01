@@ -21,8 +21,10 @@ pub struct SPSurrogate {
     pub piers: Vec<Edge>,
     /// Number of poles that will be checked during fail-fast
     pub n_ff_poles: usize,
-
+    /// The area of the convex hull of the [SimplePolygon].
     pub convex_hull_area: fsize,
+    /// The configuration used to generate the surrogate
+    pub config: SPSurrogateConfig,
 }
 
 impl SPSurrogate {
@@ -54,6 +56,7 @@ impl SPSurrogate {
             poles_bounding_circle,
             n_ff_poles,
             convex_hull_area,
+            config,
         }
     }
 
@@ -76,6 +79,7 @@ impl Transformable for SPSurrogate {
             piers,
             n_ff_poles: _,
             convex_hull_area: _,
+            config: _,
         } = self;
 
         //transform poles
@@ -107,6 +111,7 @@ impl TransformableFrom for SPSurrogate {
             piers,
             n_ff_poles: _,
             convex_hull_area: _,
+            config: _,
         } = self;
 
         for (pole, ref_pole) in poles.iter_mut().zip(reference.poles.iter()) {
