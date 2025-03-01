@@ -22,8 +22,8 @@ pub trait HazardDetector: HazardIgnorer {
     fn iter(&self) -> impl Iterator<Item = &HazardEntity>;
 }
 
-/// HazardEntity's caused by placed items are stored in a SecondaryMap for fast access.
-/// All other HazardEntity's are stored in a Vec.
+/// Datastructure to register which Hazards are detected during collision collection.
+/// Hazards caused by placed items have instant lookups, the others are stored in a Vec.
 #[derive(Debug)]
 pub struct DetectionMap {
     pi_hazards: SecondaryMap<PItemKey, HazardEntity>,
