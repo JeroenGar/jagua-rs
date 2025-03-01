@@ -16,6 +16,7 @@ use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::circle::Circle;
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 use jagua_rs::io::json_instance::JsonInstance;
+use jagua_rs::util::config::SPSurrogateConfig;
 use lbf::samplers::hpg_sampler::HPGSampler;
 
 use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
@@ -179,6 +180,7 @@ pub fn create_custom_surrogate(
         poles_bounding_circle,
         n_ff_poles,
         convex_hull_area,
+        config: SPSurrogateConfig::none(),
     };
 
     surrogate
