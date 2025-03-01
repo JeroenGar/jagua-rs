@@ -75,7 +75,10 @@ impl SimplePolygon {
     }
 
     pub fn generate_surrogate(&mut self, config: SPSurrogateConfig) {
-        self.surrogate = Some(SPSurrogate::new(self, config));
+        match &self.surrogate {
+            Some(surrogate) if surrogate.config == config => {}
+            _ => self.surrogate = Some(SPSurrogate::new(self, config)),
+        }
     }
 
     pub fn get_point(&self, i: usize) -> Point {
