@@ -38,7 +38,7 @@ fn qt_node_data(
 
     match (
         qt_node.has_children(),
-        qt_node.hazards.strongest(irrelevant_hazards),
+        qt_node.hazards.strongest(&irrelevant_hazards),
     ) {
         (true, Some(_)) => {
             //not a leaf node, go to children
@@ -60,7 +60,7 @@ fn qt_node_data(
                     .close()
             };
 
-            match qt_node.hazards.strongest(irrelevant_hazards) {
+            match qt_node.hazards.strongest(&irrelevant_hazards) {
                 Some(ch) => match ch.presence {
                     QTHazPresence::Entire => data_eh = draw(data_eh),
                     QTHazPresence::Partial(_) => data_ph = draw(data_ph),

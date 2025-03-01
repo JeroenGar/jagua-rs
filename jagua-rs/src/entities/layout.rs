@@ -1,5 +1,5 @@
 use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
-use crate::collision_detection::hazard::{Hazard, HazardEntity};
+use crate::collision_detection::hazard::Hazard;
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::placed_item::{PItemKey, PlacedItem};
@@ -48,8 +48,8 @@ impl Layout {
         self.bin = bin;
         // update the CDE
         self.cde = self.bin.base_cde.as_ref().clone();
-        for (_, pi) in self.placed_items.iter() {
-            let hazard = Hazard::new(pi.into(), pi.shape.clone());
+        for (pk, pi) in self.placed_items.iter() {
+            let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
             self.cde.register_hazard(hazard);
         }
     }
@@ -79,26 +79,27 @@ impl Layout {
     }
 
     pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation) -> PItemKey {
-        let pi = PlacedItem::new(item, d_transformation);
-        let hazard = Hazard::new(HazardEntity::from(&pi), pi.shape.clone());
+        let pk = self
+            .placed_items
+            .insert(PlacedItem::new(item, d_transformation));
+        let pi = &self.placed_items[pk];
+        let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
 
-        let pik = self.placed_items.insert(pi);
         self.cde.register_hazard(hazard);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
 
-        pik
+        pk
     }
 
-    pub fn remove_item(&mut self, key: PItemKey, commit_instant: bool) -> PlacedItem {
+    pub fn remove_item(&mut self, pk: PItemKey, commit_instant: bool) -> PlacedItem {
         let pi = self
             .placed_items
-            .remove(key)
+            .remove(pk)
             .expect("key is not valid anymore");
 
         // update the collision detection engine
-        self.cde
-            .deregister_hazard(HazardEntity::from(&pi), commit_instant);
+        self.cde.deregister_hazard((pk, &pi).into(), commit_instant);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
 
@@ -112,13 +113,6 @@ impl Layout {
 
     pub fn placed_items(&self) -> &SlotMap<PItemKey, PlacedItem> {
         &self.placed_items
-    }
-
-    pub fn hazard_to_p_item_key(&self, hz: &HazardEntity) -> Option<PItemKey> {
-        self.placed_items
-            .iter()
-            .find(|(_, pi)| HazardEntity::from(*pi) == *hz)
-            .map(|(k, _)| k)
     }
 
     /// Returns the usage of the bin with the items placed.

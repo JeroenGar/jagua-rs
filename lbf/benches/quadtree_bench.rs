@@ -7,6 +7,8 @@ use rand::SeedableRng;
 use rand::prelude::SmallRng;
 use rand::seq::IteratorRandom;
 
+use jagua_rs::collision_detection::hazard_helpers::DetectionMap;
+use jagua_rs::collision_detection::hazard_helpers::HazardDetector;
 use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::placing_option::PlacingOption;
 use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
@@ -262,15 +264,15 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
                 let item = instance.item(item_id);
                 let layout = problem.get_layout(LayoutIndex::Real(0));
                 let mut buffer_shape = item.shape.as_ref().clone();
-                let mut detected = vec![];
+                let mut detected = DetectionMap::new();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, transf);
-                    layout.cde().collect_poly_collisions_in_buffer(
+                    layout.cde().collect_poly_collisions_in_detector(
                         &buffer_shape,
                         &[],
                         &mut detected,
                     );
-                    if !detected.is_empty() {
+                    if detected.len() > 0 {
                         n_invalid += 1;
                     } else {
                         n_valid += 1;
