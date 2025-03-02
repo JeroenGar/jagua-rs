@@ -1,7 +1,7 @@
 use std::hash::{Hash, Hasher};
 
 use crate::fsize;
-use crate::geometry::geo_traits::{CollidesWith, Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{CollidesWith, Distance, Transformable, TransformableFrom};
 use crate::geometry::transformation::Transformation;
 
 /// Geometric primitive representing a point: (x, y)
@@ -33,20 +33,22 @@ const TRANSFORM_FORMULA: fn(fsize, fsize, &Transformation) -> (fsize, fsize) =
     };
 
 impl Point {
-    pub fn distance(&self, other: Point) -> fsize {
-        ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()
-    }
-
-    pub fn sq_distance(&self, other: Point) -> fsize {
-        (self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)
-    }
-
     pub fn x(&self) -> fsize {
         self.0
     }
 
     pub fn y(&self) -> fsize {
         self.1
+    }
+}
+
+impl Distance<Point> for Point {
+    fn distance(&self, other: &Point) -> fsize {
+        ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()
+    }
+
+    fn sq_distance(&self, other: &Point) -> fsize {
+        (self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)
     }
 }
 
