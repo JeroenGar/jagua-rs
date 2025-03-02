@@ -124,7 +124,7 @@ fn clip(shape: &SimplePolygon, ray: &Edge) -> Vec<Edge> {
     let intersections = shape
         .edge_iter()
         .flat_map(|edge| edge.collides_at(ray))
-        .sorted_by_key(|p| NotNan::new(ray.start.distance(*p)).unwrap())
+        .sorted_by_key(|p| NotNan::new(ray.start.distance(p)).unwrap())
         .collect_vec();
 
     //every pair of (sorted) intersections defines a clipped line
