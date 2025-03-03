@@ -149,6 +149,7 @@ impl Shape for Edge {
 }
 
 impl Distance<Point> for Edge {
+    #[inline(always)]
     fn sq_distance(&self, point: &Point) -> fsize {
         let Point(x, y) = point;
         let Point(xx, yy) = self.closest_point_on_edge(point);
@@ -157,12 +158,14 @@ impl Distance<Point> for Edge {
         dx.powi(2) + dy.powi(2)
     }
 
+    #[inline(always)]
     fn distance(&self, point: &Point) -> fsize {
         fsize::sqrt(self.sq_distance(point))
     }
 }
 
 impl CollidesWith<Edge> for Edge {
+    #[inline(always)]
     fn collides_with(&self, other: &Edge) -> bool {
         match edge_intersection(self, other, false) {
             Intersection::No => false,
@@ -172,6 +175,7 @@ impl CollidesWith<Edge> for Edge {
 }
 
 impl CollidesWith<AARectangle> for Edge {
+    #[inline(always)]
     fn collides_with(&self, other: &AARectangle) -> bool {
         other.collides_with(self)
     }

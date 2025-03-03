@@ -219,6 +219,7 @@ impl Shape for AARectangle {
 }
 
 impl CollidesWith<AARectangle> for AARectangle {
+    #[inline(always)]
     fn collides_with(&self, other: &AARectangle) -> bool {
         fsize::max(self.x_min, other.x_min) <= fsize::min(self.x_max, other.x_max)
             && fsize::max(self.y_min, other.y_min) <= fsize::min(self.y_max, other.y_max)
@@ -226,6 +227,7 @@ impl CollidesWith<AARectangle> for AARectangle {
 }
 
 impl AlmostCollidesWith<AARectangle> for AARectangle {
+    #[inline(always)]
     fn almost_collides_with(&self, other: &AARectangle) -> bool {
         FPA(fsize::max(self.x_min, other.x_min)) <= FPA(fsize::min(self.x_max, other.x_max))
             && FPA(fsize::max(self.y_min, other.y_min)) <= FPA(fsize::min(self.y_max, other.y_max))
@@ -233,6 +235,7 @@ impl AlmostCollidesWith<AARectangle> for AARectangle {
 }
 
 impl CollidesWith<Point> for AARectangle {
+    #[inline(always)]
     fn collides_with(&self, point: &Point) -> bool {
         let Point(x, y) = *point;
         x >= self.x_min && x <= self.x_max && y >= self.y_min && y <= self.y_max
@@ -240,6 +243,7 @@ impl CollidesWith<Point> for AARectangle {
 }
 
 impl AlmostCollidesWith<Point> for AARectangle {
+    #[inline(always)]
     fn almost_collides_with(&self, point: &Point) -> bool {
         let (x, y) = (*point).into();
         FPA(x) >= FPA(self.x_min)
@@ -300,6 +304,7 @@ impl CollidesWith<Edge> for AARectangle {
 }
 
 impl Distance<Point> for AARectangle {
+    #[inline(always)]
     fn sq_distance(&self, point: &Point) -> fsize {
         let Point(x, y) = *point;
         let mut distance: fsize = 0.0;
@@ -316,17 +321,20 @@ impl Distance<Point> for AARectangle {
         distance.abs()
     }
 
+    #[inline(always)]
     fn distance(&self, point: &Point) -> fsize {
         self.sq_distance(point).sqrt()
     }
 }
 
 impl SeparationDistance<Point> for AARectangle {
+    #[inline(always)]
     fn separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
         let (position, sq_distance) = self.sq_separation_distance(point);
         (position, sq_distance.sqrt())
     }
 
+    #[inline(always)]
     fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
         match self.collides_with(point) {
             false => (GeoPosition::Exterior, self.sq_distance(point)),

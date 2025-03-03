@@ -43,10 +43,12 @@ impl Point {
 }
 
 impl Distance<Point> for Point {
+    #[inline(always)]
     fn distance(&self, other: &Point) -> fsize {
         ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()
     }
 
+    #[inline(always)]
     fn sq_distance(&self, other: &Point) -> fsize {
         (self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)
     }
