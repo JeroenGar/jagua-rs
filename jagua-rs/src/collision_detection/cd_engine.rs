@@ -459,25 +459,25 @@ impl CDEngine {
         &self,
         entity: &T,
         irrelevant_hazards: &[HazardEntity],
-        detected: &mut impl HazardDetector,
+        detector: &mut impl HazardDetector,
     ) where
         T: QTQueryable,
     {
         irrelevant_hazards
             .iter()
-            .for_each(|i_haz| detected.push(i_haz.clone()));
-        self.quadtree.collect_collisions(entity, detected);
+            .for_each(|i_haz| detector.push(i_haz.clone()));
+        self.quadtree.collect_collisions(entity, detector);
         irrelevant_hazards
             .iter()
-            .for_each(|i_haz| detected.remove(i_haz));
+            .for_each(|i_haz| detector.remove(i_haz));
 
         //Check if the shape is outside the quadtree
         let centroid_in_qt = self.bbox.collides_with(&entity.centroid());
-        if !centroid_in_qt && detected.len() == 0 {
+        if !centroid_in_qt && detector.len() == 0 {
             // The shape centroid is outside the quadtree
             if !irrelevant_hazards.contains(&HazardEntity::BinExterior) {
                 //Add the bin as a hazard, unless it is ignored
-                detected.push(HazardEntity::BinExterior);
+                detector.push(HazardEntity::BinExterior);
             }
         }
     }

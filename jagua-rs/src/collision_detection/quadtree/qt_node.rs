@@ -174,47 +174,36 @@ impl QTNode {
         }
     }
 
-    /// Gathers all hazards that collide with the entity and stores them in the `detected` vector.
-    /// All hazards already present in the `detected` vector are ignored.
-    pub fn collect_collisions<T>(&self, entity: &T, detected: &mut impl HazardDetector)
+    /// Gathers all hazards that collide with the entity and reports them to the `detector`.
+    /// All hazards already present in the `detector` are ignored.
+    pub fn collect_collisions<T>(&self, entity: &T, detector: &mut impl HazardDetector)
     where
         T: QTQueryable,
     {
-        match self.hazards.strongest(detected) {
-            None => (), //No more hazards to check
-            Some(_) => match entity.collides_with(&self.bbox) {
-                false => (), //Entity does not collide with the node
-                true => {
-                    let active_hazards = self.hazards.active_hazards().iter();
-                    match self.children.as_ref() {
-                        Some(children) => {
-                            //Children present, detect all Entire hazards now, wait with the Partial ones
-                            for hz in active_hazards {
-                                if let QTHazPresence::Entire = hz.presence {
-                                    if !detected.contains(&hz.entity) {
-                                        detected.push(hz.entity);
-                                    }
+        //TODO: This seems to be the fastest version of this function
+        //      Check if the other collision functions can also be improved.
+        match entity.collides_with(&self.bbox) {
+            false => return, //Entity does not collide with the node
+            true => match self.children.as_ref() {
+                Some(children) => {
+                    //Do not perform any CD on this level, check the children
+                    children.iter().for_each(|child| {
+                        child.collect_collisions(entity, detector);
+                    })
+                }
+                None => {
+                    //No children, detect all Entire hazards and check the Partial ones
+                    for hz in self.hazards.active_hazards().iter() {
+                        match &hz.presence {
+                            QTHazPresence::None => (),
+                            QTHazPresence::Entire => {
+                                if !detector.contains(&hz.entity) {
+                                    detector.push(hz.entity)
                                 }
                             }
-
-                            //Check all children
-                            children
-                                .iter()
-                                .for_each(|child| child.collect_collisions(entity, detected));
-                        }
-                        None => {
-                            //No children, detect all Entire hazards and check the Partial ones
-                            for hz in active_hazards {
-                                if !detected.contains(&hz.entity) {
-                                    match &hz.presence {
-                                        QTHazPresence::None => (),
-                                        QTHazPresence::Entire => detected.push(hz.entity),
-                                        QTHazPresence::Partial(p_haz) => {
-                                            if p_haz.collides_with(entity) {
-                                                detected.push(hz.entity);
-                                            }
-                                        }
-                                    }
+                            QTHazPresence::Partial(p_haz) => {
+                                if !detector.contains(&hz.entity) && p_haz.collides_with(entity) {
+                                    detector.push(hz.entity);
                                 }
                             }
                         }
