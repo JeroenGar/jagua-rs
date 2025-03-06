@@ -46,6 +46,14 @@ impl DetectionMap {
         self.pi_hazards.clear();
         self.other.clear();
     }
+
+    pub fn iter_with_index(&self) -> impl Iterator<Item = &(HazardEntity, usize)> {
+        self.pi_hazards.values().chain(self.other.iter())
+    }
+
+    pub fn index_counter(&self) -> usize {
+        self.idx_counter
+    }
 }
 
 impl HazardDetector for DetectionMap {
@@ -84,16 +92,6 @@ impl HazardDetector for DetectionMap {
             .iter()
             .map(|(_, (h, _))| h)
             .chain(self.other.iter().map(|(h, _)| h))
-    }
-}
-
-impl DetectionMap {
-    pub fn iter_with_index(&self) -> impl Iterator<Item = &(HazardEntity, usize)> {
-        self.pi_hazards.values().chain(self.other.iter())
-    }
-
-    pub fn index_counter(&self) -> usize {
-        self.idx_counter
     }
 }
 
