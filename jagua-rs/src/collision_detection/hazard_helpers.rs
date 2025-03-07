@@ -65,6 +65,7 @@ impl HazardDetector for DetectionMap {
     }
 
     fn push(&mut self, haz: HazardEntity) {
+        debug_assert!(!self.contains(&haz));
         match haz {
             HazardEntity::PlacedItem { pk, .. } => {
                 self.pi_hazards.insert(pk, (haz, self.idx_counter));
