@@ -484,7 +484,6 @@ impl CDEngine {
             .for_each(|e| self.quadtree.collect_collisions(&e, detector));
 
         //collect all colliding entities due to containment
-        //TODO: check if gathering the hazards inside the bbox using the quadtree is faster
         self.all_hazards().filter(|h| h.active).for_each(|h| {
             if !detector.contains(&h.entity) && self.poly_or_hazard_are_contained(shape, h) {
                 detector.push(h.entity);
@@ -542,5 +541,16 @@ impl CDEngine {
         irrelevant_hazards
             .iter()
             .for_each(|i_haz| detector.remove(i_haz));
+    }
+
+    /// Collects all hazards potentially colliding with the given bounding box.
+    /// This is an overestimation, as it's limited by the quadtree resolution.
+    pub fn collect_potential_hazards_within(
+        &self,
+        bbox: &AARectangle,
+        detector: &mut impl HazardDetector,
+    ) {
+        self.quadtree
+            .collect_potential_hazards_within(bbox, detector);
     }
 }

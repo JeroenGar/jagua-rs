@@ -17,6 +17,10 @@ pub trait HazardDetector: HazardIgnorer {
 
     fn remove(&mut self, haz: &HazardEntity);
 
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     fn len(&self) -> usize;
 
     fn iter(&self) -> impl Iterator<Item = &HazardEntity>;
