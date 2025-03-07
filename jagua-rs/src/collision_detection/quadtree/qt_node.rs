@@ -313,7 +313,7 @@ impl QTNode {
                                     detector.push(hz.entity)
                                 }
                             }
-                            QTHazPresence::Partial(p_haz) => {
+                            QTHazPresence::Partial(_) => {
                                 // If the hazards is partially present, add it.
                                 // We are limited by the resolution of the quadtree
                                 if !detector.contains(&hz.entity) {
