@@ -5,7 +5,6 @@ use crate::collision_detection::hpg::grid::Grid;
 use crate::collision_detection::hpg::hazard_proximity_grid::{DirtyState, HazardProximityGrid};
 use crate::collision_detection::hpg::hpg_cell::HPGCell;
 use crate::collision_detection::quadtree::qt_node::QTNode;
-use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::fsize;
 use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
@@ -26,13 +25,13 @@ use tribool::Tribool;
 /// and update its state by registering and deregistering hazards.
 #[derive(Clone, Debug)]
 pub struct CDEngine {
-    quadtree: QTNode,
-    static_hazards: Vec<Hazard>,
-    dynamic_hazards: Vec<Hazard>,
-    haz_prox_grid: Option<HazardProximityGrid>,
-    config: CDEConfig,
-    bbox: AARectangle,
-    uncommitted_deregisters: Vec<Hazard>,
+    pub quadtree: QTNode,
+    pub static_hazards: Vec<Hazard>,
+    pub dynamic_hazards: Vec<Hazard>,
+    pub haz_prox_grid: Option<HazardProximityGrid>,
+    pub config: CDEConfig,
+    pub bbox: AARectangle,
+    pub uncommitted_deregisters: Vec<Hazard>,
 }
 
 /// Snapshot of the state of [CDEngine] at a given time.
@@ -416,7 +415,7 @@ impl CDEngine {
             .any(|haz| self.poly_or_hazard_are_contained(shape, haz))
     }
 
-    fn poly_or_hazard_are_contained(&self, shape: &SimplePolygon, haz: &Hazard) -> bool {
+    pub fn poly_or_hazard_are_contained(&self, shape: &SimplePolygon, haz: &Hazard) -> bool {
         //Due to possible fp issues, we check if the bboxes are "almost" related
         //"almost" meaning that, when edges are very close together, they are considered equal.
         //Some relations which would normally be seen as Intersecting are now being considered Enclosed/Surrounding
@@ -454,34 +453,6 @@ impl CDEngine {
         }
     }
 
-    /// Stores all the (relevant) hazards present inside any [QTQueryable] entity in the detector
-    pub fn hazards_within<T>(
-        &self,
-        entity: &T,
-        irrelevant_hazards: &[HazardEntity],
-        detected: &mut impl HazardDetector,
-    ) where
-        T: QTQueryable,
-    {
-        irrelevant_hazards
-            .iter()
-            .for_each(|i_haz| detected.push(i_haz.clone()));
-        self.quadtree.collect_collisions(entity, detected);
-        irrelevant_hazards
-            .iter()
-            .for_each(|i_haz| detected.remove(i_haz));
-
-        //Check if the shape is outside the quadtree
-        let centroid_in_qt = self.bbox.collides_with(&entity.centroid());
-        if !centroid_in_qt && detected.len() == 0 {
-            // The shape centroid is outside the quadtree
-            if !irrelevant_hazards.contains(&HazardEntity::BinExterior) {
-                //Add the bin as a hazard, unless it is ignored
-                detected.push(HazardEntity::BinExterior);
-            }
-        }
-    }
-
     /// Collects all hazards with which the polygon collides.
     /// Any hazards in `irrelevant_hazards` are ignored.
     pub fn collect_poly_collisions(
@@ -513,7 +484,6 @@ impl CDEngine {
             .for_each(|e| self.quadtree.collect_collisions(&e, detector));
 
         //collect all colliding entities due to containment
-        //TODO: check if gathering the hazards inside the bbox using the quadtree is faster
         self.all_hazards().filter(|h| h.active).for_each(|h| {
             if !detector.contains(&h.entity) && self.poly_or_hazard_are_contained(shape, h) {
                 detector.push(h.entity);
@@ -571,5 +541,16 @@ impl CDEngine {
         irrelevant_hazards
             .iter()
             .for_each(|i_haz| detector.remove(i_haz));
+    }
+
+    /// Collects all hazards potentially colliding with the given bounding box.
+    /// This is an overestimation, as it's limited by the quadtree resolution.
+    pub fn collect_potential_hazards_within(
+        &self,
+        bbox: &AARectangle,
+        detector: &mut impl HazardDetector,
+    ) {
+        self.quadtree
+            .collect_potential_hazards_within(bbox, detector);
     }
 }

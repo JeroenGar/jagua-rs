@@ -17,6 +17,10 @@ pub trait HazardDetector: HazardIgnorer {
 
     fn remove(&mut self, haz: &HazardEntity);
 
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     fn len(&self) -> usize;
 
     fn iter(&self) -> impl Iterator<Item = &HazardEntity>;
@@ -46,6 +50,14 @@ impl DetectionMap {
         self.pi_hazards.clear();
         self.other.clear();
     }
+
+    pub fn iter_with_index(&self) -> impl Iterator<Item = &(HazardEntity, usize)> {
+        self.pi_hazards.values().chain(self.other.iter())
+    }
+
+    pub fn index_counter(&self) -> usize {
+        self.idx_counter
+    }
 }
 
 impl HazardDetector for DetectionMap {
@@ -57,6 +69,7 @@ impl HazardDetector for DetectionMap {
     }
 
     fn push(&mut self, haz: HazardEntity) {
+        debug_assert!(!self.contains(&haz));
         match haz {
             HazardEntity::PlacedItem { pk, .. } => {
                 self.pi_hazards.insert(pk, (haz, self.idx_counter));
@@ -84,16 +97,6 @@ impl HazardDetector for DetectionMap {
             .iter()
             .map(|(_, (h, _))| h)
             .chain(self.other.iter().map(|(h, _)| h))
-    }
-}
-
-impl DetectionMap {
-    pub fn iter_with_index(&self) -> impl Iterator<Item = &(HazardEntity, usize)> {
-        self.pi_hazards.values().chain(self.other.iter())
-    }
-
-    pub fn index_counter(&self) -> usize {
-        self.idx_counter
     }
 }
 
