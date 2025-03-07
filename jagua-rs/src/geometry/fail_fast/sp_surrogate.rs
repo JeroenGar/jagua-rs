@@ -1,12 +1,15 @@
 use crate::fsize;
 use crate::geometry::convex_hull;
 use crate::geometry::fail_fast::{piers, poi};
-use crate::geometry::geo_traits::{Shape, Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{
+    Distance, SeparationDistance, Shape, Transformable, TransformableFrom,
+};
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::config::SPSurrogateConfig;
+use ordered_float::OrderedFloat;
 
 #[derive(Clone, Debug)]
 /// Surrogate representation of a [SimplePolygon] for fail-fast purposes
@@ -17,6 +20,8 @@ pub struct SPSurrogate {
     pub poles: Vec<Circle>,
     /// Circle in which all poles are contained
     pub poles_bounding_circle: Circle,
+    /// The maximum distance from any point in the SP to a pole
+    pub max_distance_point_to_pole: fsize,
     /// Set of piers
     pub piers: Vec<Edge>,
     /// Number of poles that will be checked during fail-fast
@@ -28,6 +33,8 @@ pub struct SPSurrogate {
 }
 
 impl SPSurrogate {
+    /// Creates a new [SPSurrogate] from a [SimplePolygon] and a configuration.
+    /// Expensive operations are performed here, so this should be done here!
     pub fn new(simple_poly: &SimplePolygon, config: SPSurrogateConfig) -> Self {
         let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
         let convex_hull_area = SimplePolygon::new(
@@ -44,6 +51,18 @@ impl SPSurrogate {
             config.pole_coverage_goal,
         ));
         let poles_bounding_circle = Circle::bounding_circle(&poles);
+        let max_distance_to_pole = simple_poly
+            .points
+            .iter()
+            .map(|p| {
+                poles
+                    .iter()
+                    .map(|c| c.distance(p))
+                    .fold(fsize::MAX, |acc, d| fsize::min(acc, d))
+            })
+            .fold(fsize::MIN, |acc, d| fsize::max(acc, d));
+
+        dbg!(max_distance_to_pole);
 
         let n_ff_poles = usize::min(config.n_ff_poles, poles.len());
         let relevant_poles_for_piers = &poles[0..n_ff_poles]; //poi + all poles that will be checked during fail fast are relevant for piers
@@ -54,6 +73,7 @@ impl SPSurrogate {
             poles,
             piers,
             poles_bounding_circle,
+            max_distance_point_to_pole: max_distance_to_pole,
             n_ff_poles,
             convex_hull_area,
             config,
@@ -76,6 +96,7 @@ impl Transformable for SPSurrogate {
             convex_hull_indices: _,
             poles,
             poles_bounding_circle,
+            max_distance_point_to_pole: _,
             piers,
             n_ff_poles: _,
             convex_hull_area: _,
@@ -108,6 +129,7 @@ impl TransformableFrom for SPSurrogate {
             convex_hull_indices: _,
             poles,
             poles_bounding_circle,
+            max_distance_point_to_pole: _,
             piers,
             n_ff_poles: _,
             convex_hull_area: _,
