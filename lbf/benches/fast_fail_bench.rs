@@ -12,6 +12,7 @@ use jagua_rs::fsize;
 use jagua_rs::geometry::convex_hull;
 use jagua_rs::geometry::fail_fast::sp_surrogate::SPSurrogate;
 use jagua_rs::geometry::fail_fast::{piers, poi};
+use jagua_rs::geometry::geo_traits::Distance;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::circle::Circle;
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
@@ -162,6 +163,17 @@ pub fn create_custom_surrogate(
     ));
     let poles_bounding_circle = Circle::bounding_circle(&poles);
 
+    let max_distance_point_to_pole = simple_poly
+        .points
+        .iter()
+        .map(|p| {
+            poles
+                .iter()
+                .map(|c| c.distance(p))
+                .fold(fsize::MAX, |acc, d| fsize::min(acc, d))
+        })
+        .fold(fsize::MIN, |acc, d| fsize::max(acc, d));
+
     let n_ff_poles = usize::min(n_poles, poles.len());
     let relevant_poles_for_piers = &poles[0..n_ff_poles];
     let piers = piers::generate(simple_poly, n_piers, relevant_poles_for_piers);
@@ -178,6 +190,7 @@ pub fn create_custom_surrogate(
         poles,
         piers,
         poles_bounding_circle,
+        max_distance_point_to_pole,
         n_ff_poles,
         convex_hull_area,
         config: SPSurrogateConfig::none(),

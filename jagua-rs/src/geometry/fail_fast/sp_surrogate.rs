@@ -1,15 +1,12 @@
 use crate::fsize;
 use crate::geometry::convex_hull;
 use crate::geometry::fail_fast::{piers, poi};
-use crate::geometry::geo_traits::{
-    Distance, SeparationDistance, Shape, Transformable, TransformableFrom,
-};
+use crate::geometry::geo_traits::{Distance, Shape, Transformable, TransformableFrom};
 use crate::geometry::primitives::circle::Circle;
 use crate::geometry::primitives::edge::Edge;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::config::SPSurrogateConfig;
-use ordered_float::OrderedFloat;
 
 #[derive(Clone, Debug)]
 /// Surrogate representation of a [SimplePolygon] for fail-fast purposes
@@ -51,7 +48,7 @@ impl SPSurrogate {
             config.pole_coverage_goal,
         ));
         let poles_bounding_circle = Circle::bounding_circle(&poles);
-        let max_distance_to_pole = simple_poly
+        let max_distance_point_to_pole = simple_poly
             .points
             .iter()
             .map(|p| {
@@ -62,8 +59,6 @@ impl SPSurrogate {
             })
             .fold(fsize::MIN, |acc, d| fsize::max(acc, d));
 
-        dbg!(max_distance_to_pole);
-
         let n_ff_poles = usize::min(config.n_ff_poles, poles.len());
         let relevant_poles_for_piers = &poles[0..n_ff_poles]; //poi + all poles that will be checked during fail fast are relevant for piers
         let piers = piers::generate(simple_poly, config.n_ff_piers, relevant_poles_for_piers);
@@ -73,7 +68,7 @@ impl SPSurrogate {
             poles,
             piers,
             poles_bounding_circle,
-            max_distance_point_to_pole: max_distance_to_pole,
+            max_distance_point_to_pole,
             n_ff_poles,
             convex_hull_area,
             config,
