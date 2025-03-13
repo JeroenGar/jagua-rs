@@ -106,25 +106,23 @@ impl AARectangle {
         let dx = (self.x_max - self.x_min) * (factor - 1.0) / 2.0;
         let dy = (self.y_max - self.y_min) * (factor - 1.0) / 2.0;
         self.resize_by(dx, dy)
+            .expect("scaling should not lead to invalid rectangle")
     }
 
-    /// Returns a new rectangle with the same center but expanded by `dx` in both x-directions and by `dy` in both y-directions
-    pub fn resize_by(mut self, dx: fsize, dy: fsize) -> Self {
+    /// Returns a new rectangle with the same center but expanded by `dx` in both x-directions and by `dy` in both y-directions.
+    /// If the new rectangle is invalid (x_min >= x_max or y_min >= y_max), returns None.
+    pub fn resize_by(mut self, dx: fsize, dy: fsize) -> Option<Self> {
         self.x_min -= dx;
         self.y_min -= dy;
         self.x_max += dx;
         self.y_max += dy;
 
-        debug_assert!(
-            self.x_min < self.x_max && self.y_min < self.y_max,
-            "invalid AARectangle, x_min: {}, x_max: {}, y_min: {}, y_max: {}",
-            self.x_min,
-            self.x_max,
-            self.y_min,
-            self.y_max
-        );
-
-        self
+        if self.x_min < self.x_max && self.y_min < self.y_max {
+            Some(self)
+        } else {
+            //resizing would lead to invalid rectangle
+            None
+        }
     }
 
     /// For all quadrants, contains indices of the two neighbors of the quadrant at that index.
