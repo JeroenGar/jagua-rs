@@ -15,7 +15,6 @@ serde_json = "1.0"
 once_cell = { version = "1.20", features = [] }
 fern = "0.7"
 log = "0.4"
-humantime = "2.1"
 itertools = "0.14"
 svg = "0.18"
 ordered-float = "5.0.0"
@@ -24,6 +23,7 @@ mimalloc = "0.1"
 almost = "0.2.0"
 test-case = "3.3.1"
 thousands = "0.2.0"
+jiff = "0.2.4"
 
 [dev-dependencies]
 criterion = "0.5.1"

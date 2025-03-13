@@ -82,9 +82,5 @@ pub fn init_logger(level_filter: LevelFilter) {
         .chain(std::io::stdout())
         .apply()
         .expect("could not initialize logger");
-    log!(
-        Level::Info,
-        "Epoch: {}",
-        humantime::format_rfc3339_seconds(std::time::SystemTime::now())
-    );
+    log!(Level::Info, "Epoch: {}", jiff::Timestamp::now().to_string());
 }
