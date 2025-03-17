@@ -17,7 +17,7 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
-use indexmap::IndexSet;
+use itertools::Itertools;
 use tribool::Tribool;
 
 /// The Collision Detection Engine (CDE).
@@ -151,17 +151,17 @@ impl CDEngine {
     /// Restores the CDE to a previous state, as described by the snapshot.
     pub fn restore(&mut self, snapshot: &CDESnapshot) {
         //Quadtree
-        let mut hazards_to_remove = self
-            .dynamic_hazards
-            .iter()
-            .map(|h| h.entity)
-            .collect::<IndexSet<HazardEntity>>();
+        let mut hazards_to_remove = self.dynamic_hazards.iter().map(|h| h.entity).collect_vec();
         debug_assert!(hazards_to_remove.len() == self.dynamic_hazards.len());
         let mut hazards_to_add = vec![];
 
         for hazard in snapshot.dynamic_hazards.iter() {
-            let hazard_already_present = hazards_to_remove.swap_remove(&hazard.entity);
-            if !hazard_already_present {
+            let hazard_already_present = hazards_to_remove.iter().position(|h| h == &hazard.entity);
+            if let Some(idx) = hazard_already_present {
+                //the hazard is already present in the CDE, remove it from the hazards to remove
+                hazards_to_remove.swap_remove(idx);
+            } else {
+                //the hazard is not present in the CDE, add it to the list of hazards to add
                 hazards_to_add.push(hazard.clone());
             }
         }

@@ -1,7 +1,6 @@
 use std::borrow::Borrow;
 
 use itertools::Itertools;
-use num_integer::Integer;
 use ordered_float::{NotNan, OrderedFloat};
 
 use crate::fsize;
@@ -307,8 +306,7 @@ impl CollidesWith<Point> for SimplePolygon {
                         n_intersections += 1;
                     }
                 }
-
-                n_intersections.is_odd()
+                n_intersections % 2 == 1
             }
         }
     }
