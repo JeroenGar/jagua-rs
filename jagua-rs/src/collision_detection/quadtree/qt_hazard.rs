@@ -1,7 +1,6 @@
+use std::array;
 use std::borrow::Borrow;
 use std::sync::Arc;
-
-use arr_macro::arr;
 
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
@@ -49,8 +48,8 @@ impl QTHazard {
         debug_assert!(assertions::quadrants_have_valid_layout(&quadrants));
 
         match &self.presence {
-            QTHazPresence::None => arr![None;4],
-            QTHazPresence::Entire => arr![Some(self.clone());4],
+            QTHazPresence::None => array::from_fn(|_| None),
+            QTHazPresence::Entire => array::from_fn(|_| Some(self.clone())),
             QTHazPresence::Partial(partial_haz) => {
                 //If the hazard is partially present, it may produce different hazards for each quadrant
 
@@ -59,7 +58,7 @@ impl QTHazard {
                 let haz_q_rels = quadrants.map(|q| haz_bbox.relation_to(q));
 
                 //find the presence of the hazard in each quadrant, initially set to None (not yet determined)
-                let mut q_presences = arr![None;4];
+                let mut q_presences = array::from_fn(|_| None);
 
                 //Check if one of the quadrants entirely contains the hazard
                 let enclosed_haz_quad_index =
