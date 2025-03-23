@@ -478,6 +478,10 @@ impl CDEngine {
             .iter()
             .for_each(|i_haz| detector.push(i_haz.clone()));
 
+        if self.bbox.relation_to(&shape.bbox()) != GeoRelation::Surrounding {
+            detector.push(HazardEntity::BinExterior)
+        }
+
         //collect all colliding entities due to edge intersection
         shape
             .edge_iter()
