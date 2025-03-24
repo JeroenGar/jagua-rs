@@ -143,8 +143,7 @@ The configuration file has the following structure:
     "quadtree_depth": 5, //Maximum depth of the quadtree is 5
     "hpg_n_cells": 2000, //The hazard proximity grid contains 2000 cells
     "item_surrogate_config": {
-      "pole_coverage_goal": 0.9, //The surrogate will stop generating poles when 90% of the item is covered
-      "max_poles": 10, //The surrogate will at most generate 10 poles
+      "n_pole_limits": [[100, 0.0], [20, 0.75], [10, 0.90]], //See docs for details 
       "n_ff_poles": 2, //Two poles will be used for fail-fast collision detection
       "n_ff_piers": 0 //Zero piers will be used for fail-fast collision detection
     }

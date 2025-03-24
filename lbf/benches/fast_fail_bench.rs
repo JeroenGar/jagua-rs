@@ -158,8 +158,7 @@ pub fn create_custom_surrogate(
     let mut poles = vec![simple_poly.poi.clone()];
     poles.extend(poi::generate_additional_surrogate_poles(
         simple_poly,
-        n_poles.saturating_sub(1),
-        0.9,
+        &[(n_poles, 0.0), (n_poles, 0.0), (n_poles, 0.0)],
     ));
     let poles_bounding_circle = Circle::bounding_circle(&poles);
 
