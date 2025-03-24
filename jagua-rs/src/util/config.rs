@@ -13,12 +13,17 @@ pub struct CDEConfig {
     pub item_surrogate_config: SPSurrogateConfig,
 }
 
+/// maximum number of definable pole limits, increase if needed
+const N_POLE_LIMITS: usize = 3;
+
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct SPSurrogateConfig {
-    ///Poles will stop being generated when the surrogate covers this fraction of the shape's area
-    pub pole_coverage_goal: fsize,
-    ///Maximum number of poles to generate
-    pub max_poles: usize,
+    ///Limits on the number of poles to be generated at different coverage levels.
+    ///For example: [(100, 0.0), (20, 0.75), (10, 0.90)]:
+    ///While the coverage is below 75% the generation will stop at 100 poles.
+    ///If 75% coverage with 20 or more poles the generation will stop.
+    ///If 90% coverage with 10 or more poles the generation will stop.
+    pub n_pole_limits: [(usize, fsize); N_POLE_LIMITS],
     ///Number of poles to test during fail-fast (additional poles are exclusively used in the hazard proximity grid)
     pub n_ff_poles: usize,
     ///number of piers to test during fail-fast
@@ -28,8 +33,7 @@ pub struct SPSurrogateConfig {
 impl SPSurrogateConfig {
     pub fn none() -> Self {
         Self {
-            pole_coverage_goal: 0.0,
-            max_poles: 0,
+            n_pole_limits: [(0, 0.0); N_POLE_LIMITS],
             n_ff_poles: 0,
             n_ff_piers: 0,
         }

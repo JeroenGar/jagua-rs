@@ -113,8 +113,7 @@ pub fn create_base_config() -> LBFConfig {
             quadtree_depth: 5,
             hpg_n_cells: 2000,
             item_surrogate_config: SPSurrogateConfig {
-                pole_coverage_goal: 0.9,
-                max_poles: 10,
+                n_pole_limits: [(100, 0.0), (20, 0.75), (10, 0.90)],
                 n_ff_poles: 4,
                 n_ff_piers: 0,
             },

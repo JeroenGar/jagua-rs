@@ -44,8 +44,7 @@ impl SPSurrogate {
         let mut poles = vec![simple_poly.poi.clone()];
         poles.extend(poi::generate_additional_surrogate_poles(
             simple_poly,
-            config.max_poles.saturating_sub(1),
-            config.pole_coverage_goal,
+            &config.n_pole_limits,
         ));
         let poles_bounding_circle = Circle::bounding_circle(&poles);
         let max_distance_point_to_pole = simple_poly

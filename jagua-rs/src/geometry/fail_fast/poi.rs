@@ -37,26 +37,39 @@ pub fn generate_next_pole(shape: &SimplePolygon, poles: &[Circle]) -> Circle {
 ///Generates additional poles for a shape alongside the PoI
 pub fn generate_additional_surrogate_poles(
     shape: &SimplePolygon,
-    max_poles: usize,
-    coverage_goal: fsize,
+    n_pole_limits: &[(usize, fsize)],
 ) -> Vec<Circle> {
     //generate the additional poles
     let additional_poles = {
         let mut all_poles = vec![shape.poi.clone()];
-        let pole_area_goal = shape.area() * coverage_goal;
         let mut total_pole_area = shape.poi.area();
 
         //Generate the poles
-        for _ in 0..max_poles {
+        loop {
             let next = generate_next_pole(shape, &all_poles);
 
             total_pole_area += next.area();
             all_poles.push(next);
 
-            if total_pole_area > pole_area_goal {
-                //sufficient poles generated
-                break;
+            let current_coverage = total_pole_area / shape.area();
+
+            //check if any limit in the number of poles is reached at this coverage
+            let active_pole_limit = n_pole_limits
+                .iter()
+                .filter(|(_, coverage_threshold)| current_coverage > *coverage_threshold)
+                .min_by_key(|(n_poles, _)| *n_poles)
+                .map(|(n_poles, _)| n_poles);
+
+            if let Some(active_pole_limit) = active_pole_limit {
+                if all_poles.len() >= *active_pole_limit {
+                    //stop generating if we are above the limit
+                    break;
+                }
             }
+            assert!(
+                all_poles.len() < 1000,
+                "More than 1000 poles were generated, please check the SPSurrogateConfig"
+            )
         }
         all_poles[1..].to_vec()
     };
