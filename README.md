@@ -4,6 +4,8 @@
 
 <img src="img/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
+### ‼️ See [`sparrow`](https://github.com/JeroenGar/sparrow) for a state-of-the-art optimization algorithm based on `jagua-rs` ‼️
+
 ## Preamble
 
 2D irregular cutting and packing (C&P) problems are a class of combinatorial optimization problems that involve placing irregular
@@ -64,8 +66,9 @@ most position.
 The code is thoroughly documented and should provide a good starting point for anyone interested building their own optimization algorithm on top
 of `jagua-rs`.
 
-⚠️ *Please note that `lbf` should probably not be used as an optimization algorithm for any real-world use case.
-Read the [Important note](#important-note) section for more information.* ⚠️
+⚠️ *Please note that `lbf` should not be used as an optimization algorithm for any real-world use case.
+Read the [Important note](#important-note) section for more information.
+See [`sparrow`](https://github.com/JeroenGar/sparrow) for a state-of-the-art optimization algorithm which leverages `jagua-rs`*
 
 ### How to run LBF
 
