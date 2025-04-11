@@ -6,8 +6,8 @@ use itertools::Itertools;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
 
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
-use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::instances::instance::Instance;
+use jagua_rs::entities::problems::problem::{LayoutIndex, Problem};
 use jagua_rs::fsize;
 use jagua_rs::geometry::convex_hull;
 use jagua_rs::geometry::fail_fast::sp_surrogate::SPSurrogate;
@@ -75,7 +75,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     );
 
     let mut rng = SmallRng::seed_from_u64(0);
-    let layout = problem.get_layout(LayoutIndex::Real(0));
+    let layout = problem.layout(LayoutIndex::Real(0));
     let samples = ITEMS_ID_TO_TEST
         .iter()
         .map(|&item_id| {

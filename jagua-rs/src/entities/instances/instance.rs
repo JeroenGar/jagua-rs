@@ -1,42 +1,19 @@
-use crate::entities::instances::bin_packing::BPInstance;
-use crate::entities::instances::instance_generic::InstanceGeneric;
-use crate::entities::instances::strip_packing::SPInstance;
+use std::any::Any;
 use crate::entities::item::Item;
 use crate::fsize;
 
 /// An `Instance` is the static (unmodifiable) representation of a problem instance.
-/// This enum contains all variants of an instance.
-/// See [`crate::entities::problems::problem::Problem`] for more information about the choice to represent variants as enums.
-#[derive(Debug, Clone)]
-pub enum Instance {
-    SP(SPInstance),
-    BP(BPInstance),
-}
-
-impl InstanceGeneric for Instance {
-    fn items(&self) -> &[(Item, usize)] {
-        match self {
-            Instance::SP(instance) => instance.items(),
-            Instance::BP(instance) => instance.items(),
-        }
+/// This trait defines shared functionality of all instance variants.
+pub trait Instance: Any {
+    fn items(&self) -> &[(Item, usize)];
+    fn item_qty(&self, id: usize) -> usize {
+        self.items()[id].1
     }
-
-    fn item_area(&self) -> fsize {
-        match self {
-            Instance::SP(instance) => instance.item_area(),
-            Instance::BP(instance) => instance.item_area(),
-        }
+    fn item(&self, id: usize) -> &Item {
+        &self.items()[id].0
     }
-}
-
-impl From<SPInstance> for Instance {
-    fn from(instance: SPInstance) -> Self {
-        Instance::SP(instance)
+    fn total_item_qty(&self) -> usize {
+        self.items().iter().map(|(_, qty)| qty).sum()
     }
-}
-
-impl From<BPInstance> for Instance {
-    fn from(instance: BPInstance) -> Self {
-        Instance::BP(instance)
-    }
+    fn item_area(&self) -> fsize;
 }

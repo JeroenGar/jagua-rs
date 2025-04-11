@@ -7,9 +7,9 @@ use rand::SeedableRng;
 use rand::rngs::SmallRng;
 
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
+use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::placing_option::PlacingOption;
-use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::problems::problem::{LayoutIndex, Problem};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
@@ -41,7 +41,7 @@ fn hpg_query_bench(c: &mut Criterion) {
     let (base_problem, _) =
         util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
     let base_p_opts = base_problem
-        .get_layout(LayoutIndex::Real(0))
+        .layout(LayoutIndex::Real(0))
         .placed_items()
         .values()
         .map(|pi| PlacingOption {
@@ -87,7 +87,7 @@ fn hpg_query_bench(c: &mut Criterion) {
 
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
-        let layout = problem.get_layout(LayoutIndex::Real(0));
+        let layout = problem.layout(LayoutIndex::Real(0));
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
         let mut sampler = HPGSampler::new(item, layout).unwrap();
@@ -129,7 +129,7 @@ fn hpg_update_bench(c: &mut Criterion) {
     let (base_problem, _) =
         util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
     let base_p_opts = base_problem
-        .get_layout(LayoutIndex::Real(0))
+        .layout(LayoutIndex::Real(0))
         .placed_items()
         .values()
         .map(|pi| PlacingOption {
@@ -175,7 +175,7 @@ fn hpg_update_bench(c: &mut Criterion) {
 
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
-        let layout = problem.get_layout(LayoutIndex::Real(0));
+        let layout = problem.layout(LayoutIndex::Real(0));
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
         let mut sampler = HPGSampler::new(item, layout).unwrap();

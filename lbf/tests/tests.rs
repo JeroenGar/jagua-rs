@@ -7,8 +7,8 @@ mod tests {
     use rand::{Rng, SeedableRng};
     use test_case::test_case;
 
-    use jagua_rs::entities::problems::problem_generic::LayoutIndex;
-    use jagua_rs::entities::problems::problem_generic::ProblemGeneric;
+    use jagua_rs::entities::problems::problem::LayoutIndex;
+    use jagua_rs::entities::problems::problem::Problem;
     use jagua_rs::io::parser::Parser;
     use jagua_rs::util::polygon_simplification::PolySimplConfig;
     use lbf::io;
@@ -56,7 +56,7 @@ mod tests {
                 //pick random existing layout
                 let layout_index = LayoutIndex::Real(rng.random_range(0..problem.layouts().len()));
                 let random_placed_item = problem
-                    .get_layout(&layout_index)
+                    .layout(&layout_index)
                     .placed_items()
                     .iter()
                     .choose(&mut rng)

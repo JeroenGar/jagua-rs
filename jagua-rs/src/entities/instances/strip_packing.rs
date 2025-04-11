@@ -1,4 +1,4 @@
-use crate::entities::instances::instance_generic::InstanceGeneric;
+use crate::entities::instances::instance::Instance;
 use crate::entities::item::Item;
 use crate::fsize;
 use crate::geometry::geo_traits::Shape;
@@ -33,7 +33,7 @@ impl SPInstance {
     }
 }
 
-impl InstanceGeneric for SPInstance {
+impl Instance for SPInstance {
     fn items(&self) -> &[(Item, usize)] {
         &self.items
     }

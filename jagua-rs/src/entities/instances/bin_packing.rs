@@ -1,5 +1,5 @@
 use crate::entities::bin::Bin;
-use crate::entities::instances::instance_generic::InstanceGeneric;
+use crate::entities::instances::instance::Instance;
 use crate::entities::item::Item;
 use crate::fsize;
 use crate::geometry::geo_traits::Shape;
@@ -34,7 +34,7 @@ impl BPInstance {
     }
 }
 
-impl InstanceGeneric for BPInstance {
+impl Instance for BPInstance {
     fn items(&self) -> &[(Item, usize)] {
         &self.items
     }

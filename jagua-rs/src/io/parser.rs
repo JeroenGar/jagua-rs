@@ -1,15 +1,14 @@
-use std::sync::Arc;
+use std::any::Any;
 use std::time::Instant;
 
 use crate::entities::bin::Bin;
 use crate::entities::instances::bin_packing::BPInstance;
 use crate::entities::instances::instance::Instance;
-use crate::entities::instances::instance_generic::InstanceGeneric;
 use crate::entities::instances::strip_packing::SPInstance;
 use crate::entities::item::Item;
-use crate::entities::placing_option::PlacingOption;
+use crate::entities::placing_option::{LayoutType, PlacingOption};
 use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric, STRIP_LAYOUT_IDX};
+use crate::entities::problems::problem::Problem;
 use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::quality_zone::InferiorQualityZone;
 use crate::entities::quality_zone::N_QUALITIES;
@@ -34,6 +33,7 @@ use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
+use crate::entities::layout::LayKey;
 
 /// Parses a `JsonInstance` into an `Instance`.
 pub struct Parser {
@@ -56,7 +56,7 @@ impl Parser {
     }
 
     /// Parses a `JsonInstance` into an `Instance`.
-    pub fn parse(&self, json_instance: &JsonInstance) -> Instance {
+    pub fn parse(&self, json_instance: &JsonInstance) -> Box<dyn Instance> {
         let items = json_instance
             .items
             .par_iter()
@@ -64,34 +64,15 @@ impl Parser {
             .map(|(item_id, json_item)| self.parse_item(json_item, item_id))
             .collect();
 
-        let instance: Instance = match (json_instance.bins.as_ref(), json_instance.strip.as_ref()) {
+        match (json_instance.bins.as_ref(), json_instance.strip.as_ref()) {
             (Some(json_bins), None) => {
+                //bin packing instance
                 let bins: Vec<(Bin, usize)> = json_bins
                     .par_iter()
                     .enumerate()
                     .map(|(bin_id, json_bin)| self.parse_bin(json_bin, bin_id))
                     .collect();
-                BPInstance::new(items, bins).into()
-            }
-            (None, Some(json_strip)) => SPInstance::new(items, json_strip.height).into(),
-            (Some(_), Some(_)) => {
-                panic!("Both bins and strip packing specified, has to be one or the other")
-            }
-            (None, None) => panic!("Neither bins or strips specified"),
-        };
-
-        match &instance {
-            Instance::SP(spi) => {
-                log!(
-                    Level::Info,
-                    "[PARSE] strip packing instance \"{}\": {} items ({} unique), {} strip height",
-                    json_instance.name,
-                    spi.total_item_qty(),
-                    spi.items.len(),
-                    spi.strip_height
-                );
-            }
-            Instance::BP(bpi) => {
+                let bpi = BPInstance::new(items, bins);
                 log!(
                     Level::Info,
                     "[PARSE] bin packing instance \"{}\": {} items ({} unique), {} bins ({} unique)",
@@ -101,10 +82,25 @@ impl Parser {
                     bpi.bins.iter().map(|(_, qty)| *qty).sum::<usize>(),
                     bpi.bins.len()
                 );
+                Box::new(bpi)
             }
+            (None, Some(json_strip)) => {
+                let spi = SPInstance::new(items, json_strip.height);
+                log!(
+                    Level::Info,
+                    "[PARSE] strip packing instance \"{}\": {} items ({} unique), {} strip height",
+                    json_instance.name,
+                    spi.total_item_qty(),
+                    spi.items.len(),
+                    spi.strip_height
+                );
+                Box::new(spi)
+            },
+            (Some(_), Some(_)) => {
+                panic!("Both bins and strip packing specified, has to be one or the other")
+            }
+            (None, None) => panic!("Neither bins or strips specified"),
         }
-
-        instance
     }
 
     /// Parses a `JsonInstance` and accompanying `JsonLayout`s into an `Instance` and `Solution`.
@@ -112,11 +108,9 @@ impl Parser {
         &self,
         json_instance: &JsonInstance,
         json_layouts: &[JsonLayout],
-    ) -> (Instance, Solution) {
-        let instance = Arc::new(self.parse(json_instance));
+    ) -> (Box<dyn Instance>, Solution) {
+        let instance = self.parse(json_instance);
         let solution = build_solution_from_json(instance.as_ref(), json_layouts, self.cde_config);
-        let instance =
-            Arc::try_unwrap(instance).expect("Cannot unwrap instance, strong references present");
         (instance, solution)
     }
 
@@ -262,16 +256,19 @@ impl Parser {
 
 /// Builds a `Solution` from a set of `JsonLayout`s and an `Instance`.
 pub fn build_solution_from_json(
-    instance: &Instance,
+    instance: &dyn Instance,
     json_layouts: &[JsonLayout],
     cde_config: CDEConfig,
 ) -> Solution {
-    match instance {
-        Instance::BP(bp_i) => build_bin_packing_solution(bp_i, json_layouts),
-        Instance::SP(sp_i) => {
-            assert_eq!(json_layouts.len(), 1);
-            build_strip_packing_solution(sp_i, &json_layouts[0], cde_config)
-        }
+    let instance = instance as &dyn Any;
+    if let Some(bpi) = instance.downcast_ref::<BPInstance>() {
+        build_bin_packing_solution(bpi, &json_layouts)
+    }
+    else if let Some(spi) = instance.downcast_ref::<SPInstance>() {
+        assert_eq!(json_layouts.len(), 1);
+        build_strip_packing_solution(spi, &json_layouts[0], cde_config)
+    } else {
+        unimplemented!("Unknown instance type");
     }
 }
 
@@ -304,7 +301,7 @@ pub fn build_strip_packing_solution(
         let d_transf = transform.decompose();
 
         let placing_opt = PlacingOption {
-            layout_idx: STRIP_LAYOUT_IDX,
+            layout: LayoutType::Open(LayKey::default()),
             item_id: item.id,
             d_transf,
         };
@@ -313,7 +310,7 @@ pub fn build_strip_packing_solution(
         problem.flush_changes();
     }
 
-    problem.create_solution(None)
+    problem.create_solution()
 }
 
 pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLayout]) -> Solution {
@@ -326,15 +323,8 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
                 panic!("Bin packing solution should not contain layouts with references to a Strip")
             }
         };
+
         //Create the layout by inserting the first item
-
-        //Find the template layout matching the bin id in the JSON solution
-        let template_index = problem
-            .template_layouts()
-            .iter()
-            .position(|tl| tl.bin.id == bin.id)
-            .expect("no template layout found for bin");
-
         let json_first_item = json_layout
             .placed_items
             .first()
@@ -353,11 +343,11 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
         let d_transf = transform.decompose();
 
         let initial_insert_opt = PlacingOption {
-            layout_idx: LayoutIndex::Template(template_index),
+            layout: LayoutType::Closed{bin_id: bin.id},
             item_id: first_item.id,
             d_transf,
         };
-        let (layout_idx, _) = problem.place_item(initial_insert_opt);
+        let (lkey, _) = problem.place_item(initial_insert_opt);
         problem.flush_changes();
 
         //Insert the rest of the items
@@ -376,7 +366,7 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
             let d_transf = transform.decompose();
 
             let insert_opt = PlacingOption {
-                layout_idx,
+                layout: LayoutType::Open(lkey),
                 item_id: item.id,
                 d_transf,
             };
@@ -385,25 +375,31 @@ pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLay
         }
     }
 
-    problem.create_solution(None)
+    problem.create_solution()
 }
 
 /// Composes a `JsonSolution` from a `Solution` and an `Instance`.
 pub fn compose_json_solution(
     solution: &Solution,
-    instance: &Instance,
+    instance: &dyn Instance,
     epoch: Instant,
 ) -> JsonSolution {
     let layouts = solution
         .layout_snapshots
         .iter()
-        .map(|sl| {
-            let container = match &instance {
-                Instance::BP(_bpi) => JsonContainer::Bin { index: sl.bin.id },
-                Instance::SP(spi) => JsonContainer::Strip {
-                    width: sl.bin.bbox().width(),
-                    height: spi.strip_height,
-                },
+        .map(|(_, sl)| {
+            let container = {
+                let instance = instance as &dyn Any;
+                if instance.is::<BPInstance>() {
+                    JsonContainer::Bin { index: sl.bin.id }
+                } else if let Some(spi) = instance.downcast_ref::<SPInstance>() {
+                    JsonContainer::Strip {
+                        width: sl.bin.bbox().width(),
+                        height: spi.strip_height,
+                    }
+                } else {
+                    panic!("Unknown instance type");
+                }
             };
 
             let placed_items = sl

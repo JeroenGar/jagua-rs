@@ -10,10 +10,10 @@ use rand::prelude::SmallRng;
 
 use jagua_rs::entities::instances::bin_packing::BPInstance;
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
+use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::strip_packing::SPInstance;
 use jagua_rs::entities::item::Item;
-use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::problems::problem::{LayoutIndex, Problem};
 use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::point::Point;
@@ -79,7 +79,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                 ..SvgDrawOptions::default()
             };
             let svg = io::layout_to_svg::layout_to_svg(
-                problem.get_layout(LayoutIndex::Real(0)),
+                problem.layout(LayoutIndex::Real(0)),
                 &instance,
                 draw_options,
             );
@@ -91,7 +91,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        let layout = problem.get_layout(LayoutIndex::Real(0));
+        let layout = problem.layout(LayoutIndex::Real(0));
         /*let samples = {
             let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
             (0..N_SAMPLES).map(

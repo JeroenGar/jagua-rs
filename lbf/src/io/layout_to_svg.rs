@@ -1,7 +1,6 @@
 use crate::io::svg_util::SvgDrawOptions;
 use crate::io::{svg_export, svg_util};
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
 use jagua_rs::entities::layout::Layout;
 use jagua_rs::entities::layout::LayoutSnapshot;
 use jagua_rs::fsize;

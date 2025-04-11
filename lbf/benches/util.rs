@@ -5,10 +5,10 @@ use rand::prelude::{IteratorRandom, SmallRng};
 use std::path::Path;
 
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
+use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::placing_option::PlacingOption;
 use jagua_rs::entities::problems::problem::Problem;
-use jagua_rs::entities::problems::problem_generic::{ProblemGeneric, STRIP_LAYOUT_IDX};
+use jagua_rs::entities::problems::problem::{Problem, STRIP_LAYOUT_IDX};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::fsize;
 use jagua_rs::io::json_instance::JsonInstance;
@@ -56,7 +56,7 @@ pub fn create_blf_problem(
     let mut rng = SmallRng::seed_from_u64(0);
     // Remove some items from the layout
     let placed_items_to_remove = problem
-        .get_layout(&STRIP_LAYOUT_IDX)
+        .layout(&STRIP_LAYOUT_IDX)
         .placed_items()
         .iter()
         .map(|(k, _)| k)
@@ -97,7 +97,7 @@ pub fn create_blf_problem(
             ..SvgDrawOptions::default()
         };
         let svg = io::layout_to_svg::layout_to_svg(
-            problem.get_layout(&STRIP_LAYOUT_IDX),
+            problem.layout(&STRIP_LAYOUT_IDX),
             &instance,
             draw_options,
         );

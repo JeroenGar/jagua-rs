@@ -1,15 +1,13 @@
-use std::{iter, slice};
-
+use std::iter;
+use std::time::Instant;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::entities::bin::Bin;
-use crate::entities::instances::instance_generic::InstanceGeneric;
+use crate::entities::instances::instance::Instance;
 use crate::entities::instances::strip_packing::SPInstance;
-use crate::entities::layout::Layout;
+use crate::entities::layout::{LayKey, Layout};
 use crate::entities::placed_item::PItemKey;
-use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::problem_generic::ProblemGeneric;
-use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
-use crate::entities::problems::problem_generic::{LayoutIndex, STRIP_LAYOUT_IDX};
+use crate::entities::placing_option::{LayoutType, PlacingOption};
+use crate::entities::problems::problem::Problem;
 use crate::entities::solution::Solution;
 use crate::fsize;
 use crate::geometry::geo_traits::{Shape, Transformable};
@@ -18,6 +16,7 @@ use crate::util::assertions;
 use crate::util::config::CDEConfig;
 use itertools::Itertools;
 use log::error;
+use slotmap::SecondaryMap;
 
 /// Strip Packing Problem
 #[derive(Clone)]
@@ -25,8 +24,6 @@ pub struct SPProblem {
     pub instance: SPInstance,
     pub layout: Layout,
     missing_item_qtys: Vec<isize>,
-    layout_id_counter: usize,
-    solution_id_counter: usize,
 }
 
 impl SPProblem {
@@ -37,17 +34,14 @@ impl SPProblem {
             .iter()
             .map(|(_, qty)| *qty as isize)
             .collect_vec();
-        let strip_rect = AARectangle::new(0.0, 0.0, strip_width, strip_height);
-        let strip_bin = Bin::from_strip(strip_rect, cde_config);
-        let layout_id_counter = 0;
-        let layout = Layout::new(layout_id_counter, strip_bin);
+        let strip_bbox = AARectangle::new(0.0, 0.0, strip_width, strip_height);
+        let strip_bin = Bin::from_strip(0, strip_bbox, cde_config);
+        let layout = Layout::new(strip_bin);
 
         Self {
             instance,
             layout,
-            missing_item_qtys,
-            layout_id_counter,
-            solution_id_counter: 0,
+            missing_item_qtys
         }
     }
 
@@ -105,8 +99,11 @@ impl SPProblem {
 
         //Modifying the width causes the bin to change, so the layout must be replaced
         self.layout = Layout::new(
-            self.next_layout_id(),
-            Bin::from_strip(rect, self.layout.bin.base_cde.config()),
+            Bin::from_strip(
+                self.layout.bin.id + 1,
+                rect,
+                self.layout.bin.base_cde.config()
+            ),
         );
 
         //place the items back in the new layout
@@ -125,7 +122,7 @@ impl SPProblem {
             let cde = self.layout.cde();
             if !cde.poly_collides(&transformed_shape, entities_to_ignore.as_ref()) {
                 let insert_opt = PlacingOption {
-                    layout_idx: STRIP_LAYOUT_IDX,
+                    layout: LayoutType::Open(LayKey::default()),
                     item_id,
                     d_transf,
                 };
@@ -172,12 +169,20 @@ impl SPProblem {
     pub fn strip_height(&self) -> fsize {
         self.layout.bin.outer.bbox().height()
     }
+
+    fn register_included_item(&mut self, item_id: usize) {
+        self.missing_item_qtys[item_id] -= 1;
+    }
+
+    fn deregister_included_item(&mut self, item_id: usize) {
+        self.missing_item_qtys[item_id] += 1;
+    }
 }
 
-impl ProblemGeneric for SPProblem {
-    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey) {
+impl Problem for SPProblem {
+    fn place_item(&mut self, p_opt: PlacingOption) -> (LayKey, PItemKey) {
         assert_eq!(
-            p_opt.layout_idx, STRIP_LAYOUT_IDX,
+            p_opt.layout, LayoutType::Open(LayKey::default()),
             "Strip packing problems only have a single layout"
         );
         let item_id = p_opt.item_id;
@@ -185,30 +190,31 @@ impl ProblemGeneric for SPProblem {
         let placed_item_key = self.layout.place_item(item, p_opt.d_transf);
 
         self.register_included_item(item_id);
-        (STRIP_LAYOUT_IDX, placed_item_key)
+        (LayKey::default(), placed_item_key)
     }
 
     fn remove_item(
         &mut self,
-        layout_index: LayoutIndex,
+        lkey: LayKey,
         pik: PItemKey,
         commit_instantly: bool,
     ) -> PlacingOption {
         assert_eq!(
-            layout_index, STRIP_LAYOUT_IDX,
+            lkey, LayKey::default(),
             "strip packing problems only have a single layout"
         );
         let pi = self.layout.remove_item(pik, commit_instantly);
         self.deregister_included_item(pi.item_id);
 
-        PlacingOption::from_placed_item(layout_index, &pi)
+        PlacingOption::from_placed_item(LayoutType::Open(lkey), &pi)
     }
 
-    fn create_solution(&mut self, _old_solution: Option<&Solution>) -> Solution {
-        let id = self.next_solution_id();
-        let included_item_qtys = self.placed_item_qtys().collect_vec();
-        let bin_qtys = self.bin_qtys().to_vec();
-        let layout_snapshots = vec![self.layout.create_snapshot()];
+    fn create_solution(&mut self) -> Solution {
+        let layout_snapshots = {
+            let mut snapshots = SecondaryMap::new();
+            snapshots.insert(LayKey::default(), self.layout.create_snapshot());
+            snapshots
+        };
         let target_item_qtys = self
             .instance
             .items
@@ -216,14 +222,14 @@ impl ProblemGeneric for SPProblem {
             .map(|(_, qty)| *qty)
             .collect_vec();
 
-        let solution = Solution::new(
-            id,
+        let solution = Solution {
             layout_snapshots,
-            self.usage(),
-            included_item_qtys,
+            usage: self.usage(),
+            placed_item_qtys: self.placed_item_qtys().collect(),
             target_item_qtys,
-            bin_qtys,
-        );
+            bin_qtys: self.bin_qtys().to_vec(),
+            time_stamp: Instant::now()
+        };
 
         debug_assert!(assertions::problem_matches_solution(self, &solution));
 
@@ -234,10 +240,13 @@ impl ProblemGeneric for SPProblem {
         debug_assert!(solution.layout_snapshots.len() == 1);
 
         //restore the layout
-        let layout_snapshot = &solution.layout_snapshots[0];
-        match self.layout.id() == layout_snapshot.id {
-            true => self.layout.restore(layout_snapshot),
-            false => self.layout = Layout::from_snapshot(layout_snapshot),
+        let layout_snapshot = &solution.layout_snapshots[LayKey::default()];
+        if self.layout.bin.id == layout_snapshot.bin.id {
+            //if the bin id is the same, restore the layout
+            self.layout.restore(layout_snapshot);
+        } else {
+            //if the bin id is different, create a new layout
+            self.layout = Layout::from_snapshot(layout_snapshot);
         }
 
         //restore the missing item quantities
@@ -251,48 +260,32 @@ impl ProblemGeneric for SPProblem {
         debug_assert!(assertions::problem_matches_solution(self, solution));
     }
 
-    fn layouts(&self) -> &[Layout] {
-        slice::from_ref(&self.layout)
-    }
-
-    fn layouts_mut(&mut self) -> &mut [Layout] {
-        slice::from_mut(&mut self.layout)
-    }
-
-    fn template_layouts(&self) -> &[Layout] {
-        &[]
+    fn layouts(&self) -> impl Iterator<Item = (LayKey, &'_ Layout)> {
+        iter::once((LayKey::default(), &self.layout))
     }
 
     fn missing_item_qtys(&self) -> &[isize] {
         &self.missing_item_qtys
     }
 
-    fn template_layout_indices_with_stock(&self) -> impl Iterator<Item = LayoutIndex> {
-        iter::empty::<LayoutIndex>()
-    }
-
     fn bin_qtys(&self) -> &[usize] {
         &[0]
     }
 
-    fn instance(&self) -> &dyn InstanceGeneric {
+    fn instance(&self) -> &dyn Instance {
         &self.instance
     }
-}
 
-impl ProblemGenericPrivate for SPProblem {
-    fn next_solution_id(&mut self) -> usize {
-        self.solution_id_counter += 1;
-        self.solution_id_counter
+    fn layout(&self, key: LayKey) -> &Layout {
+        assert_eq!(
+            key, LayKey::default(),
+            "strip packing problems only have a single layout"
+        );
+        &self.layout
     }
 
-    fn next_layout_id(&mut self) -> usize {
-        self.layout_id_counter += 1;
-        self.layout_id_counter
-    }
-
-    fn missing_item_qtys_mut(&mut self) -> &mut [isize] {
-        &mut self.missing_item_qtys
+    fn layouts_mut(&mut self) -> impl Iterator<Item=(LayKey, &'_ mut Layout)> {
+        iter::once((LayKey::default(), &mut self.layout))
     }
 }
 
@@ -325,5 +318,5 @@ pub fn occupied_width(layout: &Layout) -> fsize {
 
 /// Returns the width of the strip in the solution.
 pub fn strip_width(solution: &Solution) -> fsize {
-    solution.layout_snapshots[0].bin.outer.bbox().width()
+    solution.layout_snapshots[LayKey::default()].bin.outer.bbox().width()
 }

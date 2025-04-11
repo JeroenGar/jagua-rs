@@ -7,7 +7,12 @@ use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
-use slotmap::SlotMap;
+use slotmap::{new_key_type, SlotMap};
+
+new_key_type! {
+    /// Unique key for each `Layout` in a `Problem` or `Solution`
+    pub struct LayKey;
+}
 
 ///A Layout is made out of a [Bin] with a set of [Item]s positioned inside of it in a specific way.
 ///It is a mutable representation, and can be modified by placing or removing items.
@@ -16,8 +21,6 @@ use slotmap::SlotMap;
 ///ensuring that it always reflects the current state of the layout.
 #[derive(Clone)]
 pub struct Layout {
-    /// The unique identifier of the layout, used only to match with a [LayoutSnapshot].
-    pub id: usize,
     /// The bin used for this layout
     pub bin: Bin,
     /// How the items are placed in the bin
@@ -27,10 +30,9 @@ pub struct Layout {
 }
 
 impl Layout {
-    pub fn new(id: usize, bin: Bin) -> Self {
+    pub fn new(bin: Bin) -> Self {
         let cde = bin.base_cde.as_ref().clone();
         Layout {
-            id,
             bin,
             placed_items: SlotMap::with_key(),
             cde,
@@ -38,7 +40,7 @@ impl Layout {
     }
 
     pub fn from_snapshot(ls: &LayoutSnapshot) -> Self {
-        let mut layout = Layout::new(ls.id, ls.bin.clone());
+        let mut layout = Layout::new(ls.bin.clone());
         layout.restore(ls);
         layout
     }
@@ -56,7 +58,6 @@ impl Layout {
 
     pub fn create_snapshot(&mut self) -> LayoutSnapshot {
         LayoutSnapshot {
-            id: self.id,
             bin: self.bin.clone(),
             placed_items: self.placed_items.clone(),
             cde_snapshot: self.cde.create_snapshot(),
@@ -65,17 +66,12 @@ impl Layout {
     }
 
     pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
-        assert_eq!(self.id, layout_snapshot.id);
-
+        assert_eq!(self.bin.id, layout_snapshot.bin.id);
         self.placed_items = layout_snapshot.placed_items.clone();
         self.cde.restore(&layout_snapshot.cde_snapshot);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
         debug_assert!(assertions::layouts_match(self, layout_snapshot))
-    }
-
-    pub fn clone_with_id(&self, id: usize) -> Self {
-        Layout { id, ..self.clone() }
     }
 
     pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation) -> PItemKey {
@@ -128,10 +124,6 @@ impl Layout {
         item_area / bin_area
     }
 
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
     /// Returns the collision detection engine for this layout
     pub fn cde(&self) -> &CDEngine {
         &self.cde
@@ -147,8 +139,6 @@ impl Layout {
 /// `Layout`s can create `LayoutSnapshot`s, and revert back themselves to a previous state using them.
 #[derive(Clone, Debug)]
 pub struct LayoutSnapshot {
-    /// The unique identifier of the layout, used only to match with a [Layout].
-    pub id: usize,
     /// The bin used for this layout
     pub bin: Bin,
     /// How the items are placed in the bin

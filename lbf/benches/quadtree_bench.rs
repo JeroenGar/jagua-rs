@@ -9,9 +9,9 @@ use rand::seq::IteratorRandom;
 
 use jagua_rs::collision_detection::hazard_helpers::DetectionMap;
 use jagua_rs::collision_detection::hazard_helpers::HazardDetector;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
+use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::placing_option::PlacingOption;
-use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::problems::problem::{LayoutIndex, Problem};
 use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::io::json_instance::JsonInstance;
@@ -64,7 +64,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
             b.iter(|| {
                 // Remove an item from the layout
                 let (pik, pi) = problem
-                    .get_layout(&layout_idx)
+                    .layout(&layout_idx)
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
@@ -111,7 +111,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
         let (problem, selected_pi_uids) =
             util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = problem.get_layout(LayoutIndex::Real(0));
+        let layout = problem.layout(LayoutIndex::Real(0));
         let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -130,7 +130,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
             b.iter(|| {
                 let item_id = item_id_cycler.next().unwrap();
                 let item = instance.item(item_id);
-                let layout = problem.get_layout(LayoutIndex::Real(0));
+                let layout = problem.layout(LayoutIndex::Real(0));
                 let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, transf);
@@ -171,7 +171,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         );
         let (mut problem, _) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = problem.get_layout(LayoutIndex::Real(0));
+        let layout = problem.layout(LayoutIndex::Real(0));
         let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -186,7 +186,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
                 let (pik, pi) = problem
-                    .get_layout(layout_idx)
+                    .layout(layout_idx)
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
@@ -203,7 +203,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
 
                 let item_id = p_opt.item_id;
                 let item = instance.item(item_id);
-                let layout = problem.get_layout(LayoutIndex::Real(0));
+                let layout = problem.layout(LayoutIndex::Real(0));
                 let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, &transf);
@@ -242,7 +242,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
         let (problem, selected_pi_uids) =
             util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = problem.get_layout(LayoutIndex::Real(0));
+        let layout = problem.layout(LayoutIndex::Real(0));
         let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -262,7 +262,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
             b.iter(|| {
                 let item_id = item_id_cycler.next().unwrap();
                 let item = instance.item(item_id);
-                let layout = problem.get_layout(LayoutIndex::Real(0));
+                let layout = problem.layout(LayoutIndex::Real(0));
                 let mut buffer_shape = item.shape.as_ref().clone();
                 let mut detected = DetectionMap::new();
                 for transf in sample_cycler.next().unwrap() {

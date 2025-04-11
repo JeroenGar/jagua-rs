@@ -1,136 +1,75 @@
-use crate::entities::instances::instance_generic::InstanceGeneric;
-use crate::entities::layout::Layout;
+use std::any::Any;
+
+use crate::entities::instances::instance::Instance;
+use crate::entities::layout::{LayKey, Layout};
 use crate::entities::placed_item::PItemKey;
 use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem_generic::private::ProblemGenericPrivate;
-use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
-use crate::entities::problems::strip_packing::SPProblem;
 use crate::entities::solution::Solution;
+use crate::fsize;
 
-/// Enum which contains all the different problem types.
 /// A `Problem` represents a problem instance in a modifiable state.
 /// It can insert or remove items, create a snapshot from the current state called a `Solution`,
 /// and restore its state to a previous `Solution`.
-/// <br>
-/// Also enables the use of match statements on the `Problem` enum when variant-specific behavior is required,
-/// When a new variant is added, compile errors will be generated everywhere specific behaviour is required.
-#[derive(Clone)]
-pub enum Problem {
-    /// Bin Packing Problem
-    BP(BPProblem),
-    /// Strip Packing Problem
-    SP(SPProblem),
-}
+/// This trait defines shared functionality of all problem variants.
+pub trait Problem : Any {
+    /// Places an item into the problem instance according to the given `PlacingOption`.
+    /// Returns the index of the layout where the item was placed.
+    fn place_item(&mut self, p_opt: PlacingOption) -> (LayKey, PItemKey);
 
-impl ProblemGeneric for Problem {
-    fn place_item(&mut self, p_opt: PlacingOption) -> (LayoutIndex, PItemKey) {
-        match self {
-            Problem::BP(bp) => bp.place_item(p_opt),
-            Problem::SP(sp) => sp.place_item(p_opt),
-        }
-    }
-
+    /// Removes a placed item (with its unique key) from a specific `Layout`.
+    /// Returns a `PlacingOption` that can be used to place the item back in the same configuration.
+    /// For more information about `commit_instantly`, see [`crate::collision_detection::cd_engine::CDEngine::deregister_hazard`].
     fn remove_item(
         &mut self,
-        layout_index: LayoutIndex,
+        lkey: LayKey,
         pik: PItemKey,
         commit_instantly: bool,
-    ) -> PlacingOption {
-        match self {
-            Problem::BP(bp) => bp.remove_item(layout_index, pik, commit_instantly),
-            Problem::SP(sp) => sp.remove_item(layout_index, pik, commit_instantly),
-        }
+    ) -> PlacingOption;
+
+    /// Saves the current state of the problem as a `Solution`.
+    fn create_solution(&mut self) -> Solution;
+
+    /// Restores the state of the problem to a previous `Solution`.
+    fn restore_to_solution(&mut self, solution: &Solution);
+
+    /// The quantity of each item that is requested but currently missing in the problem instance, indexed by item id.
+    fn missing_item_qtys(&self) -> &[isize];
+
+    /// The quantity of each item that is currently placed in the problem instance, indexed by item id.
+    fn placed_item_qtys(&self) -> impl Iterator<Item = usize> {
+        self.missing_item_qtys()
+            .iter()
+            .enumerate()
+            .map(|(i, missing_qty)| (self.instance().item_qty(i) as isize - missing_qty) as usize)
     }
 
-    fn create_solution(&mut self, old_solution: Option<&Solution>) -> Solution {
-        match self {
-            Problem::BP(bp) => bp.create_solution(old_solution),
-            Problem::SP(sp) => sp.create_solution(old_solution),
-        }
+    fn usage(&mut self) -> fsize {
+        let (total_bin_area, total_used_area) =
+            self.layouts().fold((0.0, 0.0), |acc, (_, l)| {
+                let bin_area = l.bin.area;
+                let used_area = bin_area * l.usage();
+                (acc.0 + bin_area, acc.1 + used_area)
+            });
+        total_used_area / total_bin_area
     }
 
-    fn restore_to_solution(&mut self, solution: &Solution) {
-        match self {
-            Problem::BP(bp) => bp.restore_to_solution(solution),
-            Problem::SP(sp) => sp.restore_to_solution(solution),
-        }
+    fn used_bin_cost(&self) -> u64 {
+        self.layouts().map(|(_,l)| l.bin.value).sum()
     }
 
-    fn layouts(&self) -> &[Layout] {
-        match self {
-            Problem::BP(bp) => bp.layouts(),
-            Problem::SP(sp) => sp.layouts(),
-        }
+    fn layout(&self, key: LayKey) -> &Layout;
+
+    fn layouts(&self) -> impl Iterator<Item = (LayKey, &'_ Layout)>;
+
+    fn layouts_mut(&mut self) -> impl Iterator<Item = (LayKey, &'_ mut Layout)>;
+
+    fn bin_qtys(&self) -> &[usize];
+
+    /// Makes sure that the all collision detection engines are completely updated with the changes made to the layouts.
+    fn flush_changes(&mut self) {
+        self.layouts_mut()
+            .for_each(|(_, l)| l.flush_changes());
     }
 
-    fn layouts_mut(&mut self) -> &mut [Layout] {
-        match self {
-            Problem::BP(bp) => bp.layouts_mut(),
-            Problem::SP(sp) => sp.layouts_mut(),
-        }
-    }
-
-    fn template_layouts(&self) -> &[Layout] {
-        match self {
-            Problem::BP(bp) => bp.template_layouts(),
-            Problem::SP(sp) => sp.template_layouts(),
-        }
-    }
-
-    fn missing_item_qtys(&self) -> &[isize] {
-        match self {
-            Problem::BP(bp) => bp.missing_item_qtys(),
-            Problem::SP(sp) => sp.missing_item_qtys(),
-        }
-    }
-
-    fn bin_qtys(&self) -> &[usize] {
-        match self {
-            Problem::BP(bp) => bp.bin_qtys(),
-            Problem::SP(sp) => sp.bin_qtys(),
-        }
-    }
-
-    fn instance(&self) -> &dyn InstanceGeneric {
-        match self {
-            Problem::BP(bp) => bp.instance(),
-            Problem::SP(sp) => sp.instance(),
-        }
-    }
-}
-
-impl ProblemGenericPrivate for Problem {
-    fn next_solution_id(&mut self) -> usize {
-        match self {
-            Problem::BP(bp) => bp.next_solution_id(),
-            Problem::SP(sp) => sp.next_solution_id(),
-        }
-    }
-
-    fn next_layout_id(&mut self) -> usize {
-        match self {
-            Problem::BP(bp) => bp.next_layout_id(),
-            Problem::SP(sp) => sp.next_layout_id(),
-        }
-    }
-
-    fn missing_item_qtys_mut(&mut self) -> &mut [isize] {
-        match self {
-            Problem::BP(bp) => bp.missing_item_qtys_mut(),
-            Problem::SP(sp) => sp.missing_item_qtys_mut(),
-        }
-    }
-}
-
-impl From<BPProblem> for Problem {
-    fn from(bp: BPProblem) -> Self {
-        Problem::BP(bp)
-    }
-}
-
-impl From<SPProblem> for Problem {
-    fn from(sp: SPProblem) -> Self {
-        Problem::SP(sp)
-    }
+    fn instance(&self) -> &dyn Instance;
 }

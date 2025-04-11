@@ -10,13 +10,13 @@ use thousands::Separable;
 
 use jagua_rs::collision_detection::hazard_filter;
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
+use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::item::Item;
 use jagua_rs::entities::layout::Layout;
 use jagua_rs::entities::placing_option::PlacingOption;
 use jagua_rs::entities::problems::bin_packing::BPProblem;
 use jagua_rs::entities::problems::problem::Problem;
-use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::problems::problem::{LayoutIndex, Problem};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::entities::solution::Solution;
 use jagua_rs::fsize;
@@ -173,7 +173,7 @@ pub fn sample_layout(
     rng: &mut impl Rng,
     sample_counter: &mut usize,
 ) -> Option<PlacingOption> {
-    let layout: &Layout = problem.get_layout(layout_idx);
+    let layout: &Layout = problem.layout(layout_idx);
     let cde = layout.cde();
     let irrel_hazards = match item.hazard_filter.as_ref() {
         None => vec![],

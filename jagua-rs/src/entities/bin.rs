@@ -85,8 +85,7 @@ impl Bin {
     }
 
     /// Create a new `Bin` for a strip-packing problem. Instead of a shape, the bin is always rectangular.
-    pub fn from_strip(rect: AARectangle, cde_config: CDEConfig) -> Self {
-        let id = 0;
+    pub fn from_strip(id: usize, rect: AARectangle, cde_config: CDEConfig) -> Self {
         //The "original" x_min and y_min of the strip should always be at (0, 0)
         let pretransform = Transformation::from_translation((rect.x_min, rect.y_min));
 

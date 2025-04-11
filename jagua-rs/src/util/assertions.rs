@@ -13,7 +13,7 @@ use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::layout::Layout;
 use crate::entities::layout::LayoutSnapshot;
-use crate::entities::problems::problem_generic::ProblemGeneric;
+use crate::entities::problems::problem::Problem;
 use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
@@ -35,16 +35,11 @@ pub fn instance_item_bin_ids_correct(items: &[(Item, usize)], bins: &[(Bin, usiz
         && bins.iter().enumerate().all(|(i, (bin, _qty))| bin.id == i)
 }
 
-pub fn problem_matches_solution<P: ProblemGeneric>(problem: &P, solution: &Solution) -> bool {
-    for l in problem.layouts() {
-        let sl = solution
-            .layout_snapshots
-            .iter()
-            .find(|sl| sl.id == l.id())
-            .unwrap();
-        match layouts_match(l, sl) {
-            true => continue,
-            false => return false,
+pub fn problem_matches_solution<P: Problem>(problem: &P, solution: &Solution) -> bool {
+    for (lkey, l) in problem.layouts() {
+        let ls = &solution.layout_snapshots[lkey];
+        if !layouts_match(l, ls) {
+            return false;
         }
     }
     true
