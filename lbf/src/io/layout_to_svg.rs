@@ -12,14 +12,18 @@ use svg::node::element::{Definitions, Group, Title, Use};
 
 pub fn s_layout_to_svg(
     s_layout: &LayoutSnapshot,
-    instance: &Instance,
+    instance: &dyn Instance,
     options: SvgDrawOptions,
 ) -> Document {
     let layout = Layout::from_snapshot(s_layout);
     layout_to_svg(&layout, instance, options)
 }
 
-pub fn layout_to_svg(layout: &Layout, instance: &Instance, options: SvgDrawOptions) -> Document {
+pub fn layout_to_svg(
+    layout: &Layout,
+    instance: &dyn Instance,
+    options: SvgDrawOptions,
+) -> Document {
     let internal_bin = &layout.bin;
     let inv_bin_transf = internal_bin.pretransform.clone().inverse();
     let bin = parser::pretransform_bin(internal_bin, &inv_bin_transf);

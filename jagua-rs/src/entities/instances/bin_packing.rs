@@ -39,6 +39,18 @@ impl Instance for BPInstance {
         &self.items
     }
 
+    fn bins(&self) -> &[(Bin, usize)] {
+        &self.bins
+    }
+
+    fn bin_qty(&self, id: usize) -> usize {
+        self.bins[id].1
+    }
+
+    fn bin(&self, id: usize) -> &Bin {
+        &self.bins[id].0
+    }
+
     fn item_area(&self) -> fsize {
         self.item_area
     }

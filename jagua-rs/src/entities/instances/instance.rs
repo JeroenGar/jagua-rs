@@ -1,4 +1,5 @@
 use std::any::Any;
+use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::fsize;
 
@@ -11,6 +12,15 @@ pub trait Instance: Any {
     }
     fn item(&self, id: usize) -> &Item {
         &self.items()[id].0
+    }
+
+    fn bins(&self) -> &[(Bin, usize)];
+
+    fn bin_qty(&self, id: usize) -> usize {
+        self.bins()[id].1
+    }
+    fn bin(&self, id: usize) -> &Bin {
+        &self.bins()[id].0
     }
     fn total_item_qty(&self) -> usize {
         self.items().iter().map(|(_, qty)| qty).sum()

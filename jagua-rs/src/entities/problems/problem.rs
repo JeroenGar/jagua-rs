@@ -3,8 +3,7 @@ use std::any::Any;
 use crate::entities::instances::instance::Instance;
 use crate::entities::layout::{LayKey, Layout};
 use crate::entities::placed_item::PItemKey;
-use crate::entities::placing_option::PlacingOption;
-use crate::entities::solution::Solution;
+use crate::entities::placement::Placement;
 use crate::fsize;
 
 /// A `Problem` represents a problem instance in a modifiable state.
@@ -12,9 +11,15 @@ use crate::fsize;
 /// and restore its state to a previous `Solution`.
 /// This trait defines shared functionality of all problem variants.
 pub trait Problem : Any {
+    /// Links a concrete `Instance` to a concrete `Problem`.
+    type Instance: Instance;
+
+    /// The type of the `Solution` that can be created from this `Problem`.
+    type Solution;
+
     /// Places an item into the problem instance according to the given `PlacingOption`.
     /// Returns the index of the layout where the item was placed.
-    fn place_item(&mut self, p_opt: PlacingOption) -> (LayKey, PItemKey);
+    fn place_item(&mut self, p_opt: Placement) -> (LayKey, PItemKey);
 
     /// Removes a placed item (with its unique key) from a specific `Layout`.
     /// Returns a `PlacingOption` that can be used to place the item back in the same configuration.
@@ -24,13 +29,13 @@ pub trait Problem : Any {
         lkey: LayKey,
         pik: PItemKey,
         commit_instantly: bool,
-    ) -> PlacingOption;
+    ) -> Placement;
 
     /// Saves the current state of the problem as a `Solution`.
-    fn create_solution(&mut self) -> Solution;
+    fn create_solution(&mut self) -> Self::Solution;
 
     /// Restores the state of the problem to a previous `Solution`.
-    fn restore_to_solution(&mut self, solution: &Solution);
+    fn restore_to_solution(&mut self, solution: &Self::Solution);
 
     /// The quantity of each item that is requested but currently missing in the problem instance, indexed by item id.
     fn missing_item_qtys(&self) -> &[isize];
@@ -43,7 +48,7 @@ pub trait Problem : Any {
             .map(|(i, missing_qty)| (self.instance().item_qty(i) as isize - missing_qty) as usize)
     }
 
-    fn usage(&mut self) -> fsize {
+    fn usage(&self) -> fsize {
         let (total_bin_area, total_used_area) =
             self.layouts().fold((0.0, 0.0), |acc, (_, l)| {
                 let bin_area = l.bin.area;
@@ -71,5 +76,5 @@ pub trait Problem : Any {
             .for_each(|(_, l)| l.flush_changes());
     }
 
-    fn instance(&self) -> &dyn Instance;
+    fn instance(&self) -> &Self::Instance;
 }

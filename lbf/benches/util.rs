@@ -6,7 +6,7 @@ use std::path::Path;
 
 use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::placing_option::PlacingOption;
+use jagua_rs::entities::placement::Placement;
 use jagua_rs::entities::problems::problem::Problem;
 use jagua_rs::entities::problems::problem::{Problem, STRIP_LAYOUT_IDX};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
@@ -43,7 +43,7 @@ pub fn create_blf_problem(
     instance: Instance,
     config: LBFConfig,
     n_items_removed: usize,
-) -> (SPProblem, Vec<PlacingOption>) {
+) -> (SPProblem, Vec<Placement>) {
     assert!(matches!(&instance, &Instance::SP(_)));
     let mut lbf_optimizer = LBFOptimizer::new(instance.clone(), config, SmallRng::seed_from_u64(0));
     lbf_optimizer.solve();
@@ -66,7 +66,7 @@ pub fn create_blf_problem(
         .iter()
         .map(|k| {
             let pi = &problem.layout.placed_items()[*k];
-            PlacingOption {
+            Placement {
                 layout_idx: STRIP_LAYOUT_IDX,
                 item_id: pi.item_id,
                 d_transf: pi.d_transf,

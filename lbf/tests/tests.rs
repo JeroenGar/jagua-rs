@@ -1,13 +1,15 @@
 #[cfg(test)]
 mod tests {
+    use std::any::Any;
     use std::path::Path;
 
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;
-    use rand::{Rng, SeedableRng};
+    use rand::{SeedableRng};
     use test_case::test_case;
-
-    use jagua_rs::entities::problems::problem::LayoutIndex;
+    use jagua_rs::entities::instances::bin_packing::BPInstance;
+    use jagua_rs::entities::instances::strip_packing::SPInstance;
+    use jagua_rs::entities::layout::LayKey;
     use jagua_rs::entities::problems::problem::Problem;
     use jagua_rs::io::parser::Parser;
     use jagua_rs::util::polygon_simplification::PolySimplConfig;
@@ -41,30 +43,38 @@ mod tests {
 
         let parser = Parser::new(poly_simpl_config, config.cde_config, true);
         let instance = parser.parse(&json_instance);
+        let any_instance = instance.as_ref() as &dyn Any;
+        if let Some(sp_instance) = any_instance.downcast_ref::<SPInstance>() {
+            test_strip_packing(sp_instance.clone(), config);
+        } else if let Some(bp_instance) = any_instance.downcast_ref::<BPInstance>() {
+            test_bin_packing(bp_instance.clone(), config);
+        } else {
+            panic!("Unknown instance type");
+        }
+    }
 
-        let mut optimizer = LBFOptimizer::new(instance.clone(), config, SmallRng::seed_from_u64(0));
+
+    fn test_strip_packing(instance: SPInstance, config: LBFConfig) {
+        let mut opt = LBFOptimizer::from_sp_instance(instance, config, SmallRng::seed_from_u64(0));
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        // a first optimization run
-        optimizer.solve();
+        // a first lbf run
+        opt.solve();
 
         {
             // remove some items
-            let problem = &mut optimizer.problem;
+            let problem = &mut opt.problem;
             for _ in 0..N_ITEMS_TO_REMOVE {
                 //pick random existing layout
-                let layout_index = LayoutIndex::Real(rng.random_range(0..problem.layouts().len()));
-                let random_placed_item = problem
-                    .layout(&layout_index)
-                    .placed_items()
+                let random_placed_item = problem.layout.placed_items()
                     .iter()
                     .choose(&mut rng)
                     .map(|(key, _)| key);
 
                 if let Some(random_placed_item) = random_placed_item {
                     // remove the item
-                    problem.remove_item(layout_index, random_placed_item, false);
+                    problem.remove_item(LayKey::default(), random_placed_item, false);
                 } else {
                     // no items to remove
                     break;
@@ -73,7 +83,43 @@ mod tests {
             // flush changes
             problem.flush_changes();
             // second optimization run
-            optimizer.solve();
+            opt.solve();
+        }
+    }
+
+    fn test_bin_packing(instance: BPInstance, config: LBFConfig) {
+        let mut opt = LBFOptimizer::from_bp_instance(instance, config, SmallRng::seed_from_u64(0));
+
+        let mut rng = SmallRng::seed_from_u64(0);
+
+        // a first optimization run
+        opt.solve();
+
+        {
+            // remove some items
+            let problem = &mut opt.problem;
+            for _ in 0..N_ITEMS_TO_REMOVE {
+                //pick random existing layout
+                let lkey = problem.layouts.keys().choose(&mut rng).unwrap();
+                let random_placed_item = problem
+                    .layout(lkey)
+                    .placed_items()
+                    .iter()
+                    .choose(&mut rng)
+                    .map(|(key, _)| key);
+
+                if let Some(random_placed_item) = random_placed_item {
+                    // remove the item
+                    problem.remove_item(lkey, random_placed_item, false);
+                } else {
+                    // no items to remove
+                    break;
+                }
+            }
+            // flush changes
+            problem.flush_changes();
+            // second optimization run
+            opt.solve();
         }
     }
 }

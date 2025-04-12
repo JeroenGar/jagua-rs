@@ -8,7 +8,7 @@ use rand::rngs::SmallRng;
 
 use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::placing_option::PlacingOption;
+use jagua_rs::entities::placement::Placement;
 use jagua_rs::entities::problems::problem::{LayoutIndex, Problem};
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::geometry::geo_traits::Shape;
@@ -44,7 +44,7 @@ fn hpg_query_bench(c: &mut Criterion) {
         .layout(LayoutIndex::Real(0))
         .placed_items()
         .values()
-        .map(|pi| PlacingOption {
+        .map(|pi| Placement {
             layout_idx: LayoutIndex::Real(0),
             item_id: pi.item_id,
             d_transf: pi.d_transf,
@@ -132,7 +132,7 @@ fn hpg_update_bench(c: &mut Criterion) {
         .layout(LayoutIndex::Real(0))
         .placed_items()
         .values()
-        .map(|pi| PlacingOption {
+        .map(|pi| Placement {
             layout_idx: LayoutIndex::Real(0),
             item_id: pi.item_id,
             d_transf: pi.d_transf,
@@ -194,7 +194,7 @@ fn hpg_update_bench(c: &mut Criterion) {
                 buffer_shape.transform_from(&item.shape, &transf);
                 if !layout.cde().poly_collides(&buffer_shape, &[]) {
                     let d_transf = transf.decompose();
-                    valid_placements.push(PlacingOption {
+                    valid_placements.push(Placement {
                         layout_idx: LayoutIndex::Real(0),
                         item_id: SELECTED_ITEM_ID,
                         d_transf,

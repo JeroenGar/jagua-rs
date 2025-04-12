@@ -1,14 +1,13 @@
 use itertools::Itertools;
-use log::debug;
-use rand::Rng;
-use rand::prelude::IndexedRandom;
-
+use jagua_rs::collision_detection::cd_engine::CDEngine;
 use jagua_rs::entities::item::Item;
-use jagua_rs::entities::layout::Layout;
 use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
 use jagua_rs::geometry::transformation::Transformation;
+use log::debug;
+use rand::Rng;
+use rand::prelude::IndexedRandom;
 
 use crate::lbf_cost::LBFPlacingCost;
 use crate::samplers::uniform_rect_sampler::UniformAARectSampler;
@@ -27,22 +26,22 @@ pub struct HPGSampler<'a> {
 }
 
 impl<'a> HPGSampler<'a> {
-    pub fn new(item: &'a Item, layout: &Layout) -> Option<HPGSampler<'a>> {
+    pub fn new(item: &'a Item, cde: &CDEngine) -> Option<HPGSampler<'a>> {
         let poi = &item.shape.poi;
-        let bin_bbox = layout.bin.bbox();
+        let bin_bbox = &cde.bbox;
 
         //create a pre-transformation which centers the shape around its Pole of Inaccessibility.
         let pretransform = Transformation::from_translation((-poi.center.0, -poi.center.1));
 
-        let hpg = layout.cde().haz_prox_grid().unwrap();
+        let hpg = cde.haz_prox_grid().unwrap();
         let all_cells = hpg.grid.cells.iter().flatten();
         let eligible_cells = all_cells.filter(|c| c.could_accommodate_item(item));
 
         //create samplers for all eligible cells
         let cell_samplers = eligible_cells
             .filter_map(|c| {
-                //map each eligible cell to a rectangle sampler, bounded by the layout's bbox.
-                //(at low densities, the cells could extend significantly beyond the layout's bbox)
+                //map each eligible cell to a rectangle sampler, bounded by the CDE's bbox.
+                //(at low densities, the cells could extend significantly beyond the CDE's bbox)
                 AARectangle::from_intersection(&c.bbox, &bin_bbox)
             })
             .map(|bbox| UniformAARectSampler::new(bbox, item))

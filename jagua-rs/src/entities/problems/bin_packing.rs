@@ -2,15 +2,13 @@ use crate::entities::instances::bin_packing::BPInstance;
 use crate::entities::instances::instance::Instance;
 use crate::entities::layout::{LayKey, Layout};
 use crate::entities::placed_item::PItemKey;
-use crate::entities::placing_option::{LayoutType, PlacingOption};
+use crate::entities::placement::{LayoutId, Placement};
 use crate::entities::problems::problem::Problem;
-use crate::entities::solution::Solution;
 use crate::util::assertions;
 use itertools::Itertools;
 use slotmap::SlotMap;
 use std::time::Instant;
-
-//TODO: what to do with uncommitted removed layouts??
+use crate::entities::solution::BPSolution;
 
 /// Bin Packing Problem
 #[derive(Clone)]
@@ -79,10 +77,12 @@ impl BPProblem {
 }
 
 impl Problem for BPProblem {
-    fn place_item(&mut self, p_opt: PlacingOption) -> (LayKey, PItemKey) {
-        let lkey = match p_opt.layout {
-            LayoutType::Open(lkey) => lkey,
-            LayoutType::Closed { bin_id } => {
+    type Instance = BPInstance;
+    type Solution = BPSolution;
+    fn place_item(&mut self, p_opt: Placement) -> (LayKey, PItemKey) {
+        let lkey = match p_opt.layout_id {
+            LayoutId::Open(lkey) => lkey,
+            LayoutId::Closed { bin_id } => {
                 //open a new layout
                 let bin = self.instance.bins[bin_id].clone().0;
                 let layout = Layout::new(bin);
@@ -103,20 +103,20 @@ impl Problem for BPProblem {
         lkey: LayKey,
         pik: PItemKey,
         commit_instantly: bool,
-    ) -> PlacingOption {
+    ) -> Placement {
         let pi = self.layouts[lkey].remove_item(pik, commit_instantly);
         self.deregister_included_item(pi.item_id);
         if self.layouts[lkey].is_empty() {
             //if layout is empty, close it
             let bin_id = self.layouts[lkey].bin.id;
             self.deregister_layout(lkey);
-            PlacingOption::from_placed_item(LayoutType::Closed { bin_id }, &pi)
+            Placement::from_placed_item(LayoutId::Closed { bin_id }, &pi)
         } else {
-            PlacingOption::from_placed_item(LayoutType::Open(lkey), &pi)
+            Placement::from_placed_item(LayoutId::Open(lkey), &pi)
         }
     }
 
-    fn create_solution(&mut self) -> Solution {
+    fn create_solution(&mut self) -> BPSolution {
         let layout_snapshots = self
             .layouts
             .iter_mut()
@@ -130,7 +130,7 @@ impl Problem for BPProblem {
             .map(|(_, qty)| *qty)
             .collect_vec();
 
-        let solution = Solution {
+        let solution = BPSolution {
             layout_snapshots,
             usage: self.usage(),
             placed_item_qtys: self.placed_item_qtys().collect(),
@@ -139,12 +139,12 @@ impl Problem for BPProblem {
             time_stamp: Instant::now(),
         };
 
-        debug_assert!(assertions::problem_matches_solution(self, &solution));
+        debug_assert!(assertions::bpproblem_matches_solution(self, &solution));
 
         solution
     }
 
-    fn restore_to_solution(&mut self, solution: &Solution) {
+    fn restore_to_solution(&mut self, solution: &BPSolution) {
         let mut layouts_to_remove = vec![];
 
         //Check which layouts from the problem are also present in the solution.
@@ -183,30 +183,30 @@ impl Problem for BPProblem {
 
         self.bin_qtys.clone_from_slice(&solution.bin_qtys);
 
-        debug_assert!(assertions::problem_matches_solution(self, solution));
-    }
-
-    fn layouts(&self) -> impl Iterator<Item = (LayKey, &'_ Layout)> {
-        self.layouts.iter()
+        debug_assert!(assertions::bpproblem_matches_solution(self, solution));
     }
 
     fn missing_item_qtys(&self) -> &[isize] {
         &self.missing_item_qtys
     }
 
-    fn bin_qtys(&self) -> &[usize] {
-        &self.bin_qtys
-    }
-
-    fn instance(&self) -> &dyn Instance {
-        &self.instance
-    }
-
     fn layout(&self, key: LayKey) -> &Layout {
         &self.layouts[key]
     }
 
+    fn layouts(&self) -> impl Iterator<Item = (LayKey, &'_ Layout)> {
+        self.layouts.iter()
+    }
+
     fn layouts_mut(&mut self) -> impl Iterator<Item=(LayKey, &'_ mut Layout)> {
         self.layouts.iter_mut()
+    }
+
+    fn bin_qtys(&self) -> &[usize] {
+        &self.bin_qtys
+    }
+
+    fn instance(&self) -> &Self::Instance {
+        &self.instance
     }
 }

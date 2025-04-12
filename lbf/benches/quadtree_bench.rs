@@ -10,7 +10,7 @@ use rand::seq::IteratorRandom;
 use jagua_rs::collision_detection::hazard_helpers::DetectionMap;
 use jagua_rs::collision_detection::hazard_helpers::HazardDetector;
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::placing_option::PlacingOption;
+use jagua_rs::entities::placement::Placement;
 use jagua_rs::entities::problems::problem::{LayoutIndex, Problem};
 use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
@@ -70,7 +70,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
                     .choose(&mut rng)
                     .expect("No items in layout");
 
-                let p_opt = PlacingOption {
+                let p_opt = Placement {
                     layout_idx,
                     item_id: pi.item_id,
                     d_transf: pi.d_transf,
@@ -192,7 +192,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                     .choose(&mut rng)
                     .expect("No items in layout");
 
-                let p_opt = PlacingOption {
+                let p_opt = Placement {
                     layout_idx,
                     item_id: pi.item_id,
                     d_transf: pi.d_transf,

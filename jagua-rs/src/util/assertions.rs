@@ -14,7 +14,6 @@ use crate::entities::item::Item;
 use crate::entities::layout::Layout;
 use crate::entities::layout::LayoutSnapshot;
 use crate::entities::problems::problem::Problem;
-use crate::entities::solution::Solution;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::transformation::Transformation;
@@ -23,7 +22,9 @@ use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::error;
 use std::collections::HashSet;
-
+use crate::entities::problems::bin_packing::BPProblem;
+use crate::entities::problems::strip_packing::SPProblem;
+use crate::entities::solution::{BPSolution, SPSolution};
 //Various checks to verify correctness of the state of the system
 //Used in debug_assertion!() blocks
 
@@ -35,13 +36,42 @@ pub fn instance_item_bin_ids_correct(items: &[(Item, usize)], bins: &[(Bin, usiz
         && bins.iter().enumerate().all(|(i, (bin, _qty))| bin.id == i)
 }
 
-pub fn problem_matches_solution<P: Problem>(problem: &P, solution: &Solution) -> bool {
-    for (lkey, l) in problem.layouts() {
-        let ls = &solution.layout_snapshots[lkey];
+pub fn spproblem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
+    let SPSolution {
+        strip_width,
+        layout_snapshot,
+        usage,
+        time_stamp: _
+    } = sol;
+
+    assert_eq!(*strip_width, spp.strip_width());
+    assert_eq!(*usage, spp.usage());
+    assert!(layouts_match(&spp.layout, layout_snapshot));
+
+    true
+}
+
+pub fn bpproblem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
+    let BPSolution {
+        layout_snapshots,
+        usage,
+        placed_item_qtys,
+        target_item_qtys: _,
+        bin_qtys,
+        time_stamp: _,
+    } = sol;
+
+    assert_eq!(*usage, bpp.usage());
+    assert_eq!(*placed_item_qtys, bpp.placed_item_qtys().collect_vec());
+    assert_eq!(*bin_qtys, bpp.bin_qtys().to_vec());
+
+    for (lkey, l) in bpp.layouts() {
+        let ls = &layout_snapshots[lkey];
         if !layouts_match(l, ls) {
             return false;
         }
     }
+
     true
 }
 

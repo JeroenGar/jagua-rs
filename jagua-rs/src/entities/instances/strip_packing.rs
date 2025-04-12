@@ -1,3 +1,4 @@
+use crate::entities::bin::Bin;
 use crate::entities::instances::instance::Instance;
 use crate::entities::item::Item;
 use crate::fsize;
@@ -36,6 +37,18 @@ impl SPInstance {
 impl Instance for SPInstance {
     fn items(&self) -> &[(Item, usize)] {
         &self.items
+    }
+
+    fn bins(&self) -> &[(Bin, usize)] {
+        &[]
+    }
+
+    fn bin_qty(&self, _id: usize) -> usize {
+        panic!()
+    }
+
+    fn bin(&self, _id: usize) -> &Bin {
+        panic!()
     }
 
     fn item_area(&self) -> fsize {

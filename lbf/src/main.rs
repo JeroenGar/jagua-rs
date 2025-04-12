@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::fs;
 use std::fs::File;
 use std::io::BufReader;
@@ -8,7 +9,8 @@ use log::{error, warn};
 use mimalloc::MiMalloc;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
-
+use jagua_rs::entities::instances::bin_packing::BPInstance;
+use jagua_rs::entities::instances::strip_packing::SPInstance;
 use jagua_rs::io::parser;
 use jagua_rs::io::parser::Parser;
 use jagua_rs::util::polygon_simplification::PolySimplConfig;
@@ -63,12 +65,28 @@ fn main() {
         None => SmallRng::from_os_rng(),
     };
 
-    let mut optimizer = LBFOptimizer::new(instance.clone(), config, rng);
-    let solution = optimizer.solve();
+    let json_solution = {
+        let any = instance.as_ref() as &dyn Any;
+        if let Some(spi) = any.downcast_ref::<SPInstance>(){
+            // strip packing instance
+            let mut optimizer = LBFOptimizer::from_sp_instance(spi.clone(), config, rng);
+            let sol = optimizer.solve();
+            parser::compose_json_solution_spp(&sol, spi, *EPOCH)
+        }
+        else if let Some(bpi) = any.downcast_ref::<BPInstance>(){
+            // bin packing instance
+            let mut optimizer = LBFOptimizer::from_bp_instance(bpi.clone(), config, rng);
+            let sol = optimizer.solve();
+            parser::compose_json_solution_bpp(&sol, bpi, *EPOCH)
+        }
+        else {
+            panic!("unsupported instance type");
+        }
+    };
 
     let json_output = JsonOutput {
         instance: json_instance.clone(),
-        solution: parser::compose_json_solution(&solution, &instance, *EPOCH),
+        solution: json_solution,
         config,
     };
 
@@ -88,12 +106,12 @@ fn main() {
         .join(format!("sol_{}.json", input_file_stem));
     io::write_json_output(&json_output, Path::new(&solution_path));
 
-    for (i, s_layout) in solution.layout_snapshots.iter().enumerate() {
+    for (i, (_, s_layout)) in solution.layout_snapshots.iter().enumerate() {
         let svg_path = args
             .solution_folder
             .join(format!("sol_{}_{}.svg", input_file_stem, i));
         io::write_svg(
-            &s_layout_to_svg(s_layout, &instance, config.svg_draw_options),
+            &s_layout_to_svg(s_layout, instance.as_ref(), config.svg_draw_options),
             Path::new(&svg_path),
         );
     }
