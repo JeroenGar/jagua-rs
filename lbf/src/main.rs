@@ -5,10 +5,6 @@ use std::io::BufReader;
 use std::path::Path;
 
 use clap::Parser as ClapParser;
-use log::{error, warn};
-use mimalloc::MiMalloc;
-use rand::SeedableRng;
-use rand::prelude::SmallRng;
 use jagua_rs::entities::instances::bin_packing::BPInstance;
 use jagua_rs::entities::instances::strip_packing::SPInstance;
 use jagua_rs::io::parser;
@@ -19,7 +15,11 @@ use lbf::io::json_output::JsonOutput;
 use lbf::io::layout_to_svg::s_layout_to_svg;
 use lbf::lbf_config::LBFConfig;
 use lbf::lbf_optimizer::LBFOptimizer;
-use lbf::{EPOCH, io, LBFInstance, LBFSolution};
+use lbf::{EPOCH, LBFInstance, LBFSolution, io};
+use log::{error, warn};
+use mimalloc::MiMalloc;
+use rand::SeedableRng;
+use rand::prelude::SmallRng;
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -63,11 +63,9 @@ fn main() {
         let any = instance.as_ref() as &dyn Any;
         if let Some(spi) = any.downcast_ref::<SPInstance>() {
             LBFInstance::SP(spi.clone())
-        }
-        else if let Some(bpi) = any.downcast_ref::<BPInstance>() {
+        } else if let Some(bpi) = any.downcast_ref::<BPInstance>() {
             LBFInstance::BP(bpi.clone())
-        }
-        else {
+        } else {
             panic!("unsupported instance type");
         }
     };
@@ -92,12 +90,12 @@ fn main() {
         None => SmallRng::from_os_rng(),
     };
 
-    let solution = match &instance{
+    let solution = match &instance {
         LBFInstance::SP(sp) => {
             let mut optimizer = LBFOptimizer::from_sp_instance(sp.clone(), config, rng);
             let sol = optimizer.solve();
             LBFSolution::SP(sol)
-        },
+        }
         LBFInstance::BP(bp) => {
             let mut optimizer = LBFOptimizer::from_bp_instance(bp.clone(), config, rng);
             let sol = optimizer.solve();
@@ -105,9 +103,8 @@ fn main() {
         }
     };
 
-
     //output
-    match (&instance, &solution){
+    match (&instance, &solution) {
         (LBFInstance::SP(spi), LBFSolution::SP(sol)) => {
             let json_sol = parser::compose_json_solution_spp(&sol, spi, *EPOCH);
             let json_output = JsonOutput {
@@ -123,9 +120,9 @@ fn main() {
 
             io::write_svg(
                 &s_layout_to_svg(&sol.layout_snapshot, spi, config.svg_draw_options),
-                Path::new(&svg_path)
+                Path::new(&svg_path),
             );
-        },
+        }
         (LBFInstance::BP(bpi), LBFSolution::BP(sol)) => {
             let json_sol = parser::compose_json_solution_bpp(&sol, bpi, *EPOCH);
             let json_output = JsonOutput {
@@ -145,7 +142,7 @@ fn main() {
                     Path::new(&svg_path),
                 );
             }
-        },
+        }
         _ => panic!("solution and instance types do not match"),
     };
 }

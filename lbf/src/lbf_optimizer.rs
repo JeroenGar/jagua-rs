@@ -4,8 +4,8 @@ use std::time::Instant;
 use itertools::Itertools;
 use log::{debug, info};
 use ordered_float::NotNan;
-use rand::prelude::SmallRng;
 use rand::Rng;
+use rand::prelude::SmallRng;
 use thousands::Separable;
 
 use jagua_rs::collision_detection::hazard_filter;
@@ -19,7 +19,7 @@ use jagua_rs::entities::problems::problem::Problem;
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::entities::solution::{BPSolution, SPSolution};
 use jagua_rs::fsize;
-use jagua_rs::geometry::convex_hull::{convex_hull_from_surrogate};
+use jagua_rs::geometry::convex_hull::convex_hull_from_surrogate;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 
@@ -100,7 +100,10 @@ impl LBFOptimizer<SPProblem> {
         }
 
         self.problem.fit_strip();
-        info!("[LBF] fitted strip width to {:.3}", self.problem.strip_width());
+        info!(
+            "[LBF] fitted strip width to {:.3}",
+            self.problem.strip_width()
+        );
 
         let solution = self.problem.create_solution();
 

@@ -4,11 +4,11 @@ use crate::entities::layout::{LayKey, Layout};
 use crate::entities::placed_item::PItemKey;
 use crate::entities::placement::{LayoutId, Placement};
 use crate::entities::problems::problem::Problem;
+use crate::entities::solution::BPSolution;
 use crate::util::assertions;
 use itertools::Itertools;
 use slotmap::SlotMap;
 use std::time::Instant;
-use crate::entities::solution::BPSolution;
 
 /// Bin Packing Problem
 #[derive(Clone)]
@@ -98,12 +98,7 @@ impl Problem for BPProblem {
         (lkey, pik)
     }
 
-    fn remove_item(
-        &mut self,
-        lkey: LayKey,
-        pik: PItemKey,
-        commit_instantly: bool,
-    ) -> Placement {
+    fn remove_item(&mut self, lkey: LayKey, pik: PItemKey, commit_instantly: bool) -> Placement {
         let pi = self.layouts[lkey].remove_item(pik, commit_instantly);
         self.deregister_included_item(pi.item_id);
         if self.layouts[lkey].is_empty() {
@@ -198,7 +193,7 @@ impl Problem for BPProblem {
         self.layouts.iter()
     }
 
-    fn layouts_mut(&mut self) -> impl Iterator<Item=(LayKey, &'_ mut Layout)> {
+    fn layouts_mut(&mut self) -> impl Iterator<Item = (LayKey, &'_ mut Layout)> {
         self.layouts.iter_mut()
     }
 

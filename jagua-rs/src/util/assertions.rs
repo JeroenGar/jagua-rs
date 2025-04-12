@@ -13,7 +13,10 @@ use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::entities::layout::Layout;
 use crate::entities::layout::LayoutSnapshot;
+use crate::entities::problems::bin_packing::BPProblem;
 use crate::entities::problems::problem::Problem;
+use crate::entities::problems::strip_packing::SPProblem;
+use crate::entities::solution::{BPSolution, SPSolution};
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::transformation::Transformation;
@@ -22,9 +25,6 @@ use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::error;
 use std::collections::HashSet;
-use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::strip_packing::SPProblem;
-use crate::entities::solution::{BPSolution, SPSolution};
 //Various checks to verify correctness of the state of the system
 //Used in debug_assertion!() blocks
 
@@ -41,7 +41,7 @@ pub fn spproblem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
         strip_width,
         layout_snapshot,
         usage,
-        time_stamp: _
+        time_stamp: _,
     } = sol;
 
     assert_eq!(*strip_width, spp.strip_width());

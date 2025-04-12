@@ -1,8 +1,8 @@
 use std::time::Instant;
 
-use slotmap::SecondaryMap;
 use crate::entities::layout::{LayKey, LayoutSnapshot};
 use crate::fsize;
+use slotmap::SecondaryMap;
 
 pub trait Solution {
     fn layout_snapshots(&self) -> impl Iterator<Item = &LayoutSnapshot>;
@@ -23,7 +23,6 @@ pub struct SPSolution {
     pub time_stamp: Instant,
 }
 
-
 /// Represents a snapshot of a `BPProblem` at a specific moment.
 /// Solutions can be used to restore the state of a `BPProblem` to a previous state.
 #[derive(Debug, Clone)]
@@ -41,5 +40,3 @@ pub struct BPSolution {
     /// Instant the solution was created
     pub time_stamp: Instant,
 }
-
-

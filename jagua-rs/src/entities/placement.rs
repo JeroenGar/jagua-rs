@@ -28,7 +28,5 @@ pub enum LayoutId {
     /// An already existing layout (currently open)
     Open(LayKey),
     /// A new layout (currently closed)
-    Closed{
-        bin_id: usize
-    }
+    Closed { bin_id: usize },
 }

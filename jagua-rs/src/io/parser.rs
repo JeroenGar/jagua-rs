@@ -24,7 +24,7 @@ use crate::util::config::CDEConfig;
 use crate::util::polygon_simplification;
 use crate::util::polygon_simplification::{PolySimplConfig, PolySimplMode};
 use itertools::Itertools;
-use log::{log, Level};
+use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
@@ -248,7 +248,10 @@ pub fn compose_json_solution_spp(
         height: instance.strip_height,
     };
 
-    let placed_items = solution.layout_snapshot.placed_items.values()
+    let placed_items = solution
+        .layout_snapshot
+        .placed_items
+        .values()
         .map(|placed_item| {
             let item_index = placed_item.item_id;
             let item = instance.item(item_index);
@@ -258,7 +261,7 @@ pub fn compose_json_solution_spp(
                 &item.pretransform,
                 &solution.layout_snapshot.bin.pretransform,
             )
-                .decompose();
+            .decompose();
 
             JsonPlacedItem {
                 index: item_index,
@@ -269,7 +272,9 @@ pub fn compose_json_solution_spp(
             }
         })
         .collect::<Vec<JsonPlacedItem>>();
-    let statistics = JsonLayoutStats { usage: solution.layout_snapshot.usage };
+    let statistics = JsonLayoutStats {
+        usage: solution.layout_snapshot.usage,
+    };
     JsonSolution {
         layouts: vec![JsonLayout {
             container,
@@ -303,7 +308,8 @@ pub fn compose_json_solution_bpp(
                         &placed_item.d_transf,
                         &item.pretransform,
                         &sl.bin.pretransform,
-                    ).decompose();
+                    )
+                    .decompose();
 
                     JsonPlacedItem {
                         index: item_index,

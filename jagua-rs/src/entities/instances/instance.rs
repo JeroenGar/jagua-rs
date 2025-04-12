@@ -1,7 +1,7 @@
-use std::any::Any;
 use crate::entities::bin::Bin;
 use crate::entities::item::Item;
 use crate::fsize;
+use std::any::Any;
 
 /// An `Instance` is the static (unmodifiable) representation of a problem instance.
 /// This trait defines shared functionality of all instance variants.

@@ -3,10 +3,6 @@ mod tests {
     use std::any::Any;
     use std::path::Path;
 
-    use rand::prelude::IteratorRandom;
-    use rand::prelude::SmallRng;
-    use rand::{SeedableRng};
-    use test_case::test_case;
     use jagua_rs::entities::instances::bin_packing::BPInstance;
     use jagua_rs::entities::instances::strip_packing::SPInstance;
     use jagua_rs::entities::layout::LayKey;
@@ -16,6 +12,10 @@ mod tests {
     use lbf::io;
     use lbf::lbf_config::LBFConfig;
     use lbf::lbf_optimizer::LBFOptimizer;
+    use rand::SeedableRng;
+    use rand::prelude::IteratorRandom;
+    use rand::prelude::SmallRng;
+    use test_case::test_case;
 
     const N_ITEMS_TO_REMOVE: usize = 5;
 
@@ -53,7 +53,6 @@ mod tests {
         }
     }
 
-
     fn test_strip_packing(instance: SPInstance, config: LBFConfig) {
         let mut opt = LBFOptimizer::from_sp_instance(instance, config, SmallRng::seed_from_u64(0));
 
@@ -67,7 +66,9 @@ mod tests {
             let problem = &mut opt.problem;
             for _ in 0..N_ITEMS_TO_REMOVE {
                 //pick random existing layout
-                let random_placed_item = problem.layout.placed_items()
+                let random_placed_item = problem
+                    .layout
+                    .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .map(|(key, _)| key);

@@ -10,7 +10,7 @@ use crate::fsize;
 /// It can insert or remove items, create a snapshot from the current state called a `Solution`,
 /// and restore its state to a previous `Solution`.
 /// This trait defines shared functionality of all problem variants.
-pub trait Problem : Any {
+pub trait Problem: Any {
     /// Links a concrete `Instance` to a concrete `Problem`.
     type Instance: Instance;
 
@@ -24,12 +24,7 @@ pub trait Problem : Any {
     /// Removes a placed item (with its unique key) from a specific `Layout`.
     /// Returns a `PlacingOption` that can be used to place the item back in the same configuration.
     /// For more information about `commit_instantly`, see [`crate::collision_detection::cd_engine::CDEngine::deregister_hazard`].
-    fn remove_item(
-        &mut self,
-        lkey: LayKey,
-        pik: PItemKey,
-        commit_instantly: bool,
-    ) -> Placement;
+    fn remove_item(&mut self, lkey: LayKey, pik: PItemKey, commit_instantly: bool) -> Placement;
 
     /// Saves the current state of the problem as a `Solution`.
     fn create_solution(&mut self) -> Self::Solution;
@@ -49,17 +44,16 @@ pub trait Problem : Any {
     }
 
     fn usage(&self) -> fsize {
-        let (total_bin_area, total_used_area) =
-            self.layouts().fold((0.0, 0.0), |acc, (_, l)| {
-                let bin_area = l.bin.area;
-                let used_area = bin_area * l.usage();
-                (acc.0 + bin_area, acc.1 + used_area)
-            });
+        let (total_bin_area, total_used_area) = self.layouts().fold((0.0, 0.0), |acc, (_, l)| {
+            let bin_area = l.bin.area;
+            let used_area = bin_area * l.usage();
+            (acc.0 + bin_area, acc.1 + used_area)
+        });
         total_used_area / total_bin_area
     }
 
     fn used_bin_cost(&self) -> u64 {
-        self.layouts().map(|(_,l)| l.bin.value).sum()
+        self.layouts().map(|(_, l)| l.bin.value).sum()
     }
 
     fn layout(&self, key: LayKey) -> &Layout;
@@ -72,8 +66,7 @@ pub trait Problem : Any {
 
     /// Makes sure that the all collision detection engines are completely updated with the changes made to the layouts.
     fn flush_changes(&mut self) {
-        self.layouts_mut()
-            .for_each(|(_, l)| l.flush_changes());
+        self.layouts_mut().for_each(|(_, l)| l.flush_changes());
     }
 
     fn instance(&self) -> &Self::Instance;

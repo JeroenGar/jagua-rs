@@ -1,5 +1,3 @@
-use std::iter;
-use std::time::Instant;
 use crate::collision_detection::hazard::HazardEntity;
 use crate::entities::bin::Bin;
 use crate::entities::instances::instance::Instance;
@@ -16,6 +14,8 @@ use crate::util::assertions;
 use crate::util::config::CDEConfig;
 use itertools::Itertools;
 use log::error;
+use std::iter;
+use std::time::Instant;
 
 /// Strip Packing Problem
 #[derive(Clone)]
@@ -40,7 +40,7 @@ impl SPProblem {
         Self {
             instance,
             layout,
-            missing_item_qtys
+            missing_item_qtys,
         }
     }
 
@@ -97,13 +97,7 @@ impl SPProblem {
             .for_each(|(i, qty)| *qty = self.instance.item_qty(i) as isize);
 
         //Modifying the width causes the bin to change, so the layout must be replaced
-        self.layout = Layout::new(
-            Bin::from_strip(
-                0,
-                rect,
-                self.layout.bin.base_cde.config()
-            ),
-        );
+        self.layout = Layout::new(Bin::from_strip(0, rect, self.layout.bin.base_cde.config()));
 
         //place the items back in the new layout
         for (item_id, d_transf) in placed_items {
@@ -183,7 +177,8 @@ impl Problem for SPProblem {
     type Solution = SPSolution;
     fn place_item(&mut self, p_opt: Placement) -> (LayKey, PItemKey) {
         assert_eq!(
-            p_opt.layout_id, LayoutId::Open(LayKey::default()),
+            p_opt.layout_id,
+            LayoutId::Open(LayKey::default()),
             "Strip packing problems only have a single layout"
         );
         let item_id = p_opt.item_id;
@@ -194,14 +189,10 @@ impl Problem for SPProblem {
         (LayKey::default(), placed_item_key)
     }
 
-    fn remove_item(
-        &mut self,
-        lkey: LayKey,
-        pik: PItemKey,
-        commit_instantly: bool,
-    ) -> Placement {
+    fn remove_item(&mut self, lkey: LayKey, pik: PItemKey, commit_instantly: bool) -> Placement {
         assert_eq!(
-            lkey, LayKey::default(),
+            lkey,
+            LayKey::default(),
             "strip packing problems only have a single layout"
         );
         let pi = self.layout.remove_item(pik, commit_instantly);
@@ -215,7 +206,7 @@ impl Problem for SPProblem {
             layout_snapshot: self.layout.create_snapshot(),
             usage: self.usage(),
             strip_width: self.strip_width(),
-            time_stamp: Instant::now()
+            time_stamp: Instant::now(),
         };
 
         debug_assert!(assertions::spproblem_matches_solution(self, &solution));
@@ -232,10 +223,14 @@ impl Problem for SPProblem {
         }
 
         //restore the missing item quantities
-        self.missing_item_qtys.iter_mut().enumerate()
+        self.missing_item_qtys
+            .iter_mut()
+            .enumerate()
             .for_each(|(id, qty)| *qty = self.instance.item_qty(id) as isize);
 
-        self.layout.placed_items().iter()
+        self.layout
+            .placed_items()
+            .iter()
             .for_each(|(_, pi)| self.missing_item_qtys[pi.item_id] -= 1);
 
         debug_assert!(assertions::spproblem_matches_solution(self, solution));
@@ -247,7 +242,8 @@ impl Problem for SPProblem {
 
     fn layout(&self, key: LayKey) -> &Layout {
         assert_eq!(
-            key, LayKey::default(),
+            key,
+            LayKey::default(),
             "strip packing problems only have a single layout"
         );
         &self.layout
@@ -257,7 +253,7 @@ impl Problem for SPProblem {
         iter::once((LayKey::default(), &self.layout))
     }
 
-    fn layouts_mut(&mut self) -> impl Iterator<Item=(LayKey, &'_ mut Layout)> {
+    fn layouts_mut(&mut self) -> impl Iterator<Item = (LayKey, &'_ mut Layout)> {
         iter::once((LayKey::default(), &mut self.layout))
     }
 

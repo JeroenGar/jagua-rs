@@ -7,7 +7,7 @@ use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
-use slotmap::{new_key_type, SlotMap};
+use slotmap::{SlotMap, new_key_type};
 
 new_key_type! {
     /// Unique key for each `Layout` in a `Problem` or `Solution`
