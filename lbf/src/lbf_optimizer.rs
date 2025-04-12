@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::cmp::{Ordering, Reverse};
 use std::time::Instant;
 
@@ -20,7 +19,7 @@ use jagua_rs::entities::problems::problem::Problem;
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::entities::solution::{BPSolution, SPSolution};
 use jagua_rs::fsize;
-use jagua_rs::geometry::convex_hull::convex_hull_from_points;
+use jagua_rs::geometry::convex_hull::{convex_hull_from_surrogate};
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
 
@@ -41,6 +40,8 @@ pub struct LBFOptimizer<P: Problem> {
     pub sample_counter: usize,
 }
 
+/// LBF implementation for strip-packing problems
+
 impl LBFOptimizer<SPProblem> {
     pub fn from_sp_instance(instance: SPInstance, config: LBFConfig, rng: SmallRng) -> Self {
         assert!(config.n_samples > 0);
@@ -55,47 +56,13 @@ impl LBFOptimizer<SPProblem> {
         }
     }
 
-    pub fn solve2(&self) -> SPSolution {
-        todo!()
-    }
-}
-
-impl LBFOptimizer<BPProblem> {
-    pub fn from_bp_instance(instance: BPInstance, config: LBFConfig, rng: SmallRng) -> Self {
-        assert!(config.n_samples > 0);
-        let problem = BPProblem::new(instance.clone()).into();
-        Self {
-            instance,
-            problem,
-            config,
-            rng,
-            sample_counter: 0,
-        }
-    }
-
-    pub fn solve2(&self) -> BPSolution {
-        todo!()
-    }
-}
-
-impl<P: Problem> LBFOptimizer<P> {
-    pub fn solve(&mut self) -> P::Solution {
-        //sort the items by descending diameter of convex hull
-        let sorted_item_indices = (0..self.instance.items().len())
-            .sorted_by_cached_key(|i| {
-                let item = &self.instance.items()[*i].0;
-                let ch = SimplePolygon::new(convex_hull_from_points(item.shape.points.clone()));
-                let ch_diam = NotNan::new(ch.diameter()).expect("convex hull diameter is NaN");
-                Reverse(ch_diam)
-            })
-            .collect_vec();
-
+    pub fn solve(&mut self) -> SPSolution {
         let start = Instant::now();
 
-        'outer: for item_index in sorted_item_indices {
+        'outer: for item_index in item_order(&self.instance) {
             let item = &self.instance.items()[item_index].0;
             //place all items of this type
-            'inner: while self.problem.missing_item_qtys()[item_index] > 0 {
+            while self.problem.missing_item_qtys()[item_index] > 0 {
                 //find a position and insert it
                 match find_lbf_placement(
                     &self.problem,
@@ -120,27 +87,86 @@ impl<P: Problem> LBFOptimizer<P> {
                         }
                     }
                     None => {
-                        let any = &mut self.problem as &mut dyn Any;
-                        if let Some(_) = any.downcast_ref::<BPProblem>() {
-                            // items of this type don't fit
-                            break 'inner;
-                        }
-                        if let Some(sp_prob) = any.downcast_mut::<SPProblem>() {
-                            let new_width = sp_prob.strip_width() * 1.1;
-                            info!(
-                                "[LBF] no placement found, extending strip width by 10% to {:.3}",
-                                new_width
-                            );
-                            sp_prob.modify_strip_in_back(new_width);
-                        }
+                        // item does not fit anywhere, increase the strip width
+                        let new_width = self.problem.strip_width() * 1.1;
+                        info!(
+                            "[LBF] no placement found, extending strip by 10% to {:.3}",
+                            new_width
+                        );
+                        self.problem.modify_strip_in_back(new_width);
                     }
                 }
             }
         }
 
-        if let Some(sp_prob) = (&mut self.problem as &mut dyn Any).downcast_mut::<SPProblem>() {
-            sp_prob.fit_strip();
-            info!("[LBF] fitted strip width to {:.3}", sp_prob.strip_width());
+        self.problem.fit_strip();
+        info!("[LBF] fitted strip width to {:.3}", self.problem.strip_width());
+
+        let solution = self.problem.create_solution();
+
+        info!(
+            "[LBF] optimization finished in {:.3}ms ({} samples)",
+            start.elapsed().as_secs_f64() * 1000.0,
+            self.sample_counter.separate_with_commas()
+        );
+
+        info!(
+            "[LBF] solution contains {} items with a usage of {:.3}%",
+            solution.layout_snapshot.placed_items.len(),
+            solution.usage * 100.0
+        );
+        solution
+    }
+}
+
+impl LBFOptimizer<BPProblem> {
+    pub fn from_bp_instance(instance: BPInstance, config: LBFConfig, rng: SmallRng) -> Self {
+        assert!(config.n_samples > 0);
+        let problem = BPProblem::new(instance.clone()).into();
+        Self {
+            instance,
+            problem,
+            config,
+            rng,
+            sample_counter: 0,
+        }
+    }
+
+    pub fn solve(&mut self) -> BPSolution {
+        let start = Instant::now();
+
+        'outer: for item_index in item_order(&self.instance) {
+            let item = &self.instance.items()[item_index].0;
+            //place all items of this type
+            'inner: while self.problem.missing_item_qtys()[item_index] > 0 {
+                //find a position and insert it
+                let placement = find_lbf_placement(
+                    &self.problem,
+                    item,
+                    &self.config,
+                    &mut self.rng,
+                    &mut self.sample_counter,
+                );
+
+                match placement {
+                    Some(i_opt) => {
+                        let l_index = self.problem.place_item(i_opt);
+                        info!(
+                            "[LBF] placing item {}/{} with id {} at [{}] in Layout {:?}",
+                            self.problem.placed_item_qtys().sum::<usize>(),
+                            self.instance.total_item_qty(),
+                            i_opt.item_id,
+                            i_opt.d_transf,
+                            l_index
+                        );
+                        #[allow(clippy::absurd_extreme_comparisons)]
+                        if self.problem.placed_item_qtys().sum::<usize>() >= ITEM_LIMIT {
+                            break 'outer;
+                        }
+                    }
+                    None => break 'inner, // items of this type do not fit anywhere
+                }
+            }
         }
 
         let solution = self.problem.create_solution();
@@ -151,11 +177,15 @@ impl<P: Problem> LBFOptimizer<P> {
             self.sample_counter.separate_with_commas()
         );
 
-        // info!(
-        //     "[LBF] solution contains {} items with a usage of {:.3}%",
-        //     solution.n_items_placed(),
-        //     solution.usage() * 100.0
-        // );
+        info!(
+            "[LBF] solution contains {} items with a usage of {:.3}%",
+            solution
+                .layout_snapshots
+                .values()
+                .map(|ls| ls.placed_items.len())
+                .sum::<usize>(),
+            solution.usage * 100.0
+        );
         solution
     }
 }
@@ -181,7 +211,8 @@ pub fn find_lbf_placement(
     //sequential search until a valid placement is found
     for layout_id in open_layouts.chain(bins_with_stock) {
         debug!("searching in layout {:?}", layout_id);
-        if let Some(placing_opt) = sample_layout(problem, layout_id, item, config, rng, sample_counter)
+        if let Some(placing_opt) =
+            sample_layout(problem, layout_id, item, config, rng, sample_counter)
         {
             return Some(placing_opt);
         }
@@ -298,4 +329,19 @@ pub fn sample_layout(
     *sample_counter += ls_sampler.n_samples;
 
     best.map(|(p_opt, _)| p_opt)
+}
+
+pub fn item_order(instance: &impl Instance) -> Vec<usize> {
+    //sort the items by descending diameter of convex hull
+    (0..instance.items().len())
+        .sorted_by_cached_key(|i| {
+            let item = &instance.items()[*i].0;
+            let ch = SimplePolygon::new(
+                convex_hull_from_surrogate(&item.shape)
+                    .expect("items should have a surrogate generated"),
+            );
+            let ch_diam = NotNan::new(ch.diameter()).expect("convex hull diameter is NaN");
+            Reverse(ch_diam)
+        })
+        .collect_vec()
 }

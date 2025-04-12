@@ -19,7 +19,7 @@ use lbf::io::json_output::JsonOutput;
 use lbf::io::layout_to_svg::s_layout_to_svg;
 use lbf::lbf_config::LBFConfig;
 use lbf::lbf_optimizer::LBFOptimizer;
-use lbf::{EPOCH, io};
+use lbf::{EPOCH, io, LBFInstance, LBFSolution};
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -58,37 +58,25 @@ fn main() {
     };
 
     let parser = Parser::new(poly_simpl_config, config.cde_config, true);
-    let instance = parser.parse(&json_instance);
-
-    let rng = match config.prng_seed {
-        Some(seed) => SmallRng::seed_from_u64(seed),
-        None => SmallRng::from_os_rng(),
-    };
-
-    let json_solution = {
+    let instance = {
+        let instance = parser.parse(&json_instance);
         let any = instance.as_ref() as &dyn Any;
-        if let Some(spi) = any.downcast_ref::<SPInstance>(){
-            // strip packing instance
-            let mut optimizer = LBFOptimizer::from_sp_instance(spi.clone(), config, rng);
-            let sol = optimizer.solve();
-            parser::compose_json_solution_spp(&sol, spi, *EPOCH)
+        if let Some(spi) = any.downcast_ref::<SPInstance>() {
+            LBFInstance::SP(spi.clone())
         }
-        else if let Some(bpi) = any.downcast_ref::<BPInstance>(){
-            // bin packing instance
-            let mut optimizer = LBFOptimizer::from_bp_instance(bpi.clone(), config, rng);
-            let sol = optimizer.solve();
-            parser::compose_json_solution_bpp(&sol, bpi, *EPOCH)
+        else if let Some(bpi) = any.downcast_ref::<BPInstance>() {
+            LBFInstance::BP(bpi.clone())
         }
         else {
             panic!("unsupported instance type");
         }
     };
 
-    let json_output = JsonOutput {
-        instance: json_instance.clone(),
-        solution: json_solution,
-        config,
-    };
+    let input_file_stem = args.input_file.file_stem().unwrap().to_str().unwrap();
+
+    let solution_path = args
+        .solution_folder
+        .join(format!("sol_{}.json", input_file_stem));
 
     if !args.solution_folder.exists() {
         fs::create_dir_all(&args.solution_folder).unwrap_or_else(|_| {
@@ -99,20 +87,65 @@ fn main() {
         });
     }
 
-    let input_file_stem = args.input_file.file_stem().unwrap().to_str().unwrap();
+    let rng = match config.prng_seed {
+        Some(seed) => SmallRng::seed_from_u64(seed),
+        None => SmallRng::from_os_rng(),
+    };
 
-    let solution_path = args
-        .solution_folder
-        .join(format!("sol_{}.json", input_file_stem));
-    io::write_json_output(&json_output, Path::new(&solution_path));
+    let solution = match &instance{
+        LBFInstance::SP(sp) => {
+            let mut optimizer = LBFOptimizer::from_sp_instance(sp.clone(), config, rng);
+            let sol = optimizer.solve();
+            LBFSolution::SP(sol)
+        },
+        LBFInstance::BP(bp) => {
+            let mut optimizer = LBFOptimizer::from_bp_instance(bp.clone(), config, rng);
+            let sol = optimizer.solve();
+            LBFSolution::BP(sol)
+        }
+    };
 
-    for (i, (_, s_layout)) in solution.layout_snapshots.iter().enumerate() {
-        let svg_path = args
-            .solution_folder
-            .join(format!("sol_{}_{}.svg", input_file_stem, i));
-        io::write_svg(
-            &s_layout_to_svg(s_layout, instance.as_ref(), config.svg_draw_options),
-            Path::new(&svg_path),
-        );
-    }
+
+    //output
+    match (&instance, &solution){
+        (LBFInstance::SP(spi), LBFSolution::SP(sol)) => {
+            let json_sol = parser::compose_json_solution_spp(&sol, spi, *EPOCH);
+            let json_output = JsonOutput {
+                instance: json_instance.clone(),
+                solution: json_sol,
+                config,
+            };
+            io::write_json_output(&json_output, Path::new(&solution_path));
+
+            let svg_path = args
+                .solution_folder
+                .join(format!("sol_{}.svg", input_file_stem));
+
+            io::write_svg(
+                &s_layout_to_svg(&sol.layout_snapshot, spi, config.svg_draw_options),
+                Path::new(&svg_path)
+            );
+        },
+        (LBFInstance::BP(bpi), LBFSolution::BP(sol)) => {
+            let json_sol = parser::compose_json_solution_bpp(&sol, bpi, *EPOCH);
+            let json_output = JsonOutput {
+                instance: json_instance.clone(),
+                solution: json_sol,
+                config,
+            };
+
+            io::write_json_output(&json_output, Path::new(&solution_path));
+
+            for (i, (_, s_layout)) in sol.layout_snapshots.iter().enumerate() {
+                let svg_path = args
+                    .solution_folder
+                    .join(format!("sol_{}_{}.svg", input_file_stem, i));
+                io::write_svg(
+                    &s_layout_to_svg(s_layout, bpi, config.svg_draw_options),
+                    Path::new(&svg_path),
+                );
+            }
+        },
+        _ => panic!("solution and instance types do not match"),
+    };
 }

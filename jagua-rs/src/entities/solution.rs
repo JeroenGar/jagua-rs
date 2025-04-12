@@ -4,6 +4,11 @@ use slotmap::SecondaryMap;
 use crate::entities::layout::{LayKey, LayoutSnapshot};
 use crate::fsize;
 
+pub trait Solution {
+    fn layout_snapshots(&self) -> impl Iterator<Item = &LayoutSnapshot>;
+    fn usage(&self) -> fsize;
+}
+
 /// Represents a snapshot of a `SPProblem` at a specific moment.
 /// Solutions can be used to restore the state of a `SPProblem` to a previous state.
 #[derive(Debug, Clone)]
@@ -37,39 +42,4 @@ pub struct BPSolution {
     pub time_stamp: Instant,
 }
 
-// impl Solution {
-//
-//     /// Whether all items demanded in the `instance` are placed
-//     pub fn is_complete(&self, instance: &impl Instance) -> bool {
-//         self.placed_item_qtys
-//             .iter()
-//             .enumerate()
-//             .all(|(i, &qty)| qty >= instance.item_qty(i))
-//     }
-//
-//     /// Ratio of included item area vs total demanded item area in the instance
-//     pub fn completeness(&self, instance: &impl Instance) -> fsize {
-//         let total_item_area = instance.item_area();
-//         let included_item_area = self
-//             .placed_item_qtys
-//             .iter()
-//             .enumerate()
-//             .map(|(i, qty)| instance.item(i).shape.area() * *qty as fsize)
-//             .sum::<fsize>();
-//         included_item_area / total_item_area
-//     }
-//
-//     /// Returns the quantities of the items that still need to be placed to reach a complete solution.
-//     pub fn missing_item_qtys(&self, instance: &impl Instance) -> Vec<isize> {
-//         debug_assert!(instance.items().len() == self.placed_item_qtys.len());
-//         self.placed_item_qtys
-//             .iter()
-//             .enumerate()
-//             .map(|(i, &qty)| instance.item_qty(i) as isize - qty as isize)
-//             .collect_vec()
-//     }
-//
-//     pub fn n_items_placed(&self) -> usize {
-//         self.placed_item_qtys.iter().sum()
-//     }
-// }
+

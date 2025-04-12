@@ -63,3 +63,11 @@ fn grow_convex_hull(mut h: Vec<Point>, next: Point) -> Vec<Point> {
 fn cross(a: Point, b: Point, c: Point) -> fsize {
     (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0)
 }
+
+pub fn convex_hull_from_surrogate(s: &SimplePolygon) -> Result<Vec<Point>, &'static str> {
+    if let Some(surr) = s.surrogate.as_ref() {
+        Ok(surr.convex_hull_indices.iter().map(|&i| s.points[i]).collect())
+    } else {
+        Err("No surrogate available")
+    }
+}
