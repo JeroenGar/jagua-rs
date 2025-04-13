@@ -40,12 +40,12 @@ impl SPProblem {
         }
     }
 
-    /// Adds width to the strip in the back, keeping the front fixed.
-    pub fn extend_strip(&mut self, extra_width: fsize) {
+    /// Modifies the width of the the strip in the back, keeping the front fixed.
+    pub fn change_strip_width(&mut self, new_width: fsize) {
         let new_bbox = AARectangle::new(
             0.0,
             0.0,
-            self.strip_width() + extra_width,
+            new_width,
             self.strip_height(),
         );
         let new_bin = Bin::from_strip(0, new_bbox, self.layout.bin.base_cde.config());
