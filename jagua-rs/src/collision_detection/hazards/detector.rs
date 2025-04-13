@@ -25,7 +25,10 @@ pub trait HazardDetector: HazardFilter {
     fn iter(&self) -> impl Iterator<Item = &HazardEntity>;
 }
 
-impl<T> HazardFilter for T where T: HazardDetector {
+impl<T> HazardFilter for T
+where
+    T: HazardDetector,
+{
     fn is_irrelevant(&self, haz: &HazardEntity) -> bool {
         self.contains(haz)
     }

@@ -72,7 +72,8 @@ impl LBFOptimizerSP {
                     }
                     None => {
                         // item does not fit anywhere, increase the strip width
-                        self.problem.change_strip_width(self.problem.strip_width() * 1.1);
+                        self.problem
+                            .change_strip_width(self.problem.strip_width() * 1.1);
                         info!(
                             "[LBF] no placement found, extended strip by 10% to {:.3}",
                             self.problem.strip_width()
