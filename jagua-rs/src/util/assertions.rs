@@ -9,14 +9,10 @@ use crate::collision_detection::hpg::hpg_cell::HPGCellUpdate;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_node::QTNode;
-use crate::entities::bin::Bin;
-use crate::entities::item::Item;
-use crate::entities::layout::Layout;
-use crate::entities::layout::LayoutSnapshot;
-use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem::Problem;
-use crate::entities::problems::strip_packing::SPProblem;
-use crate::entities::solution::{BPSolution, SPSolution};
+use crate::entities::general::bin::Bin;
+use crate::entities::general::item::Item;
+use crate::entities::general::layout::Layout;
+use crate::entities::general::layout::LayoutSnapshot;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::aa_rectangle::AARectangle;
 use crate::geometry::transformation::Transformation;
@@ -25,6 +21,10 @@ use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::error;
 use std::collections::HashSet;
+use crate::entities::bin_packing::problem::BPProblem;
+use crate::entities::bin_packing::solution::BPSolution;
+use crate::entities::strip_packing::problem::SPProblem;
+use crate::entities::strip_packing::solution::SPSolution;
 //Various checks to verify correctness of the state of the system
 //Used in debug_assertion!() blocks
 
@@ -63,9 +63,9 @@ pub fn bpproblem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
 
     assert_eq!(*usage, bpp.usage());
     assert_eq!(*placed_item_qtys, bpp.placed_item_qtys().collect_vec());
-    assert_eq!(*bin_qtys, bpp.bin_qtys().to_vec());
+    assert_eq!(bin_qtys, &bpp.bin_qtys);
 
-    for (lkey, l) in bpp.layouts() {
+    for (lkey, l) in &bpp.layouts {
         let ls = &layout_snapshots[lkey];
         if !layouts_match(l, ls) {
             return false;

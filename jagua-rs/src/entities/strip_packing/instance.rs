@@ -1,12 +1,12 @@
-use crate::entities::bin::Bin;
-use crate::entities::instances::instance::Instance;
-use crate::entities::item::Item;
+use crate::entities::general::bin::Bin;
+use crate::entities::general::instance::Instance;
+use crate::entities::general::item::Item;
 use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 
-/// Strip-packing problem instance: a set of items to be packed into a single strip.
-/// The items are to be packed in such a way that the total width of the strip used is minimized.
+/// Strip-packing problem instance: a set of items to be packed into a single strip with a fixed height and variable width.
+/// The items should be packed in such a way that the total width of the strip used is minimized.
 #[derive(Debug, Clone)]
 pub struct SPInstance {
     /// The items to be packed and their quantities

@@ -1,9 +1,3 @@
-pub mod bin;
-pub mod instances;
-pub mod item;
-pub mod layout;
-pub mod placed_item;
-pub mod placement;
-pub mod problems;
-pub mod quality_zone;
-pub mod solution;
+pub mod general;
+pub mod bin_packing;
+pub mod strip_packing;

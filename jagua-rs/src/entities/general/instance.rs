@@ -1,5 +1,5 @@
-use crate::entities::bin::Bin;
-use crate::entities::item::Item;
+use crate::entities::general::bin::Bin;
+use crate::entities::general::item::Item;
 use crate::fsize;
 use std::any::Any;
 

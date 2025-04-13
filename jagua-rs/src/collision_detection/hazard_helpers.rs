@@ -1,5 +1,5 @@
 use crate::collision_detection::hazard::HazardEntity;
-use crate::entities::placed_item::PItemKey;
+use crate::entities::general::placed_item::PItemKey;
 use slotmap::SecondaryMap;
 
 /// Trait for structs that can be used to filter out irrelevant hazards.

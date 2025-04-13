@@ -1,5 +1,5 @@
 use crate::collision_detection::hazard_filter::QZHazardFilter;
-use crate::entities::item::Item;
+use crate::entities::general::item::Item;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;

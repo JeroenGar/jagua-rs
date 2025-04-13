@@ -1,18 +1,13 @@
 use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
-use crate::collision_detection::hazard::Hazard;
-use crate::entities::bin::Bin;
-use crate::entities::item::Item;
-use crate::entities::placed_item::{PItemKey, PlacedItem};
+use crate::collision_detection::hazard::{Hazard, HazardEntity};
+use crate::entities::general::bin::Bin;
+use crate::entities::general::item::Item;
+use crate::entities::general::placed_item::{PItemKey, PlacedItem};
 use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
-use slotmap::{SlotMap, new_key_type};
-
-new_key_type! {
-    /// Unique key for each `Layout` in a `Problem` or `Solution`
-    pub struct LayKey;
-}
+use slotmap::SlotMap;
 
 ///A Layout is made out of a [Bin] with a set of [Item]s positioned inside of it in a specific way.
 ///It is a mutable representation, and can be modified by placing or removing items.
@@ -48,7 +43,7 @@ impl Layout {
     pub fn change_bin(&mut self, bin: Bin) {
         // swap the bin
         self.bin = bin;
-        // update the CDE
+        // rebuild the CDE
         self.cde = self.bin.base_cde.as_ref().clone();
         for (pk, pi) in self.placed_items.iter() {
             let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
@@ -132,6 +127,14 @@ impl Layout {
     /// Makes sure that the collision detection engine is completely updated with the changes made to the layout.
     pub fn flush_changes(&mut self) {
         self.cde.flush_haz_prox_grid();
+    }
+
+    /// Returns true if all the items are placed without colliding
+    pub fn is_feasible(&self) -> bool {
+        self.placed_items.iter().all(|(pk, pi)| {
+            let irrel_haz = HazardEntity::from((pk, pi));
+            !self.cde.poly_collides(&pi.shape, &[irrel_haz])
+        })
     }
 }
 

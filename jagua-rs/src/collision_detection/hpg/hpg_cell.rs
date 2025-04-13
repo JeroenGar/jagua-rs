@@ -5,8 +5,8 @@ use ordered_float::NotNan;
 
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
-use crate::entities::item::Item;
-use crate::entities::quality_zone::N_QUALITIES;
+use crate::entities::general::item::Item;
+use crate::entities::general::quality_zone::N_QUALITIES;
 use crate::fsize;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{SeparationDistance, Shape};

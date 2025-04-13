@@ -1,27 +1,8 @@
 use std::time::Instant;
-
-use crate::entities::layout::{LayKey, LayoutSnapshot};
-use crate::fsize;
 use slotmap::SecondaryMap;
-
-pub trait Solution {
-    fn layout_snapshots(&self) -> impl Iterator<Item = &LayoutSnapshot>;
-    fn usage(&self) -> fsize;
-}
-
-/// Represents a snapshot of a `SPProblem` at a specific moment.
-/// Solutions can be used to restore the state of a `SPProblem` to a previous state.
-#[derive(Debug, Clone)]
-pub struct SPSolution {
-    /// Width of the strip
-    pub strip_width: fsize,
-    /// Snapshot of the strip
-    pub layout_snapshot: LayoutSnapshot,
-    /// Usage of the strip
-    pub usage: fsize,
-    /// Instant the solution was created
-    pub time_stamp: Instant,
-}
+use crate::entities::bin_packing::LayKey;
+use crate::entities::general::layout::LayoutSnapshot;
+use crate::fsize;
 
 /// Represents a snapshot of a `BPProblem` at a specific moment.
 /// Solutions can be used to restore the state of a `BPProblem` to a previous state.

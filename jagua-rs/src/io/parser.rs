@@ -1,13 +1,10 @@
 use std::time::Instant;
 
-use crate::entities::bin::Bin;
-use crate::entities::instances::bin_packing::BPInstance;
-use crate::entities::instances::instance::Instance;
-use crate::entities::instances::strip_packing::SPInstance;
-use crate::entities::item::Item;
-use crate::entities::quality_zone::InferiorQualityZone;
-use crate::entities::quality_zone::N_QUALITIES;
-use crate::entities::solution::{BPSolution, SPSolution};
+use crate::entities::general::bin::Bin;
+use crate::entities::bin_packing::instance::BPInstance;
+use crate::entities::general::instance::Instance;
+use crate::entities::strip_packing::instance::SPInstance;
+use crate::entities::general::item::Item;
 use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_enums::AllowedRotation;
@@ -28,6 +25,9 @@ use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
+use crate::entities::bin_packing::solution::BPSolution;
+use crate::entities::general::quality_zone::{InferiorQualityZone, N_QUALITIES};
+use crate::entities::strip_packing::solution::SPSolution;
 
 /// Parses a `JsonInstance` into an `Instance`.
 pub struct Parser {

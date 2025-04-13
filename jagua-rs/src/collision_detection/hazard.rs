@@ -1,4 +1,4 @@
-use crate::entities::placed_item::{PItemKey, PlacedItem};
+use crate::entities::general::placed_item::{PItemKey, PlacedItem};
 use crate::geometry::d_transformation::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::simple_polygon::SimplePolygon;

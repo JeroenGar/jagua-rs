@@ -1,12 +1,12 @@
-use crate::entities::bin::Bin;
-use crate::entities::instances::instance::Instance;
-use crate::entities::item::Item;
+use crate::entities::general::bin::Bin;
+use crate::entities::general::instance::Instance;
+use crate::entities::general::item::Item;
 use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 
 /// Bin-packing problem instance: a set of items to be packed into a set of bins.
-/// The items are to be packed in such a way that the total cost of the bins used is minimized.
+/// The items should be packed in such a way that the total cost of the bins used is minimized.
 #[derive(Debug, Clone)]
 pub struct BPInstance {
     /// Items to be packed in the instance, along with their requested quantities

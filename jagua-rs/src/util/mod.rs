@@ -1,4 +1,4 @@
-use crate::entities::layout::Layout;
+use crate::entities::general::layout::Layout;
 
 /// Set of functions used throughout assure the correctness of the library.
 pub mod assertions;
