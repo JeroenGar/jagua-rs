@@ -10,8 +10,9 @@ use rand::seq::IteratorRandom;
 use jagua_rs::collision_detection::hazard_helpers::DetectionMap;
 use jagua_rs::collision_detection::hazard_helpers::HazardDetector;
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::placement::Placement;
-use jagua_rs::entities::problems::problem::{LayoutIndex, Problem};
+use jagua_rs::entities::layout::LayKey;
+use jagua_rs::entities::placement::{LayoutId, Placement};
+use jagua_rs::entities::problems::problem::Problem;
 use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::io::json_instance::JsonInstance;
@@ -55,29 +56,28 @@ fn quadtree_update_bench(c: &mut Criterion) {
             config.cde_config,
             config.poly_simpl_tolerance,
         );
-        let (mut problem, _) = util::create_blf_problem(instance.clone(), config, 0);
+        let (mut problem, _) = util::create_lbf_problem(instance.clone(), config, 0);
 
-        let layout_idx = LayoutIndex::Real(0);
         let mut rng = SmallRng::seed_from_u64(0);
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
                 // Remove an item from the layout
                 let (pik, pi) = problem
-                    .layout(&layout_idx)
+                    .layout
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
 
                 let p_opt = Placement {
-                    layout_idx,
+                    layout_id: LayoutId::Open(LayKey::default()),
                     item_id: pi.item_id,
                     d_transf: pi.d_transf,
                 };
 
                 //println!("Removing item with id: {}\n", pi_uid.item_id);
-                problem.remove_item(layout_idx, pik, true);
+                problem.remove_item(LayKey::default(), pik, true);
 
                 problem.flush_changes();
 
@@ -109,9 +109,9 @@ fn quadtree_query_bench(c: &mut Criterion) {
             config.poly_simpl_tolerance,
         );
         let (problem, selected_pi_uids) =
-            util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
+            util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = problem.layout(LayoutIndex::Real(0));
+        let layout = &problem.layout;
         let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -130,7 +130,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
             b.iter(|| {
                 let item_id = item_id_cycler.next().unwrap();
                 let item = instance.item(item_id);
-                let layout = problem.layout(LayoutIndex::Real(0));
+                let layout = &problem.layout;
                 let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, transf);
@@ -169,9 +169,9 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
             config.cde_config,
             config.poly_simpl_tolerance,
         );
-        let (mut problem, _) = util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
+        let (mut problem, _) = util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = problem.layout(LayoutIndex::Real(0));
+        let layout = &problem.layout;
         let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -181,29 +181,28 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
 
         let mut sample_cycler = samples.chunks(N_SAMPLES_PER_ITER).cycle();
 
-        let layout_idx = LayoutIndex::Real(0);
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
                 let (pik, pi) = problem
-                    .layout(layout_idx)
+                    .layout
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
 
                 let p_opt = Placement {
-                    layout_idx,
+                    layout_id: LayoutId::Open(LayKey::default()),
                     item_id: pi.item_id,
                     d_transf: pi.d_transf,
                 };
 
-                problem.remove_item(layout_idx, pik, true);
+                problem.remove_item(LayKey::default(), pik, true);
                 problem.flush_changes();
 
                 let item_id = p_opt.item_id;
                 let item = instance.item(item_id);
-                let layout = problem.layout(LayoutIndex::Real(0));
+                let layout = &problem.layout;
                 let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, &transf);
@@ -240,9 +239,9 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
             config.poly_simpl_tolerance,
         );
         let (problem, selected_pi_uids) =
-            util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
+            util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = problem.layout(LayoutIndex::Real(0));
+        let layout = &problem.layout;
         let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -262,7 +261,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
             b.iter(|| {
                 let item_id = item_id_cycler.next().unwrap();
                 let item = instance.item(item_id);
-                let layout = problem.layout(LayoutIndex::Real(0));
+                let layout = &problem.layout;
                 let mut buffer_shape = item.shape.as_ref().clone();
                 let mut detected = DetectionMap::new();
                 for transf in sample_cycler.next().unwrap() {

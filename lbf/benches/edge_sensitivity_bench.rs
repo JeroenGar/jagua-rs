@@ -10,10 +10,9 @@ use rand::prelude::SmallRng;
 
 use jagua_rs::entities::instances::bin_packing::BPInstance;
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance::Instance;
 use jagua_rs::entities::instances::strip_packing::SPInstance;
 use jagua_rs::entities::item::Item;
-use jagua_rs::entities::problems::problem::{LayoutIndex, Problem};
+use jagua_rs::entities::problems::problem::{Problem};
 use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::point::Point;
@@ -66,11 +65,11 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                 config.cde_config,
                 config.poly_simpl_tolerance,
             );
-            modify_instance(&instance, edge_multiplier as usize, config)
+            modify_instance(instance, edge_multiplier as usize, config)
         };
 
         let (problem, selected_pi_uids) =
-            util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
+            util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         {
             let draw_options = SvgDrawOptions {
@@ -79,7 +78,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                 ..SvgDrawOptions::default()
             };
             let svg = io::layout_to_svg::layout_to_svg(
-                problem.layout(LayoutIndex::Real(0)),
+                &problem.layout,
                 &instance,
                 draw_options,
             );
@@ -91,7 +90,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        let layout = problem.layout(LayoutIndex::Real(0));
+        let layout = &problem.layout;
         /*let samples = {
             let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
             (0..N_SAMPLES).map(
@@ -100,7 +99,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
         };*/
 
         let samples = {
-            let mut hpg_sampler = HPGSampler::new(instance.item(0), layout)
+            let mut hpg_sampler = HPGSampler::new(instance.item(0), layout.cde())
                 .expect("should be able to create HPGSampler");
             (0..N_TOTAL_SAMPLES)
                 .map(|_| hpg_sampler.sample(&mut rng))
@@ -146,30 +145,22 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
     g.finish();
 }
 
-fn modify_instance(instance: &Instance, multiplier: usize, config: LBFConfig) -> Instance {
-    let modified_items = instance
-        .items()
-        .iter()
-        .map(|(item, qty)| {
-            let modified_shape = multiply_edge_count(&item.shape, multiplier);
-
-            let modified_item = Item::new(
+fn modify_instance(mut instance: SPInstance, multiplier: usize, config: LBFConfig) -> SPInstance {
+    instance
+        .items
+        .iter_mut()
+        .for_each(|(item, _)| {
+            *item = Item::new(
                 item.id,
-                modified_shape,
+                multiply_edge_count(&item.shape, multiplier),
                 item.allowed_rotation.clone(),
                 item.base_quality,
                 item.value,
                 item.pretransform.clone(),
                 config.cde_config.item_surrogate_config,
             );
-            (modified_item, *qty)
-        })
-        .collect_vec();
-
-    match instance {
-        Instance::SP(spi) => Instance::SP(SPInstance::new(modified_items, spi.strip_height)),
-        Instance::BP(bpi) => Instance::BP(BPInstance::new(modified_items, bpi.bins.clone())),
-    }
+        });
+    instance
 }
 
 fn multiply_edge_count(shape: &SimplePolygon, multiplier: usize) -> SimplePolygon {

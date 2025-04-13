@@ -7,9 +7,9 @@ use rand::SeedableRng;
 use rand::rngs::SmallRng;
 
 use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::placement::Placement;
-use jagua_rs::entities::problems::problem::{LayoutIndex, Problem};
+use jagua_rs::entities::layout::LayKey;
+use jagua_rs::entities::placement::{LayoutId, Placement};
+use jagua_rs::entities::problems::problem::Problem;
 use jagua_rs::entities::problems::strip_packing::SPProblem;
 use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
@@ -39,13 +39,13 @@ fn hpg_query_bench(c: &mut Criterion) {
         base_config.poly_simpl_tolerance,
     );
     let (base_problem, _) =
-        util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
+        util::create_lbf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
     let base_p_opts = base_problem
-        .layout(LayoutIndex::Real(0))
+        .layout
         .placed_items()
         .values()
         .map(|pi| Placement {
-            layout_idx: LayoutIndex::Real(0),
+            layout_id: LayoutId::Open(LayKey::default()),
             item_id: pi.item_id,
             d_transf: pi.d_transf,
         })
@@ -61,12 +61,7 @@ fn hpg_query_bench(c: &mut Criterion) {
             config.cde_config,
             config.poly_simpl_tolerance,
         );
-        let mut problem = match instance.clone() {
-            Instance::BP(_) => panic!("Expected SPInstance"),
-            Instance::SP(instance) => {
-                SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
-            }
-        };
+        let mut problem = SPProblem::new(instance.clone(), base_problem.strip_width(), config.cde_config);
         // Place the items in exactly the same way as the base problem
         for p_opt in base_p_opts.iter() {
             problem.place_item(*p_opt);
@@ -87,10 +82,10 @@ fn hpg_query_bench(c: &mut Criterion) {
 
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
-        let layout = problem.layout(LayoutIndex::Real(0));
+        let layout = &problem.layout;
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
-        let mut sampler = HPGSampler::new(item, layout).unwrap();
+        let mut sampler = HPGSampler::new(item, layout.cde()).unwrap();
         println!(
             "[{}] sampler coverage: {:.3}% with {} samplers",
             n_hpg_cells,
@@ -127,13 +122,13 @@ fn hpg_update_bench(c: &mut Criterion) {
         base_config.poly_simpl_tolerance,
     );
     let (base_problem, _) =
-        util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
+        util::create_lbf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
     let base_p_opts = base_problem
-        .layout(LayoutIndex::Real(0))
+        .layout
         .placed_items()
         .values()
         .map(|pi| Placement {
-            layout_idx: LayoutIndex::Real(0),
+            layout_id: LayoutId::Open(LayKey::default()),
             item_id: pi.item_id,
             d_transf: pi.d_transf,
         })
@@ -149,12 +144,7 @@ fn hpg_update_bench(c: &mut Criterion) {
             config.cde_config,
             config.poly_simpl_tolerance,
         );
-        let mut problem = match instance.clone() {
-            Instance::BP(_) => panic!("Expected SPInstance"),
-            Instance::SP(instance) => {
-                SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
-            }
-        };
+        let mut problem = SPProblem::new(instance.clone(), base_problem.strip_width(), config.cde_config);
         // Place the items in exactly the same way as the base problem
         for p_opt in base_p_opts.iter() {
             problem.place_item(*p_opt);
@@ -175,10 +165,10 @@ fn hpg_update_bench(c: &mut Criterion) {
 
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
-        let layout = problem.layout(LayoutIndex::Real(0));
+        let layout = &problem.layout;
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
-        let mut sampler = HPGSampler::new(item, layout).unwrap();
+        let mut sampler = HPGSampler::new(item, layout.cde()).unwrap();
         println!(
             "[{}] sampler coverage: {:.3}% with {} samplers",
             n_hpg_cells,
@@ -195,7 +185,7 @@ fn hpg_update_bench(c: &mut Criterion) {
                 if !layout.cde().poly_collides(&buffer_shape, &[]) {
                     let d_transf = transf.decompose();
                     valid_placements.push(Placement {
-                        layout_idx: LayoutIndex::Real(0),
+                        layout_id: LayoutId::Open(LayKey::default()),
                         item_id: SELECTED_ITEM_ID,
                         d_transf,
                     });
