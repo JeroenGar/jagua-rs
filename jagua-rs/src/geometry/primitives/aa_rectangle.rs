@@ -303,7 +303,7 @@ impl CollidesWith<Edge> for AARectangle {
 
 impl DistanceTo<Point> for AARectangle {
     #[inline(always)]
-    fn sq_distance(&self, point: &Point) -> fsize {
+    fn sq_distance_to(&self, point: &Point) -> fsize {
         let Point(x, y) = *point;
         let mut distance: fsize = 0.0;
         if x < self.x_min {
@@ -320,8 +320,8 @@ impl DistanceTo<Point> for AARectangle {
     }
 
     #[inline(always)]
-    fn distance(&self, point: &Point) -> fsize {
-        self.sq_distance(point).sqrt()
+    fn distance_to(&self, point: &Point) -> fsize {
+        self.sq_distance_to(point).sqrt()
     }
 }
 
@@ -335,7 +335,7 @@ impl SeparationDistance<Point> for AARectangle {
     #[inline(always)]
     fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
         match self.collides_with(point) {
-            false => (GeoPosition::Exterior, self.sq_distance(point)),
+            false => (GeoPosition::Exterior, self.sq_distance_to(point)),
             true => {
                 let Point(x, y) = *point;
                 let min_distance = [

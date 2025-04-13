@@ -144,13 +144,13 @@ impl Shape for Edge {
     }
 
     fn diameter(&self) -> fsize {
-        self.start.distance(&self.end)
+        self.start.distance_to(&self.end)
     }
 }
 
 impl DistanceTo<Point> for Edge {
     #[inline(always)]
-    fn sq_distance(&self, point: &Point) -> fsize {
+    fn sq_distance_to(&self, point: &Point) -> fsize {
         let Point(x, y) = point;
         let Point(xx, yy) = self.closest_point_on_edge(point);
 
@@ -159,8 +159,8 @@ impl DistanceTo<Point> for Edge {
     }
 
     #[inline(always)]
-    fn distance(&self, point: &Point) -> fsize {
-        fsize::sqrt(self.sq_distance(point))
+    fn distance_to(&self, point: &Point) -> fsize {
+        fsize::sqrt(self.sq_distance_to(point))
     }
 }
 

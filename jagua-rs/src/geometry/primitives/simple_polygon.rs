@@ -108,7 +108,7 @@ impl SimplePolygon {
         let sq_diam = ch
             .iter()
             .tuple_combinations()
-            .map(|(p1, p2)| p1.sq_distance(p2))
+            .map(|(p1, p2)| p1.sq_distance_to(p2))
             .max_by_key(|sq_d| NotNan::new(*sq_d).unwrap())
             .expect("convex hull is empty");
 
@@ -312,18 +312,18 @@ impl CollidesWith<Point> for SimplePolygon {
 }
 
 impl DistanceTo<Point> for SimplePolygon {
-    fn sq_distance(&self, point: &Point) -> fsize {
+    fn sq_distance_to(&self, point: &Point) -> fsize {
         match self.collides_with(point) {
             true => 0.0,
             false => self
                 .edge_iter()
-                .map(|edge| edge.sq_distance(point))
+                .map(|edge| edge.sq_distance_to(point))
                 .min_by(|a, b| a.partial_cmp(b).unwrap())
                 .unwrap(),
         }
     }
-    fn distance(&self, point: &Point) -> fsize {
-        self.sq_distance(point).sqrt()
+    fn distance_to(&self, point: &Point) -> fsize {
+        self.sq_distance_to(point).sqrt()
     }
 }
 
@@ -336,7 +336,7 @@ impl SeparationDistance<Point> for SimplePolygon {
     fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
         let distance_to_closest_edge = self
             .edge_iter()
-            .map(|edge| edge.sq_distance(point))
+            .map(|edge| edge.sq_distance_to(point))
             .min_by_key(|sq_d| OrderedFloat(*sq_d))
             .unwrap();
 

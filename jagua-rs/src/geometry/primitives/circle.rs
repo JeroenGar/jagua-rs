@@ -39,7 +39,7 @@ impl Circle {
         let mut bounding_circle = circles.next().expect("no circles provided").clone();
 
         for circle in circles {
-            let distance_between_centers = bounding_circle.center.distance(&circle.center);
+            let distance_between_centers = bounding_circle.center.distance_to(&circle.center);
             if bounding_circle.radius < distance_between_centers + circle.radius {
                 // circle not contained in bounding circle, expand
                 let diameter = Edge::new(bounding_circle.center, circle.center)
@@ -88,7 +88,7 @@ impl CollidesWith<Circle> for Circle {
 
 impl CollidesWith<Edge> for Circle {
     fn collides_with(&self, edge: &Edge) -> bool {
-        edge.sq_distance(&self.center) <= self.radius.powi(2)
+        edge.sq_distance_to(&self.center) <= self.radius.powi(2)
     }
 }
 
@@ -109,16 +109,16 @@ impl CollidesWith<AARectangle> for Circle {
 
 impl CollidesWith<Point> for Circle {
     fn collides_with(&self, point: &Point) -> bool {
-        point.sq_distance(&self.center) <= self.radius.powi(2)
+        point.sq_distance_to(&self.center) <= self.radius.powi(2)
     }
 }
 
 impl DistanceTo<Point> for Circle {
-    fn sq_distance(&self, other: &Point) -> fsize {
-        self.distance(other).powi(2)
+    fn sq_distance_to(&self, other: &Point) -> fsize {
+        self.distance_to(other).powi(2)
     }
 
-    fn distance(&self, point: &Point) -> fsize {
+    fn distance_to(&self, point: &Point) -> fsize {
         let Point(x, y) = point;
         let Point(cx, cy) = self.center;
         let sq_d = (x - cx).powi(2) + (y - cy).powi(2);
@@ -149,11 +149,11 @@ impl SeparationDistance<Point> for Circle {
 }
 
 impl DistanceTo<Circle> for Circle {
-    fn sq_distance(&self, other: &Circle) -> fsize {
-        self.distance(other).powi(2)
+    fn sq_distance_to(&self, other: &Circle) -> fsize {
+        self.distance_to(other).powi(2)
     }
 
-    fn distance(&self, other: &Circle) -> fsize {
+    fn distance_to(&self, other: &Circle) -> fsize {
         match self.separation_distance(other) {
             (GeoPosition::Interior, _) => 0.0,
             (GeoPosition::Exterior, d) => d,
@@ -163,7 +163,7 @@ impl DistanceTo<Circle> for Circle {
 
 impl SeparationDistance<Circle> for Circle {
     fn separation_distance(&self, other: &Circle) -> (GeoPosition, fsize) {
-        let sq_center_dist = self.center.sq_distance(&other.center);
+        let sq_center_dist = self.center.sq_distance_to(&other.center);
         let sq_radii_sum = (self.radius + other.radius).powi(2);
         if sq_center_dist < sq_radii_sum {
             let dist = sq_radii_sum.sqrt() - sq_center_dist.sqrt();
@@ -181,11 +181,11 @@ impl SeparationDistance<Circle> for Circle {
 }
 
 impl DistanceTo<Edge> for Circle {
-    fn sq_distance(&self, e: &Edge) -> fsize {
-        self.distance(e).powi(2)
+    fn sq_distance_to(&self, e: &Edge) -> fsize {
+        self.distance_to(e).powi(2)
     }
 
-    fn distance(&self, e: &Edge) -> fsize {
+    fn distance_to(&self, e: &Edge) -> fsize {
         match self.separation_distance(e) {
             (GeoPosition::Interior, _) => 0.0,
             (GeoPosition::Exterior, d) => d,
@@ -195,7 +195,7 @@ impl DistanceTo<Edge> for Circle {
 
 impl SeparationDistance<Edge> for Circle {
     fn separation_distance(&self, e: &Edge) -> (GeoPosition, fsize) {
-        let distance_to_center = e.distance(&self.center);
+        let distance_to_center = e.distance_to(&self.center);
         if distance_to_center < self.radius {
             (GeoPosition::Interior, self.radius - distance_to_center)
         } else {

@@ -10,3 +10,5 @@ pub use qt_hazard::QTHazPresence;
 pub use qt_hazard::QTHazard;
 #[doc(inline)]
 pub use qt_node::QTNode;
+#[doc(inline)]
+pub use qt_traits::QTQueryable;

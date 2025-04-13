@@ -50,7 +50,7 @@ impl SPSurrogate {
             .map(|p| {
                 poles
                     .iter()
-                    .map(|c| c.distance(p))
+                    .map(|c| c.distance_to(p))
                     .fold(fsize::MAX, |acc, d| fsize::min(acc, d))
             })
             .fold(fsize::MIN, |acc, d| fsize::max(acc, d));

@@ -5,8 +5,6 @@ use slotmap::SecondaryMap;
 
 #[cfg(doc)]
 use crate::collision_detection::hazards::Hazard;
-use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::{AARectangle, Edge};
 
 /// Trait for structs that can track and store already detected [`Hazard`]s during querying.
 /// Used during 'collision collection' to avoid repeatedly checking the same hazards.

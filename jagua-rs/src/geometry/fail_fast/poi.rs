@@ -114,7 +114,7 @@ impl POINode {
             && poles.iter().all(|c| !c.collides_with(&bbox.centroid()));
 
         let distance = {
-            let distance_to_edges = poly.edge_iter().map(|e| e.distance(&bbox.centroid()));
+            let distance_to_edges = poly.edge_iter().map(|e| e.distance_to(&bbox.centroid()));
 
             let distance_to_poles = poles
                 .iter()

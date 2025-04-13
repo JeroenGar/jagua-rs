@@ -124,7 +124,7 @@ fn clip(shape: &SimplePolygon, ray: &Edge) -> Vec<Edge> {
     let intersections = shape
         .edge_iter()
         .flat_map(|edge| edge.collides_at(ray))
-        .sorted_by_key(|p| NotNan::new(ray.start.distance(p)).unwrap())
+        .sorted_by_key(|p| NotNan::new(ray.start.distance_to(p)).unwrap())
         .collect_vec();
 
     //every pair of (sorted) intersections defines a clipped line
@@ -186,7 +186,7 @@ fn loss_function(
         min_distance_to_poles.iter()
     )
     .map(|(p, min_distance_to_existing_ray, min_distance_to_pole)| {
-        let distance_to_new_ray = new_ray.distance(p);
+        let distance_to_new_ray = new_ray.distance_to(p);
 
         let min_distance_to_ray = fsize::min(*min_distance_to_existing_ray, distance_to_new_ray);
 
@@ -204,7 +204,7 @@ fn min_distances_to_rays(points: &[Point], rays: &[Edge], forfeit_distance: fsiz
         .iter()
         .map(|p| {
             rays.iter()
-                .map(|r| r.distance(p))
+                .map(|r| r.distance_to(p))
                 .fold(forfeit_distance, fsize::min)
         })
         .collect_vec()
@@ -220,7 +220,7 @@ fn min_distances_to_poles(
         .map(|p| {
             poles
                 .iter()
-                .map(|c| c.distance(p))
+                .map(|c| c.distance_to(p))
                 .fold(forfeit_distance, fsize::min)
         })
         .collect_vec()
