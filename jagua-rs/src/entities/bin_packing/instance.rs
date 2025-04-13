@@ -5,9 +5,8 @@ use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 
-/// Bin-packing problem instance: a set of items to be packed into a set of bins.
-/// The items should be packed in such a way that the total cost of the bins used is minimized.
 #[derive(Debug, Clone)]
+/// Instance of the Bin Packing Problem: a set of items to be packed into a set of bins.
 pub struct BPInstance {
     /// Items to be packed in the instance, along with their requested quantities
     pub items: Vec<(Item, usize)>,
@@ -41,17 +40,5 @@ impl Instance for BPInstance {
 
     fn bins(&self) -> &[(Bin, usize)] {
         &self.bins
-    }
-
-    fn bin_qty(&self, id: usize) -> usize {
-        self.bins[id].1
-    }
-
-    fn bin(&self, id: usize) -> &Bin {
-        &self.bins[id].0
-    }
-
-    fn item_area(&self) -> fsize {
-        self.item_area
     }
 }

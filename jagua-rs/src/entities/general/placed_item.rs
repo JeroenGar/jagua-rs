@@ -6,12 +6,15 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use slotmap::new_key_type;
 use std::sync::Arc;
 
+#[cfg(doc)]
+use crate::entities::general::layout::Layout;
+
 new_key_type! {
-    /// Unique key for each `PlacedItem` in a layout.
+    /// Unique key for each [`PlacedItem`] in a layout.
     pub struct PItemKey;
 }
 
-/// Represents an `Item` that has been placed in a `Layout`
+/// Represents an [`Item`] that has been placed in a [`Layout`]
 #[derive(Clone, Debug)]
 pub struct PlacedItem {
     /// ID of the type of `Item` that was placed

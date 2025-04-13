@@ -1,20 +1,21 @@
 use crate::entities::general::bin::Bin;
 use crate::entities::general::item::Item;
-use crate::fsize;
-use std::any::Any;
 
-/// An `Instance` is the static (unmodifiable) representation of a problem instance.
-/// This trait defines shared functionality of all instance variants.
-pub trait Instance: Any {
+/// The static (unmodifiable) representation of a problem instance.
+/// This trait defines shared functionality between any instance variant.
+pub trait Instance {
+    /// Returns the items in the instance, along with their requested quantities.
     fn items(&self) -> &[(Item, usize)];
+
+    /// Returns the bins in the instance, along with their stock quantities.
+    fn bins(&self) -> &[(Bin, usize)];
+
     fn item_qty(&self, id: usize) -> usize {
         self.items()[id].1
     }
     fn item(&self, id: usize) -> &Item {
         &self.items()[id].0
     }
-
-    fn bins(&self) -> &[(Bin, usize)];
 
     fn bin_qty(&self, id: usize) -> usize {
         self.bins()[id].1
@@ -25,5 +26,4 @@ pub trait Instance: Any {
     fn total_item_qty(&self) -> usize {
         self.items().iter().map(|(_, qty)| qty).sum()
     }
-    fn item_area(&self) -> fsize;
 }

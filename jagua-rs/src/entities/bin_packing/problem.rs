@@ -2,18 +2,20 @@ use crate::entities::general::layout::Layout;
 use crate::entities::general::placed_item::{PItemKey, PlacedItem};
 use crate::util::assertions;
 use itertools::Itertools;
-use slotmap::SlotMap;
+use slotmap::{new_key_type, SlotMap};
 use std::time::Instant;
 use crate::entities::bin_packing::instance::BPInstance;
-use crate::entities::bin_packing::LayKey;
 use crate::entities::bin_packing::solution::BPSolution;
 use crate::entities::general::instance::Instance;
 use crate::fsize;
 use crate::geometry::d_transformation::DTransformation;
 
-/// Bin Packing Problem. Represents a `BPInstance` in a modifiable state.
-/// Items can be placed and removed, bins can be opened and closed.
-/// It can create a snapshot of the current state and restore it later.
+new_key_type! {
+    /// Unique key for each [`Layout`] in a [`BPProblem`] and [`BPSolution`]
+    pub struct LayKey;
+}
+
+/// Modifiable counterpart of [`BPInstance`]: items can be placed and removed, bins can be opened and closed.
 #[derive(Clone)]
 pub struct BPProblem {
     pub instance: BPInstance,
@@ -78,11 +80,11 @@ impl BPProblem {
         }
     }
 
-    pub fn create_solution(&mut self) -> BPSolution {
+    pub fn save(&mut self) -> BPSolution {
         let layout_snapshots = self
             .layouts
             .iter_mut()
-            .map(|(lkey, l)| (lkey, l.create_snapshot()))
+            .map(|(lkey, l)| (lkey, l.save()))
             .collect();
 
         let target_item_qtys = self
@@ -106,7 +108,7 @@ impl BPProblem {
         solution
     }
 
-    pub fn restore_to_solution(&mut self, solution: &BPSolution) {
+    pub fn restore(&mut self, solution: &BPSolution) {
         let mut layouts_to_remove = vec![];
 
         //Check which layouts from the problem are also present in the solution.

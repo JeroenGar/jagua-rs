@@ -2,8 +2,10 @@ use std::time::Instant;
 use crate::entities::general::layout::LayoutSnapshot;
 use crate::fsize;
 
-/// Represents a snapshot of a `SPProblem` at a specific moment.
-/// Solutions can be used to restore the state of a `SPProblem` to a previous state.
+#[cfg(doc)]
+use crate::entities::strip_packing::problem::SPProblem;
+
+/// Snapshot of [`SPProblem`] at a specific moment. Can be used to restore [`SPProblem`] to a previous state.
 #[derive(Debug, Clone)]
 pub struct SPSolution {
     /// Width of the strip

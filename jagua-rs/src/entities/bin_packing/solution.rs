@@ -1,11 +1,14 @@
 use std::time::Instant;
 use slotmap::SecondaryMap;
-use crate::entities::bin_packing::LayKey;
+use crate::entities::bin_packing::problem::LayKey;
 use crate::entities::general::layout::LayoutSnapshot;
 use crate::fsize;
 
-/// Represents a snapshot of a `BPProblem` at a specific moment.
-/// Solutions can be used to restore the state of a `BPProblem` to a previous state.
+#[cfg(doc)]
+use crate::entities::bin_packing::problem::BPProblem;
+
+/// Snapshot of [`BPProblem`] at a specific moment.
+/// Can be used to restore [`BPProblem`] to a previous state.
 #[derive(Debug, Clone)]
 pub struct BPSolution {
     /// Snapshots of all `Layout`s in the `Problem` at the moment the solution was created

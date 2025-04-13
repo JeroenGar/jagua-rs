@@ -9,11 +9,9 @@ use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 use slotmap::SlotMap;
 
-///A Layout is made out of a [Bin] with a set of [Item]s positioned inside of it in a specific way.
+/// Defines a configuration of [`Item`]s in a [`Bin`].
 ///It is a mutable representation, and can be modified by placing or removing items.
-///
-///The layout is responsible for maintaining its [CDEngine],
-///ensuring that it always reflects the current state of the layout.
+///Each layout maintains a [`CDEngine`], which can be used to check for collisions before placing items.
 #[derive(Clone)]
 pub struct Layout {
     /// The bin used for this layout
@@ -51,7 +49,7 @@ impl Layout {
         }
     }
 
-    pub fn create_snapshot(&mut self) -> LayoutSnapshot {
+    pub fn save(&mut self) -> LayoutSnapshot {
         LayoutSnapshot {
             bin: self.bin.clone(),
             placed_items: self.placed_items.clone(),
@@ -138,8 +136,8 @@ impl Layout {
     }
 }
 
-/// Immutable and compact representation of a [Layout].
-/// `Layout`s can create `LayoutSnapshot`s, and revert back themselves to a previous state using them.
+/// Immutable and compact representation of a [`Layout`].
+/// Can be used to restore a [`Layout`] back to a previous state.
 #[derive(Clone, Debug)]
 pub struct LayoutSnapshot {
     /// The bin used for this layout

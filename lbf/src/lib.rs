@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use jagua_rs::entities::instances::bin_packing::BPInstance;
+use jagua_rs::entities::bin_packing::instance::BPInstance;
 use jagua_rs::entities::instances::strip_packing::SPInstance;
 use jagua_rs::entities::solution::{BPSolution, SPSolution};
 use once_cell::sync::Lazy;

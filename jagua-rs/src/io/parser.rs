@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use crate::entities::general::bin::Bin;
+use crate::entities::general::bin::{Bin, InferiorQualityZone, N_QUALITIES};
 use crate::entities::bin_packing::instance::BPInstance;
 use crate::entities::general::instance::Instance;
 use crate::entities::strip_packing::instance::SPInstance;
@@ -26,7 +26,6 @@ use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use crate::entities::bin_packing::solution::BPSolution;
-use crate::entities::general::quality_zone::{InferiorQualityZone, N_QUALITIES};
 use crate::entities::strip_packing::solution::SPSolution;
 
 /// Parses a `JsonInstance` into an `Instance`.

@@ -6,7 +6,7 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::config::SPSurrogateConfig;
 
-/// Item to be placed in a Layout
+/// Item to be produced.
 #[derive(Clone, Debug)]
 pub struct Item {
     pub id: usize,

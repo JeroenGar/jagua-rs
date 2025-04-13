@@ -13,9 +13,7 @@ use crate::entities::strip_packing::instance::SPInstance;
 use crate::entities::strip_packing::solution::SPSolution;
 use crate::geometry::d_transformation::DTransformation;
 
-/// Strip Packing Problem. Represents a `SPInstance` in a modifiable state.
-/// Items can be placed and removed, strip width can be changed.
-/// It can create a snapshot of the current state and restore it later.
+/// Modifiable counterpart of [`SPInstance`]: items can be placed and removed, strip can be extended or fitted.
 #[derive(Clone)]
 pub struct SPProblem {
     pub instance: SPInstance,
@@ -43,7 +41,7 @@ impl SPProblem {
     }
 
     /// Adds width to the strip in the back, keeping the front fixed.
-    pub fn extend_strip_in_back(&mut self, extra_width: usize) {
+    pub fn extend_strip(&mut self, extra_width: usize) {
         let new_bbox = AARectangle::new(0.0, 0.0, self.strip_width() + extra_width as fsize, self.strip_height());
         let new_bin = Bin::from_strip(0, new_bbox, self.layout.bin.base_cde.config());
         self.layout.change_bin(new_bin);
@@ -84,9 +82,9 @@ impl SPProblem {
         }
     }
     
-    pub fn create_solution(&mut self) -> SPSolution {
+    pub fn save(&mut self) -> SPSolution {
         let solution = SPSolution {
-            layout_snapshot: self.layout.create_snapshot(),
+            layout_snapshot: self.layout.save(),
             usage: self.usage(),
             strip_width: self.strip_width(),
             time_stamp: Instant::now(),
@@ -97,7 +95,7 @@ impl SPProblem {
         solution
     }
 
-    pub fn restore_to_solution(&mut self, solution: &SPSolution) {
+    pub fn restore(&mut self, solution: &SPSolution) {
         // restore or recreate the layout
         if self.strip_width() == solution.strip_width {
             self.layout.restore(&solution.layout_snapshot);

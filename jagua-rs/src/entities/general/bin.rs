@@ -5,8 +5,6 @@ use itertools::Itertools;
 use crate::collision_detection::cd_engine::CDEngine;
 use crate::collision_detection::hazard::Hazard;
 use crate::collision_detection::hazard::HazardEntity;
-use crate::entities::general::quality_zone::InferiorQualityZone;
-use crate::entities::general::quality_zone::N_QUALITIES;
 use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::aa_rectangle::AARectangle;
@@ -14,7 +12,10 @@ use crate::geometry::primitives::simple_polygon::SimplePolygon;
 use crate::geometry::transformation::Transformation;
 use crate::util::config::CDEConfig;
 
-/// A container in which items can be placed.
+#[cfg(doc)]
+use crate::entities::general::item::Item;
+
+/// A container in which [`Item`]'s can be placed.
 #[derive(Clone, Debug)]
 pub struct Bin {
     pub id: usize,
@@ -126,3 +127,27 @@ fn generate_bin_hazards(
     }
     hazards
 }
+
+/// Maximum number of qualities that can be used (increase if needed)
+pub const N_QUALITIES: usize = 10;
+
+/// Represents a zone of inferior quality in the [`Bin`]
+#[derive(Clone, Debug)]
+pub struct InferiorQualityZone {
+    /// Quality of this zone. Higher qualities are superior.
+    pub quality: usize,
+    /// The shapes of all zones of this quality
+    pub zones: Vec<Arc<SimplePolygon>>,
+}
+
+impl InferiorQualityZone {
+    pub fn new(quality: usize, shapes: Vec<SimplePolygon>) -> Self {
+        assert!(
+            quality < N_QUALITIES,
+            "Quality must be in range of N_QUALITIES"
+        );
+        let zones = shapes.into_iter().map(Arc::new).collect();
+        Self { quality, zones }
+    }
+}
+

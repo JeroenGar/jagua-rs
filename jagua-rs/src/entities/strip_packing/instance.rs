@@ -5,9 +5,8 @@ use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 
-/// Strip-packing problem instance: a set of items to be packed into a single strip with a fixed height and variable width.
-/// The items should be packed in such a way that the total width of the strip used is minimized.
 #[derive(Debug, Clone)]
+/// Instance of the Strip Packing Problem: a set of items to be packed into a single strip with a fixed height and variable width.
 pub struct SPInstance {
     /// The items to be packed and their quantities
     pub items: Vec<(Item, usize)>,
@@ -41,17 +40,5 @@ impl Instance for SPInstance {
 
     fn bins(&self) -> &[(Bin, usize)] {
         &[]
-    }
-
-    fn bin_qty(&self, _id: usize) -> usize {
-        panic!()
-    }
-
-    fn bin(&self, _id: usize) -> &Bin {
-        panic!()
-    }
-
-    fn item_area(&self) -> fsize {
-        self.item_area
     }
 }
