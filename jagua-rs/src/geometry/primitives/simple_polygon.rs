@@ -4,22 +4,21 @@ use itertools::Itertools;
 use ordered_float::{NotNan, OrderedFloat};
 
 use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::convex_hull::convex_hull_from_points;
-use crate::geometry::fail_fast::poi;
-use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
+use crate::geometry::fail_fast::{SPSurrogate, generate_next_pole};
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
-    CollidesWith, Distance, SeparationDistance, Shape, Transformable, TransformableFrom,
+    CollidesWith, DistanceTo, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::circle::Circle;
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::transformation::Transformation;
-use crate::util::config::SPSurrogateConfig;
-use crate::util::fpa::FPA;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Circle;
+use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::Point;
+use crate::util::FPA;
+use crate::util::SPSurrogateConfig;
 
-/// Geometric primitive representing a simple polygon: <https://en.wikipedia.org/wiki/Simple_polygon>
+/// Simple Polygon, [read more](https://en.wikipedia.org/wiki/Simple_polygon)
 #[derive(Clone, Debug)]
 pub struct SimplePolygon {
     /// Set of bounds describing the polygon
@@ -109,7 +108,7 @@ impl SimplePolygon {
         let sq_diam = ch
             .iter()
             .tuple_combinations()
-            .map(|(p1, p2)| p1.sq_distance(p2))
+            .map(|(p1, p2)| p1.sq_distance_to(p2))
             .max_by_key(|sq_d| NotNan::new(*sq_d).unwrap())
             .expect("convex hull is empty");
 
@@ -164,7 +163,7 @@ impl SimplePolygon {
             }
         };
 
-        poi::generate_next_pole(&dummy_sp, &[])
+        generate_next_pole(&dummy_sp, &[])
     }
 
     pub fn center_around_centroid(mut self) -> (SimplePolygon, Transformation) {
@@ -312,19 +311,19 @@ impl CollidesWith<Point> for SimplePolygon {
     }
 }
 
-impl Distance<Point> for SimplePolygon {
-    fn sq_distance(&self, point: &Point) -> fsize {
+impl DistanceTo<Point> for SimplePolygon {
+    fn sq_distance_to(&self, point: &Point) -> fsize {
         match self.collides_with(point) {
             true => 0.0,
             false => self
                 .edge_iter()
-                .map(|edge| edge.sq_distance(point))
+                .map(|edge| edge.sq_distance_to(point))
                 .min_by(|a, b| a.partial_cmp(b).unwrap())
                 .unwrap(),
         }
     }
-    fn distance(&self, point: &Point) -> fsize {
-        self.sq_distance(point).sqrt()
+    fn distance_to(&self, point: &Point) -> fsize {
+        self.sq_distance_to(point).sqrt()
     }
 }
 
@@ -337,7 +336,7 @@ impl SeparationDistance<Point> for SimplePolygon {
     fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
         let distance_to_closest_edge = self
             .edge_iter()
-            .map(|edge| edge.sq_distance(point))
+            .map(|edge| edge.sq_distance_to(point))
             .min_by_key(|sq_d| OrderedFloat(*sq_d))
             .unwrap();
 

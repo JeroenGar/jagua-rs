@@ -1,8 +1,23 @@
+/// Set of functions to compute and generate [convex hulls](https://en.wikipedia.org/wiki/Convex_hull)
 pub mod convex_hull;
 
-pub mod d_transformation;
+mod d_transformation;
+
+/// All logic related to fail-fast surrogate and its generation
 pub mod fail_fast;
+
+/// Set of enums representing various geometric properties
 pub mod geo_enums;
+
+/// Set of traits representing various geometric properties & operations
 pub mod geo_traits;
+
+/// Set of atomic building blocks for the geometry module
 pub mod primitives;
-pub mod transformation;
+mod transformation;
+
+#[doc(inline)]
+pub use d_transformation::DTransformation;
+
+#[doc(inline)]
+pub use transformation::Transformation;

@@ -1,34 +1,26 @@
-use std::sync::Arc;
 use std::time::Instant;
 
-use crate::entities::bin::Bin;
-use crate::entities::instances::bin_packing::BPInstance;
-use crate::entities::instances::instance::Instance;
-use crate::entities::instances::instance_generic::InstanceGeneric;
-use crate::entities::instances::strip_packing::SPInstance;
-use crate::entities::item::Item;
-use crate::entities::placing_option::PlacingOption;
-use crate::entities::problems::bin_packing::BPProblem;
-use crate::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric, STRIP_LAYOUT_IDX};
-use crate::entities::problems::strip_packing::SPProblem;
-use crate::entities::quality_zone::InferiorQualityZone;
-use crate::entities::quality_zone::N_QUALITIES;
-use crate::entities::solution::Solution;
+use crate::entities::bin_packing::BPInstance;
+use crate::entities::bin_packing::BPSolution;
+use crate::entities::general::Instance;
+use crate::entities::general::Item;
+use crate::entities::general::{Bin, InferiorQualityZone, N_QUALITIES};
+use crate::entities::strip_packing::SPInstance;
+use crate::entities::strip_packing::SPSolution;
 use crate::fsize;
-use crate::geometry::d_transformation::DTransformation;
+use crate::geometry::DTransformation;
+use crate::geometry::Transformation;
 use crate::geometry::geo_enums::AllowedRotation;
 use crate::geometry::geo_traits::{Shape, Transformable};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Point;
+use crate::geometry::primitives::SimplePolygon;
 use crate::io::json_instance::{JsonBin, JsonInstance, JsonItem, JsonShape, JsonSimplePoly};
 use crate::io::json_solution::{
     JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
 };
-use crate::util::config::CDEConfig;
-use crate::util::polygon_simplification;
-use crate::util::polygon_simplification::{PolySimplConfig, PolySimplMode};
+use crate::util::{CDEConfig, simplify_poly};
+use crate::util::{PolySimplConfig, PolySimplMode};
 use itertools::Itertools;
 use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
@@ -56,7 +48,7 @@ impl Parser {
     }
 
     /// Parses a `JsonInstance` into an `Instance`.
-    pub fn parse(&self, json_instance: &JsonInstance) -> Instance {
+    pub fn parse(&self, json_instance: &JsonInstance) -> Box<dyn Instance> {
         let items = json_instance
             .items
             .par_iter()
@@ -64,34 +56,15 @@ impl Parser {
             .map(|(item_id, json_item)| self.parse_item(json_item, item_id))
             .collect();
 
-        let instance: Instance = match (json_instance.bins.as_ref(), json_instance.strip.as_ref()) {
+        match (json_instance.bins.as_ref(), json_instance.strip.as_ref()) {
             (Some(json_bins), None) => {
+                //bin packing instance
                 let bins: Vec<(Bin, usize)> = json_bins
                     .par_iter()
                     .enumerate()
                     .map(|(bin_id, json_bin)| self.parse_bin(json_bin, bin_id))
                     .collect();
-                BPInstance::new(items, bins).into()
-            }
-            (None, Some(json_strip)) => SPInstance::new(items, json_strip.height).into(),
-            (Some(_), Some(_)) => {
-                panic!("Both bins and strip packing specified, has to be one or the other")
-            }
-            (None, None) => panic!("Neither bins or strips specified"),
-        };
-
-        match &instance {
-            Instance::SP(spi) => {
-                log!(
-                    Level::Info,
-                    "[PARSE] strip packing instance \"{}\": {} items ({} unique), {} strip height",
-                    json_instance.name,
-                    spi.total_item_qty(),
-                    spi.items.len(),
-                    spi.strip_height
-                );
-            }
-            Instance::BP(bpi) => {
+                let bpi = BPInstance::new(items, bins);
                 log!(
                     Level::Info,
                     "[PARSE] bin packing instance \"{}\": {} items ({} unique), {} bins ({} unique)",
@@ -101,23 +74,25 @@ impl Parser {
                     bpi.bins.iter().map(|(_, qty)| *qty).sum::<usize>(),
                     bpi.bins.len()
                 );
+                Box::new(bpi)
             }
+            (None, Some(json_strip)) => {
+                let spi = SPInstance::new(items, json_strip.height);
+                log!(
+                    Level::Info,
+                    "[PARSE] strip packing instance \"{}\": {} items ({} unique), {} strip height",
+                    json_instance.name,
+                    spi.total_item_qty(),
+                    spi.items.len(),
+                    spi.strip_height
+                );
+                Box::new(spi)
+            }
+            (Some(_), Some(_)) => {
+                panic!("Both bins and strip packing specified, has to be one or the other")
+            }
+            (None, None) => panic!("Neither bins or strips specified"),
         }
-
-        instance
-    }
-
-    /// Parses a `JsonInstance` and accompanying `JsonLayout`s into an `Instance` and `Solution`.
-    pub fn parse_and_build_solution(
-        &self,
-        json_instance: &JsonInstance,
-        json_layouts: &[JsonLayout],
-    ) -> (Instance, Solution) {
-        let instance = Arc::new(self.parse(json_instance));
-        let solution = build_solution_from_json(instance.as_ref(), json_layouts, self.cde_config);
-        let instance =
-            Arc::try_unwrap(instance).expect("Cannot unwrap instance, strong references present");
-        (instance, solution)
     }
 
     fn parse_item(&self, json_item: &JsonItem, item_id: usize) -> (Item, usize) {
@@ -260,152 +235,66 @@ impl Parser {
     }
 }
 
-/// Builds a `Solution` from a set of `JsonLayout`s and an `Instance`.
-pub fn build_solution_from_json(
-    instance: &Instance,
-    json_layouts: &[JsonLayout],
-    cde_config: CDEConfig,
-) -> Solution {
-    match instance {
-        Instance::BP(bp_i) => build_bin_packing_solution(bp_i, json_layouts),
-        Instance::SP(sp_i) => {
-            assert_eq!(json_layouts.len(), 1);
-            build_strip_packing_solution(sp_i, &json_layouts[0], cde_config)
-        }
-    }
-}
-
-pub fn build_strip_packing_solution(
+/// Composes a `JsonSolution` from a `SPSolution` and an `SPInstance`.
+pub fn compose_json_solution_spp(
+    solution: &SPSolution,
     instance: &SPInstance,
-    json_layout: &JsonLayout,
-    cde_config: CDEConfig,
-) -> Solution {
-    let mut problem = match json_layout.container {
-        JsonContainer::Bin { .. } => {
-            panic!("Strip packing solution should not contain layouts with references to an Object")
-        }
-        JsonContainer::Strip { width, height: _ } => {
-            SPProblem::new(instance.clone(), width, cde_config)
-        }
+    epoch: Instant,
+) -> JsonSolution {
+    let container = JsonContainer::Strip {
+        width: solution.strip_width,
+        height: instance.strip_height,
     };
 
-    for json_item in json_layout.placed_items.iter() {
-        let item = instance.item(json_item.index);
-        let json_rotation = json_item.transformation.rotation;
-        let json_translation = json_item.transformation.translation;
+    let placed_items = solution
+        .layout_snapshot
+        .placed_items
+        .values()
+        .map(|placed_item| {
+            let item_index = placed_item.item_id;
+            let item = instance.item(item_index);
 
-        let abs_transform = DTransformation::new(json_rotation, json_translation);
-        let transform = absolute_to_internal_transform(
-            &abs_transform,
-            &item.pretransform,
-            &problem.layout.bin.pretransform,
-        );
-
-        let d_transf = transform.decompose();
-
-        let placing_opt = PlacingOption {
-            layout_idx: STRIP_LAYOUT_IDX,
-            item_id: item.id,
-            d_transf,
-        };
-
-        problem.place_item(placing_opt);
-        problem.flush_changes();
-    }
-
-    problem.create_solution(None)
-}
-
-pub fn build_bin_packing_solution(instance: &BPInstance, json_layouts: &[JsonLayout]) -> Solution {
-    let mut problem = BPProblem::new(instance.clone());
-
-    for json_layout in json_layouts {
-        let bin = match json_layout.container {
-            JsonContainer::Bin { index } => &instance.bins[index].0,
-            JsonContainer::Strip { .. } => {
-                panic!("Bin packing solution should not contain layouts with references to a Strip")
-            }
-        };
-        //Create the layout by inserting the first item
-
-        //Find the template layout matching the bin id in the JSON solution
-        let template_index = problem
-            .template_layouts()
-            .iter()
-            .position(|tl| tl.bin.id == bin.id)
-            .expect("no template layout found for bin");
-
-        let json_first_item = json_layout
-            .placed_items
-            .first()
-            .expect("no items in layout");
-        let first_item = instance.item(json_first_item.index);
-        let abs_transform = DTransformation::new(
-            json_first_item.transformation.rotation,
-            json_first_item.transformation.translation,
-        );
-
-        let transform = absolute_to_internal_transform(
-            &abs_transform,
-            &first_item.pretransform,
-            &bin.pretransform,
-        );
-        let d_transf = transform.decompose();
-
-        let initial_insert_opt = PlacingOption {
-            layout_idx: LayoutIndex::Template(template_index),
-            item_id: first_item.id,
-            d_transf,
-        };
-        let (layout_idx, _) = problem.place_item(initial_insert_opt);
-        problem.flush_changes();
-
-        //Insert the rest of the items
-        for json_item in json_layout.placed_items.iter().skip(1) {
-            let item = instance.item(json_item.index);
-            let json_rotation = json_item.transformation.rotation;
-            let json_translation = json_item.transformation.translation;
-
-            let abs_transform = DTransformation::new(json_rotation, json_translation);
-            let transform = absolute_to_internal_transform(
-                &abs_transform,
+            let abs_transf = internal_to_absolute_transform(
+                &placed_item.d_transf,
                 &item.pretransform,
-                &bin.pretransform,
-            );
+                &solution.layout_snapshot.bin.pretransform,
+            )
+            .decompose();
 
-            let d_transf = transform.decompose();
-
-            let insert_opt = PlacingOption {
-                layout_idx,
-                item_id: item.id,
-                d_transf,
-            };
-            problem.place_item(insert_opt);
-            problem.flush_changes();
-        }
+            JsonPlacedItem {
+                index: item_index,
+                transformation: JsonTransformation {
+                    rotation: abs_transf.rotation(),
+                    translation: abs_transf.translation(),
+                },
+            }
+        })
+        .collect::<Vec<JsonPlacedItem>>();
+    let statistics = JsonLayoutStats {
+        usage: solution.layout_snapshot.usage,
+    };
+    JsonSolution {
+        layouts: vec![JsonLayout {
+            container,
+            placed_items,
+            statistics,
+        }],
+        usage: solution.usage,
+        run_time_sec: solution.time_stamp.duration_since(epoch).as_secs(),
     }
-
-    problem.create_solution(None)
 }
 
-/// Composes a `JsonSolution` from a `Solution` and an `Instance`.
-pub fn compose_json_solution(
-    solution: &Solution,
-    instance: &Instance,
+/// Composes a `JsonSolution` from a `BPSolution` and an `BPInstance`.
+pub fn compose_json_solution_bpp(
+    solution: &BPSolution,
+    instance: &BPInstance,
     epoch: Instant,
 ) -> JsonSolution {
     let layouts = solution
         .layout_snapshots
         .iter()
-        .map(|sl| {
-            let container = match &instance {
-                Instance::BP(_bpi) => JsonContainer::Bin { index: sl.bin.id },
-                Instance::SP(spi) => JsonContainer::Strip {
-                    width: sl.bin.bbox().width(),
-                    height: spi.strip_height,
-                },
-            };
-
+        .map(|(_, sl)| {
+            let container = JsonContainer::Bin { index: sl.bin.id };
             let placed_items = sl
                 .placed_items
                 .values()
@@ -453,9 +342,7 @@ fn convert_json_simple_poly(
     let shape = SimplePolygon::new(json_simple_poly_to_points(s_json_shape));
 
     let shape = match simpl_config {
-        PolySimplConfig::Enabled { tolerance } => {
-            polygon_simplification::simplify_shape(&shape, simpl_mode, tolerance)
-        }
+        PolySimplConfig::Enabled { tolerance } => simplify_poly(&shape, simpl_mode, tolerance),
         PolySimplConfig::Disabled => shape,
     };
 

@@ -7,10 +7,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::fsize;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::Point;
+use crate::geometry::primitives::SimplePolygon;
 
+/// Polygon simplification configuration
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 #[serde(tag = "mode", content = "params")]
 pub enum PolySimplConfig {
@@ -23,6 +24,7 @@ pub enum PolySimplConfig {
     },
 }
 
+/// Mode of polygon simplification
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PolySimplMode {
     /// Simplify the polygon to be strictly larger than the original
@@ -40,55 +42,10 @@ impl PolySimplMode {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-enum Candidate {
-    Concave(Corner),
-    ConvexConvex(Corner, Corner),
-    Collinear(Corner),
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-///Corner is defined as the left hand side of points 0-1-2
-struct Corner(pub usize, pub usize, pub usize);
-
-impl Corner {
-    pub fn flip(&mut self) {
-        std::mem::swap(&mut self.0, &mut self.2);
-    }
-
-    pub fn to_points(self, points: &[Point]) -> [Point; 3] {
-        [points[self.0], points[self.1], points[self.2]]
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum CornerType {
-    Concave,
-    Convex,
-    Collinear,
-}
-
-impl CornerType {
-    pub fn from([p1, p2, p3]: [Point; 3]) -> Self {
-        //returns the corner type on the left-hand side p1->p2->p3
-        //From: https://algorithmtutor.com/Computational-Geometry/Determining-if-two-consecutive-segments-turn-left-or-right/
-
-        let p1p2 = (p2.0 - p1.0, p2.1 - p1.1);
-        let p1p3 = (p3.0 - p1.0, p3.1 - p1.1);
-        let cross_prod = p1p2.0 * p1p3.1 - p1p2.1 * p1p3.0;
-
-        //a positive cross product indicates that p2p3 turns to the left with respect to p1p2
-        match cross_prod.partial_cmp(&0.0).expect("cross product is NaN") {
-            Ordering::Less => CornerType::Concave,
-            Ordering::Equal => CornerType::Collinear,
-            Ordering::Greater => CornerType::Convex,
-        }
-    }
-}
-
-/// Simplifies a shape (removing vertices) strictly inflating or deflating based on the mode.
-/// The number of edges is reduced by one at a time, until either the change in area would exceed the max_area_delta or the number of edges would become less than 4.
-pub fn simplify_shape(
+/// Simplifies a [`SimplePolygon`] according to the given [`PolySimplMode`].
+/// The number of edges is reduced by one at a time, until either
+/// the change in area would exceed the `max_area_delta` or the number of edges < 4.
+pub fn simplify_poly(
     shape: &SimplePolygon,
     mode: PolySimplMode,
     max_area_delta: fsize,
@@ -327,3 +284,49 @@ fn calculate_intersection_in_front(l1: &Edge, l2: &Edge) -> Option<Point> {
 
 #[derive(Debug, Clone)]
 struct InvalidCandidate;
+
+#[derive(Clone, Debug, PartialEq)]
+enum Candidate {
+    Concave(Corner),
+    ConvexConvex(Corner, Corner),
+    Collinear(Corner),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+///Corner is defined as the left hand side of points 0-1-2
+struct Corner(pub usize, pub usize, pub usize);
+
+impl Corner {
+    pub fn flip(&mut self) {
+        std::mem::swap(&mut self.0, &mut self.2);
+    }
+
+    pub fn to_points(self, points: &[Point]) -> [Point; 3] {
+        [points[self.0], points[self.1], points[self.2]]
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum CornerType {
+    Concave,
+    Convex,
+    Collinear,
+}
+
+impl CornerType {
+    pub fn from([p1, p2, p3]: [Point; 3]) -> Self {
+        //returns the corner type on the left-hand side p1->p2->p3
+        //From: https://algorithmtutor.com/Computational-Geometry/Determining-if-two-consecutive-segments-turn-left-or-right/
+
+        let p1p2 = (p2.0 - p1.0, p2.1 - p1.1);
+        let p1p3 = (p3.0 - p1.0, p3.1 - p1.1);
+        let cross_prod = p1p2.0 * p1p3.1 - p1p2.1 * p1p3.0;
+
+        //a positive cross product indicates that p2p3 turns to the left with respect to p1p2
+        match cross_prod.partial_cmp(&0.0).expect("cross product is NaN") {
+            Ordering::Less => CornerType::Concave,
+            Ordering::Equal => CornerType::Collinear,
+            Ordering::Greater => CornerType::Convex,
+        }
+    }
+}

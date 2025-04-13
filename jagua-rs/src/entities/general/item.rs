@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use crate::collision_detection::hazard_filter::QZHazardFilter;
+use crate::collision_detection::hazards::filter::QZHazardFilter;
+use crate::geometry::Transformation;
 use crate::geometry::geo_enums::AllowedRotation;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::transformation::Transformation;
-use crate::util::config::SPSurrogateConfig;
+use crate::geometry::primitives::SimplePolygon;
+use crate::util::SPSurrogateConfig;
 
-/// Item to be placed in a Layout
+/// Item to be produced.
 #[derive(Clone, Debug)]
 pub struct Item {
     pub id: usize,

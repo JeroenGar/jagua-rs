@@ -1,17 +1,20 @@
-use crate::collision_detection::hazard_filter::QZHazardFilter;
-use crate::entities::item::Item;
-use crate::geometry::d_transformation::DTransformation;
+use crate::collision_detection::hazards::filter::QZHazardFilter;
+use crate::entities::general::Item;
+use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Transformable;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use crate::geometry::primitives::SimplePolygon;
 use slotmap::new_key_type;
 use std::sync::Arc;
 
+#[cfg(doc)]
+use crate::entities::general::Layout;
+
 new_key_type! {
-    /// Unique key for each `PlacedItem` in a layout.
+    /// Unique key for each [`PlacedItem`] in a layout.
     pub struct PItemKey;
 }
 
-/// Represents an `Item` that has been placed in a `Layout`
+/// Represents an [`Item`] that has been placed in a [`Layout`]
 #[derive(Clone, Debug)]
 pub struct PlacedItem {
     /// ID of the type of `Item` that was placed

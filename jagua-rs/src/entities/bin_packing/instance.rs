@@ -1,13 +1,12 @@
-use crate::entities::bin::Bin;
-use crate::entities::instances::instance_generic::InstanceGeneric;
-use crate::entities::item::Item;
+use crate::entities::general::Bin;
+use crate::entities::general::Instance;
+use crate::entities::general::Item;
 use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 
-/// Bin-packing problem instance: a set of items to be packed into a set of bins.
-/// The items are to be packed in such a way that the total cost of the bins used is minimized.
 #[derive(Debug, Clone)]
+/// Instance of the Bin Packing Problem: a set of items to be packed into a set of bins.
 pub struct BPInstance {
     /// Items to be packed in the instance, along with their requested quantities
     pub items: Vec<(Item, usize)>,
@@ -34,12 +33,12 @@ impl BPInstance {
     }
 }
 
-impl InstanceGeneric for BPInstance {
+impl Instance for BPInstance {
     fn items(&self) -> &[(Item, usize)] {
         &self.items
     }
 
-    fn item_area(&self) -> fsize {
-        self.item_area
+    fn bins(&self) -> &[(Bin, usize)] {
+        &self.bins
     }
 }

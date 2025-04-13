@@ -1,10 +1,7 @@
+use crate::collision_detection::hazards::{Hazard, HazardEntity};
 use itertools::Itertools;
 
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
-
-/// Trait that allows for ignoring out specific hazards.
-/// Enables querying the `CDEngine` only for relevant hazards.
+/// Trait for filters which ignore all [`Hazard`]s induced by specific [`HazardEntity`]s during querying.
 pub trait HazardFilter {
     fn is_irrelevant(&self, entity: &HazardEntity) -> bool;
 }
@@ -67,5 +64,11 @@ impl HazardFilter for QZHazardFilter {
             HazardEntity::InferiorQualityZone { quality, .. } => *quality >= self.0,
             _ => false,
         }
+    }
+}
+
+impl HazardFilter for &[HazardEntity] {
+    fn is_irrelevant(&self, haz: &HazardEntity) -> bool {
+        self.contains(&haz)
     }
 }

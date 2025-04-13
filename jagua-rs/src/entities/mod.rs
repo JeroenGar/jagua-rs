@@ -1,9 +1,8 @@
-pub mod bin;
-pub mod instances;
-pub mod item;
-pub mod layout;
-pub mod placed_item;
-pub mod placing_option;
-pub mod problems;
-pub mod quality_zone;
-pub mod solution;
+/// General 2D Irregular Cutting and Packing entities.
+pub mod general;
+
+/// Entities related to modelling a Bin Packing Problem.
+pub mod bin_packing;
+
+/// Entities related to modelling a Strip Packing Problem.
+pub mod strip_packing;

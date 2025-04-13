@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use jagua_rs::fsize;
-use jagua_rs::util::config::{CDEConfig, SPSurrogateConfig};
+use jagua_rs::util::{CDEConfig, SPSurrogateConfig};
 
 use crate::io::svg_util::SvgDrawOptions;
 

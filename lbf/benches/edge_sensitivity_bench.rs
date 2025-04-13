@@ -5,24 +5,19 @@ use std::path::Path;
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use rand::SeedableRng;
-use rand::prelude::SmallRng;
-
-use jagua_rs::entities::instances::bin_packing::BPInstance;
-use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
-use jagua_rs::entities::instances::strip_packing::SPInstance;
-use jagua_rs::entities::item::Item;
-use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
+use jagua_rs::entities::general::{Instance, Item};
+use jagua_rs::entities::strip_packing::SPInstance;
 use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
-use jagua_rs::geometry::primitives::point::Point;
-use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
+use jagua_rs::geometry::primitives::Point;
+use jagua_rs::geometry::primitives::SimplePolygon;
 use jagua_rs::io::json_instance::JsonInstance;
+use lbf::config::LBFConfig;
 use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
-use lbf::lbf_config::LBFConfig;
 use lbf::samplers::hpg_sampler::HPGSampler;
+use rand::SeedableRng;
+use rand::prelude::SmallRng;
 
 use crate::util::{N_ITEMS_REMOVED, SWIM_PATH};
 
@@ -66,11 +61,11 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                 config.cde_config,
                 config.poly_simpl_tolerance,
             );
-            modify_instance(&instance, edge_multiplier as usize, config)
+            modify_instance(instance, edge_multiplier as usize, config)
         };
 
         let (problem, selected_pi_uids) =
-            util::create_blf_problem(instance.clone(), config, N_ITEMS_REMOVED);
+            util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         {
             let draw_options = SvgDrawOptions {
@@ -78,11 +73,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                 surrogate: true,
                 ..SvgDrawOptions::default()
             };
-            let svg = io::layout_to_svg::layout_to_svg(
-                problem.get_layout(LayoutIndex::Real(0)),
-                &instance,
-                draw_options,
-            );
+            let svg = io::layout_to_svg::layout_to_svg(&problem.layout, &instance, draw_options);
             io::write_svg(
                 &svg,
                 Path::new(&format!("edge_sensitivity_{edge_multiplier}.svg")),
@@ -91,7 +82,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        let layout = problem.get_layout(LayoutIndex::Real(0));
+        let layout = &problem.layout;
         /*let samples = {
             let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
             (0..N_SAMPLES).map(
@@ -100,7 +91,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
         };*/
 
         let samples = {
-            let mut hpg_sampler = HPGSampler::new(instance.item(0), layout)
+            let mut hpg_sampler = HPGSampler::new(instance.item(0), layout.cde())
                 .expect("should be able to create HPGSampler");
             (0..N_TOTAL_SAMPLES)
                 .map(|_| hpg_sampler.sample(&mut rng))
@@ -118,15 +109,16 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                     let pi_uid = &selected_pi_uids[i];
                     let item = instance.item(pi_uid.item_id);
                     let mut buffer_shape = item.shape.as_ref().clone();
-                    for transf in samples_cycler.next().unwrap() {
+                    for dtransf in samples_cycler.next().unwrap() {
+                        let transf = dtransf.compose();
                         let collides = match layout.cde().surrogate_collides(
                             item.shape.surrogate(),
-                            transf,
+                            &transf,
                             &[],
                         ) {
                             true => true,
                             false => {
-                                buffer_shape.transform_from(&item.shape, transf);
+                                buffer_shape.transform_from(&item.shape, &transf);
                                 layout.cde().poly_collides(&buffer_shape, &[])
                             }
                         };
@@ -146,30 +138,19 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
     g.finish();
 }
 
-fn modify_instance(instance: &Instance, multiplier: usize, config: LBFConfig) -> Instance {
-    let modified_items = instance
-        .items()
-        .iter()
-        .map(|(item, qty)| {
-            let modified_shape = multiply_edge_count(&item.shape, multiplier);
-
-            let modified_item = Item::new(
-                item.id,
-                modified_shape,
-                item.allowed_rotation.clone(),
-                item.base_quality,
-                item.value,
-                item.pretransform.clone(),
-                config.cde_config.item_surrogate_config,
-            );
-            (modified_item, *qty)
-        })
-        .collect_vec();
-
-    match instance {
-        Instance::SP(spi) => Instance::SP(SPInstance::new(modified_items, spi.strip_height)),
-        Instance::BP(bpi) => Instance::BP(BPInstance::new(modified_items, bpi.bins.clone())),
-    }
+fn modify_instance(mut instance: SPInstance, multiplier: usize, config: LBFConfig) -> SPInstance {
+    instance.items.iter_mut().for_each(|(item, _)| {
+        *item = Item::new(
+            item.id,
+            multiply_edge_count(&item.shape, multiplier),
+            item.allowed_rotation.clone(),
+            item.base_quality,
+            item.value,
+            item.pretransform.clone(),
+            config.cde_config.item_surrogate_config,
+        );
+    });
+    instance
 }
 
 fn multiply_edge_count(shape: &SimplePolygon, multiplier: usize) -> SimplePolygon {

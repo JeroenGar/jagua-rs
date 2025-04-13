@@ -1,9 +1,15 @@
-/// Collision detection engine itself
-pub mod cd_engine;
-pub mod hazard;
-pub mod hazard_filter;
+mod cd_engine;
 
-pub mod hazard_helpers;
-/// Everything related to the Hazard Proximity Grid
+/// Everything Hazard related
+pub mod hazards;
+
+/// Everything Hazard Proximity Grid related
 pub mod hpg;
+
+/// Everything Quadtree related.
 pub mod quadtree;
+
+#[doc(inline)]
+pub use cd_engine::CDESnapshot;
+#[doc(inline)]
+pub use cd_engine::CDEngine;

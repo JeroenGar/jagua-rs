@@ -3,10 +3,10 @@ use std::collections::VecDeque;
 use ordered_float::NotNan;
 
 use crate::fsize;
-use crate::geometry::geo_traits::{CollidesWith, Distance, SeparationDistance, Shape};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::circle::Circle;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use crate::geometry::geo_traits::{CollidesWith, DistanceTo, SeparationDistance, Shape};
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Circle;
+use crate::geometry::primitives::SimplePolygon;
 
 /// Generates the Pole of Inaccessibility (PoI). The PoI is the point in the interior of the shape that is farthest from the boundary.
 /// The interior is defined as the interior of the `shape` minus the interior of the `poles`.
@@ -35,10 +35,7 @@ pub fn generate_next_pole(shape: &SimplePolygon, poles: &[Circle]) -> Circle {
 }
 
 ///Generates additional poles for a shape alongside the PoI
-pub fn generate_additional_surrogate_poles(
-    shape: &SimplePolygon,
-    n_pole_limits: &[(usize, fsize)],
-) -> Vec<Circle> {
+pub fn generate_poles(shape: &SimplePolygon, n_pole_limits: &[(usize, fsize)]) -> Vec<Circle> {
     //generate the additional poles
     let additional_poles = {
         let mut all_poles = vec![shape.poi.clone()];
@@ -110,14 +107,14 @@ struct POINode {
 }
 
 impl POINode {
-    pub fn new(bbox: AARectangle, level: usize, poly: &SimplePolygon, poles: &[Circle]) -> Self {
+    fn new(bbox: AARectangle, level: usize, poly: &SimplePolygon, poles: &[Circle]) -> Self {
         let radius = bbox.diameter() / 2.0;
 
         let centroid_inside = poly.collides_with(&bbox.centroid())
             && poles.iter().all(|c| !c.collides_with(&bbox.centroid()));
 
         let distance = {
-            let distance_to_edges = poly.edge_iter().map(|e| e.distance(&bbox.centroid()));
+            let distance_to_edges = poly.edge_iter().map(|e| e.distance_to(&bbox.centroid()));
 
             let distance_to_poles = poles
                 .iter()
@@ -142,7 +139,7 @@ impl POINode {
         }
     }
 
-    pub fn split(&self, poly: &SimplePolygon, poles: &[Circle]) -> Option<[POINode; 4]> {
+    fn split(&self, poly: &SimplePolygon, poles: &[Circle]) -> Option<[POINode; 4]> {
         match self.level {
             0 => None,
             _ => Some(
@@ -153,7 +150,7 @@ impl POINode {
         }
     }
 
-    pub fn distance_upperbound(&self) -> fsize {
+    fn distance_upperbound(&self) -> fsize {
         self.radius + self.distance
     }
 }

@@ -2,16 +2,16 @@ use std::array;
 use std::borrow::Borrow;
 use std::sync::Arc;
 
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
-use crate::collision_detection::quadtree::qt_partial_hazard::{PartialQTHaz, RelevantEdges};
+use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::quadtree::qt_partial_hazard::{QTHazPartial, RelevantEdges};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::SimplePolygon;
 use crate::util::assertions;
 
-/// Represents the manifestation of a [Hazard] in a [QTNode](crate::collision_detection::quadtree::qt_node::QTNode)
+/// Manifestation of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
 #[derive(Clone, Debug)]
 pub struct QTHazard {
     pub entity: HazardEntity,
@@ -19,13 +19,13 @@ pub struct QTHazard {
     pub active: bool,
 }
 
-/// How a [Hazard] is present in a [QTNode](crate::collision_detection::quadtree::qt_node::QTNode)
+/// Presence of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
 #[derive(Clone, Debug)]
 pub enum QTHazPresence {
     /// The hazard is entirely absent from the node
     None,
-    /// The hazard is present in the node, but only partially, defined by a [PartialQTHaz]
-    Partial(PartialQTHaz),
+    /// The hazard is present in the node, but only partially
+    Partial(QTHazPartial),
     /// The hazard is entirely present in the node
     Entire,
 }
@@ -41,7 +41,7 @@ impl QTHazard {
         }
     }
 
-    /// Returns the resulting QTHazards after constricting to the given quadrants.
+    /// Returns the resulting QTHazards after constricting to the provided quadrants.
     /// The quadrants should be ordered according to [AARectangle::QUADRANT_NEIGHBOR_LAYOUT]
     /// and should all be inside the bounds from which `self` was created.
     pub fn constrict(&self, quadrants: [&AARectangle; 4]) -> [Option<Self>; 4] {
@@ -156,7 +156,7 @@ impl QTHazard {
                 match &mut q_presences[q_index] {
                     None => {
                         //create a new partial hazard
-                        q_presences[q_index] = Some(QTHazPresence::Partial(PartialQTHaz::new(
+                        q_presences[q_index] = Some(QTHazPresence::Partial(QTHazPartial::new(
                             shape.clone(),
                             edge_index.into(),
                         )));

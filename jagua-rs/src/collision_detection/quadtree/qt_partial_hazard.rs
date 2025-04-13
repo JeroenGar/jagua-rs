@@ -2,19 +2,19 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 use std::sync::{Arc, Weak};
 
-use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use crate::geometry::primitives::SimplePolygon;
 
-/// Defines a set of edges from a hazard that is partially active in the [QTNode](crate::collision_detection::quadtree::qt_node::QTNode).
+/// Defines a set of edges from a hazard that is partially active in the [`QTNode`](crate::collision_detection::quadtree::QTNode).
 #[derive(Clone, Debug)]
-pub struct PartialQTHaz {
+pub struct QTHazPartial {
     pub shape: Weak<SimplePolygon>,
     pub edges: RelevantEdges,
 }
 
-impl<T> From<T> for PartialQTHaz
+impl<T> From<T> for QTHazPartial
 where
     T: Borrow<Hazard>,
 {
@@ -26,7 +26,7 @@ where
     }
 }
 
-impl PartialQTHaz {
+impl QTHazPartial {
     pub fn new(shape: Arc<SimplePolygon>, edge_indices: RelevantEdges) -> Self {
         Self {
             shape: Arc::downgrade(&shape),
@@ -59,10 +59,7 @@ const BBOX_CHECK_THRESHOLD: usize = 10;
 
 const BBOX_CHECK_THRESHOLD_MINUS_1: usize = BBOX_CHECK_THRESHOLD - 1;
 
-impl<T> CollidesWith<T> for PartialQTHaz
-where
-    T: QTQueryable,
-{
+impl<T: QTQueryable> CollidesWith<T> for QTHazPartial {
     fn collides_with(&self, entity: &T) -> bool {
         let shape = self.shape_arc();
         match &self.edges {

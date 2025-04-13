@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::fsize;
 
-///Configuration of the Collision Detection Engine
+///Configuration of the [`CDEngine`](crate::collision_detection::CDEngine)
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct CDEConfig {
     ///Maximum depth of the quadtree
@@ -16,6 +16,7 @@ pub struct CDEConfig {
 /// maximum number of definable pole limits, increase if needed
 const N_POLE_LIMITS: usize = 3;
 
+/// Configuration of the [`SPSurrogate`](crate::geometry::fail_fast::SPSurrogate) generation
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct SPSurrogateConfig {
     ///Limits on the number of poles to be generated at different coverage levels.

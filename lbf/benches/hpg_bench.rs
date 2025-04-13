@@ -3,18 +3,15 @@ use std::io::BufReader;
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use rand::SeedableRng;
-use rand::rngs::SmallRng;
-
-use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::instance_generic::InstanceGeneric;
-use jagua_rs::entities::placing_option::PlacingOption;
-use jagua_rs::entities::problems::problem_generic::{LayoutIndex, ProblemGeneric};
-use jagua_rs::entities::problems::strip_packing::SPProblem;
+use jagua_rs::entities::general::Instance;
+use jagua_rs::entities::strip_packing::SPPlacement;
+use jagua_rs::entities::strip_packing::SPProblem;
 use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::hpg_sampler::HPGSampler;
+use rand::SeedableRng;
+use rand::rngs::SmallRng;
 
 use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
 
@@ -39,13 +36,12 @@ fn hpg_query_bench(c: &mut Criterion) {
         base_config.poly_simpl_tolerance,
     );
     let (base_problem, _) =
-        util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
+        util::create_lbf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
     let base_p_opts = base_problem
-        .get_layout(LayoutIndex::Real(0))
+        .layout
         .placed_items()
         .values()
-        .map(|pi| PlacingOption {
-            layout_idx: LayoutIndex::Real(0),
+        .map(|pi| SPPlacement {
             item_id: pi.item_id,
             d_transf: pi.d_transf,
         })
@@ -61,12 +57,11 @@ fn hpg_query_bench(c: &mut Criterion) {
             config.cde_config,
             config.poly_simpl_tolerance,
         );
-        let mut problem = match instance.clone() {
-            Instance::BP(_) => panic!("Expected SPInstance"),
-            Instance::SP(instance) => {
-                SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
-            }
-        };
+        let mut problem = SPProblem::new(
+            instance.clone(),
+            base_problem.strip_width(),
+            config.cde_config,
+        );
         // Place the items in exactly the same way as the base problem
         for p_opt in base_p_opts.iter() {
             problem.place_item(*p_opt);
@@ -87,10 +82,10 @@ fn hpg_query_bench(c: &mut Criterion) {
 
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
-        let layout = problem.get_layout(LayoutIndex::Real(0));
+        let layout = &problem.layout;
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
-        let mut sampler = HPGSampler::new(item, layout).unwrap();
+        let mut sampler = HPGSampler::new(item, layout.cde()).unwrap();
         println!(
             "[{}] sampler coverage: {:.3}% with {} samplers",
             n_hpg_cells,
@@ -102,7 +97,8 @@ fn hpg_query_bench(c: &mut Criterion) {
             b.iter(|| {
                 let mut n_valid_samples = 0;
                 while n_valid_samples < N_VALID_SAMPLES {
-                    let transf = sampler.sample(&mut rng);
+                    let dtransf = sampler.sample(&mut rng);
+                    let transf = dtransf.compose();
                     if !layout.cde().surrogate_collides(surrogate, &transf, &[]) {
                         buffer_shape.transform_from(&item.shape, &transf);
                         if !layout.cde().poly_collides(&buffer_shape, &[]) {
@@ -127,13 +123,12 @@ fn hpg_update_bench(c: &mut Criterion) {
         base_config.poly_simpl_tolerance,
     );
     let (base_problem, _) =
-        util::create_blf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
+        util::create_lbf_problem(base_instance.clone(), base_config, N_ITEMS_REMOVED);
     let base_p_opts = base_problem
-        .get_layout(LayoutIndex::Real(0))
+        .layout
         .placed_items()
         .values()
-        .map(|pi| PlacingOption {
-            layout_idx: LayoutIndex::Real(0),
+        .map(|pi| SPPlacement {
             item_id: pi.item_id,
             d_transf: pi.d_transf,
         })
@@ -149,12 +144,11 @@ fn hpg_update_bench(c: &mut Criterion) {
             config.cde_config,
             config.poly_simpl_tolerance,
         );
-        let mut problem = match instance.clone() {
-            Instance::BP(_) => panic!("Expected SPInstance"),
-            Instance::SP(instance) => {
-                SPProblem::new(instance, base_problem.strip_width(), config.cde_config)
-            }
-        };
+        let mut problem = SPProblem::new(
+            instance.clone(),
+            base_problem.strip_width(),
+            config.cde_config,
+        );
         // Place the items in exactly the same way as the base problem
         for p_opt in base_p_opts.iter() {
             problem.place_item(*p_opt);
@@ -175,10 +169,10 @@ fn hpg_update_bench(c: &mut Criterion) {
 
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
-        let layout = problem.get_layout(LayoutIndex::Real(0));
+        let layout = &problem.layout;
         let surrogate = item.shape.surrogate();
         let mut buffer_shape = item.shape.as_ref().clone();
-        let mut sampler = HPGSampler::new(item, layout).unwrap();
+        let mut sampler = HPGSampler::new(item, layout.cde()).unwrap();
         println!(
             "[{}] sampler coverage: {:.3}% with {} samplers",
             n_hpg_cells,
@@ -189,13 +183,13 @@ fn hpg_update_bench(c: &mut Criterion) {
         //collect N_VALID_SAMPLES
         let mut valid_placements = vec![];
         while valid_placements.len() < N_VALID_SAMPLES {
-            let transf = sampler.sample(&mut rng);
+            let dtransf = sampler.sample(&mut rng);
+            let transf = dtransf.compose();
             if !layout.cde().surrogate_collides(surrogate, &transf, &[]) {
                 buffer_shape.transform_from(&item.shape, &transf);
                 if !layout.cde().poly_collides(&buffer_shape, &[]) {
                     let d_transf = transf.decompose();
-                    valid_placements.push(PlacingOption {
-                        layout_idx: LayoutIndex::Real(0),
+                    valid_placements.push(SPPlacement {
                         item_id: SELECTED_ITEM_ID,
                         d_transf,
                     });
@@ -208,8 +202,8 @@ fn hpg_update_bench(c: &mut Criterion) {
         group.bench_function(BenchmarkId::from_parameter(n_hpg_cells), |b| {
             b.iter(|| {
                 let opt = valid_samples_cycler.next().unwrap();
-                let (l_idx, pik) = problem.place_item(*opt);
-                problem.remove_item(l_idx, pik, true);
+                let pkey = problem.place_item(*opt);
+                problem.remove_item(pkey, true);
                 problem.flush_changes();
             })
         });

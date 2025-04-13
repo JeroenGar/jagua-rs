@@ -2,19 +2,20 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 
-use crate::collision_detection::cd_engine::CDEngine;
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
-use crate::entities::quality_zone::InferiorQualityZone;
-use crate::entities::quality_zone::N_QUALITIES;
+use crate::collision_detection::CDEngine;
+use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::HazardEntity;
 use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::transformation::Transformation;
-use crate::util::config::CDEConfig;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::SimplePolygon;
+use crate::util::CDEConfig;
 
-/// A container in which items can be placed.
+#[cfg(doc)]
+use crate::entities::general::Item;
+
+/// A container in which [`Item`]'s can be placed.
 #[derive(Clone, Debug)]
 pub struct Bin {
     pub id: usize,
@@ -85,8 +86,7 @@ impl Bin {
     }
 
     /// Create a new `Bin` for a strip-packing problem. Instead of a shape, the bin is always rectangular.
-    pub fn from_strip(rect: AARectangle, cde_config: CDEConfig) -> Self {
-        let id = 0;
+    pub fn from_strip(id: usize, rect: AARectangle, cde_config: CDEConfig) -> Self {
         //The "original" x_min and y_min of the strip should always be at (0, 0)
         let pretransform = Transformation::from_translation((rect.x_min, rect.y_min));
 
@@ -126,4 +126,27 @@ fn generate_bin_hazards(
         }
     }
     hazards
+}
+
+/// Maximum number of qualities that can be used for quality zones in a bin.
+pub const N_QUALITIES: usize = 10;
+
+/// Represents a zone of inferior quality in the [`Bin`]
+#[derive(Clone, Debug)]
+pub struct InferiorQualityZone {
+    /// Quality of this zone. Higher qualities are superior.
+    pub quality: usize,
+    /// The shapes of all zones of this quality
+    pub zones: Vec<Arc<SimplePolygon>>,
+}
+
+impl InferiorQualityZone {
+    pub fn new(quality: usize, shapes: Vec<SimplePolygon>) -> Self {
+        assert!(
+            quality < N_QUALITIES,
+            "Quality must be in range of N_QUALITIES"
+        );
+        let zones = shapes.into_iter().map(Arc::new).collect();
+        Self { quality, zones }
+    }
 }

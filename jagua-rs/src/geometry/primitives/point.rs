@@ -1,10 +1,10 @@
 use std::hash::{Hash, Hasher};
 
 use crate::fsize;
-use crate::geometry::geo_traits::{CollidesWith, Distance, Transformable, TransformableFrom};
-use crate::geometry::transformation::Transformation;
+use crate::geometry::Transformation;
+use crate::geometry::geo_traits::{CollidesWith, DistanceTo, Transformable, TransformableFrom};
 
-/// Geometric primitive representing a point: (x, y)
+/// Point(x, y)
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Point(pub fsize, pub fsize);
 
@@ -42,14 +42,14 @@ impl Point {
     }
 }
 
-impl Distance<Point> for Point {
+impl DistanceTo<Point> for Point {
     #[inline(always)]
-    fn distance(&self, other: &Point) -> fsize {
+    fn distance_to(&self, other: &Point) -> fsize {
         ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()
     }
 
     #[inline(always)]
-    fn sq_distance(&self, other: &Point) -> fsize {
+    fn sq_distance_to(&self, other: &Point) -> fsize {
         (self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)
     }
 }

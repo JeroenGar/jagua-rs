@@ -1,29 +1,30 @@
-use crate::collision_detection::cd_engine::CDEngine;
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
-use crate::collision_detection::hazard_filter;
-use crate::collision_detection::hazard_filter::CombinedHazardFilter;
-use crate::collision_detection::hazard_filter::EntityHazardFilter;
+use crate::collision_detection::CDEngine;
+use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::hazards::filter;
+use crate::collision_detection::hazards::filter::CombinedHazardFilter;
+use crate::collision_detection::hazards::filter::EntityHazardFilter;
 use crate::collision_detection::hpg::hazard_proximity_grid::HazardProximityGrid;
 use crate::collision_detection::hpg::hpg_cell::HPGCellUpdate;
-use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
-use crate::collision_detection::quadtree::qt_hazard::QTHazard;
-use crate::collision_detection::quadtree::qt_node::QTNode;
-use crate::entities::bin::Bin;
-use crate::entities::item::Item;
-use crate::entities::layout::Layout;
-use crate::entities::layout::LayoutSnapshot;
-use crate::entities::problems::problem_generic::ProblemGeneric;
-use crate::entities::solution::Solution;
+use crate::collision_detection::quadtree::QTHazPresence;
+use crate::collision_detection::quadtree::QTHazard;
+use crate::collision_detection::quadtree::QTNode;
+use crate::entities::bin_packing::BPProblem;
+use crate::entities::bin_packing::BPSolution;
+use crate::entities::general::Bin;
+use crate::entities::general::Item;
+use crate::entities::general::Layout;
+use crate::entities::general::LayoutSnapshot;
+use crate::entities::strip_packing::SPProblem;
+use crate::entities::strip_packing::SPSolution;
+use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{Shape, Transformable};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::transformation::Transformation;
-use crate::{fsize, util};
+use crate::geometry::primitives::AARectangle;
 use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::error;
 use std::collections::HashSet;
-
 //Various checks to verify correctness of the state of the system
 //Used in debug_assertion!() blocks
 
@@ -35,18 +36,42 @@ pub fn instance_item_bin_ids_correct(items: &[(Item, usize)], bins: &[(Bin, usiz
         && bins.iter().enumerate().all(|(i, (bin, _qty))| bin.id == i)
 }
 
-pub fn problem_matches_solution<P: ProblemGeneric>(problem: &P, solution: &Solution) -> bool {
-    for l in problem.layouts() {
-        let sl = solution
-            .layout_snapshots
-            .iter()
-            .find(|sl| sl.id == l.id())
-            .unwrap();
-        match layouts_match(l, sl) {
-            true => continue,
-            false => return false,
+pub fn spproblem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
+    let SPSolution {
+        strip_width,
+        layout_snapshot,
+        usage,
+        time_stamp: _,
+    } = sol;
+
+    assert_eq!(*strip_width, spp.strip_width());
+    assert_eq!(*usage, spp.usage());
+    assert!(layouts_match(&spp.layout, layout_snapshot));
+
+    true
+}
+
+pub fn bpproblem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
+    let BPSolution {
+        layout_snapshots,
+        usage,
+        placed_item_qtys,
+        target_item_qtys: _,
+        bin_qtys,
+        time_stamp: _,
+    } = sol;
+
+    assert_eq!(*usage, bpp.usage());
+    assert_eq!(*placed_item_qtys, bpp.placed_item_qtys().collect_vec());
+    assert_eq!(bin_qtys, &bpp.bin_qtys);
+
+    for (lkey, l) in &bpp.layouts {
+        let ls = &layout_snapshots[lkey];
+        if !layouts_match(l, ls) {
+            return false;
         }
     }
+
     true
 }
 
@@ -106,7 +131,7 @@ pub fn item_to_place_does_not_collide(
     let t_shape = shape.transform_clone(transformation);
 
     let entities_to_ignore = haz_filter.as_ref().map_or(vec![], |f| {
-        hazard_filter::generate_irrelevant_hazards(f, layout.cde().all_hazards())
+        filter::generate_irrelevant_hazards(f, layout.cde().all_hazards())
     });
 
     if layout
@@ -132,11 +157,11 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
             },
         };
         let entities_to_ignore =
-            hazard_filter::generate_irrelevant_hazards(&combo_filter, layout.cde().all_hazards());
+            filter::generate_irrelevant_hazards(&combo_filter, layout.cde().all_hazards());
 
         if layout.cde().poly_collides(&pi.shape, &entities_to_ignore) {
             println!("Collision detected for item {:.?}", pi.item_id);
-            util::print_layout(layout);
+            print_layout(layout);
             return false;
         }
     }
@@ -463,4 +488,26 @@ pub fn quadrants_have_valid_layout(quadrants: &[&AARectangle; 4]) -> bool {
         );
     }
     true
+}
+
+///Prints code to rebuild a layout. Intended for debugging purposes.
+pub fn print_layout(layout: &Layout) {
+    println!(
+        "let mut layout = Layout::new(0, instance.bin({}).clone());",
+        layout.bin.id
+    );
+    println!();
+
+    for pi in layout.placed_items().values() {
+        let transformation_str = {
+            let t_decomp = &pi.d_transf;
+            let (tr, (tx, ty)) = (t_decomp.rotation(), t_decomp.translation());
+            format!("&DTransformation::new({:.6},({:.6},{:.6}))", tr, tx, ty)
+        };
+
+        println!(
+            "layout.place_item(instance.item({}), {});",
+            pi.item_id, transformation_str
+        );
+    }
 }

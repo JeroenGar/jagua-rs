@@ -1,17 +1,17 @@
 use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::convex_hull;
 use crate::geometry::fail_fast::{piers, poi};
-use crate::geometry::geo_traits::{Distance, Shape, Transformable, TransformableFrom};
-use crate::geometry::primitives::circle::Circle;
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::transformation::Transformation;
-use crate::util::config::SPSurrogateConfig;
+use crate::geometry::geo_traits::{DistanceTo, Shape, Transformable, TransformableFrom};
+use crate::geometry::primitives::Circle;
+use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::SimplePolygon;
+use crate::util::SPSurrogateConfig;
 
 #[derive(Clone, Debug)]
-/// Surrogate representation of a [SimplePolygon] for fail-fast purposes
+/// Surrogate representation of a [`SimplePolygon`] for fail-fast purposes
 pub struct SPSurrogate {
-    /// Indices of the points in the [SimplePolygon] that form the convex hull
+    /// Indices of the points in the [`SimplePolygon`] that form the convex hull
     pub convex_hull_indices: Vec<usize>,
     /// Set of poles
     pub poles: Vec<Circle>,
@@ -23,15 +23,15 @@ pub struct SPSurrogate {
     pub piers: Vec<Edge>,
     /// Number of poles that will be checked during fail-fast
     pub n_ff_poles: usize,
-    /// The area of the convex hull of the [SimplePolygon].
+    /// The area of the convex hull of the [`SimplePolygon`].
     pub convex_hull_area: fsize,
     /// The configuration used to generate the surrogate
     pub config: SPSurrogateConfig,
 }
 
 impl SPSurrogate {
-    /// Creates a new [SPSurrogate] from a [SimplePolygon] and a configuration.
-    /// Expensive operations are performed here, so this should be done here!
+    /// Creates a new [`SPSurrogate`] from a [`SimplePolygon`] and a configuration.
+    /// Expensive operations are performed here!
     pub fn new(simple_poly: &SimplePolygon, config: SPSurrogateConfig) -> Self {
         let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
         let convex_hull_area = SimplePolygon::new(
@@ -42,10 +42,7 @@ impl SPSurrogate {
         )
         .area();
         let mut poles = vec![simple_poly.poi.clone()];
-        poles.extend(poi::generate_additional_surrogate_poles(
-            simple_poly,
-            &config.n_pole_limits,
-        ));
+        poles.extend(poi::generate_poles(simple_poly, &config.n_pole_limits));
         let poles_bounding_circle = Circle::bounding_circle(&poles);
         let max_distance_point_to_pole = simple_poly
             .points
@@ -53,14 +50,14 @@ impl SPSurrogate {
             .map(|p| {
                 poles
                     .iter()
-                    .map(|c| c.distance(p))
+                    .map(|c| c.distance_to(p))
                     .fold(fsize::MAX, |acc, d| fsize::min(acc, d))
             })
             .fold(fsize::MIN, |acc, d| fsize::max(acc, d));
 
         let n_ff_poles = usize::min(config.n_ff_poles, poles.len());
         let relevant_poles_for_piers = &poles[0..n_ff_poles]; //poi + all poles that will be checked during fail fast are relevant for piers
-        let piers = piers::generate(simple_poly, config.n_ff_piers, relevant_poles_for_piers);
+        let piers = piers::generate_piers(simple_poly, config.n_ff_piers, relevant_poles_for_piers);
 
         Self {
             convex_hull_indices,

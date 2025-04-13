@@ -5,7 +5,7 @@ use itertools::Itertools;
 use ordered_float::NotNan;
 
 use crate::fsize;
-use crate::geometry::primitives::point::Point;
+use crate::geometry::primitives::Point;
 
 /// Representation of a grid of optional elements of type T
 /// Divided into rows and columns, where each row and column has a unique coordinate

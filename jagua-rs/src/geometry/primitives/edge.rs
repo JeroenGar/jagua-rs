@@ -1,12 +1,12 @@
 use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{
-    CollidesWith, Distance, Shape, Transformable, TransformableFrom,
+    CollidesWith, DistanceTo, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Point;
 
-/// Geometric primitive representing a line segment
+/// Line segment
 #[derive(Clone, Debug, PartialEq)]
 pub struct Edge {
     pub start: Point,
@@ -144,13 +144,13 @@ impl Shape for Edge {
     }
 
     fn diameter(&self) -> fsize {
-        self.start.distance(&self.end)
+        self.start.distance_to(&self.end)
     }
 }
 
-impl Distance<Point> for Edge {
+impl DistanceTo<Point> for Edge {
     #[inline(always)]
-    fn sq_distance(&self, point: &Point) -> fsize {
+    fn sq_distance_to(&self, point: &Point) -> fsize {
         let Point(x, y) = point;
         let Point(xx, yy) = self.closest_point_on_edge(point);
 
@@ -159,8 +159,8 @@ impl Distance<Point> for Edge {
     }
 
     #[inline(always)]
-    fn distance(&self, point: &Point) -> fsize {
-        fsize::sqrt(self.sq_distance(point))
+    fn distance_to(&self, point: &Point) -> fsize {
+        fsize::sqrt(self.sq_distance_to(point))
     }
 }
 
