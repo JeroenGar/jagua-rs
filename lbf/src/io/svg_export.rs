@@ -1,12 +1,12 @@
 use svg::node::element::path::Data;
 use svg::node::element::{Circle, Path};
 
-use jagua_rs::collision_detection::hazard::HazardEntity;
+use jagua_rs::collision_detection::hazards::HazardEntity;
 use jagua_rs::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use jagua_rs::collision_detection::quadtree::qt_node::QTNode;
-use jagua_rs::geometry::primitives::edge::Edge;
-use jagua_rs::geometry::primitives::point::Point;
-use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
+use jagua_rs::geometry::primitives::Edge;
+use jagua_rs::geometry::primitives::Point;
+use jagua_rs::geometry::primitives::SimplePolygon;
 use jagua_rs::{fsize, geometry};
 
 pub fn simple_polygon_data(s_poly: &SimplePolygon) -> Data {
@@ -90,7 +90,7 @@ pub fn point(Point(x, y): Point, fill: Option<&str>, rad: Option<fsize>) -> Circ
         .set("fill", fill.unwrap_or("black"))
 }
 
-pub fn circle(circle: &geometry::primitives::circle::Circle, params: &[(&str, &str)]) -> Circle {
+pub fn circle(circle: &geometry::primitives::Circle, params: &[(&str, &str)]) -> Circle {
     let mut circle = Circle::new()
         .set("cx", circle.center.0)
         .set("cy", circle.center.1)
@@ -107,7 +107,7 @@ pub fn edge_data(edge: &Edge) -> Data {
         .line_to((edge.end.0, edge.end.1))
 }
 
-pub fn aa_rect_data(rect: &geometry::primitives::aa_rectangle::AARectangle) -> Data {
+pub fn aa_rect_data(rect: &geometry::primitives::AARectangle) -> Data {
     Data::new()
         .move_to((rect.x_min, rect.y_min))
         .line_to((rect.x_max, rect.y_min))

@@ -1,14 +1,14 @@
-use crate::entities::general::layout::Layout;
-use crate::entities::general::placed_item::{PItemKey, PlacedItem};
+use crate::entities::bin_packing::BPInstance;
+use crate::entities::bin_packing::BPSolution;
+use crate::entities::general::Instance;
+use crate::entities::general::Layout;
+use crate::entities::general::{PItemKey, PlacedItem};
+use crate::fsize;
+use crate::geometry::DTransformation;
 use crate::util::assertions;
 use itertools::Itertools;
-use slotmap::{new_key_type, SlotMap};
+use slotmap::{SlotMap, new_key_type};
 use std::time::Instant;
-use crate::entities::bin_packing::instance::BPInstance;
-use crate::entities::bin_packing::solution::BPSolution;
-use crate::entities::general::instance::Instance;
-use crate::fsize;
-use crate::geometry::d_transformation::DTransformation;
 
 new_key_type! {
     /// Unique key for each [`Layout`] in a [`BPProblem`] and [`BPSolution`]
@@ -48,8 +48,8 @@ impl BPProblem {
     /// Places an item according to the given `BPPlacement` in the problem.
     pub fn place_item(&mut self, p_opt: BPPlacement) -> (LayKey, PItemKey) {
         let lkey = match p_opt.layout_id {
-            BPLayoutId::Open(lkey) => lkey,
-            BPLayoutId::Closed { bin_id } => {
+            BPLayoutType::Open(lkey) => lkey,
+            BPLayoutType::Closed { bin_id } => {
                 //open a new layout
                 let bin = self.instance.bins[bin_id].clone().0;
                 let layout = Layout::new(bin);
@@ -67,16 +67,21 @@ impl BPProblem {
 
     /// Removes an item from a layout. If the layout is empty, it will be closed.
     /// Set `commit_instantly` to false if there's a high chance that this modification will be reverted.
-    pub fn remove_item(&mut self, lkey: LayKey, pik: PItemKey, commit_instant: bool) -> BPPlacement {
+    pub fn remove_item(
+        &mut self,
+        lkey: LayKey,
+        pik: PItemKey,
+        commit_instant: bool,
+    ) -> BPPlacement {
         let pi = self.layouts[lkey].remove_item(pik, commit_instant);
         self.deregister_included_item(pi.item_id);
         if self.layouts[lkey].is_empty() {
             //if layout is empty, close it
             let bin_id = self.layouts[lkey].bin.id;
             self.deregister_layout(lkey);
-            BPPlacement::from_placed_item(BPLayoutId::Closed { bin_id }, &pi)
+            BPPlacement::from_placed_item(BPLayoutType::Closed { bin_id }, &pi)
         } else {
-            BPPlacement::from_placed_item(BPLayoutId::Open(lkey), &pi)
+            BPPlacement::from_placed_item(BPLayoutType::Open(lkey), &pi)
         }
     }
 
@@ -201,13 +206,18 @@ impl BPProblem {
     fn deregister_included_item(&mut self, item_id: usize) {
         self.missing_item_qtys[item_id] += 1;
     }
+
+    /// Makes sure that the all collision detection engines are completely updated with the changes made to the layouts.
+    pub fn flush_changes(&mut self) {
+        self.layouts.values_mut().for_each(|l| l.flush_changes());
+    }
 }
 
 #[derive(Clone, Debug, Copy)]
 /// Encapsulates all required information to place an `Item` in a `Problem`
 pub struct BPPlacement {
     /// Which layout to place the item in
-    pub layout_id: BPLayoutId,
+    pub layout_id: BPLayoutType,
     /// The id of the item to be placed
     pub item_id: usize,
     /// The decomposition of the transformation
@@ -215,7 +225,7 @@ pub struct BPPlacement {
 }
 
 impl BPPlacement {
-    pub fn from_placed_item(layout_id: BPLayoutId, placed_item: &PlacedItem) -> Self {
+    pub fn from_placed_item(layout_id: BPLayoutType, placed_item: &PlacedItem) -> Self {
         BPPlacement {
             layout_id,
             item_id: placed_item.item_id,
@@ -224,10 +234,11 @@ impl BPPlacement {
     }
 }
 
+/// Enum to distinguish between both existing layouts, and potential new layouts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BPLayoutId {
-    /// An already existing layout (currently open)
+pub enum BPLayoutType {
+    /// An existing layout
     Open(LayKey),
-    /// A new layout (currently closed)
+    /// A layout that does not yet exist, but can be created
     Closed { bin_id: usize },
 }

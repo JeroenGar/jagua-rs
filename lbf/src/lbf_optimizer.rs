@@ -9,19 +9,10 @@ use rand::prelude::SmallRng;
 use thousands::Separable;
 
 use jagua_rs::collision_detection::hazard_filter;
-use jagua_rs::entities::instances::bin_packing::BPInstance;
-use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::strip_packing::SPInstance;
-use jagua_rs::entities::item::Item;
-use jagua_rs::entities::placement::{LayoutId, Placement};
-use jagua_rs::entities::problems::bin_packing::BPProblem;
-use jagua_rs::entities::problems::problem::Problem;
-use jagua_rs::entities::problems::strip_packing::SPProblem;
-use jagua_rs::entities::solution::{BPSolution, SPSolution};
 use jagua_rs::fsize;
 use jagua_rs::geometry::convex_hull::convex_hull_from_surrogate;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
-use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
+use jagua_rs::geometry::primitives::SimplePolygon;
 
 use crate::lbf_config::LBFConfig;
 use crate::lbf_cost::LBFPlacingCost;

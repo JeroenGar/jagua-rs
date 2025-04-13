@@ -2,12 +2,11 @@ use rand::Rng;
 use rand_distr::Distribution;
 use rand_distr::Normal;
 
-use jagua_rs::entities::item::Item;
-use jagua_rs::geometry::d_transformation::DTransformation;
-use jagua_rs::geometry::primitives::aa_rectangle::AARectangle;
-use jagua_rs::{PI, fsize};
-
 use crate::samplers::rotation_distr::NormalRotDistr;
+use jagua_rs::entities::general::Item;
+use jagua_rs::geometry::DTransformation;
+use jagua_rs::geometry::primitives::AARectangle;
+use jagua_rs::{PI, fsize};
 
 /// The stddev of translation starts at 1% and ends at 0.05% of the largest dimension of the bounding box.
 pub const SD_TRANSL: (fsize, fsize) = (0.01, 0.0005);
@@ -32,7 +31,7 @@ pub struct LSSampler {
 impl LSSampler {
     pub fn new(
         item: &Item,
-        ref_transform: &DTransformation,
+        ref_transform: DTransformation,
         sd_transl_range: (fsize, fsize),
         sd_rot_range: (fsize, fsize),
     ) -> Self {
@@ -56,14 +55,14 @@ impl LSSampler {
     }
 
     /// Creates a new sampler with default standard deviation ranges: [SD_TRANSL] and [SD_ROT].
-    pub fn from_defaults(item: &Item, ref_transform: &DTransformation, bbox: &AARectangle) -> Self {
+    pub fn from_defaults(item: &Item, ref_transform: DTransformation, bbox: &AARectangle) -> Self {
         let max_dim = fsize::max(bbox.width(), bbox.height());
         let sd_transl_range = (SD_TRANSL.0 * max_dim, SD_TRANSL.1 * max_dim);
         Self::new(item, ref_transform, sd_transl_range, SD_ROT)
     }
 
     /// Shifts the mean of the normal distributions to the given reference transformation.
-    pub fn shift_mean(&mut self, ref_transform: &DTransformation) {
+    pub fn shift_mean(&mut self, ref_transform: DTransformation) {
         self.normal_x = Normal::new(ref_transform.translation().0, self.sd_transl).unwrap();
         self.normal_y = Normal::new(ref_transform.translation().1, self.sd_transl).unwrap();
         self.normal_r.set_mean(ref_transform.rotation());

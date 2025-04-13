@@ -5,16 +5,17 @@ use std::io::BufReader;
 use std::path::Path;
 
 use clap::Parser as ClapParser;
-use jagua_rs::entities::instances::bin_packing::BPInstance;
-use jagua_rs::entities::instances::strip_packing::SPInstance;
+use jagua_rs::entities::bin_packing::BPInstance;
+use jagua_rs::entities::strip_packing::SPInstance;
 use jagua_rs::io::parser;
 use jagua_rs::io::parser::Parser;
 use jagua_rs::util::polygon_simplification::PolySimplConfig;
+use lbf::config::LBFConfig;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
 use lbf::io::layout_to_svg::s_layout_to_svg;
-use lbf::lbf_config::LBFConfig;
-use lbf::lbf_optimizer::LBFOptimizer;
+use lbf::opt::lbf_opt_bpp::LBFOptimizerBP;
+use lbf::opt::lbf_opt_spp::LBFOptimizerSP;
 use lbf::{EPOCH, LBFInstance, LBFSolution, io};
 use log::{error, warn};
 use mimalloc::MiMalloc;
@@ -92,12 +93,12 @@ fn main() {
 
     let solution = match &instance {
         LBFInstance::SP(sp) => {
-            let mut optimizer = LBFOptimizer::from_sp_instance(sp.clone(), config, rng);
+            let mut optimizer = LBFOptimizerSP::new(sp.clone(), config, rng);
             let sol = optimizer.solve();
             LBFSolution::SP(sol)
         }
         LBFInstance::BP(bp) => {
-            let mut optimizer = LBFOptimizer::from_bp_instance(bp.clone(), config, rng);
+            let mut optimizer = LBFOptimizerBP::new(bp.clone(), config, rng);
             let sol = optimizer.solve();
             LBFSolution::BP(sol)
         }

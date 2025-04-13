@@ -3,8 +3,8 @@ use std::iter;
 
 use itertools::Itertools;
 
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
+use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hpg::boundary_fill::BoundaryFillHPG;
 use crate::collision_detection::hpg::grid::Grid;
 use crate::collision_detection::hpg::grid_generator;
@@ -12,7 +12,7 @@ use crate::collision_detection::hpg::hpg_cell::{HPGCell, HPGCellUpdate};
 use crate::fsize;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::aa_rectangle::AARectangle;
+use crate::geometry::primitives::AARectangle;
 use crate::util::assertions;
 
 /// Grid of cells which store information about hazards in their vicinity.

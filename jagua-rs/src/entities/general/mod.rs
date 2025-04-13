@@ -1,10 +1,8 @@
-pub mod bin;
-pub mod instance;
-pub mod item;
-pub mod layout;
-pub mod placed_item;
-#[doc(inline)]
-pub use bin::Bin;
+mod bin;
+mod instance;
+mod item;
+mod layout;
+mod placed_item;
 
 #[doc(inline)]
 pub use instance::Instance;
@@ -20,3 +18,15 @@ pub use layout::LayoutSnapshot;
 
 #[doc(inline)]
 pub use placed_item::PlacedItem;
+
+#[doc(inline)]
+pub use placed_item::PItemKey;
+
+#[doc(inline)]
+pub use bin::Bin;
+
+#[doc(inline)]
+pub use bin::InferiorQualityZone;
+
+#[doc(inline)]
+pub use bin::N_QUALITIES;

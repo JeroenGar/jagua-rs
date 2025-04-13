@@ -1,16 +1,16 @@
 use std::cmp::Ordering;
 
+use crate::geometry::Transformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
     CollidesWith, Distance, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::Point;
 use crate::{PI, fsize};
 
-/// Geometric primitive representing a circle
+/// Circle
 #[derive(Clone, Debug, PartialEq)]
 pub struct Circle {
     pub center: Point,

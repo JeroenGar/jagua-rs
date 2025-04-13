@@ -1,10 +1,10 @@
 use std::hash::{Hash, Hasher};
 
 use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{CollidesWith, Distance, Transformable, TransformableFrom};
-use crate::geometry::transformation::Transformation;
 
-/// Geometric primitive representing a point: (x, y)
+/// Point(x, y)
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Point(pub fsize, pub fsize);
 

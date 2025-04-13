@@ -3,16 +3,16 @@ use std::cmp::Ordering;
 use itertools::Itertools;
 use ordered_float::NotNan;
 
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
-use crate::entities::general::bin::N_QUALITIES;
-use crate::entities::general::item::Item;
+use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::HazardEntity;
+use crate::entities::general::Item;
+use crate::entities::general::N_QUALITIES;
 use crate::fsize;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{SeparationDistance, Shape};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::circle::Circle;
-use crate::geometry::primitives::point::Point;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Circle;
+use crate::geometry::primitives::Point;
 
 /// Represents a cell in the Hazard Proximity Grid
 #[derive(Clone, Debug)]

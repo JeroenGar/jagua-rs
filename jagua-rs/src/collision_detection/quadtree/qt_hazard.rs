@@ -2,13 +2,13 @@ use std::array;
 use std::borrow::Borrow;
 use std::sync::Arc;
 
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
+use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::quadtree::qt_partial_hazard::{PartialQTHaz, RelevantEdges};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::SimplePolygon;
 use crate::util::assertions;
 
 /// Represents the manifestation of a [Hazard] in a [QTNode](crate::collision_detection::quadtree::qt_node::QTNode)

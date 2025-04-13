@@ -1,8 +1,8 @@
 use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Point;
 
 /// Trait for types that can detect collisions between itself and an object from type T.
 pub trait CollidesWith<T> {

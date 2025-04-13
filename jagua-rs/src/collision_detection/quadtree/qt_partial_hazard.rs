@@ -2,10 +2,10 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 use std::sync::{Arc, Weak};
 
-use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use crate::geometry::primitives::SimplePolygon;
 
 /// Defines a set of edges from a hazard that is partially active in the [QTNode](crate::collision_detection::quadtree::qt_node::QTNode).
 #[derive(Clone, Debug)]

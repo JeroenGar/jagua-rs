@@ -1,10 +1,16 @@
-pub mod problem;
-pub mod solution;
-pub mod instance;
+mod instance;
+mod problem;
+mod solution;
 
 #[doc(inline)]
 pub use instance::BPInstance;
 #[doc(inline)]
-pub use solution::BPSolution;
+pub use problem::BPLayoutType;
+#[doc(inline)]
+pub use problem::BPPlacement;
 #[doc(inline)]
 pub use problem::BPProblem;
+#[doc(inline)]
+pub use problem::LayKey;
+#[doc(inline)]
+pub use solution::BPSolution;

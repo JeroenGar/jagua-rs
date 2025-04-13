@@ -7,9 +7,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::fsize;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::Point;
+use crate::geometry::primitives::SimplePolygon;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 #[serde(tag = "mode", content = "params")]

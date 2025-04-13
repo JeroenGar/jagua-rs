@@ -2,11 +2,11 @@ use std::cmp::Ordering;
 
 use log::debug;
 
-use crate::collision_detection::hazard::Hazard;
+use crate::collision_detection::hazards::Hazard;
 use crate::fsize;
 use crate::geometry::geo_traits::{SeparationDistance, Shape};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::point::Point;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Point;
 
 const MAX_ITERATIONS: usize = 25;
 

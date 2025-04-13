@@ -1,17 +1,17 @@
+use crate::entities::general::Bin;
+use crate::entities::general::Instance;
+use crate::entities::general::Layout;
+use crate::entities::general::PItemKey;
+use crate::entities::strip_packing::SPInstance;
+use crate::entities::strip_packing::SPSolution;
 use crate::fsize;
+use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::aa_rectangle::AARectangle;
+use crate::geometry::primitives::AARectangle;
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
 use itertools::Itertools;
 use std::time::Instant;
-use crate::entities::general::bin::Bin;
-use crate::entities::general::instance::Instance;
-use crate::entities::general::layout::Layout;
-use crate::entities::general::placed_item::PItemKey;
-use crate::entities::strip_packing::instance::SPInstance;
-use crate::entities::strip_packing::solution::SPSolution;
-use crate::geometry::d_transformation::DTransformation;
 
 /// Modifiable counterpart of [`SPInstance`]: items can be placed and removed, strip can be extended or fitted.
 #[derive(Clone)]
@@ -41,8 +41,13 @@ impl SPProblem {
     }
 
     /// Adds width to the strip in the back, keeping the front fixed.
-    pub fn extend_strip(&mut self, extra_width: usize) {
-        let new_bbox = AARectangle::new(0.0, 0.0, self.strip_width() + extra_width as fsize, self.strip_height());
+    pub fn extend_strip(&mut self, extra_width: fsize) {
+        let new_bbox = AARectangle::new(
+            0.0,
+            0.0,
+            self.strip_width() + extra_width,
+            self.strip_height(),
+        );
         let new_bin = Bin::from_strip(0, new_bbox, self.layout.bin.base_cde.config());
         self.layout.change_bin(new_bin);
     }
@@ -51,17 +56,21 @@ impl SPProblem {
     pub fn fit_strip(&mut self) {
         let feasible_before = self.layout.is_feasible();
         //find the rightmost item in the strip and add some tolerance (avoiding false collision positives)
-        let fitted_width = self.layout.placed_items.values()
+        let fitted_width = self
+            .layout
+            .placed_items
+            .values()
             .map(|pi| pi.shape.bbox.x_max)
             .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap() * 1.00001;
+            .unwrap()
+            * 1.00001;
 
         let new_bbox = AARectangle::new(0.0, 0.0, fitted_width, self.strip_height());
         let new_bin = Bin::from_strip(0, new_bbox, self.layout.bin.base_cde.config());
         self.layout.change_bin(new_bin);
         debug_assert!(feasible_before == self.layout.is_feasible());
     }
-    
+
     /// Places an item according to the given `SPPlacement` in the problem.
     pub fn place_item(&mut self, placement: SPPlacement) -> PItemKey {
         self.register_included_item(placement.item_id);
@@ -81,7 +90,7 @@ impl SPProblem {
             d_transf: pi.d_transf,
         }
     }
-    
+
     pub fn save(&mut self) -> SPSolution {
         let solution = SPSolution {
             layout_snapshot: self.layout.save(),
@@ -124,7 +133,7 @@ impl SPProblem {
     pub fn strip_height(&self) -> fsize {
         self.layout.bin.outer.bbox().height()
     }
-    
+
     fn register_included_item(&mut self, item_id: usize) {
         self.missing_item_qtys[item_id] -= 1;
     }
@@ -136,11 +145,16 @@ impl SPProblem {
     pub fn usage(&self) -> fsize {
         self.layout.usage()
     }
+
+    /// Makes sure that the all collision detection engines are completely updated with the changes made to the layouts.
+    pub fn flush_changes(&mut self) {
+        self.layout.flush_changes();
+    }
 }
 
 /// Represents a placement of an item in the strip packing problem.
 #[derive(Debug, Clone, Copy)]
 pub struct SPPlacement {
-    item_id: usize,
-    d_transf: DTransformation,
+    pub item_id: usize,
+    pub d_transf: DTransformation,
 }

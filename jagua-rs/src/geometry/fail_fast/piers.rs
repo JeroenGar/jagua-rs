@@ -4,13 +4,13 @@ use ordered_float::NotNan;
 use rand_distr::num_traits::FloatConst;
 
 use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{CollidesWith, Distance, Shape, Transformable};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::circle::Circle;
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Circle;
+use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::Point;
+use crate::geometry::primitives::SimplePolygon;
 
 static RAYS_PER_ANGLE: usize = if cfg!(debug_assertions) { 10 } else { 200 };
 static N_ANGLES: usize = if cfg!(debug_assertions) { 4 } else { 90 };
@@ -18,7 +18,7 @@ static N_POINTS_PER_DIMENSION: usize = if cfg!(debug_assertions) { 10 } else { 1
 static CLIPPING_TRIM: fsize = 0.999;
 static ACTION_RADIUS_RATIO: fsize = 0.10;
 
-pub fn generate(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> {
+pub fn generate_piers(shape: &SimplePolygon, n: usize, poles: &[Circle]) -> Vec<Edge> {
     if n == 0 {
         return vec![];
     }

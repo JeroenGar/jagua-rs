@@ -4,12 +4,11 @@ use std::ops::{Add, Div, Mul, Sub};
 use ordered_float::NotNan;
 
 use crate::fsize;
-use crate::geometry::d_transformation::DTransformation;
-
-//See https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/geometry/geo-tran.html#:~:text=A%20rotation%20matrix%20and%20a,rotations%20followed%20by%20a%20translation.
+use crate::geometry::DTransformation;
 
 #[derive(Clone, Debug)]
-///Proper rigid transformation in matrix form
+///The matrix form of [`DTransformation`].
+///[read more](https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/geometry/geo-tran.html)
 pub struct Transformation {
     matrix: [[NotNan<fsize>; 3]; 3],
 }

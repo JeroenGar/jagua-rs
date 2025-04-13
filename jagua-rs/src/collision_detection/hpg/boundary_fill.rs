@@ -3,7 +3,7 @@ use std::ops::RangeInclusive;
 
 use crate::collision_detection::hpg::grid::Grid;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::primitives::aa_rectangle::AARectangle;
+use crate::geometry::primitives::AARectangle;
 
 // Boundary fill algorithm to propagate update through the hazard proximity grid.
 // During the update of an HPGCell, it can often guarantee that the update will also not affect any of its direct neighbors.

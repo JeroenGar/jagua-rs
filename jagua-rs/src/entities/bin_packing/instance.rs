@@ -1,6 +1,6 @@
-use crate::entities::general::bin::Bin;
-use crate::entities::general::instance::Instance;
-use crate::entities::general::item::Item;
+use crate::entities::general::Bin;
+use crate::entities::general::Instance;
+use crate::entities::general::Item;
 use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;

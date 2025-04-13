@@ -1,12 +1,12 @@
 use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{
     CollidesWith, Distance, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Point;
 
-/// Geometric primitive representing a line segment
+/// Line segment
 #[derive(Clone, Debug, PartialEq)]
 pub struct Edge {
     pub start: Point,

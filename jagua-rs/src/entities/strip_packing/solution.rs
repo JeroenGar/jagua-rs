@@ -1,9 +1,9 @@
-use std::time::Instant;
-use crate::entities::general::layout::LayoutSnapshot;
+use crate::entities::general::LayoutSnapshot;
 use crate::fsize;
+use std::time::Instant;
 
 #[cfg(doc)]
-use crate::entities::strip_packing::problem::SPProblem;
+use crate::entities::strip_packing::SPProblem;
 
 /// Snapshot of [`SPProblem`] at a specific moment. Can be used to restore [`SPProblem`] to a previous state.
 #[derive(Debug, Clone)]

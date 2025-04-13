@@ -1,9 +1,10 @@
-use crate::entities::general::bin::Bin;
-use crate::entities::general::item::Item;
+use crate::entities::general::Bin;
+use crate::entities::general::Item;
+use std::any::Any;
 
 /// The static (unmodifiable) representation of a problem instance.
 /// This trait defines shared functionality between any instance variant.
-pub trait Instance {
+pub trait Instance: Any {
     /// Returns the items in the instance, along with their requested quantities.
     fn items(&self) -> &[(Item, usize)];
 

@@ -1,11 +1,9 @@
 use crate::io::svg_util::SvgDrawOptions;
 use crate::io::{svg_export, svg_util};
-use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::layout::Layout;
-use jagua_rs::entities::layout::LayoutSnapshot;
+use jagua_rs::entities::general::{Instance, Layout, LayoutSnapshot};
 use jagua_rs::fsize;
-use jagua_rs::geometry::primitives::circle::Circle;
-use jagua_rs::geometry::transformation::Transformation;
+use jagua_rs::geometry::Transformation;
+use jagua_rs::geometry::primitives::Circle;
 use jagua_rs::io::parser;
 use svg::Document;
 use svg::node::element::{Definitions, Group, Title, Use};

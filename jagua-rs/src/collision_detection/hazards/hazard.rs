@@ -1,11 +1,12 @@
-use crate::entities::general::placed_item::{PItemKey, PlacedItem};
-use crate::geometry::d_transformation::DTransformation;
+use crate::entities::general::{PItemKey, PlacedItem};
+use crate::geometry::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
+use crate::geometry::primitives::SimplePolygon;
 use std::borrow::Borrow;
 use std::sync::Arc;
 
-/// Defines a certain spatial constraint that affects the feasibility of a placement.
+/// Abstraction around any spatial constraint that affects the feasibility of a placement.
+/// See [`HazardEntity`] for the different types of hazards.
 #[derive(Clone, Debug)]
 pub struct Hazard {
     /// The entity inducing the hazard
@@ -27,7 +28,7 @@ impl Hazard {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-/// Entity inducing the `Hazard`. All entities are uniquely identified.
+/// Entity inducing a [Hazard]. All entities are uniquely identified.
 pub enum HazardEntity {
     /// An item placed in the layout, defined by its id, applied transformation and key
     PlacedItem {

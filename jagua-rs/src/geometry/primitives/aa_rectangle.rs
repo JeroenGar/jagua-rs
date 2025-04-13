@@ -3,13 +3,13 @@ use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{
     AlmostCollidesWith, CollidesWith, Distance, SeparationDistance, Shape,
 };
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::primitives::point::Point;
+use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::Point;
 use crate::util::fpa::FPA;
 use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
 
-///Geometric primitive representing an axis-aligned rectangle
+///Axis-aligned rectangle
 #[derive(Clone, Debug, PartialEq)]
 pub struct AARectangle {
     pub x_min: fsize,

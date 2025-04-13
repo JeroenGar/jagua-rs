@@ -2,18 +2,18 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 
-use crate::collision_detection::cd_engine::CDEngine;
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
+use crate::collision_detection::CDEngine;
+use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::HazardEntity;
 use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::SimplePolygon;
 use crate::util::config::CDEConfig;
 
 #[cfg(doc)]
-use crate::entities::general::item::Item;
+use crate::entities::general::Item;
 
 /// A container in which [`Item`]'s can be placed.
 #[derive(Clone, Debug)]
@@ -128,7 +128,7 @@ fn generate_bin_hazards(
     hazards
 }
 
-/// Maximum number of qualities that can be used (increase if needed)
+/// Maximum number of qualities that can be used for quality zones in a bin.
 pub const N_QUALITIES: usize = 10;
 
 /// Represents a zone of inferior quality in the [`Bin`]
@@ -150,4 +150,3 @@ impl InferiorQualityZone {
         Self { quality, zones }
     }
 }
-

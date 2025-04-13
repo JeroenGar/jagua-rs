@@ -3,15 +3,14 @@ mod tests {
     use std::any::Any;
     use std::path::Path;
 
-    use jagua_rs::entities::instances::bin_packing::BPInstance;
-    use jagua_rs::entities::instances::strip_packing::SPInstance;
-    use jagua_rs::entities::layout::LayKey;
-    use jagua_rs::entities::problems::problem::Problem;
+    use jagua_rs::entities::bin_packing::BPInstance;
+    use jagua_rs::entities::strip_packing::SPInstance;
     use jagua_rs::io::parser::Parser;
     use jagua_rs::util::polygon_simplification::PolySimplConfig;
+    use lbf::config::LBFConfig;
     use lbf::io;
-    use lbf::lbf_config::LBFConfig;
-    use lbf::lbf_optimizer::LBFOptimizer;
+    use lbf::opt::lbf_opt_bpp::LBFOptimizerBP;
+    use lbf::opt::lbf_opt_spp::LBFOptimizerSP;
     use rand::SeedableRng;
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;
@@ -54,13 +53,12 @@ mod tests {
     }
 
     fn test_strip_packing(instance: SPInstance, config: LBFConfig) {
-        let mut opt = LBFOptimizer::from_sp_instance(instance, config, SmallRng::seed_from_u64(0));
+        let mut opt = LBFOptimizerSP::new(instance, config, SmallRng::seed_from_u64(0));
 
         let mut rng = SmallRng::seed_from_u64(0);
 
         // a first lbf run
         opt.solve();
-
         {
             // remove some items
             let problem = &mut opt.problem;
@@ -75,21 +73,26 @@ mod tests {
 
                 if let Some(random_placed_item) = random_placed_item {
                     // remove the item
-                    problem.remove_item(LayKey::default(), random_placed_item, false);
+                    problem.remove_item(random_placed_item, false);
                 } else {
                     // no items to remove
                     break;
                 }
             }
-            // flush changes
             problem.flush_changes();
+
+            let solution = opt.problem.save();
             // second optimization run
+            opt.solve();
+            // restore the solution
+            opt.problem.restore(&solution);
+            // third optimization run
             opt.solve();
         }
     }
 
     fn test_bin_packing(instance: BPInstance, config: LBFConfig) {
-        let mut opt = LBFOptimizer::from_bp_instance(instance, config, SmallRng::seed_from_u64(0));
+        let mut opt = LBFOptimizerBP::new(instance, config, SmallRng::seed_from_u64(0));
 
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -102,8 +105,7 @@ mod tests {
             for _ in 0..N_ITEMS_TO_REMOVE {
                 //pick random existing layout
                 let lkey = problem.layouts.keys().choose(&mut rng).unwrap();
-                let random_placed_item = problem
-                    .layout(lkey)
+                let random_placed_item = problem.layouts[lkey]
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
@@ -119,7 +121,13 @@ mod tests {
             }
             // flush changes
             problem.flush_changes();
+
+            let solution = opt.problem.save();
             // second optimization run
+            opt.solve();
+            // restore the solution
+            opt.problem.restore(&solution);
+            // third optimization run
             opt.solve();
         }
     }

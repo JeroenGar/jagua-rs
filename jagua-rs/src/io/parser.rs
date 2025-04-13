@@ -1,18 +1,20 @@
 use std::time::Instant;
 
-use crate::entities::general::bin::{Bin, InferiorQualityZone, N_QUALITIES};
-use crate::entities::bin_packing::instance::BPInstance;
-use crate::entities::general::instance::Instance;
-use crate::entities::strip_packing::instance::SPInstance;
-use crate::entities::general::item::Item;
+use crate::entities::bin_packing::BPInstance;
+use crate::entities::bin_packing::BPSolution;
+use crate::entities::general::Instance;
+use crate::entities::general::Item;
+use crate::entities::general::{Bin, InferiorQualityZone, N_QUALITIES};
+use crate::entities::strip_packing::SPInstance;
+use crate::entities::strip_packing::SPSolution;
 use crate::fsize;
-use crate::geometry::d_transformation::DTransformation;
+use crate::geometry::DTransformation;
+use crate::geometry::Transformation;
 use crate::geometry::geo_enums::AllowedRotation;
 use crate::geometry::geo_traits::{Shape, Transformable};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Point;
+use crate::geometry::primitives::SimplePolygon;
 use crate::io::json_instance::{JsonBin, JsonInstance, JsonItem, JsonShape, JsonSimplePoly};
 use crate::io::json_solution::{
     JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
@@ -25,8 +27,6 @@ use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
-use crate::entities::bin_packing::solution::BPSolution;
-use crate::entities::strip_packing::solution::SPSolution;
 
 /// Parses a `JsonInstance` into an `Instance`.
 pub struct Parser {

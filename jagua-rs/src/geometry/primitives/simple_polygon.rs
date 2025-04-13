@@ -4,22 +4,21 @@ use itertools::Itertools;
 use ordered_float::{NotNan, OrderedFloat};
 
 use crate::fsize;
+use crate::geometry::Transformation;
 use crate::geometry::convex_hull::convex_hull_from_points;
-use crate::geometry::fail_fast::poi;
-use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
+use crate::geometry::fail_fast::{SPSurrogate, generate_next_pole};
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
     CollidesWith, Distance, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::circle::Circle;
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Circle;
+use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::Point;
 use crate::util::config::SPSurrogateConfig;
 use crate::util::fpa::FPA;
 
-/// Geometric primitive representing a simple polygon: <https://en.wikipedia.org/wiki/Simple_polygon>
+/// Simple Polygon, [read more](https://en.wikipedia.org/wiki/Simple_polygon)
 #[derive(Clone, Debug)]
 pub struct SimplePolygon {
     /// Set of bounds describing the polygon
@@ -164,7 +163,7 @@ impl SimplePolygon {
             }
         };
 
-        poi::generate_next_pole(&dummy_sp, &[])
+        generate_next_pole(&dummy_sp, &[])
     }
 
     pub fn center_around_centroid(mut self) -> (SimplePolygon, Transformation) {

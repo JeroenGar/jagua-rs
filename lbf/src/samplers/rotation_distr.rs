@@ -4,7 +4,7 @@ use rand::prelude::IndexedRandom;
 use rand_distr::Normal;
 use rand_distr::Uniform;
 
-use jagua_rs::entities::item::Item;
+use jagua_rs::entities::general::Item;
 use jagua_rs::geometry::geo_enums::AllowedRotation;
 use jagua_rs::{PI, fsize};
 

@@ -1,11 +1,11 @@
-use std::time::Instant;
-use slotmap::SecondaryMap;
-use crate::entities::bin_packing::problem::LayKey;
-use crate::entities::general::layout::LayoutSnapshot;
+use crate::entities::bin_packing::LayKey;
+use crate::entities::general::LayoutSnapshot;
 use crate::fsize;
+use slotmap::SecondaryMap;
+use std::time::Instant;
 
 #[cfg(doc)]
-use crate::entities::bin_packing::problem::BPProblem;
+use crate::entities::bin_packing::BPProblem;
 
 /// Snapshot of [`BPProblem`] at a specific moment.
 /// Can be used to restore [`BPProblem`] to a previous state.

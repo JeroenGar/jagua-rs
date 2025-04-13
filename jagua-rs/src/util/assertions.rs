@@ -1,30 +1,30 @@
-use crate::collision_detection::cd_engine::CDEngine;
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
-use crate::collision_detection::hazard_filter;
-use crate::collision_detection::hazard_filter::CombinedHazardFilter;
-use crate::collision_detection::hazard_filter::EntityHazardFilter;
+use crate::collision_detection::CDEngine;
+use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::hazards::filter;
+use crate::collision_detection::hazards::filter::CombinedHazardFilter;
+use crate::collision_detection::hazards::filter::EntityHazardFilter;
 use crate::collision_detection::hpg::hazard_proximity_grid::HazardProximityGrid;
 use crate::collision_detection::hpg::hpg_cell::HPGCellUpdate;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_node::QTNode;
-use crate::entities::general::bin::Bin;
-use crate::entities::general::item::Item;
-use crate::entities::general::layout::Layout;
-use crate::entities::general::layout::LayoutSnapshot;
+use crate::entities::bin_packing::BPProblem;
+use crate::entities::bin_packing::BPSolution;
+use crate::entities::general::Bin;
+use crate::entities::general::Item;
+use crate::entities::general::Layout;
+use crate::entities::general::LayoutSnapshot;
+use crate::entities::strip_packing::SPProblem;
+use crate::entities::strip_packing::SPSolution;
+use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{Shape, Transformable};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
 use crate::{fsize, util};
 use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::error;
 use std::collections::HashSet;
-use crate::entities::bin_packing::problem::BPProblem;
-use crate::entities::bin_packing::solution::BPSolution;
-use crate::entities::strip_packing::problem::SPProblem;
-use crate::entities::strip_packing::solution::SPSolution;
 //Various checks to verify correctness of the state of the system
 //Used in debug_assertion!() blocks
 
@@ -131,7 +131,7 @@ pub fn item_to_place_does_not_collide(
     let t_shape = shape.transform_clone(transformation);
 
     let entities_to_ignore = haz_filter.as_ref().map_or(vec![], |f| {
-        hazard_filter::generate_irrelevant_hazards(f, layout.cde().all_hazards())
+        filter::generate_irrelevant_hazards(f, layout.cde().all_hazards())
     });
 
     if layout
@@ -157,7 +157,7 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
             },
         };
         let entities_to_ignore =
-            hazard_filter::generate_irrelevant_hazards(&combo_filter, layout.cde().all_hazards());
+            filter::generate_irrelevant_hazards(&combo_filter, layout.cde().all_hazards());
 
         if layout.cde().poly_collides(&pi.shape, &entities_to_ignore) {
             println!("Collision detected for item {:.?}", pi.item_id);

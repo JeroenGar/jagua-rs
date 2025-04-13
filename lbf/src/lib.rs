@@ -1,15 +1,15 @@
 use std::time::Instant;
 
-use jagua_rs::entities::bin_packing::instance::BPInstance;
-use jagua_rs::entities::instances::strip_packing::SPInstance;
-use jagua_rs::entities::solution::{BPSolution, SPSolution};
+use jagua_rs::entities::bin_packing::BPInstance;
+use jagua_rs::entities::bin_packing::BPSolution;
+use jagua_rs::entities::strip_packing::{SPInstance, SPSolution};
 use once_cell::sync::Lazy;
 
+pub mod config;
 pub mod io;
-pub mod lbf_config;
-pub mod lbf_cost;
-pub mod lbf_optimizer;
+pub mod opt;
 pub mod samplers;
+
 pub static EPOCH: Lazy<Instant> = Lazy::new(Instant::now);
 
 pub enum LBFSolution {

@@ -7,12 +7,9 @@ use rand::SeedableRng;
 use rand::prelude::SmallRng;
 use rand::seq::IteratorRandom;
 
-use jagua_rs::collision_detection::hazard_helpers::DetectionMap;
-use jagua_rs::collision_detection::hazard_helpers::HazardDetector;
-use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::layout::LayKey;
-use jagua_rs::entities::placement::{LayoutId, Placement};
-use jagua_rs::entities::problems::problem::Problem;
+use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, HazardDetector};
+use jagua_rs::entities::general::Instance;
+use jagua_rs::entities::strip_packing::SPPlacement;
 use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::io::json_instance::JsonInstance;
@@ -63,21 +60,20 @@ fn quadtree_update_bench(c: &mut Criterion) {
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
                 // Remove an item from the layout
-                let (pik, pi) = problem
+                let (pkey, pi) = problem
                     .layout
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
 
-                let p_opt = Placement {
-                    layout_id: LayoutId::Open(LayKey::default()),
+                let p_opt = SPPlacement {
                     item_id: pi.item_id,
                     d_transf: pi.d_transf,
                 };
 
                 //println!("Removing item with id: {}\n", pi_uid.item_id);
-                problem.remove_item(LayKey::default(), pik, true);
+                problem.remove_item(pkey, true);
 
                 problem.flush_changes();
 
@@ -181,23 +177,21 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
 
         let mut sample_cycler = samples.chunks(N_SAMPLES_PER_ITER).cycle();
 
-
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
-                let (pik, pi) = problem
+                let (pkey, pi) = problem
                     .layout
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
 
-                let p_opt = Placement {
-                    layout_id: LayoutId::Open(LayKey::default()),
+                let p_opt = SPPlacement {
                     item_id: pi.item_id,
                     d_transf: pi.d_transf,
                 };
 
-                problem.remove_item(LayKey::default(), pik, true);
+                problem.remove_item(pkey, true);
                 problem.flush_changes();
 
                 let item_id = p_opt.item_id;
@@ -263,7 +257,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
                 let item = instance.item(item_id);
                 let layout = &problem.layout;
                 let mut buffer_shape = item.shape.as_ref().clone();
-                let mut detected = DetectionMap::new();
+                let mut detected = BasicHazardDetector::new();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, transf);
                     layout.cde().collect_poly_collisions_in_detector(

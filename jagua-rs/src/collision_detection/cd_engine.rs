@@ -1,28 +1,28 @@
-use crate::collision_detection::hazard::Hazard;
-use crate::collision_detection::hazard::HazardEntity;
-use crate::collision_detection::hazard_helpers::{DetectionMap, HazardDetector};
+use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::hazards::detector::BasicHazardDetector;
+use crate::collision_detection::hazards::detector::HazardDetector;
 use crate::collision_detection::hpg::grid::Grid;
 use crate::collision_detection::hpg::hazard_proximity_grid::{DirtyState, HazardProximityGrid};
 use crate::collision_detection::hpg::hpg_cell::HPGCell;
 use crate::collision_detection::quadtree::qt_node::QTNode;
 use crate::fsize;
-use crate::geometry::fail_fast::sp_surrogate::SPSurrogate;
+use crate::geometry::Transformation;
+use crate::geometry::fail_fast::SPSurrogate;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable, TransformableFrom};
-use crate::geometry::primitives::aa_rectangle::AARectangle;
-use crate::geometry::primitives::circle::Circle;
-use crate::geometry::primitives::edge::Edge;
-use crate::geometry::primitives::point::Point;
-use crate::geometry::primitives::simple_polygon::SimplePolygon;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Circle;
+use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::Point;
+use crate::geometry::primitives::SimplePolygon;
 use crate::util::assertions;
 use crate::util::config::CDEConfig;
 use itertools::Itertools;
 use tribool::Tribool;
 
 /// The Collision Detection Engine (CDE).
-/// The CDE can resolve a range of collision queries
-/// and update its state by registering and deregistering hazards.
+/// [`Hazard`]s can be (de)registered and collision queries can be performed.
 #[derive(Clone, Debug)]
 pub struct CDEngine {
     pub quadtree: QTNode,
@@ -34,8 +34,7 @@ pub struct CDEngine {
     pub uncommitted_deregisters: Vec<Hazard>,
 }
 
-/// Snapshot of the state of [CDEngine] at a given time.
-/// The [CDEngine] can take snapshots of itself at any time, and use them to restore to that state later.
+/// Snapshot of the state of [`CDEngine`]. Can be used to restore to a previous state.
 #[derive(Clone, Debug)]
 pub struct CDESnapshot {
     dynamic_hazards: Vec<Hazard>,
@@ -459,8 +458,8 @@ impl CDEngine {
         &self,
         shape: &SimplePolygon,
         irrelevant_hazards: &[HazardEntity],
-    ) -> DetectionMap {
-        let mut detection_map = DetectionMap::new();
+    ) -> BasicHazardDetector {
+        let mut detection_map = BasicHazardDetector::new();
         self.collect_poly_collisions_in_detector(shape, irrelevant_hazards, &mut detection_map);
         detection_map
     }
@@ -507,8 +506,8 @@ impl CDEngine {
         base_surrogate: &SPSurrogate,
         transform: &Transformation,
         irrelevant_hazards: &[HazardEntity],
-    ) -> DetectionMap {
-        let mut detection_map = DetectionMap::new();
+    ) -> BasicHazardDetector {
+        let mut detection_map = BasicHazardDetector::new();
         self.collect_surrogate_collisions_in_detector(
             base_surrogate,
             transform,

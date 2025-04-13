@@ -1,25 +1,21 @@
-use std::any::Any;
 use itertools::Itertools;
-use log::info;
-use rand::SeedableRng;
-use rand::prelude::{IteratorRandom, SmallRng};
-use std::path::Path;
-
-use jagua_rs::entities::instances::instance::Instance;
-use jagua_rs::entities::instances::strip_packing::SPInstance;
-use jagua_rs::entities::layout::LayKey;
-use jagua_rs::entities::placement::{LayoutId, Placement};
-use jagua_rs::entities::problems::problem::Problem;
-use jagua_rs::entities::problems::strip_packing::SPProblem;
+use jagua_rs::entities::general::Instance;
+use jagua_rs::entities::strip_packing::SPPlacement;
+use jagua_rs::entities::strip_packing::{SPInstance, SPProblem};
 use jagua_rs::fsize;
 use jagua_rs::io::json_instance::JsonInstance;
 use jagua_rs::io::parser::Parser;
 use jagua_rs::util::config::{CDEConfig, SPSurrogateConfig};
 use jagua_rs::util::polygon_simplification::PolySimplConfig;
+use lbf::config::LBFConfig;
 use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
-use lbf::lbf_config::LBFConfig;
-use lbf::lbf_optimizer::LBFOptimizer;
+use lbf::opt::lbf_opt_spp::LBFOptimizerSP;
+use log::info;
+use rand::SeedableRng;
+use rand::prelude::{IteratorRandom, SmallRng};
+use std::any::Any;
+use std::path::Path;
 
 pub const SWIM_PATH: &str = "../assets/swim.json";
 pub const N_ITEMS_REMOVED: usize = 5;
@@ -48,8 +44,9 @@ pub fn create_lbf_problem(
     instance: SPInstance,
     config: LBFConfig,
     n_items_removed: usize,
-) -> (SPProblem, Vec<Placement>) {
-    let mut lbf_optimizer = LBFOptimizer::from_sp_instance(instance.clone(), config, SmallRng::seed_from_u64(0));
+) -> (SPProblem, Vec<SPPlacement>) {
+    let mut lbf_optimizer =
+        LBFOptimizerSP::new(instance.clone(), config, SmallRng::seed_from_u64(0));
     lbf_optimizer.solve();
 
     let mut problem = lbf_optimizer.problem;
@@ -67,17 +64,16 @@ pub fn create_lbf_problem(
         .iter()
         .map(|k| {
             let pi = &problem.layout.placed_items()[*k];
-            Placement {
-                layout_id: LayoutId::Open(LayKey::default()),
+            SPPlacement {
                 item_id: pi.item_id,
                 d_transf: pi.d_transf,
             }
         })
         .collect_vec();
 
-    for pik in placed_items_to_remove {
-        let item_id = problem.layout.placed_items()[pik].item_id;
-        problem.remove_item(LayKey::default(), pik, true);
+    for pkey in placed_items_to_remove {
+        let item_id = problem.layout.placed_items()[pkey].item_id;
+        problem.remove_item(pkey, true);
         info!(
             "Removed item: {} with {} edges",
             item_id,
@@ -97,11 +93,7 @@ pub fn create_lbf_problem(
             haz_prox_grid: false,
             ..SvgDrawOptions::default()
         };
-        let svg = io::layout_to_svg::layout_to_svg(
-            &problem.layout,
-            &instance,
-            draw_options,
-        );
+        let svg = io::layout_to_svg::layout_to_svg(&problem.layout, &instance, draw_options);
         io::write_svg(&svg, Path::new("bench_layout.svg"));
     }
 

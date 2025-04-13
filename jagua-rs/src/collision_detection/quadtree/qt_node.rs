@@ -1,11 +1,11 @@
-use crate::collision_detection::hazard::HazardEntity;
-use crate::collision_detection::hazard_helpers::HazardDetector;
+use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::hazards::detector::HazardDetector;
 use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
 use crate::collision_detection::quadtree::qt_hazard::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
-use crate::geometry::primitives::aa_rectangle::AARectangle;
+use crate::geometry::primitives::AARectangle;
 use tribool::Tribool;
 
 /// A node in the quadtree

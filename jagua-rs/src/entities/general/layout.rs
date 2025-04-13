@@ -1,10 +1,10 @@
-use crate::collision_detection::cd_engine::{CDESnapshot, CDEngine};
-use crate::collision_detection::hazard::{Hazard, HazardEntity};
-use crate::entities::general::bin::Bin;
-use crate::entities::general::item::Item;
-use crate::entities::general::placed_item::{PItemKey, PlacedItem};
+use crate::collision_detection::hazards::{Hazard, HazardEntity};
+use crate::collision_detection::{CDESnapshot, CDEngine};
+use crate::entities::general::Bin;
+use crate::entities::general::Item;
+use crate::entities::general::{PItemKey, PlacedItem};
 use crate::fsize;
-use crate::geometry::d_transformation::DTransformation;
+use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 use slotmap::SlotMap;

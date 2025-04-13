@@ -4,10 +4,11 @@ use std::fmt::Display;
 use ordered_float::NotNan;
 
 use crate::fsize;
-use crate::geometry::transformation::Transformation;
+use crate::geometry::Transformation;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Copy)]
-/// A proper rigid transformation, decomposed into a rotation followed by a translation.
+/// [Proper rigid transformation](https://en.wikipedia.org/wiki/Rigid_transformation),
+/// decomposed into a rotation followed by a translation.
 pub struct DTransformation {
     /// The rotation in radians
     pub rotation: NotNan<fsize>,
