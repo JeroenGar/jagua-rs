@@ -8,8 +8,8 @@ use crate::fsize;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::AARectangle;
-use crate::util::assertions;
 use crate::util::CDEConfig;
+use crate::util::assertions;
 use itertools::Itertools;
 use std::time::Instant;
 

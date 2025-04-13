@@ -15,8 +15,8 @@ use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
-use crate::util::SPSurrogateConfig;
 use crate::util::FPA;
+use crate::util::SPSurrogateConfig;
 
 /// Simple Polygon, [read more](https://en.wikipedia.org/wiki/Simple_polygon)
 #[derive(Clone, Debug)]

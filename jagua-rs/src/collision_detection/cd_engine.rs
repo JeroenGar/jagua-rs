@@ -16,8 +16,8 @@ use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SimplePolygon;
-use crate::util::assertions;
 use crate::util::CDEConfig;
+use crate::util::assertions;
 use itertools::Itertools;
 use tribool::Tribool;
 

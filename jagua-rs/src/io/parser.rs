@@ -19,7 +19,7 @@ use crate::io::json_instance::{JsonBin, JsonInstance, JsonItem, JsonShape, JsonS
 use crate::io::json_solution::{
     JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
 };
-use crate::util::{simplify_poly, CDEConfig};
+use crate::util::{CDEConfig, simplify_poly};
 use crate::util::{PolySimplConfig, PolySimplMode};
 use itertools::Itertools;
 use log::{Level, log};
@@ -342,9 +342,7 @@ fn convert_json_simple_poly(
     let shape = SimplePolygon::new(json_simple_poly_to_points(s_json_shape));
 
     let shape = match simpl_config {
-        PolySimplConfig::Enabled { tolerance } => {
-            simplify_poly(&shape, simpl_mode, tolerance)
-        }
+        PolySimplConfig::Enabled { tolerance } => simplify_poly(&shape, simpl_mode, tolerance),
         PolySimplConfig::Disabled => shape,
     };
 

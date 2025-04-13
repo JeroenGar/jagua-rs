@@ -39,7 +39,6 @@ pub trait SeparationDistance<T>: DistanceTo<T> {
 
 /// Trait for types that can be modified by a [`Transformation`].
 pub trait Transformable: Clone {
-
     /// Applies a transformation to `self`.
     fn transform(&mut self, t: &Transformation) -> &mut Self;
 
@@ -55,8 +54,6 @@ pub trait Transformable: Clone {
 ///
 /// Useful when repeatedly transforming a single shape without having to reallocate new memory each time.
 pub trait TransformableFrom: Transformable {
-
-
     /// Applies a transformation on the reference object and stores the result in `self`.
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self;
 }

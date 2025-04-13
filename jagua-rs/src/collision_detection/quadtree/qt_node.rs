@@ -1,9 +1,9 @@
-use crate::collision_detection::hazards::detector::HazardDetector;
 use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
-use crate::collision_detection::quadtree::qt_traits::QTQueryable;
+use crate::collision_detection::hazards::detector::HazardDetector;
 use crate::collision_detection::quadtree::QTHazPresence;
 use crate::collision_detection::quadtree::QTHazard;
+use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
+use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::AARectangle;
 use tribool::Tribool;

@@ -4,8 +4,8 @@ use std::time::Instant;
 use itertools::Itertools;
 use log::{debug, info};
 use ordered_float::NotNan;
-use rand::Rng;
 use rand::prelude::SmallRng;
+use rand::Rng;
 use thousands::Separable;
 
 use jagua_rs::collision_detection::hazard_filter;
