@@ -9,7 +9,7 @@ use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::AARectangle;
 use crate::util::assertions;
-use crate::util::config::CDEConfig;
+use crate::util::CDEConfig;
 use itertools::Itertools;
 use std::time::Instant;
 

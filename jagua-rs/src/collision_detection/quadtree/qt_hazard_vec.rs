@@ -1,13 +1,13 @@
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hazards::filter::HazardFilter;
-use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
-use crate::collision_detection::quadtree::qt_hazard::QTHazard;
+use crate::collision_detection::quadtree::QTHazPresence;
+use crate::collision_detection::quadtree::QTHazard;
 use std::cmp::Ordering;
 
 /// Vector of `QTHazard`s, which always remains sorted by activeness then presence.
 /// <br>
 /// This is a performance optimization to be able to quickly return the "strongest" hazard
-/// Strongest meaning the first active hazard with the highest presence (`Entire` > `Partial` > `None`)
+/// Strongest meaning the first active hazard with the highest [`QTHazPresence`] (`Entire` > `Partial` > `None`)
 #[derive(Clone, Debug)]
 pub struct QTHazardVec {
     hazards: Vec<QTHazard>,

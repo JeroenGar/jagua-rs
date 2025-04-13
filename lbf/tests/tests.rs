@@ -6,7 +6,7 @@ mod tests {
     use jagua_rs::entities::bin_packing::BPInstance;
     use jagua_rs::entities::strip_packing::SPInstance;
     use jagua_rs::io::parser::Parser;
-    use jagua_rs::util::polygon_simplification::PolySimplConfig;
+    use jagua_rs::util::PolySimplConfig;
     use lbf::config::LBFConfig;
     use lbf::io;
     use lbf::opt::lbf_opt_bpp::LBFOptimizerBP;

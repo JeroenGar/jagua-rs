@@ -1,11 +1,11 @@
 use crate::fsize;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{
-    AlmostCollidesWith, CollidesWith, Distance, SeparationDistance, Shape,
+    AlmostCollidesWith, CollidesWith, DistanceTo, SeparationDistance, Shape,
 };
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
-use crate::util::fpa::FPA;
+use crate::util::FPA;
 use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
 
@@ -301,7 +301,7 @@ impl CollidesWith<Edge> for AARectangle {
     }
 }
 
-impl Distance<Point> for AARectangle {
+impl DistanceTo<Point> for AARectangle {
     #[inline(always)]
     fn sq_distance(&self, point: &Point) -> fsize {
         let Point(x, y) = *point;

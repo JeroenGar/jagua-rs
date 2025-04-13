@@ -2,7 +2,7 @@ use std::hash::{Hash, Hasher};
 
 use crate::fsize;
 use crate::geometry::Transformation;
-use crate::geometry::geo_traits::{CollidesWith, Distance, Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{CollidesWith, DistanceTo, Transformable, TransformableFrom};
 
 /// Point(x, y)
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -42,7 +42,7 @@ impl Point {
     }
 }
 
-impl Distance<Point> for Point {
+impl DistanceTo<Point> for Point {
     #[inline(always)]
     fn distance(&self, other: &Point) -> fsize {
         ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()

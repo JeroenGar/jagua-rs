@@ -1,14 +1,14 @@
-use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hazards::detector::HazardDetector;
-use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
-use crate::collision_detection::quadtree::qt_hazard::QTHazard;
+use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
+use crate::collision_detection::quadtree::QTHazPresence;
+use crate::collision_detection::quadtree::QTHazard;
 use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::AARectangle;
 use tribool::Tribool;
 
-/// A node in the quadtree
+/// Quadtree node
 #[derive(Clone, Debug)]
 pub struct QTNode {
     /// The level of the node in the tree, 0 being the bottom-most level
@@ -126,14 +126,11 @@ impl QTNode {
     /// Used to detect collisions in a binary fashion: either there is a collision or there isn't.
     /// Returns `None` if no collision between the entity and any hazard is detected,
     /// otherwise the first encountered hazard that collides with the entity is returned.
-    pub fn collides<T>(
+    pub fn collides<T: QTQueryable>(
         &self,
         entity: &T,
         irrelevant_hazards: &[HazardEntity],
-    ) -> Option<&HazardEntity>
-    where
-        T: QTQueryable,
-    {
+    ) -> Option<&HazardEntity> {
         match self.hazards.strongest(&irrelevant_hazards) {
             None => None,
             Some(strongest_hazard) => match entity.collides_with(&self.bbox) {
@@ -176,10 +173,11 @@ impl QTNode {
 
     /// Gathers all hazards that collide with the entity and reports them to the `detector`.
     /// All hazards already present in the `detector` are ignored.
-    pub fn collect_collisions<T>(&self, entity: &T, detector: &mut impl HazardDetector)
-    where
-        T: QTQueryable,
-    {
+    pub fn collect_collisions<T: QTQueryable>(
+        &self,
+        entity: &T,
+        detector: &mut impl HazardDetector,
+    ) {
         //TODO: This seems to be the fastest version of this function
         //      Check if the other collision functions can also be improved.
         match entity.collides_with(&self.bbox) {

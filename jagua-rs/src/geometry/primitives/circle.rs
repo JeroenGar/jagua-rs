@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use crate::geometry::Transformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
-    CollidesWith, Distance, SeparationDistance, Shape, Transformable, TransformableFrom,
+    CollidesWith, DistanceTo, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
 use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Edge;
@@ -113,7 +113,7 @@ impl CollidesWith<Point> for Circle {
     }
 }
 
-impl Distance<Point> for Circle {
+impl DistanceTo<Point> for Circle {
     fn sq_distance(&self, other: &Point) -> fsize {
         self.distance(other).powi(2)
     }
@@ -148,7 +148,7 @@ impl SeparationDistance<Point> for Circle {
     }
 }
 
-impl Distance<Circle> for Circle {
+impl DistanceTo<Circle> for Circle {
     fn sq_distance(&self, other: &Circle) -> fsize {
         self.distance(other).powi(2)
     }
@@ -180,7 +180,7 @@ impl SeparationDistance<Circle> for Circle {
     }
 }
 
-impl Distance<Edge> for Circle {
+impl DistanceTo<Edge> for Circle {
     fn sq_distance(&self, e: &Edge) -> fsize {
         self.distance(e).powi(2)
     }

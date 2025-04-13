@@ -9,7 +9,7 @@ use jagua_rs::entities::bin_packing::BPInstance;
 use jagua_rs::entities::strip_packing::SPInstance;
 use jagua_rs::io::parser;
 use jagua_rs::io::parser::Parser;
-use jagua_rs::util::polygon_simplification::PolySimplConfig;
+use jagua_rs::util::PolySimplConfig;
 use lbf::config::LBFConfig;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;

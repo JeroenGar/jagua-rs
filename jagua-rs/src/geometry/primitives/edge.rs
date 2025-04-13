@@ -1,7 +1,7 @@
 use crate::fsize;
 use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{
-    CollidesWith, Distance, Shape, Transformable, TransformableFrom,
+    CollidesWith, DistanceTo, Shape, Transformable, TransformableFrom,
 };
 use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Point;
@@ -148,7 +148,7 @@ impl Shape for Edge {
     }
 }
 
-impl Distance<Point> for Edge {
+impl DistanceTo<Point> for Edge {
     #[inline(always)]
     fn sq_distance(&self, point: &Point) -> fsize {
         let Point(x, y) = point;

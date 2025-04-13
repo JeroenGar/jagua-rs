@@ -4,7 +4,7 @@ use crate::collision_detection::hazards::filter::QZHazardFilter;
 use crate::geometry::Transformation;
 use crate::geometry::geo_enums::AllowedRotation;
 use crate::geometry::primitives::SimplePolygon;
-use crate::util::config::SPSurrogateConfig;
+use crate::util::SPSurrogateConfig;
 
 /// Item to be produced.
 #[derive(Clone, Debug)]

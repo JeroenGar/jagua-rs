@@ -9,14 +9,14 @@ use crate::geometry::convex_hull::convex_hull_from_points;
 use crate::geometry::fail_fast::{SPSurrogate, generate_next_pole};
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
-    CollidesWith, Distance, SeparationDistance, Shape, Transformable, TransformableFrom,
+    CollidesWith, DistanceTo, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
 use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
-use crate::util::config::SPSurrogateConfig;
-use crate::util::fpa::FPA;
+use crate::util::SPSurrogateConfig;
+use crate::util::FPA;
 
 /// Simple Polygon, [read more](https://en.wikipedia.org/wiki/Simple_polygon)
 #[derive(Clone, Debug)]
@@ -311,7 +311,7 @@ impl CollidesWith<Point> for SimplePolygon {
     }
 }
 
-impl Distance<Point> for SimplePolygon {
+impl DistanceTo<Point> for SimplePolygon {
     fn sq_distance(&self, point: &Point) -> fsize {
         match self.collides_with(point) {
             true => 0.0,

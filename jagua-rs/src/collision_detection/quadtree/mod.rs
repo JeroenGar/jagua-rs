@@ -1,5 +1,12 @@
-pub mod qt_hazard;
-pub mod qt_hazard_vec;
-pub mod qt_node;
-pub mod qt_partial_hazard;
-pub mod qt_traits;
+mod qt_hazard;
+mod qt_hazard_vec;
+mod qt_node;
+mod qt_partial_hazard;
+mod qt_traits;
+
+#[doc(inline)]
+pub use qt_node::QTNode;
+#[doc(inline)]
+pub use qt_hazard::QTHazard;
+#[doc(inline)]
+pub use qt_hazard::QTHazPresence;

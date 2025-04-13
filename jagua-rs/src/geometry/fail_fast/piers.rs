@@ -5,7 +5,7 @@ use rand_distr::num_traits::FloatConst;
 
 use crate::fsize;
 use crate::geometry::Transformation;
-use crate::geometry::geo_traits::{CollidesWith, Distance, Shape, Transformable};
+use crate::geometry::geo_traits::{CollidesWith, DistanceTo, Shape, Transformable};
 use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;

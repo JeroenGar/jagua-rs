@@ -5,7 +5,7 @@ use crate::collision_detection::hazards::detector::HazardDetector;
 use crate::collision_detection::hpg::grid::Grid;
 use crate::collision_detection::hpg::hazard_proximity_grid::{DirtyState, HazardProximityGrid};
 use crate::collision_detection::hpg::hpg_cell::HPGCell;
-use crate::collision_detection::quadtree::qt_node::QTNode;
+use crate::collision_detection::quadtree::QTNode;
 use crate::fsize;
 use crate::geometry::Transformation;
 use crate::geometry::fail_fast::SPSurrogate;
@@ -17,7 +17,7 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SimplePolygon;
 use crate::util::assertions;
-use crate::util::config::CDEConfig;
+use crate::util::CDEConfig;
 use itertools::Itertools;
 use tribool::Tribool;
 

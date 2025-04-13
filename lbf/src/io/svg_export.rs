@@ -2,8 +2,8 @@ use svg::node::element::path::Data;
 use svg::node::element::{Circle, Path};
 
 use jagua_rs::collision_detection::hazards::HazardEntity;
-use jagua_rs::collision_detection::quadtree::qt_hazard::QTHazPresence;
-use jagua_rs::collision_detection::quadtree::qt_node::QTNode;
+use jagua_rs::collision_detection::quadtree::QTHazPresence;
+use jagua_rs::collision_detection::quadtree::QTNode;
 use jagua_rs::geometry::primitives::Edge;
 use jagua_rs::geometry::primitives::Point;
 use jagua_rs::geometry::primitives::SimplePolygon;

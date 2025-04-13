@@ -6,9 +6,9 @@ use crate::collision_detection::hazards::filter::CombinedHazardFilter;
 use crate::collision_detection::hazards::filter::EntityHazardFilter;
 use crate::collision_detection::hpg::hazard_proximity_grid::HazardProximityGrid;
 use crate::collision_detection::hpg::hpg_cell::HPGCellUpdate;
-use crate::collision_detection::quadtree::qt_hazard::QTHazPresence;
-use crate::collision_detection::quadtree::qt_hazard::QTHazard;
-use crate::collision_detection::quadtree::qt_node::QTNode;
+use crate::collision_detection::quadtree::QTHazPresence;
+use crate::collision_detection::quadtree::QTHazard;
+use crate::collision_detection::quadtree::QTNode;
 use crate::entities::bin_packing::BPProblem;
 use crate::entities::bin_packing::BPSolution;
 use crate::entities::general::Bin;
@@ -20,7 +20,7 @@ use crate::entities::strip_packing::SPSolution;
 use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::AARectangle;
-use crate::{fsize, util};
+use crate::fsize;
 use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::error;
@@ -161,7 +161,7 @@ pub fn layout_is_collision_free(layout: &Layout) -> bool {
 
         if layout.cde().poly_collides(&pi.shape, &entities_to_ignore) {
             println!("Collision detected for item {:.?}", pi.item_id);
-            util::print_layout(layout);
+            print_layout(layout);
             return false;
         }
     }
@@ -488,4 +488,26 @@ pub fn quadrants_have_valid_layout(quadrants: &[&AARectangle; 4]) -> bool {
         );
     }
     true
+}
+
+///Prints code to rebuild a layout. Intended for debugging purposes.
+pub fn print_layout(layout: &Layout) {
+    println!(
+        "let mut layout = Layout::new(0, instance.bin({}).clone());",
+        layout.bin.id
+    );
+    println!();
+
+    for pi in layout.placed_items().values() {
+        let transformation_str = {
+            let t_decomp = &pi.d_transf;
+            let (tr, (tx, ty)) = (t_decomp.rotation(), t_decomp.translation());
+            format!("&DTransformation::new({:.6},({:.6},{:.6}))", tr, tx, ty)
+        };
+
+        println!(
+            "layout.place_item(instance.item({}), {});",
+            pi.item_id, transformation_str
+        );
+    }
 }

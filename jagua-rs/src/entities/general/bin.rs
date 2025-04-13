@@ -10,7 +10,7 @@ use crate::geometry::Transformation;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::SimplePolygon;
-use crate::util::config::CDEConfig;
+use crate::util::CDEConfig;
 
 #[cfg(doc)]
 use crate::entities::general::Item;

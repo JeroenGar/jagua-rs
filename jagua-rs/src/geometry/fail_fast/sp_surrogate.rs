@@ -2,11 +2,11 @@ use crate::fsize;
 use crate::geometry::Transformation;
 use crate::geometry::convex_hull;
 use crate::geometry::fail_fast::{piers, poi};
-use crate::geometry::geo_traits::{Distance, Shape, Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{DistanceTo, Shape, Transformable, TransformableFrom};
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::SimplePolygon;
-use crate::util::config::SPSurrogateConfig;
+use crate::util::SPSurrogateConfig;
 
 #[derive(Clone, Debug)]
 /// Surrogate representation of a [`SimplePolygon`] for fail-fast purposes

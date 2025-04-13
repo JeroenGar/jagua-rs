@@ -19,9 +19,8 @@ use crate::io::json_instance::{JsonBin, JsonInstance, JsonItem, JsonShape, JsonS
 use crate::io::json_solution::{
     JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
 };
-use crate::util::config::CDEConfig;
-use crate::util::polygon_simplification;
-use crate::util::polygon_simplification::{PolySimplConfig, PolySimplMode};
+use crate::util::{simplify_poly, CDEConfig};
+use crate::util::{PolySimplConfig, PolySimplMode};
 use itertools::Itertools;
 use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
@@ -344,7 +343,7 @@ fn convert_json_simple_poly(
 
     let shape = match simpl_config {
         PolySimplConfig::Enabled { tolerance } => {
-            polygon_simplification::simplify_shape(&shape, simpl_mode, tolerance)
+            simplify_poly(&shape, simpl_mode, tolerance)
         }
         PolySimplConfig::Disabled => shape,
     };

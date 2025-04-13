@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use ordered_float::NotNan;
 
 use crate::fsize;
-use crate::geometry::geo_traits::{CollidesWith, Distance, SeparationDistance, Shape};
+use crate::geometry::geo_traits::{CollidesWith, DistanceTo, SeparationDistance, Shape};
 use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::SimplePolygon;
