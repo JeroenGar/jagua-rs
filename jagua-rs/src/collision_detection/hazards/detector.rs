@@ -5,13 +5,13 @@ use slotmap::SecondaryMap;
 
 #[cfg(doc)]
 use crate::collision_detection::hazards::Hazard;
+use crate::geometry::geo_traits::{CollidesWith, Shape};
+use crate::geometry::primitives::{AARectangle, Edge};
 
 /// Trait for structs that can track and store already detected [`Hazard`]s during querying.
 /// Used during 'collision collection' to avoid repeatedly checking the same hazards.
 /// Interface designed to mimic a Vec of [`HazardEntity`]s.
 pub trait HazardDetector: HazardFilter {
-    fn new() -> Self;
-    fn clear(&mut self);
     fn contains(&self, haz: &HazardEntity) -> bool;
 
     fn push(&mut self, haz: HazardEntity);
@@ -27,6 +27,12 @@ pub trait HazardDetector: HazardFilter {
     fn iter(&self) -> impl Iterator<Item = &HazardEntity>;
 }
 
+impl<T> HazardFilter for T where T: HazardDetector {
+    fn is_irrelevant(&self, haz: &HazardEntity) -> bool {
+        self.contains(haz)
+    }
+}
+
 /// Basic implementation of a [`HazardDetector`].
 /// Hazards from [`HazardEntity::PlacedItem`] have instant lookups, the rest are stored in a Vec.
 #[derive(Debug)]
@@ -35,25 +41,21 @@ pub struct BasicHazardDetector {
     other: Vec<HazardEntity>,
 }
 
-impl HazardFilter for BasicHazardDetector {
-    fn is_irrelevant(&self, haz: &HazardEntity) -> bool {
-        self.contains(haz)
-    }
-}
-
-impl HazardDetector for BasicHazardDetector {
-    fn new() -> Self {
+impl BasicHazardDetector {
+    pub fn new() -> Self {
         BasicHazardDetector {
             pi_hazards: SecondaryMap::new(),
             other: Vec::new(),
         }
     }
 
-    fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.pi_hazards.clear();
         self.other.clear();
     }
+}
 
+impl HazardDetector for BasicHazardDetector {
     fn contains(&self, haz: &HazardEntity) -> bool {
         match haz {
             HazardEntity::PlacedItem { pk, .. } => self.pi_hazards.contains_key(*pk),
