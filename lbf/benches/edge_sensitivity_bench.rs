@@ -2,9 +2,11 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
+use crate::util::{N_ITEMS_REMOVED, SWIM_PATH};
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
+use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::{Instance, Item};
 use jagua_rs::entities::strip_packing::SPInstance;
 use jagua_rs::fsize;
@@ -18,8 +20,6 @@ use lbf::io::svg_util::SvgDrawOptions;
 use lbf::samplers::hpg_sampler::HPGSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
-
-use crate::util::{N_ITEMS_REMOVED, SWIM_PATH};
 
 criterion_main!(benches);
 criterion_group!(
@@ -114,12 +114,12 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                         let collides = match layout.cde().surrogate_collides(
                             item.shape.surrogate(),
                             &transf,
-                            &[],
+                            &NoHazardFilter,
                         ) {
                             true => true,
                             false => {
                                 buffer_shape.transform_from(&item.shape, &transf);
-                                layout.cde().poly_collides(&buffer_shape, &[])
+                                layout.cde().poly_collides(&buffer_shape, &NoHazardFilter)
                             }
                         };
                         match collides {

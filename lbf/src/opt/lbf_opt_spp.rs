@@ -1,15 +1,15 @@
 use std::time::Instant;
 
-use log::info;
-use rand::prelude::SmallRng;
-use thousands::Separable;
-
 use crate::config::LBFConfig;
 use crate::opt::ITEM_LIMIT;
 use crate::opt::search::{item_placement_order, search};
+use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPPlacement;
 use jagua_rs::entities::strip_packing::{SPInstance, SPProblem, SPSolution};
+use log::info;
+use rand::prelude::SmallRng;
+use thousands::Separable;
 
 /// Left-Bottom-Fill (LBF) optimizer for Strip Packing problems.
 pub struct LBFOptimizerSP {
@@ -42,28 +42,37 @@ impl LBFOptimizerSP {
             let item = &self.instance.items()[item_index].0;
             //place all items of this type
             while self.problem.missing_item_qtys[item_index] > 0 {
-                //find a position and insert it
-                let placement = search(
-                    &self.problem.layout.cde(),
-                    item,
-                    &self.config,
-                    &mut self.rng,
-                    &mut self.sample_counter,
-                )
-                .map(|(d_transf, _)| SPPlacement {
-                    item_id: item.id,
-                    d_transf,
-                });
+                let placement = match &item.hazard_filter {
+                    None => search(
+                        &self.problem.layout.cde(),
+                        item,
+                        &self.config,
+                        &mut self.rng,
+                        &mut self.sample_counter,
+                        &NoHazardFilter,
+                    ),
+                    Some(hf) => search(
+                        &self.problem.layout.cde(),
+                        item,
+                        &self.config,
+                        &mut self.rng,
+                        &mut self.sample_counter,
+                        hf,
+                    ),
+                };
 
                 match placement {
-                    Some(i_opt) => {
-                        self.problem.place_item(i_opt);
+                    Some((d_transf, _)) => {
+                        self.problem.place_item(SPPlacement {
+                            item_id: item.id,
+                            d_transf,
+                        });
                         info!(
                             "[LBF] placing item {}/{} with id {} at [{}]",
                             self.problem.layout.placed_items().len(),
                             self.instance.total_item_qty(),
-                            i_opt.item_id,
-                            i_opt.d_transf,
+                            item.id,
+                            d_transf,
                         );
                         #[allow(clippy::absurd_extreme_comparisons)]
                         if self.problem.layout.placed_items().len() >= ITEM_LIMIT {

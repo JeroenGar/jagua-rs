@@ -1,9 +1,6 @@
 use crate::collision_detection::CDEngine;
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::hazards::filter;
-use crate::collision_detection::hazards::filter::CombinedHazardFilter;
-use crate::collision_detection::hazards::filter::EntityHazardFilter;
 use crate::collision_detection::hpg::hazard_proximity_grid::HazardProximityGrid;
 use crate::collision_detection::hpg::hpg_cell::HPGCellUpdate;
 use crate::collision_detection::quadtree::QTHazPresence;
@@ -18,8 +15,7 @@ use crate::entities::general::LayoutSnapshot;
 use crate::entities::strip_packing::SPProblem;
 use crate::entities::strip_packing::SPSolution;
 use crate::fsize;
-use crate::geometry::Transformation;
-use crate::geometry::geo_traits::{Shape, Transformable};
+use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::AARectangle;
 use float_cmp::approx_eq;
 use itertools::Itertools;
@@ -118,54 +114,6 @@ pub fn all_bins_and_items_centered(items: &[(Item, usize)], bins: &[(Bin, usize)
         .map(|(i, _)| i.shape.centroid())
         .chain(bins.iter().map(|(b, _)| b.outer.centroid()))
         .all(|c| approx_eq!(fsize, c.0, 0.0) && approx_eq!(fsize, c.1, 0.0))
-}
-
-pub fn item_to_place_does_not_collide(
-    item: &Item,
-    transformation: &Transformation,
-    layout: &Layout,
-) -> bool {
-    let haz_filter = &item.hazard_filter;
-
-    let shape = item.shape.as_ref();
-    let t_shape = shape.transform_clone(transformation);
-
-    let entities_to_ignore = haz_filter.as_ref().map_or(vec![], |f| {
-        filter::generate_irrelevant_hazards(f, layout.cde().all_hazards())
-    });
-
-    if layout
-        .cde()
-        .surrogate_collides(shape.surrogate(), transformation, &entities_to_ignore)
-        || layout.cde().poly_collides(&t_shape, &entities_to_ignore)
-    {
-        return false;
-    }
-    true
-}
-
-pub fn layout_is_collision_free(layout: &Layout) -> bool {
-    for (pk, pi) in layout.placed_items().iter() {
-        let ehf = EntityHazardFilter(vec![(pk, pi).into()]);
-
-        let combo_filter = match &pi.hazard_filter {
-            None => CombinedHazardFilter {
-                filters: vec![Box::new(&ehf)],
-            },
-            Some(hf) => CombinedHazardFilter {
-                filters: vec![Box::new(&ehf), Box::new(hf)],
-            },
-        };
-        let entities_to_ignore =
-            filter::generate_irrelevant_hazards(&combo_filter, layout.cde().all_hazards());
-
-        if layout.cde().poly_collides(&pi.shape, &entities_to_ignore) {
-            println!("Collision detected for item {:.?}", pi.item_id);
-            print_layout(layout);
-            return false;
-        }
-    }
-    true
 }
 
 pub fn qt_node_contains_no_deactivated_hazards<'a>(

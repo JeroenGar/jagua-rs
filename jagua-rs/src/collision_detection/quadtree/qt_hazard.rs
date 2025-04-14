@@ -42,7 +42,7 @@ impl QTHazard {
     }
 
     /// Returns the resulting QTHazards after constricting to the provided quadrants.
-    /// The quadrants should be ordered according to [AARectangle::QUADRANT_NEIGHBOR_LAYOUT]
+    /// The quadrants should be ordered according to the [Cartesian system](https://en.wikipedia.org/wiki/Quadrant_(plane_geometry))
     /// and should all be inside the bounds from which `self` was created.
     pub fn constrict(&self, quadrants: [&AARectangle; 4]) -> [Option<Self>; 4] {
         debug_assert!(assertions::quadrants_have_valid_layout(&quadrants));

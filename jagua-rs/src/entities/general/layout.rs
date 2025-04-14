@@ -130,8 +130,8 @@ impl Layout {
     /// Returns true if all the items are placed without colliding
     pub fn is_feasible(&self) -> bool {
         self.placed_items.iter().all(|(pk, pi)| {
-            let irrel_haz = HazardEntity::from((pk, pi));
-            !self.cde.poly_collides(&pi.shape, &[irrel_haz])
+            let filter = HazardEntity::from((pk, pi));
+            !self.cde.poly_collides(&pi.shape, &filter)
         })
     }
 }

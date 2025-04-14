@@ -1,8 +1,10 @@
 use std::fs::File;
 use std::io::BufReader;
 
+use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
+use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPPlacement;
 use jagua_rs::entities::strip_packing::SPProblem;
@@ -12,8 +14,6 @@ use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::hpg_sampler::HPGSampler;
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
-
-use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
 
 criterion_main!(benches);
 criterion_group!(benches, hpg_update_bench, hpg_query_bench);
@@ -99,9 +99,12 @@ fn hpg_query_bench(c: &mut Criterion) {
                 while n_valid_samples < N_VALID_SAMPLES {
                     let dtransf = sampler.sample(&mut rng);
                     let transf = dtransf.compose();
-                    if !layout.cde().surrogate_collides(surrogate, &transf, &[]) {
+                    if !layout
+                        .cde()
+                        .surrogate_collides(surrogate, &transf, &NoHazardFilter)
+                    {
                         buffer_shape.transform_from(&item.shape, &transf);
-                        if !layout.cde().poly_collides(&buffer_shape, &[]) {
+                        if !layout.cde().poly_collides(&buffer_shape, &NoHazardFilter) {
                             n_valid_samples += 1;
                         }
                     }
@@ -185,9 +188,12 @@ fn hpg_update_bench(c: &mut Criterion) {
         while valid_placements.len() < N_VALID_SAMPLES {
             let dtransf = sampler.sample(&mut rng);
             let transf = dtransf.compose();
-            if !layout.cde().surrogate_collides(surrogate, &transf, &[]) {
+            if !layout
+                .cde()
+                .surrogate_collides(surrogate, &transf, &NoHazardFilter)
+            {
                 buffer_shape.transform_from(&item.shape, &transf);
-                if !layout.cde().poly_collides(&buffer_shape, &[]) {
+                if !layout.cde().poly_collides(&buffer_shape, &NoHazardFilter) {
                     let d_transf = transf.decompose();
                     valid_placements.push(SPPlacement {
                         item_id: SELECTED_ITEM_ID,

@@ -1,7 +1,7 @@
 use svg::node::element::path::Data;
 use svg::node::element::{Circle, Path};
 
-use jagua_rs::collision_detection::hazards::HazardEntity;
+use jagua_rs::collision_detection::hazards::filter::HazardFilter;
 use jagua_rs::collision_detection::quadtree::QTHazPresence;
 use jagua_rs::collision_detection::quadtree::QTNode;
 use jagua_rs::geometry::primitives::Edge;
@@ -17,14 +17,8 @@ pub fn simple_polygon_data(s_poly: &SimplePolygon) -> Data {
     data.close()
 }
 
-pub fn quad_tree_data(qt_root: &QTNode, irrelevant_hazards: &[HazardEntity]) -> (Data, Data, Data) {
-    qt_node_data(
-        qt_root,
-        Data::new(),
-        Data::new(),
-        Data::new(),
-        irrelevant_hazards,
-    )
+pub fn quad_tree_data(qt_root: &QTNode, filter: &impl HazardFilter) -> (Data, Data, Data) {
+    qt_node_data(qt_root, Data::new(), Data::new(), Data::new(), filter)
 }
 
 fn qt_node_data(
@@ -32,18 +26,15 @@ fn qt_node_data(
     mut data_eh: Data, //entire hazards data
     mut data_ph: Data, //partial hazards data
     mut data_nh: Data, //no hazards data
-    irrelevant_hazards: &[HazardEntity],
+    filter: &impl HazardFilter,
 ) -> (Data, Data, Data) {
     //Only draw qt_nodes that do not have a child
 
-    match (
-        qt_node.has_children(),
-        qt_node.hazards.strongest(&irrelevant_hazards),
-    ) {
+    match (qt_node.has_children(), qt_node.hazards.strongest(filter)) {
         (true, Some(_)) => {
             //not a leaf node, go to children
             for child in qt_node.children.as_ref().unwrap().iter() {
-                let data = qt_node_data(child, data_eh, data_ph, data_nh, irrelevant_hazards);
+                let data = qt_node_data(child, data_eh, data_ph, data_nh, filter);
                 data_eh = data.0;
                 data_ph = data.1;
                 data_nh = data.2;
@@ -60,7 +51,7 @@ fn qt_node_data(
                     .close()
             };
 
-            match qt_node.hazards.strongest(&irrelevant_hazards) {
+            match qt_node.hazards.strongest(filter) {
                 Some(ch) => match ch.presence {
                     QTHazPresence::Entire => data_eh = draw(data_eh),
                     QTHazPresence::Partial(_) => data_ph = draw(data_ph),

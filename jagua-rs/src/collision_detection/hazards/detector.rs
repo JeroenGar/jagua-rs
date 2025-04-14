@@ -3,12 +3,8 @@ use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::entities::general::PItemKey;
 use slotmap::SecondaryMap;
 
-#[cfg(doc)]
-use crate::collision_detection::hazards::Hazard;
-
-/// Trait for structs that can track and store already detected [`Hazard`]s during querying.
-/// Used during 'collision collection' to avoid repeatedly checking the same hazards.
-/// Interface designed to mimic a Vec of [`HazardEntity`]s.
+/// Trait for structs that can track and store detected [`HazardEntity`]s.
+/// Used in 'collision collection' queries to avoid having to repeatedly check hazards induced by an already detected entity.
 pub trait HazardDetector: HazardFilter {
     fn contains(&self, haz: &HazardEntity) -> bool;
 
@@ -25,6 +21,8 @@ pub trait HazardDetector: HazardFilter {
     fn iter(&self) -> impl Iterator<Item = &HazardEntity>;
 }
 
+/// Implements [`HazardFilter`] for any type that implements [`HazardDetector`].
+/// Any [`HazardEntity`]s that are already in the detector are considered irrelevant.
 impl<T> HazardFilter for T
 where
     T: HazardDetector,
@@ -36,7 +34,7 @@ where
 
 /// Basic implementation of a [`HazardDetector`].
 /// Hazards from [`HazardEntity::PlacedItem`] have instant lookups, the rest are stored in a Vec.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BasicHazardDetector {
     pi_hazards: SecondaryMap<PItemKey, HazardEntity>,
     other: Vec<HazardEntity>,

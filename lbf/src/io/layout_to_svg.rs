@@ -1,5 +1,6 @@
 use crate::io::svg_util::SvgDrawOptions;
 use crate::io::{svg_export, svg_util};
+use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::{Instance, Layout, LayoutSnapshot};
 use jagua_rs::fsize;
 use jagua_rs::geometry::Transformation;
@@ -216,7 +217,7 @@ pub fn layout_to_svg(
     let qt_group = match options.quadtree {
         false => None,
         true => {
-            let qt_data = svg_export::quad_tree_data(layout.cde().quadtree(), &[]);
+            let qt_data = svg_export::quad_tree_data(layout.cde().quadtree(), &NoHazardFilter);
             let qt_group = Group::new()
                 .set("id", "quadtree")
                 .set("transform", transform_to_svg(&inv_bin_transf))

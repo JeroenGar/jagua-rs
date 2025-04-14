@@ -8,6 +8,7 @@ use rand::prelude::SmallRng;
 use rand::seq::IteratorRandom;
 
 use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, HazardDetector};
+use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPPlacement;
 use jagua_rs::fsize;
@@ -130,7 +131,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
                 let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, transf);
-                    let collides = layout.cde().poly_collides(&buffer_shape, &[]);
+                    let collides = layout.cde().poly_collides(&buffer_shape, &NoHazardFilter);
                     if collides {
                         n_invalid += 1;
                     } else {
@@ -200,7 +201,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 let mut buffer_shape = item.shape.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, &transf);
-                    let collides = layout.cde().poly_collides(&buffer_shape, &[]);
+                    let collides = layout.cde().poly_collides(&buffer_shape, &NoHazardFilter);
                     criterion::black_box(collides); //prevent the compiler from optimizing the loop away
                 }
 
@@ -260,11 +261,9 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
                 let mut detected = BasicHazardDetector::new();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape, transf);
-                    layout.cde().collect_poly_collisions_in_detector(
-                        &buffer_shape,
-                        &[],
-                        &mut detected,
-                    );
+                    layout
+                        .cde()
+                        .collect_poly_collisions(&buffer_shape, &mut detected);
                     if detected.len() > 0 {
                         n_invalid += 1;
                     } else {

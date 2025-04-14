@@ -3,6 +3,7 @@ use std::time::Instant;
 use crate::config::LBFConfig;
 use crate::opt::ITEM_LIMIT;
 use crate::opt::search::{item_placement_order, search};
+use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::bin_packing::{BPInstance, BPProblem, BPSolution};
 use jagua_rs::entities::bin_packing::{BPLayoutType, BPPlacement};
 use jagua_rs::entities::general::{Instance, Item};
@@ -119,13 +120,16 @@ fn search_layouts(
             BPLayoutType::Closed { bin_id } => problem.instance.bin(bin_id).base_cde.as_ref(),
         };
 
-        let placement = search(cde, item, config, rng, sample_counter);
+        let placement = match &item.hazard_filter {
+            None => search(cde, item, config, rng, sample_counter, &NoHazardFilter),
+            Some(hf) => search(cde, item, config, rng, sample_counter, hf),
+        };
 
-        if let Some(placement) = placement {
+        if let Some((d_transf, _)) = placement {
             return Some(BPPlacement {
                 layout_id,
                 item_id: item.id,
-                d_transf: placement.0,
+                d_transf,
             });
         }
     }

@@ -4,7 +4,7 @@ use crate::samplers::hpg_sampler::HPGSampler;
 use crate::samplers::ls_sampler::LSSampler;
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEngine;
-use jagua_rs::collision_detection::hazards::filter;
+use jagua_rs::collision_detection::hazards::filter::HazardFilter;
 use jagua_rs::entities::general::{Instance, Item};
 use jagua_rs::fsize;
 use jagua_rs::geometry::DTransformation;
@@ -23,13 +23,8 @@ pub fn search(
     config: &LBFConfig,
     rng: &mut impl Rng,
     sample_counter: &mut usize,
+    filter: &impl HazardFilter,
 ) -> Option<(DTransformation, LBFLoss)> {
-    // hazards to be ignored when checking for collisions
-    let irrel_hazards = match item.hazard_filter.as_ref() {
-        None => vec![],
-        Some(hf) => filter::generate_irrelevant_hazards(hf, cde.all_hazards()),
-    };
-
     let surrogate = item.shape.surrogate();
     //create a clone of the shape which will we can use to apply the transformations
     let mut buffer = {
@@ -50,7 +45,7 @@ pub fn search(
     for i in 0..uni_sample_budget {
         let d_transf = hpg_sampler.sample(rng);
         let transf = d_transf.compose();
-        if !cde.surrogate_collides(surrogate, &transf, &irrel_hazards) {
+        if !cde.surrogate_collides(surrogate, &transf, filter) {
             //if no collision is detected on the surrogate, apply the transformation
             buffer.transform_from(&item.shape, &transf);
             let cost = LBFLoss::from_shape(&buffer);
@@ -63,7 +58,7 @@ pub fn search(
                 (None, _) => true,
             };
 
-            if worth_testing && !cde.poly_collides(&buffer, &irrel_hazards) {
+            if worth_testing && !cde.poly_collides(&buffer, filter) {
                 //sample is valid and improves on the current best
                 hpg_sampler.tighten(cost);
                 debug!("[UNI: {i}/{uni_sample_budget}] better: {} ", &d_transf);
@@ -89,14 +84,14 @@ pub fn search(
     for i in 0..ls_sample_budget {
         let d_transf = ls_sampler.sample(rng);
         let transf = d_transf.compose();
-        if !cde.surrogate_collides(surrogate, &transf, &irrel_hazards) {
+        if !cde.surrogate_collides(surrogate, &transf, filter) {
             buffer.transform_from(&item.shape, &transf);
             let cost = LBFLoss::from_shape(&buffer);
 
             //only validate the sample if it possibly can replace the current best
             let worth_testing = cost < *best_cost;
 
-            if worth_testing && !cde.poly_collides(&buffer, &irrel_hazards) {
+            if worth_testing && !cde.poly_collides(&buffer, filter) {
                 //sample is valid and improves on the current best
                 ls_sampler.shift_mean(d_transf);
                 debug!("[LS: {i}/{ls_sample_budget}] better: {}", &d_transf);

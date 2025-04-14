@@ -1,8 +1,10 @@
 use std::fs::File;
 use std::io::BufReader;
 
+use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
+use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::fsize;
 use jagua_rs::geometry::convex_hull;
@@ -16,8 +18,6 @@ use jagua_rs::util::SPSurrogateConfig;
 use lbf::samplers::hpg_sampler::HPGSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
-
-use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
 
 criterion_main!(benches);
 criterion_group!(benches, fast_fail_query_bench);
@@ -123,14 +123,17 @@ fn fast_fail_query_bench(c: &mut Criterion) {
                     let buffer_shape = &mut buffer_shapes[i];
                     for dtransf in samples_cyclers[i].next().unwrap() {
                         let transf = dtransf.compose();
-                        let collides =
-                            match layout.cde().surrogate_collides(surrogate, &transf, &[]) {
-                                true => true,
-                                false => {
-                                    buffer_shape.transform_from(&item.shape, &transf);
-                                    layout.cde().poly_collides(&buffer_shape, &[])
-                                }
-                            };
+                        let collides = match layout.cde().surrogate_collides(
+                            surrogate,
+                            &transf,
+                            &NoHazardFilter,
+                        ) {
+                            true => true,
+                            false => {
+                                buffer_shape.transform_from(&item.shape, &transf);
+                                layout.cde().poly_collides(&buffer_shape, &NoHazardFilter)
+                            }
+                        };
                         match collides {
                             true => n_invalid += 1,
                             false => n_valid += 1,

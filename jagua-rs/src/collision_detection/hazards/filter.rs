@@ -1,38 +1,31 @@
-use crate::collision_detection::hazards::{Hazard, HazardEntity};
-use itertools::Itertools;
+use crate::collision_detection::hazards::HazardEntity;
 
-/// Trait for filters which ignore all [`Hazard`]s induced by specific [`HazardEntity`]s during querying.
+/// Trait for filters to ignore all [`Hazard`](crate::collision_detection::hazards::Hazard)s induced by specific [`HazardEntity`]s.
+/// Enables collision queries to ignore specific hazards during the check.
 pub trait HazardFilter {
     fn is_irrelevant(&self, entity: &HazardEntity) -> bool;
 }
 
-/// Returns the entities that are deemed irrelevant by the specified `HazardFilter`.
-pub fn generate_irrelevant_hazards<'a>(
-    filter: &impl HazardFilter,
-    hazards: impl Iterator<Item = &'a Hazard>,
-) -> Vec<HazardEntity> {
-    hazards
-        .filter_map(|h| match filter.is_irrelevant(&h.entity) {
-            true => Some(h.entity),
-            false => None,
-        })
-        .collect_vec()
-}
+/// Deems no hazards as irrelevant.
+#[derive(Clone, Debug)]
+pub struct NoHazardFilter;
 
-/// Deems all hazards induced by the `Bin` as irrelevant.
-#[derive(Clone)]
+/// Deems all hazards induced by the [`Bin`](crate::entities::general::Bin) as irrelevant.
+#[derive(Clone, Debug)]
 pub struct BinHazardFilter;
 
-/// Deems hazards induced by `QualityZone`s above a cutoff quality as irrelevant.
+/// Deems hazards induced by [`InferiorQualityZone`](crate::entities::general::InferiorQualityZone)s above a cutoff quality as irrelevant.
 #[derive(Clone, Debug)]
 pub struct QZHazardFilter(pub usize);
 
-/// Deems hazards induced by specific entities as irrelevant.
+/// Deems hazards induced by specific [`HazardEntity`]s as irrelevant.
+#[derive(Clone, Debug)]
 pub struct EntityHazardFilter(pub Vec<HazardEntity>);
 
-/// Combines multiple `HazardFilter`s into a single filter.
-pub struct CombinedHazardFilter<'a> {
-    pub filters: Vec<Box<&'a dyn HazardFilter>>,
+impl HazardFilter for NoHazardFilter {
+    fn is_irrelevant(&self, _entity: &HazardEntity) -> bool {
+        false
+    }
 }
 
 impl HazardFilter for BinHazardFilter {
@@ -43,12 +36,6 @@ impl HazardFilter for BinHazardFilter {
             HazardEntity::BinHole { .. } => true,
             HazardEntity::InferiorQualityZone { .. } => true,
         }
-    }
-}
-
-impl<'a> HazardFilter for CombinedHazardFilter<'a> {
-    fn is_irrelevant(&self, entity: &HazardEntity) -> bool {
-        self.filters.iter().any(|f| f.is_irrelevant(entity))
     }
 }
 
@@ -67,8 +54,9 @@ impl HazardFilter for QZHazardFilter {
     }
 }
 
-impl HazardFilter for &[HazardEntity] {
+/// Deems hazards induced by `self` as irrelevant.
+impl HazardFilter for HazardEntity {
     fn is_irrelevant(&self, haz: &HazardEntity) -> bool {
-        self.contains(&haz)
+        self == haz
     }
 }
