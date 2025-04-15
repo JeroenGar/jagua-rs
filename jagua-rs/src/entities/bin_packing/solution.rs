@@ -1,6 +1,5 @@
 use crate::entities::bin_packing::LayKey;
 use crate::entities::general::LayoutSnapshot;
-use crate::fsize;
 use slotmap::SecondaryMap;
 use std::time::Instant;
 
@@ -13,8 +12,6 @@ use crate::entities::bin_packing::BPProblem;
 pub struct BPSolution {
     /// Snapshots of all `Layout`s in the `Problem` at the moment the solution was created
     pub layout_snapshots: SecondaryMap<LayKey, LayoutSnapshot>,
-    /// Average usage of bins in the solution
-    pub usage: fsize,
     /// Quantity of placed items for each `Item` in the solution
     pub placed_item_qtys: Vec<usize>,
     /// Target quantity of each `Item` in the solution

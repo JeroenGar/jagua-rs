@@ -12,8 +12,6 @@ pub struct SPSolution {
     pub strip_width: fsize,
     /// Snapshot of the strip
     pub layout_snapshot: LayoutSnapshot,
-    /// Usage of the strip
-    pub usage: fsize,
     /// Instant the solution was created
     pub time_stamp: Instant,
 }

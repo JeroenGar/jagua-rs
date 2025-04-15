@@ -67,7 +67,7 @@ impl SvgLayoutTheme {
             item_fill: "#8F8F8F".into(),
             hole_fill: "#FFFFFF".into(),
             qz_fill: [
-                "#636363".into(), //GRAY
+                "#000000".into(), //BLACK
                 "#636363".into(), //GRAY
                 "#636363".into(), //GRAY
                 "#636363".into(), //GRAY

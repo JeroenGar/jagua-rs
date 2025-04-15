@@ -101,7 +101,6 @@ impl BPProblem {
 
         let solution = BPSolution {
             layout_snapshots,
-            usage: self.usage(),
             placed_item_qtys: self.placed_item_qtys().collect(),
             target_item_qtys,
             bin_qtys: self.bin_qtys.clone(),
@@ -155,14 +154,16 @@ impl BPProblem {
         debug_assert!(assertions::bpproblem_matches_solution(self, solution));
     }
 
-    pub fn usage(&self) -> fsize {
-        let (total_bin_area, total_used_area) =
-            self.layouts.iter().fold((0.0, 0.0), |acc, (_, l)| {
-                let bin_area = l.bin.area;
-                let used_area = bin_area * l.usage();
-                (acc.0 + bin_area, acc.1 + used_area)
-            });
-        total_used_area / total_bin_area
+    pub fn density(&self) -> fsize {
+        let total_bin_area = self.layouts.values()
+            .map(|l| l.bin.area())
+            .sum::<fsize>();
+
+        let total_item_area = self.layouts.values()
+            .map(|l| l.placed_item_area(&self.instance))
+            .sum::<fsize>();
+
+        total_item_area / total_bin_area
     }
 
     pub fn placed_item_qtys(&self) -> impl Iterator<Item = usize> {

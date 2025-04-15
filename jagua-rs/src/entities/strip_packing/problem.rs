@@ -89,7 +89,6 @@ impl SPProblem {
     pub fn save(&mut self) -> SPSolution {
         let solution = SPSolution {
             layout_snapshot: self.layout.save(),
-            usage: self.usage(),
             strip_width: self.strip_width(),
             time_stamp: Instant::now(),
         };
@@ -137,8 +136,8 @@ impl SPProblem {
         self.missing_item_qtys[item_id] += 1;
     }
 
-    pub fn usage(&self) -> fsize {
-        self.layout.usage()
+    pub fn density(&self) -> fsize {
+        self.layout.density(&self.instance)
     }
 
     /// Makes sure that the all collision detection engines are completely updated with the changes made to the layouts.

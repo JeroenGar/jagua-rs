@@ -3,6 +3,7 @@ mod instance;
 mod item;
 mod layout;
 mod placed_item;
+mod original_shape;
 
 #[doc(inline)]
 pub use instance::Instance;
