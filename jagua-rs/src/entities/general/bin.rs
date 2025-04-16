@@ -10,7 +10,7 @@ use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::SimplePolygon;
-use crate::util::{CDEConfig, PolySimplConfig, PolySimplMode};
+use crate::util::{CDEConfig, ShapeModifyConfig, ShapeModifyMode};
 
 #[cfg(doc)]
 use crate::entities::general::Item;
@@ -43,6 +43,7 @@ impl Bin {
         let outer = original_outer.convert_to_internal();
         let original_outer = Arc::new(original_outer);
         let outer = Arc::new(outer);
+        dbg!(outer.as_ref());
         assert_eq!(
             quality_zones.len(),
             quality_zones.iter().map(|qz| qz.quality).unique().count(),
@@ -88,7 +89,13 @@ impl Bin {
     }
 
     /// Create a new `Bin` for a strip-packing problem. Instead of a shape, the bin is always rectangular.
-    pub fn from_strip(id: usize, rect: AARectangle, cde_config: CDEConfig) -> Self {
+    pub fn from_strip(
+        id: usize,
+        rect: AARectangle,
+        cde_config: CDEConfig,
+        shape_modify_config: ShapeModifyConfig,
+    ) -> Self {
+        dbg!(shape_modify_config);
         assert_eq!(rect.x_min, 0.0, "Strip x_min must be 0.0");
         assert_eq!(rect.y_min, 0.0, "Strip y_min must be 0.0");
 
@@ -96,7 +103,8 @@ impl Bin {
         let original = OriginalShape {
             original: SimplePolygon::from(rect),
             pre_transform: DTransformation::empty(),
-            simplification: (PolySimplConfig::Disabled, PolySimplMode::Deflate),
+            modify_mode: ShapeModifyMode::Deflate,
+            modify_config: shape_modify_config,
         };
 
         Bin::new(id, original, value, vec![], cde_config)

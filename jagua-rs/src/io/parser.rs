@@ -7,6 +7,7 @@ use crate::entities::general::{Bin, InferiorQualityZone, N_QUALITIES};
 use crate::entities::general::{Instance, OriginalShape};
 use crate::entities::strip_packing::SPInstance;
 use crate::entities::strip_packing::SPSolution;
+use crate::fsize;
 use crate::geometry::DTransformation;
 use crate::geometry::Transformation;
 use crate::geometry::geo_enums::AllowedRotation;
@@ -18,8 +19,8 @@ use crate::io::json_instance::{JsonBin, JsonInstance, JsonItem, JsonShape, JsonS
 use crate::io::json_solution::{
     JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
 };
-use crate::util::CDEConfig;
-use crate::util::{PolySimplConfig, PolySimplMode};
+use crate::util::ShapeModifyMode;
+use crate::util::{CDEConfig, ShapeModifyConfig};
 use itertools::Itertools;
 use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
@@ -28,14 +29,23 @@ use rayon::prelude::IntoParallelRefIterator;
 
 /// Parses a `JsonInstance` into an `Instance`.
 pub struct Parser {
-    poly_simpl_config: PolySimplConfig,
+    shape_modify_config: ShapeModifyConfig,
     cde_config: CDEConfig,
 }
 
 impl Parser {
-    pub fn new(poly_simpl_config: PolySimplConfig, cde_config: CDEConfig) -> Parser {
+    pub fn new(
+        cde_config: CDEConfig,
+        poly_simpl_tolerance: Option<fsize>,
+        min_item_separation: Option<fsize>,
+    ) -> Parser {
+        let shape_modify_config = ShapeModifyConfig {
+            offset: min_item_separation.map(|f| f / 2.0),
+            simplify_tolerance: poly_simpl_tolerance,
+        };
+        dbg!(shape_modify_config);
         Parser {
-            poly_simpl_config,
+            shape_modify_config,
             cde_config,
         }
     }
@@ -70,7 +80,11 @@ impl Parser {
                 Box::new(bpi)
             }
             (None, Some(json_strip)) => {
-                let spi = SPInstance::new(items, json_strip.height);
+                let strip_modify_config = ShapeModifyConfig {
+                    offset: self.shape_modify_config.offset,
+                    simplify_tolerance: None,
+                };
+                let spi = SPInstance::new(items, json_strip.height, strip_modify_config);
                 log!(
                     Level::Info,
                     "[PARSE] strip packing instance \"{}\": {} items ({} unique), {} strip height",
@@ -110,7 +124,8 @@ impl Parser {
             OriginalShape {
                 pre_transform: centering_transformation(&shape),
                 original: shape,
-                simplification: (self.poly_simpl_config, PolySimplMode::Inflate),
+                modify_mode: ShapeModifyMode::Inflate,
+                modify_config: self.shape_modify_config,
             }
         };
 
@@ -165,7 +180,8 @@ impl Parser {
             OriginalShape {
                 original: outer,
                 pre_transform: DTransformation::empty(),
-                simplification: (self.poly_simpl_config, PolySimplMode::Deflate),
+                modify_mode: ShapeModifyMode::Deflate,
+                modify_config: self.shape_modify_config,
             }
         };
 
@@ -223,7 +239,8 @@ impl Parser {
                     .map(|s| OriginalShape {
                         original: s,
                         pre_transform: DTransformation::empty(),
-                        simplification: (self.poly_simpl_config, PolySimplMode::Inflate),
+                        modify_mode: ShapeModifyMode::Inflate,
+                        modify_config: self.shape_modify_config,
                     })
                     .collect_vec();
                 InferiorQualityZone::new(q, original_shapes)

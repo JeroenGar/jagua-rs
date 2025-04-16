@@ -9,7 +9,6 @@ use jagua_rs::entities::bin_packing::BPInstance;
 use jagua_rs::entities::strip_packing::SPInstance;
 use jagua_rs::io::parser;
 use jagua_rs::io::parser::Parser;
-use jagua_rs::util::PolySimplConfig;
 use lbf::config::LBFConfig;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
@@ -17,7 +16,7 @@ use lbf::io::layout_to_svg::s_layout_to_svg;
 use lbf::opt::lbf_opt_bpp::LBFOptimizerBP;
 use lbf::opt::lbf_opt_spp::LBFOptimizerSP;
 use lbf::{EPOCH, LBFInstance, LBFSolution, io};
-use log::{error, warn};
+use log::{error, info, warn};
 use mimalloc::MiMalloc;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
@@ -32,16 +31,12 @@ fn main() {
 
     let config = match args.config_file {
         None => {
-            warn!("No config file provided, use --config-file to provide a custom config");
-            warn!(
-                "Falling back default config:\n{}",
-                serde_json::to_string(&LBFConfig::default()).unwrap()
-            );
+            warn!("[MAIN] No config file provided, use --config-file to provide a custom config");
             LBFConfig::default()
         }
         Some(config_file) => {
             let file = File::open(config_file).unwrap_or_else(|err| {
-                panic!("Config file could not be opened: {}", err);
+                panic!("[MAIN] Config file could not be opened: {}", err);
             });
             let reader = BufReader::new(file);
             serde_json::from_reader(reader).unwrap_or_else(|err| {
@@ -52,13 +47,14 @@ fn main() {
         }
     };
 
-    let json_instance = io::read_json_instance(args.input_file.as_path());
-    let poly_simpl_config = match config.poly_simpl_tolerance {
-        Some(tolerance) => PolySimplConfig::Enabled { tolerance },
-        None => PolySimplConfig::Disabled,
-    };
+    info!("[MAIN] LBFConfig: {:?}", config);
 
-    let parser = Parser::new(poly_simpl_config, config.cde_config);
+    let json_instance = io::read_json_instance(args.input_file.as_path());
+    let parser = Parser::new(
+        config.cde_config,
+        config.poly_simpl_tolerance,
+        config.min_item_separation,
+    );
     let instance = {
         let instance = parser.parse(&json_instance);
         let any = instance.as_ref() as &dyn Any;

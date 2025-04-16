@@ -3,7 +3,7 @@ pub mod assertions;
 
 mod config;
 mod fpa;
-mod polygon_simplification;
+mod polygon_modification;
 
 #[doc(inline)]
 pub use config::CDEConfig;
@@ -12,8 +12,10 @@ pub use config::SPSurrogateConfig;
 #[doc(inline)]
 pub use fpa::FPA;
 #[doc(inline)]
-pub use polygon_simplification::PolySimplConfig;
+pub use polygon_modification::ShapeModifyConfig;
 #[doc(inline)]
-pub use polygon_simplification::PolySimplMode;
+pub use polygon_modification::ShapeModifyMode;
 #[doc(inline)]
-pub use polygon_simplification::simplify_poly;
+pub use polygon_modification::offset_shape;
+#[doc(inline)]
+pub use polygon_modification::simplify_shape;

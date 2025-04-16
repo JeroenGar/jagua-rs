@@ -1,9 +1,10 @@
-use std::cmp::Ordering;
-
+use geo::CoordsIter;
+use geo_offset::Offset;
 use itertools::Itertools;
 use log::{debug, info};
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 
 use crate::fsize;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
@@ -11,43 +12,32 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SimplePolygon;
 
-/// Polygon simplification configuration
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
-#[serde(tag = "mode", content = "params")]
-pub enum PolySimplConfig {
-    #[serde(rename = "disabled")]
-    Disabled,
-    #[serde(rename = "enabled")]
-    Enabled {
-        /// max deviation from the original polygon area as a fraction of the original area
-        tolerance: fsize,
-    },
-}
-
-/// Mode of polygon simplification
+/// Whether to strictly inflate or deflate when making any modifications to shape.
+/// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::position) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum PolySimplMode {
-    /// Simplify the polygon to be strictly larger than the original
+pub enum ShapeModifyMode {
+    /// Modify the shape to be strictly larger than the original.
     Inflate,
-    /// Simplify the polygon to be strictly smaller than the original
+    /// Modify the shape to be strictly smaller than the original.
     Deflate,
 }
 
-impl PolySimplMode {
-    pub fn flip(&self) -> Self {
-        match self {
-            Self::Inflate => Self::Deflate,
-            Self::Deflate => Self::Inflate,
-        }
-    }
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default)]
+pub struct ShapeModifyConfig {
+    /// Maximum deviation of the simplified polygon with respect to the original polygon area as a fraction.
+    /// If undefined, no simplification is performed.
+    pub simplify_tolerance: Option<fsize>,
+    /// Offset by which to inflate or deflate the polygon.
+    /// If undefined, no offset is applied.
+    pub offset: Option<fsize>,
 }
 
-/// Simplifies a [`SimplePolygon`] according to the given [`PolySimplMode`].
+/// Simplifies a [`SimplePolygon`] according to the given [`ShapeModifyMode`].
 /// The number of edges is reduced by one at a time, until either
 /// the change in area would exceed the `max_area_delta` or the number of edges < 4.
-pub fn simplify_poly(
+pub fn simplify_shape(
     shape: &SimplePolygon,
-    mode: PolySimplMode,
+    mode: ShapeModifyMode,
     max_area_delta: fsize,
 ) -> SimplePolygon {
     let original_area = shape.area();
@@ -69,7 +59,7 @@ pub fn simplify_poly(
             })
             .collect_vec();
 
-        if mode == PolySimplMode::Deflate {
+        if mode == ShapeModifyMode::Deflate {
             //default mode is to inflate, so we need to reverse the order of the corners and flip the corners for deflate mode
             //reverse the order of the corners
             corners.reverse();
@@ -329,4 +319,35 @@ impl CornerType {
             Ordering::Greater => CornerType::Convex,
         }
     }
+}
+
+/// Offsets a [`SimplePolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
+/// Relies on the [`geo_offset`](https://crates.io/crates/geo_offset) crate.
+pub fn offset_shape(sp: &SimplePolygon, mode: ShapeModifyMode, distance: fsize) -> SimplePolygon {
+    // Convert Vec<Point> to geo::LineString
+    let exterior: geo::LineString<fsize> = sp.points.iter().map(|p| (p.0, p.1)).collect();
+
+    // Create a polygon (assuming no holes)
+    let geo_polygon = geo::Polygon::new(exterior, vec![]);
+
+    let offset = match mode {
+        ShapeModifyMode::Deflate => -distance,
+        ShapeModifyMode::Inflate => distance,
+    };
+
+    // Inflate the polygon
+    let inflated = geo_polygon.offset(offset).unwrap();
+
+    // Convert back to Vec<Point>
+    let mut inflated_points = inflated
+        .exterior_coords_iter()
+        .map(|p| Point(p.x, p.y))
+        .collect_vec();
+    //remove the last point if it is the same as the first
+    if inflated_points.len() > 1 && inflated_points[0] == inflated_points[inflated_points.len() - 1]
+    {
+        inflated_points.pop();
+    }
+
+    SimplePolygon::new(inflated_points)
 }

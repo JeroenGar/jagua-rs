@@ -22,6 +22,8 @@ tribool = "0.3"
 rayon = "1.9"
 slotmap = "1.0"
 float-cmp = "0.10"
+geo-offset = "0.4.0"
+geo = "0.30.0"
 
 [features]
 # Switches from f32 to f64 for floating point numbers in the library

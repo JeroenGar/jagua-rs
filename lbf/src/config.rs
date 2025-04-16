@@ -12,6 +12,9 @@ pub struct LBFConfig {
     pub cde_config: CDEConfig,
     /// Max deviation from the original polygon area as a fraction. If undefined, the algorithm will run without simplification
     pub poly_simpl_tolerance: Option<fsize>,
+    /// Minimum distance between items and other hazards.
+    /// If undefined, the algorithm will run without this constraint
+    pub min_item_separation: Option<fsize>,
     /// Seed for the PRNG. If undefined, the algorithm will run in non-deterministic mode using entropy
     pub prng_seed: Option<u64>,
     /// Total budget of samples per item per layout
@@ -36,6 +39,7 @@ impl Default for LBFConfig {
                 },
             },
             poly_simpl_tolerance: Some(0.001),
+            min_item_separation: None,
             prng_seed: Some(0),
             n_samples: 5000,
             ls_frac: 0.2,
