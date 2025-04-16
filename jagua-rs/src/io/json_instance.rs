@@ -66,7 +66,12 @@ pub struct JsonItem {
 #[serde(rename_all_fields = "PascalCase")]
 pub enum JsonShape {
     /// Axis-aligned rectangle. With its left bottom corner at (x_min, y_min) and a width and height
-    Rectangle { x_min: fsize, y_min: fsize, width: fsize, height: fsize },
+    Rectangle {
+        x_min: fsize,
+        y_min: fsize,
+        width: fsize,
+        height: fsize,
+    },
     /// Polygon with a single outer boundary
     SimplePolygon(JsonSimplePoly),
     /// Polygon with a single outer boundary and a list of holes

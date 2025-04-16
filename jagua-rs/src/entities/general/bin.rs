@@ -2,19 +2,19 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 
+use crate::collision_detection::CDEngine;
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::CDEngine;
 use crate::fsize;
+use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::SimplePolygon;
-use crate::geometry::DTransformation;
 use crate::util::{CDEConfig, PolySimplConfig, PolySimplMode};
 
-use crate::entities::general::original_shape::OriginalShape;
 #[cfg(doc)]
 use crate::entities::general::Item;
+use crate::entities::general::original_shape::OriginalShape;
 
 /// A container in which [`Item`]'s can be placed.
 #[derive(Clone, Debug)]
@@ -96,7 +96,7 @@ impl Bin {
         let original = OriginalShape {
             original: SimplePolygon::from(rect),
             pre_transform: DTransformation::empty(),
-            simplification: (PolySimplConfig::Disabled, PolySimplMode::Deflate)
+            simplification: (PolySimplConfig::Disabled, PolySimplMode::Deflate),
         };
 
         Bin::new(id, original, value, vec![], cde_config)
@@ -149,19 +149,16 @@ impl InferiorQualityZone {
 
     /// Returns the set of hazards induced by this zone.
     pub fn to_hazards(&self) -> impl Iterator<Item = Hazard> {
-        self.shapes
-            .iter()
-            .enumerate()
-            .map(|(id, shape)| {
-                let entity = match self.quality {
-                    0 => HazardEntity::BinHole { id },
-                    _ => HazardEntity::InferiorQualityZone {
-                        quality: self.quality,
-                        id,
-                    },
-                };
-                Hazard::new(entity, shape.clone())
-            })
+        self.shapes.iter().enumerate().map(|(id, shape)| {
+            let entity = match self.quality {
+                0 => HazardEntity::BinHole { id },
+                _ => HazardEntity::InferiorQualityZone {
+                    quality: self.quality,
+                    id,
+                },
+            };
+            Hazard::new(entity, shape.clone())
+        })
     }
 
     pub fn area(&self) -> fsize {

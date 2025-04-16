@@ -7,22 +7,21 @@ use crate::entities::general::{Bin, InferiorQualityZone, N_QUALITIES};
 use crate::entities::general::{Instance, OriginalShape};
 use crate::entities::strip_packing::SPInstance;
 use crate::entities::strip_packing::SPSolution;
-use crate::fsize;
+use crate::geometry::DTransformation;
+use crate::geometry::Transformation;
 use crate::geometry::geo_enums::AllowedRotation;
-use crate::geometry::geo_traits::{Shape, Transformable};
+use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SimplePolygon;
-use crate::geometry::DTransformation;
-use crate::geometry::Transformation;
 use crate::io::json_instance::{JsonBin, JsonInstance, JsonItem, JsonShape, JsonSimplePoly};
 use crate::io::json_solution::{
     JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
 };
-use crate::util::{simplify_poly, CDEConfig};
+use crate::util::CDEConfig;
 use crate::util::{PolySimplConfig, PolySimplMode};
 use itertools::Itertools;
-use log::{log, Level};
+use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
@@ -34,10 +33,7 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(
-        poly_simpl_config: PolySimplConfig,
-        cde_config: CDEConfig,
-    ) -> Parser {
+    pub fn new(poly_simpl_config: PolySimplConfig, cde_config: CDEConfig) -> Parser {
         Parser {
             poly_simpl_config,
             cde_config,

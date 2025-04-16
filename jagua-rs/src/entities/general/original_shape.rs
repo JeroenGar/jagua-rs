@@ -2,17 +2,17 @@ use crate::fsize;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::{Shape, Transformable};
 use crate::geometry::primitives::SimplePolygon;
-use crate::util::{simplify_poly, PolySimplConfig, PolySimplMode};
+use crate::util::{PolySimplConfig, PolySimplMode, simplify_poly};
 
 #[derive(Clone, Debug)]
 /// A [`SimplePolygon`] exactly as is defined in the input file
 ///
 /// Also contains all required operation to convert it to a shape that can be used internally.
 /// Currently these are centering and simplification operations, but could be extended in the future.
-pub struct OriginalShape{
+pub struct OriginalShape {
     pub original: SimplePolygon,
     pub pre_transform: DTransformation,
-    pub simplification: (PolySimplConfig, PolySimplMode)
+    pub simplification: (PolySimplConfig, PolySimplMode),
 }
 
 impl OriginalShape {
@@ -21,7 +21,7 @@ impl OriginalShape {
         let internal = self.original.transform_clone(&t);
         match self.simplification.0 {
             PolySimplConfig::Disabled => internal,
-            PolySimplConfig::Enabled{tolerance} => {
+            PolySimplConfig::Enabled { tolerance } => {
                 simplify_poly(&internal, self.simplification.1, tolerance)
             }
         }

@@ -1,23 +1,23 @@
-use log::{debug, warn};
+use log::warn;
 use svg::node::element::path::Data;
 use svg::node::element::{Circle, Path};
 
 use jagua_rs::collision_detection::hazards::filter::HazardFilter;
 use jagua_rs::collision_detection::quadtree::QTHazPresence;
 use jagua_rs::collision_detection::quadtree::QTNode;
+use jagua_rs::entities::general::OriginalShape;
 use jagua_rs::geometry::primitives::Edge;
 use jagua_rs::geometry::primitives::Point;
 use jagua_rs::geometry::primitives::SimplePolygon;
 use jagua_rs::{fsize, geometry};
-use jagua_rs::entities::general::OriginalShape;
 
 pub fn original_shape_data(original: &OriginalShape, draw_internal: bool) -> Data {
     match draw_internal {
         true => {
             warn!("drawing internal representation of original shape");
             simple_polygon_data(&original.convert_to_internal())
-        },
-        false => simple_polygon_data(&original.original)
+        }
+        false => simple_polygon_data(&original.original),
     }
 }
 

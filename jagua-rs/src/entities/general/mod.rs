@@ -2,8 +2,8 @@ mod bin;
 mod instance;
 mod item;
 mod layout;
-mod placed_item;
 mod original_shape;
+mod placed_item;
 
 #[doc(inline)]
 pub use instance::Instance;

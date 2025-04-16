@@ -1,7 +1,7 @@
 use crate::collision_detection::hazards::{Hazard, HazardEntity};
 use crate::collision_detection::{CDESnapshot, CDEngine};
-use crate::entities::general::{Bin, Instance};
 use crate::entities::general::Item;
+use crate::entities::general::{Bin, Instance};
 use crate::entities::general::{PItemKey, PlacedItem};
 use crate::fsize;
 use crate::geometry::DTransformation;

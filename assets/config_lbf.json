@@ -8,8 +8,14 @@
       "n_ff_piers": 0
     }
   },
-  "poly_simpl_tolerance": 0.001,
+  "poly_simpl_tolerance": 0.1,
   "prng_seed": 0,
   "n_samples": 5000,
-  "ls_frac": 0.2
+  "ls_frac": 0.2,
+  "svg_draw_options": {
+    "use_internal_shapes": false,
+    "quadtree": true,
+    "haz_prox_grid": true,
+    "surrogate": true
+  }
 }

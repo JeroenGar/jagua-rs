@@ -1,9 +1,9 @@
-use crate::entities::general::{Instance, LayoutSnapshot};
-use crate::fsize;
-use std::time::Instant;
+use crate::entities::general::LayoutSnapshot;
 use crate::entities::strip_packing::SPInstance;
 #[cfg(doc)]
 use crate::entities::strip_packing::SPProblem;
+use crate::fsize;
+use std::time::Instant;
 
 /// Snapshot of [`SPProblem`] at a specific moment. Can be used to restore [`SPProblem`] to a previous state.
 #[derive(Debug, Clone)]

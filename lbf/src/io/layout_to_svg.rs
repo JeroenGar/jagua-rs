@@ -3,12 +3,12 @@ use crate::io::{svg_export, svg_util};
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::{Instance, Layout, LayoutSnapshot};
 use jagua_rs::fsize;
-use jagua_rs::geometry::geo_traits::{Transformable, TransformableFrom};
+use jagua_rs::geometry::geo_traits::Transformable;
 use jagua_rs::geometry::primitives::Circle;
 use jagua_rs::geometry::{DTransformation, Transformation};
 use jagua_rs::io::parser;
-use svg::node::element::{Definitions, Group, Title, Use};
 use svg::Document;
+use svg::node::element::{Definitions, Group, Title, Use};
 
 pub fn s_layout_to_svg(
     s_layout: &LayoutSnapshot,
@@ -149,13 +149,17 @@ pub fn layout_to_svg(
                 let ff_poles = surrogate.ff_poles();
 
                 for pole in surrogate.poles.iter() {
-                    let svg_circle =
-                        svg_export::circle(pole.transform_clone(&surr_transf), &poi_style);
                     if pole == poi {
+                        let svg_circle =
+                            svg_export::circle(pole.transform_clone(&surr_transf), &poi_style);
                         surrogate_group = surrogate_group.add(svg_circle);
                     } else if ff_poles.contains(pole) {
+                        let svg_circle =
+                            svg_export::circle(pole.transform_clone(&surr_transf), &ff_style);
                         surrogate_group = surrogate_group.add(svg_circle);
                     } else {
+                        let svg_circle =
+                            svg_export::circle(pole.transform_clone(&surr_transf), &no_ff_style);
                         surrogate_group = surrogate_group.add(svg_circle);
                     }
                 }

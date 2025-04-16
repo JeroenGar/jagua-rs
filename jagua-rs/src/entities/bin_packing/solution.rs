@@ -25,11 +25,15 @@ pub struct BPSolution {
 
 impl BPSolution {
     pub fn density(&self, instance: &BPInstance) -> fsize {
-        let total_bin_area = self.layout_snapshots.values()
+        let total_bin_area = self
+            .layout_snapshots
+            .values()
             .map(|ls| ls.bin.area())
             .sum::<fsize>();
 
-        let total_item_area = self.layout_snapshots.values()
+        let total_item_area = self
+            .layout_snapshots
+            .values()
             .map(|ls| ls.placed_item_area(instance))
             .sum::<fsize>();
 

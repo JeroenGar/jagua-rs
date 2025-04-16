@@ -29,7 +29,7 @@ pub fn create_instance(
         Some(tolerance) => PolySimplConfig::Enabled { tolerance },
         None => PolySimplConfig::Disabled,
     };
-    let parser = Parser::new(poly_simpl_config, cde_config, true);
+    let parser = Parser::new(poly_simpl_config, cde_config);
     let instance = parser.parse(json_instance);
     (instance.as_ref() as &dyn Any)
         .downcast_ref::<SPInstance>()

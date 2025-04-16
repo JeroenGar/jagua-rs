@@ -155,11 +155,11 @@ impl BPProblem {
     }
 
     pub fn density(&self) -> fsize {
-        let total_bin_area = self.layouts.values()
-            .map(|l| l.bin.area())
-            .sum::<fsize>();
+        let total_bin_area = self.layouts.values().map(|l| l.bin.area()).sum::<fsize>();
 
-        let total_item_area = self.layouts.values()
+        let total_item_area = self
+            .layouts
+            .values()
             .map(|l| l.placed_item_area(&self.instance))
             .sum::<fsize>();
 
