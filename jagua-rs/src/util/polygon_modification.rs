@@ -44,7 +44,7 @@ pub fn simplify_shape(
 
     let mut ref_points = shape.points.clone();
 
-    for _ in 0..shape.number_of_points() {
+    for _ in 0..shape.n_points() {
         let n_points = ref_points.len() as isize;
         if n_points < 4 {
             //can't simplify further
@@ -120,11 +120,11 @@ pub fn simplify_shape(
     //Convert it back to a simple polygon
     let simpl_shape = SimplePolygon::new(ref_points);
 
-    if simpl_shape.number_of_points() < shape.number_of_points() {
+    if simpl_shape.n_points() < shape.n_points() {
         info!(
             "[PS] simplified from {} to {} edges with {:.3}% area difference",
-            shape.number_of_points(),
-            simpl_shape.number_of_points(),
+            shape.n_points(),
+            simpl_shape.n_points(),
             (simpl_shape.area() - shape.area()) / shape.area() * 100.0
         );
     } else {

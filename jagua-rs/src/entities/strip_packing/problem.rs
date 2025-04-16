@@ -135,11 +135,11 @@ impl SPProblem {
     }
 
     pub fn strip_width(&self) -> fsize {
-        self.layout.bin.outer.bbox().width()
+        self.layout.bin.outer_orig.bbox().width()
     }
 
     pub fn strip_height(&self) -> fsize {
-        self.instance.strip_height
+        self.layout.bin.outer_orig.bbox().height()
     }
 
     fn register_included_item(&mut self, item_id: usize) {

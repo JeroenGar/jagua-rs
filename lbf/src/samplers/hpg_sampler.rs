@@ -27,7 +27,7 @@ pub struct HPGSampler<'a> {
 
 impl<'a> HPGSampler<'a> {
     pub fn new(item: &'a Item, cde: &CDEngine) -> Option<HPGSampler<'a>> {
-        let poi = &item.shape.poi;
+        let poi = &item.shape_cd.poi;
         let bin_bbox = &cde.bbox;
 
         //create a pre-transformation which centers the shape around its Pole of Inaccessibility.
@@ -94,7 +94,7 @@ impl<'a> HPGSampler<'a> {
     /// Removes all cells that cannot possibly generate a `Transformation` which would be better than the current best solution.
     /// LBF specific
     pub fn tighten(&mut self, best: LBFLoss) {
-        let poi_rad = self.item.shape.poi.radius;
+        let poi_rad = self.item.shape_cd.poi.radius;
 
         if best < self.loss_bound {
             //remove all cells that are out of bounds, update the coverage area

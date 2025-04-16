@@ -108,17 +108,17 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                 for i in 0..N_ITEMS_REMOVED {
                     let pi_uid = &selected_pi_uids[i];
                     let item = instance.item(pi_uid.item_id);
-                    let mut buffer_shape = item.shape.as_ref().clone();
+                    let mut buffer_shape = item.shape_cd.as_ref().clone();
                     for dtransf in samples_cycler.next().unwrap() {
                         let transf = dtransf.compose();
                         let collides = match layout.cde().surrogate_collides(
-                            item.shape.surrogate(),
+                            item.shape_cd.surrogate(),
                             &transf,
                             &NoHazardFilter,
                         ) {
                             true => true,
                             false => {
-                                buffer_shape.transform_from(&item.shape, &transf);
+                                buffer_shape.transform_from(&item.shape_cd, &transf);
                                 layout.cde().poly_collides(&buffer_shape, &NoHazardFilter)
                             }
                         };
@@ -140,8 +140,8 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
 
 fn modify_instance(mut instance: SPInstance, multiplier: usize) -> SPInstance {
     instance.items.iter_mut().for_each(|(item, _)| {
-        let multiplied_shape = multiply_edge_count(&item.shape, multiplier);
-        item.shape = Arc::new(multiplied_shape);
+        let multiplied_shape = multiply_edge_count(&item.shape_cd, multiplier);
+        item.shape_cd = Arc::new(multiplied_shape);
     });
     instance
 }

@@ -72,11 +72,7 @@ pub fn create_lbf_problem(
         info!(
             "Removed item: {} with {} edges",
             item_id,
-            lbf_optimizer
-                .instance
-                .item(item_id)
-                .shape
-                .number_of_points()
+            lbf_optimizer.instance.item(item_id).shape_cd.n_points()
         );
     }
     problem.flush_changes();

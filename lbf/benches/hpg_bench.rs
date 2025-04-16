@@ -83,13 +83,13 @@ fn hpg_query_bench(c: &mut Criterion) {
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
         let layout = &problem.layout;
-        let surrogate = item.shape.surrogate();
-        let mut buffer_shape = item.shape.as_ref().clone();
+        let surrogate = item.shape_cd.surrogate();
+        let mut buffer_shape = item.shape_cd.as_ref().clone();
         let mut sampler = HPGSampler::new(item, layout.cde()).unwrap();
         println!(
             "[{}] sampler coverage: {:.3}% with {} samplers",
             n_hpg_cells,
-            sampler.coverage_area / layout.bin.bbox().area() * 100.0,
+            sampler.coverage_area / layout.bin.outer_cd.bbox().area() * 100.0,
             sampler.cell_samplers.len()
         );
 
@@ -103,7 +103,7 @@ fn hpg_query_bench(c: &mut Criterion) {
                         .cde()
                         .surrogate_collides(surrogate, &transf, &NoHazardFilter)
                     {
-                        buffer_shape.transform_from(&item.shape, &transf);
+                        buffer_shape.transform_from(&item.shape_cd, &transf);
                         if !layout.cde().poly_collides(&buffer_shape, &NoHazardFilter) {
                             n_valid_samples += 1;
                         }
@@ -173,13 +173,13 @@ fn hpg_update_bench(c: &mut Criterion) {
         // Search N_VALID_SAMPLES for each item
         let item = instance.item(SELECTED_ITEM_ID);
         let layout = &problem.layout;
-        let surrogate = item.shape.surrogate();
-        let mut buffer_shape = item.shape.as_ref().clone();
+        let surrogate = item.shape_cd.surrogate();
+        let mut buffer_shape = item.shape_cd.as_ref().clone();
         let mut sampler = HPGSampler::new(item, layout.cde()).unwrap();
         println!(
             "[{}] sampler coverage: {:.3}% with {} samplers",
             n_hpg_cells,
-            sampler.coverage_area / layout.bin.bbox().area() * 100.0,
+            sampler.coverage_area / layout.bin.outer_cd.bbox().area() * 100.0,
             sampler.cell_samplers.len()
         );
 
@@ -192,7 +192,7 @@ fn hpg_update_bench(c: &mut Criterion) {
                 .cde()
                 .surrogate_collides(surrogate, &transf, &NoHazardFilter)
             {
-                buffer_shape.transform_from(&item.shape, &transf);
+                buffer_shape.transform_from(&item.shape_cd, &transf);
                 if !layout.cde().poly_collides(&buffer_shape, &NoHazardFilter) {
                     let d_transf = transf.decompose();
                     valid_placements.push(SPPlacement {

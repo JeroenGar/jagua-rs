@@ -122,7 +122,7 @@ impl Parser {
             };
             OriginalShape {
                 pre_transform: centering_transformation(&shape),
-                original: shape,
+                shape: shape,
                 modify_mode: ShapeModifyMode::Inflate,
                 modify_config: self.shape_modify_config,
             }
@@ -177,7 +177,7 @@ impl Parser {
                 }
             };
             OriginalShape {
-                original: outer,
+                shape: outer,
                 pre_transform: DTransformation::empty(),
                 modify_mode: ShapeModifyMode::Deflate,
                 modify_config: self.shape_modify_config,
@@ -236,7 +236,7 @@ impl Parser {
                 let original_shapes = zone_shapes
                     .into_iter()
                     .map(|s| OriginalShape {
-                        original: s,
+                        shape: s,
                         pre_transform: DTransformation::empty(),
                         modify_mode: ShapeModifyMode::Inflate,
                         modify_config: self.shape_modify_config,
@@ -281,7 +281,7 @@ pub fn compose_json_solution_spp(
 
             let abs_transf = internal_to_absolute_transform(
                 &placed_item.d_transf,
-                &item.original_shape.pre_transform,
+                &item.shape_orig.pre_transform,
             );
 
             JsonPlacedItem {
@@ -327,7 +327,7 @@ pub fn compose_json_solution_bpp(
 
                     let abs_transf = internal_to_absolute_transform(
                         &placed_item.d_transf,
-                        &item.original_shape.pre_transform,
+                        &item.shape_orig.pre_transform,
                     );
 
                     JsonPlacedItem {

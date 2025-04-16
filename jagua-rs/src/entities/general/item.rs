@@ -4,6 +4,7 @@ use crate::collision_detection::hazards::filter::QZHazardFilter;
 use crate::entities::general::original_shape::OriginalShape;
 use crate::fsize;
 use crate::geometry::geo_enums::AllowedRotation;
+use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::SimplePolygon;
 use crate::util::SPSurrogateConfig;
 
@@ -12,9 +13,9 @@ use crate::util::SPSurrogateConfig;
 pub struct Item {
     pub id: usize,
     /// Contour of the item as defined in the input file
-    pub original_shape: Arc<OriginalShape>,
-    /// Contour of the item to be used internally
-    pub shape: Arc<SimplePolygon>,
+    pub shape_orig: Arc<OriginalShape>,
+    /// Contour of the item to be used for collision detection
+    pub shape_cd: Arc<SimplePolygon>,
     /// Possible rotations in which to place the item
     pub allowed_rotation: AllowedRotation,
     /// The quality of the item, if `None` the item requires full quality
@@ -36,15 +37,17 @@ impl Item {
         surrogate_config: SPSurrogateConfig,
         value: u64,
     ) -> Item {
-        let mut shape = original_shape.convert_to_internal();
-        shape.generate_surrogate(surrogate_config);
-        let original_shape = Arc::new(original_shape);
-        let shape = Arc::new(shape);
+        let shape_orig = Arc::new(original_shape);
+        let shape_int = {
+            let mut shape_int = shape_orig.convert_to_internal();
+            shape_int.generate_surrogate(surrogate_config);
+            Arc::new(shape_int)
+        };
         let hazard_filter = base_quality.map(QZHazardFilter);
         Item {
             id,
-            shape,
-            original_shape,
+            shape_orig,
+            shape_cd: shape_int,
             allowed_rotation,
             base_quality,
             hazard_filter,
@@ -54,6 +57,6 @@ impl Item {
     }
 
     pub fn area(&self) -> fsize {
-        self.original_shape.area()
+        self.shape_orig.area()
     }
 }

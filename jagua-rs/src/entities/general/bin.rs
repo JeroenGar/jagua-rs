@@ -21,9 +21,9 @@ use crate::entities::general::original_shape::OriginalShape;
 pub struct Bin {
     pub id: usize,
     /// Contour of the bin as defined in the input file
-    pub original_outer: Arc<OriginalShape>,
-    /// Contour of the bin to be used internally
-    pub outer: Arc<SimplePolygon>,
+    pub outer_orig: Arc<OriginalShape>,
+    /// Contour of the bin to be used for collision detection
+    pub outer_cd: Arc<SimplePolygon>,
     /// The cost of using the bin
     pub cost: u64,
     /// Zones of different qualities in the bin, stored per quality.
@@ -40,9 +40,8 @@ impl Bin {
         quality_zones: Vec<InferiorQualityZone>,
         cde_config: CDEConfig,
     ) -> Self {
-        let outer = original_outer.convert_to_internal();
-        let original_outer = Arc::new(original_outer);
-        let outer = Arc::new(outer);
+        let outer_int = Arc::new(original_outer.convert_to_internal());
+        let outer_orig = Arc::new(original_outer);
         assert_eq!(
             quality_zones.len(),
             quality_zones.iter().map(|qz| qz.quality).unique().count(),
@@ -66,21 +65,21 @@ impl Bin {
         };
 
         let base_cde = {
-            let mut hazards = vec![Hazard::new(HazardEntity::BinExterior, outer.clone())];
+            let mut hazards = vec![Hazard::new(HazardEntity::BinExterior, outer_int.clone())];
             let qz_hazards = quality_zones
                 .iter()
                 .flatten()
                 .map(|qz| qz.to_hazards())
                 .flatten();
             hazards.extend(qz_hazards);
-            let base_cde = CDEngine::new(outer.bbox().inflate_to_square(), hazards, cde_config);
+            let base_cde = CDEngine::new(outer_int.bbox().inflate_to_square(), hazards, cde_config);
             Arc::new(base_cde)
         };
 
         Self {
             id,
-            outer,
-            original_outer,
+            outer_cd: outer_int,
+            outer_orig,
             cost,
             quality_zones,
             base_cde,
@@ -99,7 +98,7 @@ impl Bin {
 
         let value = rect.area() as u64;
         let original = OriginalShape {
-            original: SimplePolygon::from(rect),
+            shape: SimplePolygon::from(rect),
             pre_transform: DTransformation::empty(),
             modify_mode: ShapeModifyMode::Deflate,
             modify_config: shape_modify_config,
@@ -108,13 +107,9 @@ impl Bin {
         Bin::new(id, original, value, vec![], cde_config)
     }
 
-    pub fn bbox(&self) -> AARectangle {
-        self.outer.bbox()
-    }
-
     /// The area of the contour of the bin, excluding holes
     pub fn area(&self) -> fsize {
-        self.original_outer.area() - self.quality_zones[0].as_ref().map_or(0.0, |qz| qz.area())
+        self.outer_orig.area() - self.quality_zones[0].as_ref().map_or(0.0, |qz| qz.area())
     }
 }
 
@@ -126,10 +121,10 @@ pub const N_QUALITIES: usize = 10;
 pub struct InferiorQualityZone {
     /// Quality of this zone. Higher qualities are superior. A zone with quality 0 is treated as a hole.
     pub quality: usize,
-    /// The shapes of all zones of this quality
-    pub shapes: Vec<Arc<SimplePolygon>>,
-    ///
-    pub original_shapes: Vec<Arc<OriginalShape>>,
+    /// Contours of this quality-zone as defined in the input file
+    pub shapes_orig: Vec<Arc<OriginalShape>>,
+    /// Contours of this quality-zone to be used for collision detection
+    pub shapes_cd: Vec<Arc<SimplePolygon>>,
 }
 
 impl InferiorQualityZone {
@@ -148,14 +143,14 @@ impl InferiorQualityZone {
 
         Self {
             quality,
-            shapes,
-            original_shapes,
+            shapes_cd: shapes,
+            shapes_orig: original_shapes,
         }
     }
 
     /// Returns the set of hazards induced by this zone.
     pub fn to_hazards(&self) -> impl Iterator<Item = Hazard> {
-        self.shapes.iter().enumerate().map(|(id, shape)| {
+        self.shapes_cd.iter().enumerate().map(|(id, shape)| {
             let entity = match self.quality {
                 0 => HazardEntity::BinHole { id },
                 _ => HazardEntity::InferiorQualityZone {
@@ -168,6 +163,6 @@ impl InferiorQualityZone {
     }
 
     pub fn area(&self) -> fsize {
-        self.original_shapes.iter().map(|shape| shape.area()).sum()
+        self.shapes_orig.iter().map(|shape| shape.area()).sum()
     }
 }

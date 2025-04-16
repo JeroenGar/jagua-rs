@@ -28,7 +28,7 @@ impl SPInstance {
 
         let item_area = items
             .iter()
-            .map(|(item, qty)| item.shape.area() * *qty as fsize)
+            .map(|(item, qty)| item.shape_orig.area() * *qty as fsize)
             .sum();
 
         Self {

@@ -14,10 +14,7 @@ use crate::entities::general::Layout;
 use crate::entities::general::LayoutSnapshot;
 use crate::entities::strip_packing::SPProblem;
 use crate::entities::strip_packing::SPSolution;
-use crate::fsize;
-use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::AARectangle;
-use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::error;
 use std::collections::HashSet;
@@ -104,14 +101,6 @@ pub fn collision_hazards_sorted_correctly(hazards: &[QTHazard]) -> bool {
         };
     }
     true
-}
-
-pub fn all_bins_and_items_centered(items: &[(Item, usize)], bins: &[(Bin, usize)]) -> bool {
-    items
-        .iter()
-        .map(|(i, _)| i.shape.centroid())
-        .chain(bins.iter().map(|(b, _)| b.outer.centroid()))
-        .all(|c| approx_eq!(fsize, c.0, 0.0) && approx_eq!(fsize, c.1, 0.0))
 }
 
 pub fn qt_node_contains_no_deactivated_hazards<'a>(

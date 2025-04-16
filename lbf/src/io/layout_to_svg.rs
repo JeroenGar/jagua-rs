@@ -3,7 +3,7 @@ use crate::io::{svg_export, svg_util};
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::{Instance, Layout, LayoutSnapshot};
 use jagua_rs::fsize;
-use jagua_rs::geometry::geo_traits::Transformable;
+use jagua_rs::geometry::geo_traits::{Shape, Transformable};
 use jagua_rs::geometry::primitives::Circle;
 use jagua_rs::geometry::{DTransformation, Transformation};
 use jagua_rs::io::parser;
@@ -26,7 +26,7 @@ pub fn layout_to_svg(
 ) -> Document {
     let bin = &layout.bin;
 
-    let vbox = bin.bbox().clone().scale(1.05);
+    let vbox = bin.outer_orig.bbox().clone().scale(1.05);
 
     let theme = &options.theme;
 
@@ -36,7 +36,7 @@ pub fn layout_to_svg(
     //draw bin
     let bin_group = {
         let bin_group = Group::new().set("id", format!("bin_{}", bin.id));
-        let bbox = bin.bbox();
+        let bbox = bin.outer_orig.bbox();
         let title = Title::new(format!(
             "bin, id: {}, bbox: [x_min: {:.3}, y_min: {:.3}, x_max: {:.3}, y_max: {:.3}]",
             bin.id, bbox.x_min, bbox.y_min, bbox.x_max, bbox.y_max
@@ -46,8 +46,8 @@ pub fn layout_to_svg(
         bin_group
             .add(svg_export::data_to_path(
                 svg_export::original_shape_data(
-                    &bin.original_outer,
-                    &bin.outer,
+                    &bin.outer_orig,
+                    &bin.outer_cd,
                     options.use_internal_shapes,
                 ),
                 &[
@@ -66,8 +66,7 @@ pub fn layout_to_svg(
         for qz in bin.quality_zones.iter().rev().flatten() {
             let color = theme.qz_fill[qz.quality];
             let stroke_color = svg_util::change_brightness(color, 0.5);
-            for (orig_qz_shape, intern_qz_shape) in qz.original_shapes.iter().zip(qz.shapes.iter())
-            {
+            for (orig_qz_shape, intern_qz_shape) in qz.shapes_orig.iter().zip(qz.shapes_cd.iter()) {
                 qz_group = qz_group.add(
                     svg_export::data_to_path(
                         svg_export::original_shape_data(
@@ -106,8 +105,8 @@ pub fn layout_to_svg(
             item_defs = item_defs.add(Group::new().set("id", format!("item_{}", item.id)).add(
                 svg_export::data_to_path(
                     svg_export::original_shape_data(
-                        &item.original_shape,
-                        &item.shape,
+                        &item.shape_orig,
+                        &item.shape_cd,
                         options.use_internal_shapes,
                     ),
                     &[
@@ -125,7 +124,7 @@ pub fn layout_to_svg(
                     true => Transformation::empty(), //surrogate is already in internal coordinates
                     false => {
                         // The original shape is drawn on the SVG, we need to inverse the pre-transform
-                        let pre_transform = item.original_shape.pre_transform.compose();
+                        let pre_transform = item.shape_orig.pre_transform.compose();
                         let inv_pre_transform = pre_transform.inverse();
                         inv_pre_transform
                     }
@@ -154,7 +153,7 @@ pub fn layout_to_svg(
                     ("stroke-linejoin", "round"),
                 ];
 
-                let surrogate = item.shape.surrogate();
+                let surrogate = item.shape_cd.surrogate();
                 let poi = &surrogate.poles[0];
                 let ff_poles = surrogate.ff_poles();
 
@@ -192,7 +191,7 @@ pub fn layout_to_svg(
                     let item = instance.item(pi.item_id);
                     parser::internal_to_absolute_transform(
                         &pi.d_transf,
-                        &item.original_shape.pre_transform,
+                        &item.shape_orig.pre_transform,
                     )
                 }
             };
