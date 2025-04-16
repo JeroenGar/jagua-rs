@@ -43,7 +43,6 @@ impl Bin {
         let outer = original_outer.convert_to_internal();
         let original_outer = Arc::new(original_outer);
         let outer = Arc::new(outer);
-        dbg!(outer.as_ref());
         assert_eq!(
             quality_zones.len(),
             quality_zones.iter().map(|qz| qz.quality).unique().count(),
@@ -95,7 +94,6 @@ impl Bin {
         cde_config: CDEConfig,
         shape_modify_config: ShapeModifyConfig,
     ) -> Self {
-        dbg!(shape_modify_config);
         assert_eq!(rect.x_min, 0.0, "Strip x_min must be 0.0");
         assert_eq!(rect.y_min, 0.0, "Strip y_min must be 0.0");
 

@@ -43,7 +43,6 @@ impl Parser {
             offset: min_item_separation.map(|f| f / 2.0),
             simplify_tolerance: poly_simpl_tolerance,
         };
-        dbg!(shape_modify_config);
         Parser {
             shape_modify_config,
             cde_config,
