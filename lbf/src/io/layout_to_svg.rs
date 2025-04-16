@@ -45,7 +45,11 @@ pub fn layout_to_svg(
         //outer
         bin_group
             .add(svg_export::data_to_path(
-                svg_export::original_shape_data(&bin.original_outer, options.use_internal_shapes),
+                svg_export::original_shape_data(
+                    &bin.original_outer,
+                    &bin.outer,
+                    options.use_internal_shapes,
+                ),
                 &[
                     ("fill", &*format!("{}", theme.bin_fill)),
                     ("stroke", "black"),
@@ -62,10 +66,15 @@ pub fn layout_to_svg(
         for qz in bin.quality_zones.iter().rev().flatten() {
             let color = theme.qz_fill[qz.quality];
             let stroke_color = svg_util::change_brightness(color, 0.5);
-            for qz_shape in qz.original_shapes.iter() {
+            for (orig_qz_shape, intern_qz_shape) in qz.original_shapes.iter().zip(qz.shapes.iter())
+            {
                 qz_group = qz_group.add(
                     svg_export::data_to_path(
-                        svg_export::original_shape_data(qz_shape, options.use_internal_shapes),
+                        svg_export::original_shape_data(
+                            orig_qz_shape,
+                            intern_qz_shape,
+                            options.use_internal_shapes,
+                        ),
                         &[
                             ("fill", &*format!("{}", color)),
                             ("fill-opacity", "0.50"),
@@ -98,6 +107,7 @@ pub fn layout_to_svg(
                 svg_export::data_to_path(
                     svg_export::original_shape_data(
                         &item.original_shape,
+                        &item.shape,
                         options.use_internal_shapes,
                     ),
                     &[

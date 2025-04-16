@@ -1,4 +1,3 @@
-use log::warn;
 use svg::node::element::path::Data;
 use svg::node::element::{Circle, Path};
 
@@ -11,12 +10,13 @@ use jagua_rs::geometry::primitives::Point;
 use jagua_rs::geometry::primitives::SimplePolygon;
 use jagua_rs::{fsize, geometry};
 
-pub fn original_shape_data(original: &OriginalShape, draw_internal: bool) -> Data {
+pub fn original_shape_data(
+    original: &OriginalShape,
+    internal: &SimplePolygon,
+    draw_internal: bool,
+) -> Data {
     match draw_internal {
-        true => {
-            warn!("drawing internal representation of original shape");
-            simple_polygon_data(&original.convert_to_internal())
-        }
+        true => simple_polygon_data(&internal),
         false => simple_polygon_data(&original.original),
     }
 }
