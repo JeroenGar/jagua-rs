@@ -40,7 +40,7 @@ mod tests {
             None => PolySimplConfig::Disabled,
         };
 
-        let parser = Parser::new(poly_simpl_config, config.cde_config, true);
+        let parser = Parser::new(poly_simpl_config, config.cde_config);
         let instance = parser.parse(&json_instance);
         let any_instance = instance.as_ref() as &dyn Any;
         if let Some(sp_instance) = any_instance.downcast_ref::<SPInstance>() {

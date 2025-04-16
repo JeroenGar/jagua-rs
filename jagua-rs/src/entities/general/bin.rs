@@ -118,7 +118,7 @@ pub const N_QUALITIES: usize = 10;
 /// Represents a zone of inferior quality in the [`Bin`]
 #[derive(Clone, Debug)]
 pub struct InferiorQualityZone {
-    /// Quality of this zone. Higher qualities are superior. quality = 0 are holes in the bin.
+    /// Quality of this zone. Higher qualities are superior. A zone with quality 0 is treated as a hole.
     pub quality: usize,
     /// The shapes of all zones of this quality
     pub shapes: Vec<Arc<SimplePolygon>>,

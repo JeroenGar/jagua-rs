@@ -11,7 +11,7 @@ use crate::geometry::primitives::Point;
 use crate::{PI, fsize};
 
 /// Circle
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub struct Circle {
     pub center: Point,
     pub radius: fsize,

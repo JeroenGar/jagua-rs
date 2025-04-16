@@ -19,6 +19,9 @@ pub struct SvgDrawOptions {
     ///Draw the fail fast surrogate on top of each item
     #[serde(default)]
     pub surrogate: bool,
+    ///Draw the modified shapes used internally instead of the original ones
+    #[serde(default)]
+    pub use_internal_shapes: bool,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]

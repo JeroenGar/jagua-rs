@@ -7,7 +7,7 @@ use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Point;
 
 /// Line segment
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub struct Edge {
     pub start: Point,
     pub end: Point,

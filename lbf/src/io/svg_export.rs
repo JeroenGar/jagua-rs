@@ -1,3 +1,4 @@
+use log::{debug, warn};
 use svg::node::element::path::Data;
 use svg::node::element::{Circle, Path};
 
@@ -8,6 +9,17 @@ use jagua_rs::geometry::primitives::Edge;
 use jagua_rs::geometry::primitives::Point;
 use jagua_rs::geometry::primitives::SimplePolygon;
 use jagua_rs::{fsize, geometry};
+use jagua_rs::entities::general::OriginalShape;
+
+pub fn original_shape_data(original: &OriginalShape, draw_internal: bool) -> Data {
+    match draw_internal {
+        true => {
+            warn!("drawing internal representation of original shape");
+            simple_polygon_data(&original.convert_to_internal())
+        },
+        false => simple_polygon_data(&original.original)
+    }
+}
 
 pub fn simple_polygon_data(s_poly: &SimplePolygon) -> Data {
     let mut data = Data::new().move_to::<(fsize, fsize)>(s_poly.get_point(0).into());
@@ -81,7 +93,7 @@ pub fn point(Point(x, y): Point, fill: Option<&str>, rad: Option<fsize>) -> Circ
         .set("fill", fill.unwrap_or("black"))
 }
 
-pub fn circle(circle: &geometry::primitives::Circle, params: &[(&str, &str)]) -> Circle {
+pub fn circle(circle: geometry::primitives::Circle, params: &[(&str, &str)]) -> Circle {
     let mut circle = Circle::new()
         .set("cx", circle.center.0)
         .set("cy", circle.center.1)
@@ -92,13 +104,13 @@ pub fn circle(circle: &geometry::primitives::Circle, params: &[(&str, &str)]) ->
     circle
 }
 
-pub fn edge_data(edge: &Edge) -> Data {
+pub fn edge_data(edge: Edge) -> Data {
     Data::new()
         .move_to((edge.start.0, edge.start.1))
         .line_to((edge.end.0, edge.end.1))
 }
 
-pub fn aa_rect_data(rect: &geometry::primitives::AARectangle) -> Data {
+pub fn aa_rect_data(rect: geometry::primitives::AARectangle) -> Data {
     Data::new()
         .move_to((rect.x_min, rect.y_min))
         .line_to((rect.x_max, rect.y_min))

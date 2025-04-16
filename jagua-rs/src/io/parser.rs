@@ -31,19 +31,16 @@ use rayon::prelude::IntoParallelRefIterator;
 pub struct Parser {
     poly_simpl_config: PolySimplConfig,
     cde_config: CDEConfig,
-    center_polygons: bool,
 }
 
 impl Parser {
     pub fn new(
         poly_simpl_config: PolySimplConfig,
         cde_config: CDEConfig,
-        center_polygons: bool,
     ) -> Parser {
         Parser {
             poly_simpl_config,
             cde_config,
-            center_polygons,
         }
     }
 

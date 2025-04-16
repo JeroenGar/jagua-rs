@@ -10,7 +10,7 @@ use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
 
 ///Axis-aligned rectangle
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub struct AARectangle {
     pub x_min: fsize,
     pub y_min: fsize,

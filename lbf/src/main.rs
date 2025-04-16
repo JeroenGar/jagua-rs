@@ -58,7 +58,7 @@ fn main() {
         None => PolySimplConfig::Disabled,
     };
 
-    let parser = Parser::new(poly_simpl_config, config.cde_config, true);
+    let parser = Parser::new(poly_simpl_config, config.cde_config);
     let instance = {
         let instance = parser.parse(&json_instance);
         let any = instance.as_ref() as &dyn Any;
