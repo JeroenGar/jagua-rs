@@ -36,12 +36,11 @@ pub fn spproblem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
     let SPSolution {
         strip_width,
         layout_snapshot,
-        usage,
         time_stamp: _,
     } = sol;
 
     assert_eq!(*strip_width, spp.strip_width());
-    assert_eq!(*usage, spp.usage());
+    assert_eq!(spp.density(), sol.density(&spp.instance));
     assert!(layouts_match(&spp.layout, layout_snapshot));
 
     true
@@ -50,14 +49,13 @@ pub fn spproblem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
 pub fn bpproblem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
     let BPSolution {
         layout_snapshots,
-        usage,
         placed_item_qtys,
         target_item_qtys: _,
         bin_qtys,
         time_stamp: _,
     } = sol;
 
-    assert_eq!(*usage, bpp.usage());
+    assert_eq!(bpp.density(), sol.density(&bpp.instance));
     assert_eq!(*placed_item_qtys, bpp.placed_item_qtys().collect_vec());
     assert_eq!(bin_qtys, &bpp.bin_qtys);
 

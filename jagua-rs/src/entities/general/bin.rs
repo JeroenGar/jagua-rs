@@ -95,7 +95,7 @@ impl Bin {
         let value = rect.area() as u64;
         let original = OriginalShape {
             original: SimplePolygon::from(rect),
-            centering_transform: DTransformation::empty(),
+            pre_transform: DTransformation::empty(),
             simplification: (PolySimplConfig::Disabled, PolySimplMode::Deflate)
         };
 

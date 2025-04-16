@@ -145,3 +145,19 @@ pub struct LayoutSnapshot {
     /// Snapshot of the collision detection engine
     pub cde_snapshot: CDESnapshot,
 }
+
+impl LayoutSnapshot {
+    /// Equivalent to [`Layout::density`]
+    pub fn density(&self, instance: &impl Instance) -> fsize {
+        self.placed_item_area(instance) / self.bin.area()
+    }
+
+    /// Equivalent to [`Layout::placed_item_area`]
+    pub fn placed_item_area(&self, instance: &impl Instance) -> fsize {
+        self.placed_items
+            .iter()
+            .map(|(_, pi)| instance.item(pi.item_id))
+            .map(|item| item.area())
+            .sum::<fsize>()
+    }
+}

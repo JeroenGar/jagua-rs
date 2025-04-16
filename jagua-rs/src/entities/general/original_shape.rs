@@ -11,13 +11,13 @@ use crate::util::{simplify_poly, PolySimplConfig, PolySimplMode};
 /// Currently these are centering and simplification operations, but could be extended in the future.
 pub struct OriginalShape{
     pub original: SimplePolygon,
-    pub centering_transform: DTransformation,
+    pub pre_transform: DTransformation,
     pub simplification: (PolySimplConfig, PolySimplMode)
 }
 
 impl OriginalShape {
     pub fn convert_to_internal(&self) -> SimplePolygon {
-        let t = self.centering_transform.compose();
+        let t = self.pre_transform.compose();
         let internal = self.original.transform_clone(&t);
         match self.simplification.0 {
             PolySimplConfig::Disabled => internal,

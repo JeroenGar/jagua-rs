@@ -7,7 +7,7 @@ use crate::fsize;
 #[serde(rename_all = "PascalCase")]
 pub struct JsonSolution {
     /// Sum of the area of the produced items divided by the sum of the area of the containers
-    pub usage: fsize,
+    pub density: fsize,
     /// The time it took to generate the solution in seconds
     pub run_time_sec: u64,
     /// Layouts which compose the solution
@@ -51,7 +51,7 @@ pub struct JsonTransformation {
 #[serde(rename_all = "PascalCase")]
 pub struct JsonLayoutStats {
     /// The percentage of the container that is packed with items
-    pub usage: fsize,
+    pub density: fsize,
 }
 
 /// Type of container that was used

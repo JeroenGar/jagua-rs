@@ -1,7 +1,7 @@
-use crate::entities::general::LayoutSnapshot;
+use crate::entities::general::{Instance, LayoutSnapshot};
 use crate::fsize;
 use std::time::Instant;
-
+use crate::entities::strip_packing::SPInstance;
 #[cfg(doc)]
 use crate::entities::strip_packing::SPProblem;
 
@@ -14,4 +14,10 @@ pub struct SPSolution {
     pub layout_snapshot: LayoutSnapshot,
     /// Instant the solution was created
     pub time_stamp: Instant,
+}
+
+impl SPSolution {
+    pub fn density(&self, instance: &SPInstance) -> fsize {
+        self.layout_snapshot.density(instance)
+    }
 }
