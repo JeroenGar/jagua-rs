@@ -158,7 +158,7 @@ The configuration file has the following structure:
 }
 ```
 
-See [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/lbf_config/struct.LBFConfig.html) for a detailed description of all available configuration options.
+See [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/config/struct.LBFConfig.html) for a detailed description of all available configuration options.
 
 ### Important note
 
