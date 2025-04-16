@@ -8,7 +8,7 @@ use crate::util::{simplify_poly, PolySimplConfig, PolySimplMode};
 /// A [`SimplePolygon`] exactly as is defined in the input file
 ///
 /// Also contains all required operation to convert it to a shape that can be used internally.
-/// (centering and simplification)
+/// Currently these are centering and simplification operations, but could be extended in the future.
 pub struct OriginalShape{
     pub original: SimplePolygon,
     pub centering_transform: DTransformation,
@@ -16,7 +16,7 @@ pub struct OriginalShape{
 }
 
 impl OriginalShape {
-    pub fn to_internal(&self) -> SimplePolygon {
+    pub fn convert_to_internal(&self) -> SimplePolygon {
         let t = self.centering_transform.compose();
         let internal = self.original.transform_clone(&t);
         match self.simplification.0 {

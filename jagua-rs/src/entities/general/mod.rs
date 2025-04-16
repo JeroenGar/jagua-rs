@@ -30,4 +30,7 @@ pub use bin::Bin;
 pub use bin::InferiorQualityZone;
 
 #[doc(inline)]
+pub use original_shape::OriginalShape;
+
+#[doc(inline)]
 pub use bin::N_QUALITIES;

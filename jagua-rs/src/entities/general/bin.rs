@@ -25,7 +25,7 @@ pub struct Bin {
     /// Contour of the bin to be used internally
     pub outer: Arc<SimplePolygon>,
     /// The cost of using the bin
-    pub value: u64,
+    pub cost: u64,
     /// Zones of different qualities in the bin, stored per quality.
     pub quality_zones: [Option<InferiorQualityZone>; N_QUALITIES],
     /// The starting state of the `CDEngine` for this bin.
@@ -36,11 +36,11 @@ impl Bin {
     pub fn new(
         id: usize,
         original_outer: OriginalShape,
-        value: u64,
+        cost: u64,
         quality_zones: Vec<InferiorQualityZone>,
         cde_config: CDEConfig,
     ) -> Self {
-        let outer = original_outer.to_internal();
+        let outer = original_outer.convert_to_internal();
         let original_outer = Arc::new(original_outer);
         let outer = Arc::new(outer);
         assert_eq!(
@@ -81,7 +81,7 @@ impl Bin {
             id,
             outer,
             original_outer,
-            value,
+            cost,
             quality_zones,
             base_cde,
         }
@@ -134,7 +134,7 @@ impl InferiorQualityZone {
         );
         let shapes = original_shapes
             .iter()
-            .map(|orig| orig.to_internal())
+            .map(|orig| orig.convert_to_internal())
             .map(|shape| Arc::new(shape))
             .collect_vec();
 

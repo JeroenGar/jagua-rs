@@ -36,7 +36,7 @@ impl Item {
         surrogate_config: SPSurrogateConfig,
         value: u64,
     ) -> Item {
-        let mut shape = original_shape.to_internal();
+        let mut shape = original_shape.convert_to_internal();
         shape.generate_surrogate(surrogate_config);
         let original_shape = Arc::new(original_shape);
         let shape = Arc::new(shape);
