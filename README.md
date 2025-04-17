@@ -43,11 +43,12 @@ position without causing any *collisions*.
   - [x] Can resolve millions of collision queries per second
   - [x] Integrated preprocessor to simplify polygons
 - **Robust:**
-  - [x] Designed to mimic the exact results of a naive trigonometric approach
-  - [x] Special care is taken to handle edge cases caused by floating-point arithmetic
   - [x] Written in pure Rust 🦀
+  - [x] Designed to mimic the exact results of a naive trigonometric approach
+  - [x] Insensitive to the number of edges in the polygons 
+  - [x] Special care is taken to handle edge cases caused by floating-point arithmetic
 - **Adaptable:**
-  - [x] Define custom C&P problem variants by creating new `Instance` and accompanying `Problem` implementations
+  - [x] Define custom C&P problem variants by creating new `Instance`, `Problem` and `Solution` implementations
   - [x] Add extra constraints by creating new `Hazards` and `HazardFilters`
     - [x] `Hazards`: abstraction of all spatial constraints into a single model
     - [x] `HazardFilters`: excluding specific `Hazards` from consideration on a per-query basis

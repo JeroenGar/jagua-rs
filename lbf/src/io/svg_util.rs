@@ -21,7 +21,7 @@ pub struct SvgDrawOptions {
     pub surrogate: bool,
     ///Draw the modified shapes used internally instead of the original ones
     #[serde(default)]
-    pub use_internal_shapes: bool,
+    pub draw_cd_shapes: bool,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]

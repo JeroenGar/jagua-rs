@@ -48,7 +48,7 @@ pub fn layout_to_svg(
                 svg_export::original_shape_data(
                     &bin.outer_orig,
                     &bin.outer_cd,
-                    options.use_internal_shapes,
+                    options.draw_cd_shapes,
                 ),
                 &[
                     ("fill", &*format!("{}", theme.bin_fill)),
@@ -72,7 +72,7 @@ pub fn layout_to_svg(
                         svg_export::original_shape_data(
                             orig_qz_shape,
                             intern_qz_shape,
-                            options.use_internal_shapes,
+                            options.draw_cd_shapes,
                         ),
                         &[
                             ("fill", &*format!("{}", color)),
@@ -107,7 +107,7 @@ pub fn layout_to_svg(
                     svg_export::original_shape_data(
                         &item.shape_orig,
                         &item.shape_cd,
-                        options.use_internal_shapes,
+                        options.draw_cd_shapes,
                     ),
                     &[
                         ("fill", &*format!("{}", color)),
@@ -120,7 +120,7 @@ pub fn layout_to_svg(
             ));
 
             if options.surrogate {
-                let surr_transf = match options.use_internal_shapes {
+                let surr_transf = match options.draw_cd_shapes {
                     true => Transformation::empty(), //surrogate is already in internal coordinates
                     false => {
                         // The original shape is drawn on the SVG, we need to inverse the pre-transform
@@ -185,7 +185,7 @@ pub fn layout_to_svg(
         let mut surrogate_group = Group::new().set("id", "surrogates").add(surrogate_defs);
 
         for pi in layout.placed_items().values() {
-            let dtransf = match options.use_internal_shapes {
+            let dtransf = match options.draw_cd_shapes {
                 true => pi.d_transf,
                 false => {
                     let item = instance.item(pi.item_id);
