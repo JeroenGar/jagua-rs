@@ -34,6 +34,11 @@ pub struct Parser {
 }
 
 impl Parser {
+    /// Creates a new `Parser` with the given configuration.
+    ///
+    /// * `cde_config` - Configuration for the CDE (Collision Detection Engine).
+    /// * `poly_simpl_tolerance` - See [`ShapeModifyConfig::simplify_tolerance`].
+    /// * `min_item_separation` - Optional minimum separation distance between items and any other hazard. Twice the [`ShapeModifyConfig::offset`].
     pub fn new(
         cde_config: CDEConfig,
         poly_simpl_tolerance: Option<fsize>,
