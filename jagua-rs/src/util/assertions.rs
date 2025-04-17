@@ -14,10 +14,7 @@ use crate::entities::general::Layout;
 use crate::entities::general::LayoutSnapshot;
 use crate::entities::strip_packing::SPProblem;
 use crate::entities::strip_packing::SPSolution;
-use crate::fsize;
-use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::AARectangle;
-use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::error;
 use std::collections::HashSet;
@@ -36,12 +33,11 @@ pub fn spproblem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
     let SPSolution {
         strip_width,
         layout_snapshot,
-        usage,
         time_stamp: _,
     } = sol;
 
     assert_eq!(*strip_width, spp.strip_width());
-    assert_eq!(*usage, spp.usage());
+    assert_eq!(spp.density(), sol.density(&spp.instance));
     assert!(layouts_match(&spp.layout, layout_snapshot));
 
     true
@@ -50,14 +46,13 @@ pub fn spproblem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
 pub fn bpproblem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
     let BPSolution {
         layout_snapshots,
-        usage,
         placed_item_qtys,
         target_item_qtys: _,
         bin_qtys,
         time_stamp: _,
     } = sol;
 
-    assert_eq!(*usage, bpp.usage());
+    assert_eq!(bpp.density(), sol.density(&bpp.instance));
     assert_eq!(*placed_item_qtys, bpp.placed_item_qtys().collect_vec());
     assert_eq!(bin_qtys, &bpp.bin_qtys);
 
@@ -106,14 +101,6 @@ pub fn collision_hazards_sorted_correctly(hazards: &[QTHazard]) -> bool {
         };
     }
     true
-}
-
-pub fn all_bins_and_items_centered(items: &[(Item, usize)], bins: &[(Bin, usize)]) -> bool {
-    items
-        .iter()
-        .map(|(i, _)| i.shape.centroid())
-        .chain(bins.iter().map(|(b, _)| b.outer.centroid()))
-        .all(|c| approx_eq!(fsize, c.0, 0.0) && approx_eq!(fsize, c.1, 0.0))
 }
 
 pub fn qt_node_contains_no_deactivated_hazards<'a>(

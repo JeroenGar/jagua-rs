@@ -81,7 +81,7 @@ impl QTHazard {
                     //Add the relevant edges to the presences in the quadrants
                     match &partial_haz.edges {
                         RelevantEdges::All => {
-                            for edge_i in 0..shape.number_of_points() {
+                            for edge_i in 0..shape.n_points() {
                                 q_presences = Self::add_edge_to_q_presences(
                                     edge_i,
                                     &shape,

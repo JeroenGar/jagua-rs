@@ -6,7 +6,6 @@ mod tests {
     use jagua_rs::entities::bin_packing::BPInstance;
     use jagua_rs::entities::strip_packing::SPInstance;
     use jagua_rs::io::parser::Parser;
-    use jagua_rs::util::PolySimplConfig;
     use lbf::config::LBFConfig;
     use lbf::io;
     use lbf::opt::lbf_opt_bpp::LBFOptimizerBP;
@@ -35,12 +34,12 @@ mod tests {
         let mut config = LBFConfig::default();
         config.n_samples = 100;
         let json_instance = io::read_json_instance(&instance);
-        let poly_simpl_config = match config.poly_simpl_tolerance {
-            Some(tolerance) => PolySimplConfig::Enabled { tolerance },
-            None => PolySimplConfig::Disabled,
-        };
 
-        let parser = Parser::new(poly_simpl_config, config.cde_config, true);
+        let parser = Parser::new(
+            config.cde_config,
+            config.poly_simpl_tolerance,
+            config.min_item_separation,
+        );
         let instance = parser.parse(&json_instance);
         let any_instance = instance.as_ref() as &dyn Any;
         if let Some(sp_instance) = any_instance.downcast_ref::<SPInstance>() {

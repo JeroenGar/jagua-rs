@@ -30,7 +30,7 @@ pub struct PlacedItem {
 impl PlacedItem {
     pub fn new(item: &Item, d_transf: DTransformation) -> Self {
         let transf = d_transf.compose();
-        let shape = Arc::new(item.shape.transform_clone(&transf));
+        let shape = Arc::new(item.shape_cd.transform_clone(&transf));
         let qz_haz_filter = item.hazard_filter.clone();
 
         PlacedItem {

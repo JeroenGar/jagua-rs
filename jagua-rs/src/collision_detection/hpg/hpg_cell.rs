@@ -216,7 +216,7 @@ impl HPGCell {
     }
 
     pub fn could_accommodate_item(&self, item: &Item) -> bool {
-        let poi_d = item.shape.poi.radius;
+        let poi_d = item.shape_cd.poi.radius;
         if self.radius > poi_d {
             //impossible to give any guarantees if the cell radius is larger than the Item's POI
             true

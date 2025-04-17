@@ -2,6 +2,7 @@ mod bin;
 mod instance;
 mod item;
 mod layout;
+mod original_shape;
 mod placed_item;
 
 #[doc(inline)]
@@ -27,6 +28,9 @@ pub use bin::Bin;
 
 #[doc(inline)]
 pub use bin::InferiorQualityZone;
+
+#[doc(inline)]
+pub use original_shape::OriginalShape;
 
 #[doc(inline)]
 pub use bin::N_QUALITIES;

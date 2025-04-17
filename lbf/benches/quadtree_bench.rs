@@ -12,7 +12,7 @@ use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPPlacement;
 use jagua_rs::fsize;
-use jagua_rs::geometry::geo_traits::TransformableFrom;
+use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
 
@@ -109,7 +109,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
+        let sampler = UniformAARectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -128,9 +128,9 @@ fn quadtree_query_bench(c: &mut Criterion) {
                 let item_id = item_id_cycler.next().unwrap();
                 let item = instance.item(item_id);
                 let layout = &problem.layout;
-                let mut buffer_shape = item.shape.as_ref().clone();
+                let mut buffer_shape = item.shape_cd.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
-                    buffer_shape.transform_from(&item.shape, transf);
+                    buffer_shape.transform_from(&item.shape_cd, transf);
                     let collides = layout.cde().poly_collides(&buffer_shape, &NoHazardFilter);
                     if collides {
                         n_invalid += 1;
@@ -169,7 +169,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         let (mut problem, _) = util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
+        let sampler = UniformAARectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -198,9 +198,9 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 let item_id = p_opt.item_id;
                 let item = instance.item(item_id);
                 let layout = &problem.layout;
-                let mut buffer_shape = item.shape.as_ref().clone();
+                let mut buffer_shape = item.shape_cd.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
-                    buffer_shape.transform_from(&item.shape, &transf);
+                    buffer_shape.transform_from(&item.shape_cd, &transf);
                     let collides = layout.cde().poly_collides(&buffer_shape, &NoHazardFilter);
                     criterion::black_box(collides); //prevent the compiler from optimizing the loop away
                 }
@@ -237,7 +237,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
+        let sampler = UniformAARectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -257,10 +257,10 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
                 let item_id = item_id_cycler.next().unwrap();
                 let item = instance.item(item_id);
                 let layout = &problem.layout;
-                let mut buffer_shape = item.shape.as_ref().clone();
+                let mut buffer_shape = item.shape_cd.as_ref().clone();
                 let mut detected = BasicHazardDetector::new();
                 for transf in sample_cycler.next().unwrap() {
-                    buffer_shape.transform_from(&item.shape, transf);
+                    buffer_shape.transform_from(&item.shape_cd, transf);
                     layout
                         .cde()
                         .collect_poly_collisions(&buffer_shape, &mut detected);

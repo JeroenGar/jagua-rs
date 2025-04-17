@@ -1,13 +1,9 @@
-use std::fs::File;
-use std::io::BufReader;
-use std::path::Path;
-
 use crate::util::{N_ITEMS_REMOVED, SWIM_PATH};
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
-use jagua_rs::entities::general::{Instance, Item};
+use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPInstance;
 use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
@@ -20,6 +16,10 @@ use lbf::io::svg_util::SvgDrawOptions;
 use lbf::samplers::hpg_sampler::HPGSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
+use std::fs::File;
+use std::io::BufReader;
+use std::path::Path;
+use std::sync::Arc;
 
 criterion_main!(benches);
 criterion_group!(
@@ -61,7 +61,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                 config.cde_config,
                 config.poly_simpl_tolerance,
             );
-            modify_instance(instance, edge_multiplier as usize, config)
+            modify_instance(instance, edge_multiplier as usize)
         };
 
         let (problem, selected_pi_uids) =
@@ -108,17 +108,17 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                 for i in 0..N_ITEMS_REMOVED {
                     let pi_uid = &selected_pi_uids[i];
                     let item = instance.item(pi_uid.item_id);
-                    let mut buffer_shape = item.shape.as_ref().clone();
+                    let mut buffer_shape = item.shape_cd.as_ref().clone();
                     for dtransf in samples_cycler.next().unwrap() {
                         let transf = dtransf.compose();
                         let collides = match layout.cde().surrogate_collides(
-                            item.shape.surrogate(),
+                            item.shape_cd.surrogate(),
                             &transf,
                             &NoHazardFilter,
                         ) {
                             true => true,
                             false => {
-                                buffer_shape.transform_from(&item.shape, &transf);
+                                buffer_shape.transform_from(&item.shape_cd, &transf);
                                 layout.cde().poly_collides(&buffer_shape, &NoHazardFilter)
                             }
                         };
@@ -138,17 +138,10 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
     g.finish();
 }
 
-fn modify_instance(mut instance: SPInstance, multiplier: usize, config: LBFConfig) -> SPInstance {
+fn modify_instance(mut instance: SPInstance, multiplier: usize) -> SPInstance {
     instance.items.iter_mut().for_each(|(item, _)| {
-        *item = Item::new(
-            item.id,
-            multiply_edge_count(&item.shape, multiplier),
-            item.allowed_rotation.clone(),
-            item.base_quality,
-            item.value,
-            item.pretransform.clone(),
-            config.cde_config.item_surrogate_config,
-        );
+        let multiplied_shape = multiply_edge_count(&item.shape_cd, multiplier);
+        item.shape_cd = Arc::new(multiplied_shape);
     });
     instance
 }

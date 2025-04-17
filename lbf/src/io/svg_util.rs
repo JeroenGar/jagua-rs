@@ -19,6 +19,9 @@ pub struct SvgDrawOptions {
     ///Draw the fail fast surrogate on top of each item
     #[serde(default)]
     pub surrogate: bool,
+    ///Draw the modified shapes used internally instead of the original ones
+    #[serde(default)]
+    pub draw_cd_shapes: bool,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
@@ -67,7 +70,7 @@ impl SvgLayoutTheme {
             item_fill: "#8F8F8F".into(),
             hole_fill: "#FFFFFF".into(),
             qz_fill: [
-                "#636363".into(), //GRAY
+                "#000000".into(), //BLACK
                 "#636363".into(), //GRAY
                 "#636363".into(), //GRAY
                 "#636363".into(), //GRAY

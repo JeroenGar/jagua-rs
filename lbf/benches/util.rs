@@ -5,7 +5,6 @@ use jagua_rs::entities::strip_packing::{SPInstance, SPProblem};
 use jagua_rs::fsize;
 use jagua_rs::io::json_instance::JsonInstance;
 use jagua_rs::io::parser::Parser;
-use jagua_rs::util::PolySimplConfig;
 use jagua_rs::util::{CDEConfig, SPSurrogateConfig};
 use lbf::config::LBFConfig;
 use lbf::io;
@@ -25,11 +24,7 @@ pub fn create_instance(
     cde_config: CDEConfig,
     poly_simpl_tolerance: Option<fsize>,
 ) -> SPInstance {
-    let poly_simpl_config = match poly_simpl_tolerance {
-        Some(tolerance) => PolySimplConfig::Enabled { tolerance },
-        None => PolySimplConfig::Disabled,
-    };
-    let parser = Parser::new(poly_simpl_config, cde_config, true);
+    let parser = Parser::new(cde_config, poly_simpl_tolerance, None);
     let instance = parser.parse(json_instance);
     (instance.as_ref() as &dyn Any)
         .downcast_ref::<SPInstance>()
@@ -77,11 +72,7 @@ pub fn create_lbf_problem(
         info!(
             "Removed item: {} with {} edges",
             item_id,
-            lbf_optimizer
-                .instance
-                .item(item_id)
-                .shape
-                .number_of_points()
+            lbf_optimizer.instance.item(item_id).shape_cd.n_points()
         );
     }
     problem.flush_changes();
@@ -112,6 +103,7 @@ pub fn create_base_config() -> LBFConfig {
             },
         },
         poly_simpl_tolerance: Some(0.001),
+        min_item_separation: None,
         prng_seed: Some(0),
         n_samples: 5000,
         ls_frac: 0.2,

@@ -107,9 +107,9 @@ impl LBFOptimizerSP {
         );
 
         info!(
-            "[LBF] solution contains {} items with a usage of {:.3}%",
+            "[LBF] solution contains {} items with a density of {:.3}%",
             solution.layout_snapshot.placed_items.len(),
-            solution.usage * 100.0
+            solution.density(&self.instance) * 100.0
         );
         solution
     }

@@ -1,11 +1,10 @@
 use crate::collision_detection::hazards::{Hazard, HazardEntity};
 use crate::collision_detection::{CDESnapshot, CDEngine};
-use crate::entities::general::Bin;
 use crate::entities::general::Item;
+use crate::entities::general::{Bin, Instance};
 use crate::entities::general::{PItemKey, PlacedItem};
 use crate::fsize;
 use crate::geometry::DTransformation;
-use crate::geometry::geo_traits::Shape;
 use crate::util::assertions;
 use slotmap::SlotMap;
 
@@ -54,7 +53,6 @@ impl Layout {
             bin: self.bin.clone(),
             placed_items: self.placed_items.clone(),
             cde_snapshot: self.cde.create_snapshot(),
-            usage: self.usage(),
         }
     }
 
@@ -104,17 +102,19 @@ impl Layout {
         &self.placed_items
     }
 
-    /// Returns the usage of the bin with the items placed.
-    /// It is the ratio of the area of the items placed to the area of the bin.
-    pub fn usage(&self) -> fsize {
-        let bin_area = self.bin.area;
-        let item_area = self
-            .placed_items
-            .iter()
-            .map(|(_, pi)| pi.shape.area())
-            .sum::<fsize>();
+    /// The current density of the layout defined as the ratio of the area of the items placed to the area of the bin.
+    /// Uses the original shapes of items and bin to calculate the area.
+    pub fn density(&self, instance: &impl Instance) -> fsize {
+        self.placed_item_area(instance) / self.bin.area()
+    }
 
-        item_area / bin_area
+    /// The sum of the areas of the items placed in the layout (using the original shapes of the items).
+    pub fn placed_item_area(&self, instance: &impl Instance) -> fsize {
+        self.placed_items
+            .iter()
+            .map(|(_, pi)| instance.item(pi.item_id))
+            .map(|item| item.area())
+            .sum::<fsize>()
     }
 
     /// Returns the collision detection engine for this layout
@@ -140,12 +140,24 @@ impl Layout {
 /// Can be used to restore a [`Layout`] back to a previous state.
 #[derive(Clone, Debug)]
 pub struct LayoutSnapshot {
-    /// The bin used for this layout
     pub bin: Bin,
-    /// How the items are placed in the bin
     pub placed_items: SlotMap<PItemKey, PlacedItem>,
-    /// The collision detection engine snapshot for this layout
+    /// Snapshot of the collision detection engine
     pub cde_snapshot: CDESnapshot,
-    /// The usage of the bin with the items placed
-    pub usage: fsize,
+}
+
+impl LayoutSnapshot {
+    /// Equivalent to [`Layout::density`]
+    pub fn density(&self, instance: &impl Instance) -> fsize {
+        self.placed_item_area(instance) / self.bin.area()
+    }
+
+    /// Equivalent to [`Layout::placed_item_area`]
+    pub fn placed_item_area(&self, instance: &impl Instance) -> fsize {
+        self.placed_items
+            .iter()
+            .map(|(_, pi)| instance.item(pi.item_id))
+            .map(|item| item.area())
+            .sum::<fsize>()
+    }
 }

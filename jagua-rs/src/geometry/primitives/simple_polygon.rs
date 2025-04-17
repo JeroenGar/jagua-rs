@@ -84,15 +84,15 @@ impl SimplePolygon {
     }
 
     pub fn get_edge(&self, i: usize) -> Edge {
-        let j = (i + 1) % self.number_of_points();
+        let j = (i + 1) % self.n_points();
         Edge::new(self.points[i], self.points[j])
     }
 
     pub fn edge_iter(&self) -> impl Iterator<Item = Edge> + '_ {
-        (0..self.number_of_points()).map(move |i| self.get_edge(i))
+        (0..self.n_points()).map(move |i| self.get_edge(i))
     }
 
-    pub fn number_of_points(&self) -> usize {
+    pub fn n_points(&self) -> usize {
         self.points.len()
     }
 
@@ -184,12 +184,8 @@ impl Shape for SimplePolygon {
         let mut c_x = 0.0;
         let mut c_y = 0.0;
 
-        for i in 0..self.number_of_points() {
-            let j = if i == self.number_of_points() - 1 {
-                0
-            } else {
-                i + 1
-            };
+        for i in 0..self.n_points() {
+            let j = if i == self.n_points() - 1 { 0 } else { i + 1 };
             let Point(x_i, y_i) = self.get_point(i);
             let Point(x_j, y_j) = self.get_point(j);
             c_x += (x_i + x_j) * (x_i * y_j - x_j * y_i);

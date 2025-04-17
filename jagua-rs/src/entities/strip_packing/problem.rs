@@ -30,7 +30,7 @@ impl SPProblem {
             .map(|(_, qty)| *qty as isize)
             .collect_vec();
         let strip_bbox = AARectangle::new(0.0, 0.0, strip_width, strip_height);
-        let strip_bin = Bin::from_strip(0, strip_bbox, cde_config);
+        let strip_bin = Bin::from_strip(0, strip_bbox, cde_config, instance.strip_modify_config);
         let layout = Layout::new(strip_bin);
 
         Self {
@@ -40,18 +40,24 @@ impl SPProblem {
         }
     }
 
-    /// Modifies the width of the the strip in the back, keeping the front fixed.
+    /// Modifies the width of the strip in the back, keeping the front fixed.
     pub fn change_strip_width(&mut self, new_width: fsize) {
         let new_bbox = AARectangle::new(0.0, 0.0, new_width, self.strip_height());
-        let new_bin = Bin::from_strip(0, new_bbox, self.layout.bin.base_cde.config());
+        let new_bin = Bin::from_strip(
+            0,
+            new_bbox,
+            self.layout.bin.base_cde.config(),
+            self.instance.strip_modify_config,
+        );
         self.layout.change_bin(new_bin);
     }
 
     /// Shrinks the strip to the minimum width that fits all items.
     pub fn fit_strip(&mut self) {
         let feasible_before = self.layout.is_feasible();
-        //find the rightmost item in the strip and add some tolerance (avoiding false collision positives)
-        let fitted_width = self
+
+        //Find the rightmost item in the strip and add some tolerance (avoiding false collision positives)
+        let item_x_max = self
             .layout
             .placed_items
             .values()
@@ -60,8 +66,16 @@ impl SPProblem {
             .unwrap()
             * 1.00001;
 
+        // add the shape offset if any, the strip needs to be at least `offset` wider than the items
+        let fitted_width = item_x_max + self.instance.strip_modify_config.offset.unwrap_or(0.0);
+
         let new_bbox = AARectangle::new(0.0, 0.0, fitted_width, self.strip_height());
-        let new_bin = Bin::from_strip(0, new_bbox, self.layout.bin.base_cde.config());
+        let new_bin = Bin::from_strip(
+            0,
+            new_bbox,
+            self.layout.bin.base_cde.config(),
+            self.instance.strip_modify_config,
+        );
         self.layout.change_bin(new_bin);
         debug_assert!(feasible_before == self.layout.is_feasible());
     }
@@ -89,7 +103,6 @@ impl SPProblem {
     pub fn save(&mut self) -> SPSolution {
         let solution = SPSolution {
             layout_snapshot: self.layout.save(),
-            usage: self.usage(),
             strip_width: self.strip_width(),
             time_stamp: Instant::now(),
         };
@@ -122,11 +135,11 @@ impl SPProblem {
     }
 
     pub fn strip_width(&self) -> fsize {
-        self.layout.bin.outer.bbox().width()
+        self.layout.bin.outer_orig.bbox().width()
     }
 
     pub fn strip_height(&self) -> fsize {
-        self.layout.bin.outer.bbox().height()
+        self.layout.bin.outer_orig.bbox().height()
     }
 
     fn register_included_item(&mut self, item_id: usize) {
@@ -137,8 +150,8 @@ impl SPProblem {
         self.missing_item_qtys[item_id] += 1;
     }
 
-    pub fn usage(&self) -> fsize {
-        self.layout.usage()
+    pub fn density(&self) -> fsize {
+        self.layout.density(&self.instance)
     }
 
     /// Makes sure that the all collision detection engines are completely updated with the changes made to the layouts.

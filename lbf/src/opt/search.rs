@@ -25,10 +25,10 @@ pub fn search(
     sample_counter: &mut usize,
     filter: &impl HazardFilter,
 ) -> Option<(DTransformation, LBFLoss)> {
-    let surrogate = item.shape.surrogate();
+    let surrogate = item.shape_cd.surrogate();
     //create a clone of the shape which will we can use to apply the transformations
     let mut buffer = {
-        let mut buffer = (*item.shape).clone();
+        let mut buffer = (*item.shape_cd).clone();
         buffer.surrogate = None; //remove the surrogate for faster transforms, we don't need it for the buffer shape
         buffer
     };
@@ -47,7 +47,7 @@ pub fn search(
         let transf = d_transf.compose();
         if !cde.surrogate_collides(surrogate, &transf, filter) {
             //if no collision is detected on the surrogate, apply the transformation
-            buffer.transform_from(&item.shape, &transf);
+            buffer.transform_from(&item.shape_cd, &transf);
             let cost = LBFLoss::from_shape(&buffer);
 
             //only validate the sample if it possibly can replace the current best
@@ -85,7 +85,7 @@ pub fn search(
         let d_transf = ls_sampler.sample(rng);
         let transf = d_transf.compose();
         if !cde.surrogate_collides(surrogate, &transf, filter) {
-            buffer.transform_from(&item.shape, &transf);
+            buffer.transform_from(&item.shape_cd, &transf);
             let cost = LBFLoss::from_shape(&buffer);
 
             //only validate the sample if it possibly can replace the current best
@@ -113,7 +113,7 @@ pub fn item_placement_order(instance: &impl Instance) -> Vec<usize> {
         .sorted_by_cached_key(|i| {
             let item = &instance.items()[*i].0;
             let ch = SimplePolygon::new(
-                convex_hull_from_surrogate(&item.shape)
+                convex_hull_from_surrogate(&item.shape_cd)
                     .expect("items should have a surrogate generated"),
             );
             let ch_diam = NotNan::new(ch.diameter()).expect("convex hull diameter is NaN");
