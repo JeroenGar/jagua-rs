@@ -26,9 +26,11 @@ pub enum ShapeModifyMode {
 pub struct ShapeModifyConfig {
     /// Maximum deviation of the simplified polygon with respect to the original polygon area as a ratio.
     /// If undefined, no simplification is performed.
+    /// See [`simplify_shape`]
     pub simplify_tolerance: Option<fsize>,
     /// Offset by which to inflate or deflate the polygon.
     /// If undefined, no offset is applied.
+    /// See [`offset_shape`]
     pub offset: Option<fsize>,
 }
 
