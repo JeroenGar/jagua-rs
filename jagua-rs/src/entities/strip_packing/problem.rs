@@ -4,10 +4,9 @@ use crate::entities::general::Layout;
 use crate::entities::general::PItemKey;
 use crate::entities::strip_packing::SPInstance;
 use crate::entities::strip_packing::SPSolution;
-use crate::fsize;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Rect;
 use crate::util::CDEConfig;
 use crate::util::assertions;
 use itertools::Itertools;
@@ -22,14 +21,14 @@ pub struct SPProblem {
 }
 
 impl SPProblem {
-    pub fn new(instance: SPInstance, strip_width: fsize, cde_config: CDEConfig) -> Self {
+    pub fn new(instance: SPInstance, strip_width: f32, cde_config: CDEConfig) -> Self {
         let strip_height = instance.strip_height;
         let missing_item_qtys = instance
             .items
             .iter()
             .map(|(_, qty)| *qty as isize)
             .collect_vec();
-        let strip_bbox = AARectangle::new(0.0, 0.0, strip_width, strip_height);
+        let strip_bbox = Rect::new(0.0, 0.0, strip_width, strip_height);
         let strip_bin = Bin::from_strip(0, strip_bbox, cde_config, instance.strip_modify_config);
         let layout = Layout::new(strip_bin);
 
@@ -41,8 +40,8 @@ impl SPProblem {
     }
 
     /// Modifies the width of the strip in the back, keeping the front fixed.
-    pub fn change_strip_width(&mut self, new_width: fsize) {
-        let new_bbox = AARectangle::new(0.0, 0.0, new_width, self.strip_height());
+    pub fn change_strip_width(&mut self, new_width: f32) {
+        let new_bbox = Rect::new(0.0, 0.0, new_width, self.strip_height());
         let new_bin = Bin::from_strip(
             0,
             new_bbox,
@@ -69,7 +68,7 @@ impl SPProblem {
         // add the shape offset if any, the strip needs to be at least `offset` wider than the items
         let fitted_width = item_x_max + self.instance.strip_modify_config.offset.unwrap_or(0.0);
 
-        let new_bbox = AARectangle::new(0.0, 0.0, fitted_width, self.strip_height());
+        let new_bbox = Rect::new(0.0, 0.0, fitted_width, self.strip_height());
         let new_bin = Bin::from_strip(
             0,
             new_bbox,
@@ -134,11 +133,11 @@ impl SPProblem {
         debug_assert!(assertions::spproblem_matches_solution(self, solution));
     }
 
-    pub fn strip_width(&self) -> fsize {
+    pub fn strip_width(&self) -> f32 {
         self.layout.bin.outer_orig.bbox().width()
     }
 
-    pub fn strip_height(&self) -> fsize {
+    pub fn strip_height(&self) -> f32 {
         self.layout.bin.outer_orig.bbox().height()
     }
 
@@ -150,14 +149,10 @@ impl SPProblem {
         self.missing_item_qtys[item_id] += 1;
     }
 
-    pub fn density(&self) -> fsize {
+    pub fn density(&self) -> f32 {
         self.layout.density(&self.instance)
     }
 
-    /// Makes sure that the all collision detection engines are completely updated with the changes made to the layouts.
-    pub fn flush_changes(&mut self) {
-        self.layout.flush_changes();
-    }
 }
 
 /// Represents a placement of an item in the strip packing problem.

@@ -5,10 +5,10 @@ use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPInstance;
-use jagua_rs::fsize;
+;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::Point;
-use jagua_rs::geometry::primitives::SimplePolygon;
+use jagua_rs::geometry::primitives::SPolygon;
 use jagua_rs::io::json_instance::JsonInstance;
 use lbf::config::LBFConfig;
 use lbf::io;
@@ -132,7 +132,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
         });
         println!(
             "{:.3}% valid",
-            n_valid as fsize / (n_invalid + n_valid) as fsize * 100.0
+            n_valid as f32 / (n_invalid + n_valid) as f32 * 100.0
         );
     }
     g.finish();
@@ -146,20 +146,20 @@ fn modify_instance(mut instance: SPInstance, multiplier: usize) -> SPInstance {
     instance
 }
 
-fn multiply_edge_count(shape: &SimplePolygon, multiplier: usize) -> SimplePolygon {
+fn multiply_edge_count(shape: &SPolygon, multiplier: usize) -> SPolygon {
     let mut new_points = vec![];
 
     for edge in shape.edge_iter() {
         //split x and y into "times" parts
-        let x_step = (edge.end.0 - edge.start.0) / multiplier as fsize;
-        let y_step = (edge.end.1 - edge.start.1) / multiplier as fsize;
+        let x_step = (edge.end.0 - edge.start.0) / multiplier as f32;
+        let y_step = (edge.end.1 - edge.start.1) / multiplier as f32;
         let mut start = edge.start;
         for _ in 0..multiplier {
             new_points.push(start);
             start = Point(start.0 + x_step, start.1 + y_step);
         }
     }
-    let new_polygon = SimplePolygon::new(new_points);
+    let new_polygon = SPolygon::new(new_points);
     assert!(almost::equal(shape.area(), new_polygon.area()));
     new_polygon
 }

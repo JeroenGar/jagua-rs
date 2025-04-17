@@ -11,7 +11,7 @@ use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, Haza
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPPlacement;
-use jagua_rs::fsize;
+;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
@@ -142,7 +142,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
         });
         println!(
             "valid: {:.3}%",
-            n_valid as fsize / (n_valid + n_invalid) as fsize * 100.0
+            n_valid as f32 / (n_valid + n_invalid) as f32 * 100.0
         );
     }
     group.finish();
@@ -276,8 +276,8 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
         });
         println!(
             "valid: {:.3}%, avg # detected: {:.3}",
-            n_valid as fsize / (n_valid + n_invalid) as fsize * 100.0,
-            n_detected as fsize / (n_valid + n_invalid) as fsize
+            n_valid as f32 / (n_valid + n_invalid) as f32 * 100.0,
+            n_detected as f32 / (n_valid + n_invalid) as f32
         );
     }
     group.finish();

@@ -2,7 +2,7 @@ use itertools::Itertools;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPPlacement;
 use jagua_rs::entities::strip_packing::{SPInstance, SPProblem};
-use jagua_rs::fsize;
+;
 use jagua_rs::io::json_instance::JsonInstance;
 use jagua_rs::io::parser::Parser;
 use jagua_rs::util::{CDEConfig, SPSurrogateConfig};
@@ -22,7 +22,7 @@ pub const N_ITEMS_REMOVED: usize = 5;
 pub fn create_instance(
     json_instance: &JsonInstance,
     cde_config: CDEConfig,
-    poly_simpl_tolerance: Option<fsize>,
+    poly_simpl_tolerance: Option<f32>,
 ) -> SPInstance {
     let parser = Parser::new(cde_config, poly_simpl_tolerance, None);
     let instance = parser.parse(json_instance);
@@ -72,7 +72,7 @@ pub fn create_lbf_problem(
         info!(
             "Removed item: {} with {} edges",
             item_id,
-            lbf_optimizer.instance.item(item_id).shape_cd.n_points()
+            lbf_optimizer.instance.item(item_id).shape_cd.n_vertices()
         );
     }
     problem.flush_changes();

@@ -5,11 +5,10 @@ use itertools::Itertools;
 use crate::collision_detection::CDEngine;
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
-use crate::fsize;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::AARectangle;
-use crate::geometry::primitives::SimplePolygon;
+use crate::geometry::primitives::Rect;
+use crate::geometry::primitives::SPolygon;
 use crate::util::{CDEConfig, ShapeModifyConfig, ShapeModifyMode};
 
 #[cfg(doc)]
@@ -23,7 +22,7 @@ pub struct Bin {
     /// Contour of the bin as defined in the input file
     pub outer_orig: Arc<OriginalShape>,
     /// Contour of the bin to be used for collision detection
-    pub outer_cd: Arc<SimplePolygon>,
+    pub outer_cd: Arc<SPolygon>,
     /// The cost of using the bin
     pub cost: u64,
     /// Zones of different qualities in the bin, stored per quality.
@@ -89,7 +88,7 @@ impl Bin {
     /// Create a new `Bin` for a strip-packing problem. Instead of a shape, the bin is always rectangular.
     pub fn from_strip(
         id: usize,
-        rect: AARectangle,
+        rect: Rect,
         cde_config: CDEConfig,
         shape_modify_config: ShapeModifyConfig,
     ) -> Self {
@@ -98,7 +97,7 @@ impl Bin {
 
         let value = rect.area() as u64;
         let original = OriginalShape {
-            shape: SimplePolygon::from(rect),
+            shape: SPolygon::from(rect),
             pre_transform: DTransformation::empty(),
             modify_mode: ShapeModifyMode::Deflate,
             modify_config: shape_modify_config,
@@ -108,7 +107,7 @@ impl Bin {
     }
 
     /// The area of the contour of the bin, excluding holes
-    pub fn area(&self) -> fsize {
+    pub fn area(&self) -> f32 {
         self.outer_orig.area() - self.quality_zones[0].as_ref().map_or(0.0, |qz| qz.area())
     }
 }
@@ -124,7 +123,7 @@ pub struct InferiorQualityZone {
     /// Contours of this quality-zone as defined in the input file
     pub shapes_orig: Vec<Arc<OriginalShape>>,
     /// Contours of this quality-zone to be used for collision detection
-    pub shapes_cd: Vec<Arc<SimplePolygon>>,
+    pub shapes_cd: Vec<Arc<SPolygon>>,
 }
 
 impl InferiorQualityZone {
@@ -162,7 +161,7 @@ impl InferiorQualityZone {
         })
     }
 
-    pub fn area(&self) -> fsize {
+    pub fn area(&self) -> f32 {
         self.shapes_orig.iter().map(|shape| shape.area()).sum()
     }
 }

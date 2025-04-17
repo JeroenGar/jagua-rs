@@ -3,11 +3,10 @@ use crate::samplers::uniform_rect_sampler::UniformAARectSampler;
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEngine;
 use jagua_rs::entities::general::Item;
-use jagua_rs::fsize;
 use jagua_rs::geometry::DTransformation;
 use jagua_rs::geometry::Transformation;
 use jagua_rs::geometry::geo_traits::Shape;
-use jagua_rs::geometry::primitives::AARectangle;
+use jagua_rs::geometry::primitives::Rect;
 use log::debug;
 use rand::Rng;
 use rand::prelude::IndexedRandom;
@@ -20,8 +19,8 @@ pub struct HPGSampler<'a> {
     pub cell_samplers: Vec<UniformAARectSampler>,
     pub loss_bound: LBFLoss,
     pub pretransform: Transformation,
-    pub coverage_area: fsize,
-    pub bin_bbox_area: fsize,
+    pub coverage_area: f32,
+    pub bin_bbox_area: f32,
     pub n_samples: usize,
 }
 
@@ -42,7 +41,7 @@ impl<'a> HPGSampler<'a> {
             .filter_map(|c| {
                 //map each eligible cell to a rectangle sampler, bounded by the CDE's bbox.
                 //(at low densities, the cells could extend significantly beyond the CDE's bbox)
-                AARectangle::from_intersection(&c.bbox, &bin_bbox)
+                Rect::intersection(&c.bbox, &bin_bbox)
             })
             .map(|bbox| UniformAARectSampler::new(bbox, item))
             .collect_vec();

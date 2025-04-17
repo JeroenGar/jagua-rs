@@ -1,12 +1,11 @@
 use std::hash::{Hash, Hasher};
 
-use crate::fsize;
 use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{CollidesWith, DistanceTo, Transformable, TransformableFrom};
 
-/// Point(x, y)
+/// A Point in 2D space with x and y coordinates
 #[derive(Debug, Clone, PartialEq, Copy)]
-pub struct Point(pub fsize, pub fsize);
+pub struct Point(pub f32, pub f32);
 
 impl Transformable for Point {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
@@ -24,8 +23,8 @@ impl TransformableFrom for Point {
     }
 }
 
-const TRANSFORM_FORMULA: fn(fsize, fsize, &Transformation) -> (fsize, fsize) =
-    |x, y, t| -> (fsize, fsize) {
+const TRANSFORM_FORMULA: fn(f32, f32, &Transformation) -> (f32, f32) =
+    |x, y, t| -> (f32, f32) {
         let m = t.matrix();
         let t_x = m[0][0].into_inner() * x + m[0][1].into_inner() * y + m[0][2].into_inner() * 1.0;
         let t_y = m[1][0].into_inner() * x + m[1][1].into_inner() * y + m[1][2].into_inner() * 1.0;
@@ -33,23 +32,23 @@ const TRANSFORM_FORMULA: fn(fsize, fsize, &Transformation) -> (fsize, fsize) =
     };
 
 impl Point {
-    pub fn x(&self) -> fsize {
+    pub fn x(&self) -> f32 {
         self.0
     }
 
-    pub fn y(&self) -> fsize {
+    pub fn y(&self) -> f32 {
         self.1
     }
 }
 
 impl DistanceTo<Point> for Point {
     #[inline(always)]
-    fn distance_to(&self, other: &Point) -> fsize {
+    fn distance_to(&self, other: &Point) -> f32 {
         ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()
     }
 
     #[inline(always)]
-    fn sq_distance_to(&self, other: &Point) -> fsize {
+    fn sq_distance_to(&self, other: &Point) -> f32 {
         (self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)
     }
 }
@@ -65,14 +64,14 @@ impl Hash for Point {
     }
 }
 
-impl From<Point> for (fsize, fsize) {
+impl From<Point> for (f32, f32) {
     fn from(p: Point) -> Self {
         (p.0, p.1)
     }
 }
 
-impl From<(fsize, fsize)> for Point {
-    fn from((x, y): (fsize, fsize)) -> Self {
+impl From<(f32, f32)> for Point {
+    fn from((x, y): (f32, f32)) -> Self {
         Point(x, y)
     }
 }

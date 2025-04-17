@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::fsize;
 
 ///Configuration of the [`CDEngine`](crate::collision_detection::CDEngine)
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
@@ -24,7 +23,7 @@ pub struct SPSurrogateConfig {
     ///While the coverage is below 75% the generation will stop at 100 poles.
     ///If 75% coverage with 20 or more poles the generation will stop.
     ///If 90% coverage with 10 or more poles the generation will stop.
-    pub n_pole_limits: [(usize, fsize); N_POLE_LIMITS],
+    pub n_pole_limits: [(usize, f32); N_POLE_LIMITS],
     ///Number of poles to test during fail-fast (additional poles are exclusively used in the hazard proximity grid)
     pub n_ff_poles: usize,
     ///number of piers to test during fail-fast

@@ -3,38 +3,40 @@ use std::borrow::Borrow;
 use itertools::Itertools;
 use ordered_float::{NotNan, OrderedFloat};
 
-use crate::fsize;
 use crate::geometry::Transformation;
 use crate::geometry::convex_hull::convex_hull_from_points;
-use crate::geometry::fail_fast::{SPSurrogate, generate_next_pole};
+use crate::geometry::fail_fast::{SPSurrogate, compute_pole};
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
     CollidesWith, DistanceTo, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::util::FPA;
 use crate::util::SPSurrogateConfig;
 
-/// Simple Polygon, [read more](https://en.wikipedia.org/wiki/Simple_polygon)
+/// A Simple Polygon is a polygon that does not intersect itself and contains no holes.
+/// It is a closed shape with a finite number of vertices and edges.
+/// [read more](https://en.wikipedia.org/wiki/Simple_polygon)
 #[derive(Clone, Debug)]
-pub struct SimplePolygon {
-    /// Set of bounds describing the polygon
-    pub points: Vec<Point>,
+pub struct SPolygon {
+    /// Set of points that form the polygon
+    pub vertices: Vec<Point>,
     /// Bounding box
-    pub bbox: AARectangle,
-    pub area: fsize,
+    pub bbox: Rect,
+    /// Area of its interior
+    pub area: f32,
     /// Maximum distance between any two points in the polygon
-    pub diameter: fsize,
-    /// Pole of inaccessibility
+    pub diameter: f32,
+    /// [Pole of inaccessibility](https://en.wikipedia.org/wiki/Pole_of_inaccessibility) represented as a circle
     pub poi: Circle,
-    /// Surrogate representation (subset of the simple polygon)
+    /// Optional surrogate representation of the polygon (subset of the original)
     pub surrogate: Option<SPSurrogate>,
 }
 
-impl SimplePolygon {
+impl SPolygon {
     /// Create a new simple polygon from a set of points, expensive operations are performed here! Use [Self::clone()] or [Self::transform()] to avoid recomputation.
     pub fn new(mut points: Vec<Point>) -> Self {
         assert!(
@@ -48,7 +50,7 @@ impl SimplePolygon {
             points
         );
 
-        let area = match SimplePolygon::calculate_area(&points) {
+        let area = match SPolygon::calculate_area(&points) {
             area if area == 0.0 => panic!("simple polygon has no area: {:?}", points),
             area if area < 0.0 => {
                 //edges should always be ordered counterclockwise (positive area)
@@ -58,12 +60,12 @@ impl SimplePolygon {
             area => area,
         };
 
-        let diameter = SimplePolygon::calculate_diameter(points.clone());
-        let bbox = SimplePolygon::generate_bounding_box(&points);
-        let poi = SimplePolygon::calculate_poi(&points, diameter);
+        let diameter = SPolygon::calculate_diameter(points.clone());
+        let bbox = SPolygon::generate_bounding_box(&points);
+        let poi = SPolygon::calculate_poi(&points, diameter);
 
-        SimplePolygon {
-            points,
+        SPolygon {
+            vertices: points,
             bbox,
             area,
             diameter,
@@ -79,28 +81,28 @@ impl SimplePolygon {
         }
     }
 
-    pub fn get_point(&self, i: usize) -> Point {
-        self.points[i]
+    pub fn vertex(&self, i: usize) -> Point {
+        self.vertices[i]
     }
 
-    pub fn get_edge(&self, i: usize) -> Edge {
-        let j = (i + 1) % self.n_points();
-        Edge::new(self.points[i], self.points[j])
+    pub fn edge(&self, i: usize) -> Edge {
+        let j = (i + 1) % self.n_vertices();
+        Edge::new(self.vertices[i], self.vertices[j])
     }
 
     pub fn edge_iter(&self) -> impl Iterator<Item = Edge> + '_ {
-        (0..self.n_points()).map(move |i| self.get_edge(i))
+        (0..self.n_vertices()).map(move |i| self.edge(i))
     }
 
-    pub fn n_points(&self) -> usize {
-        self.points.len()
+    pub fn n_vertices(&self) -> usize {
+        self.vertices.len()
     }
 
     pub fn surrogate(&self) -> &SPSurrogate {
         self.surrogate.as_ref().expect("surrogate not generated")
     }
 
-    pub fn calculate_diameter(points: Vec<Point>) -> fsize {
+    pub fn calculate_diameter(points: Vec<Point>) -> f32 {
         //The two points furthest apart must be part of the convex hull
         let ch = convex_hull_from_points(points);
 
@@ -115,9 +117,9 @@ impl SimplePolygon {
         sq_diam.sqrt()
     }
 
-    pub fn generate_bounding_box(points: &[Point]) -> AARectangle {
-        let (mut x_min, mut y_min) = (fsize::MAX, fsize::MAX);
-        let (mut x_max, mut y_max) = (fsize::MIN, fsize::MIN);
+    pub fn generate_bounding_box(points: &[Point]) -> Rect {
+        let (mut x_min, mut y_min) = (f32::MAX, f32::MAX);
+        let (mut x_max, mut y_max) = (f32::MIN, f32::MIN);
 
         for point in points.iter() {
             x_min = x_min.min(point.0);
@@ -125,13 +127,13 @@ impl SimplePolygon {
             x_max = x_max.max(point.0);
             y_max = y_max.max(point.1);
         }
-        AARectangle::new(x_min, y_min, x_max, y_max)
+        Rect::new(x_min, y_min, x_max, y_max)
     }
 
     //https://en.wikipedia.org/wiki/Shoelace_formula
     //counterclockwise = positive area, clockwise = negative area
-    pub fn calculate_area(points: &[Point]) -> fsize {
-        let mut sigma: fsize = 0.0;
+    pub fn calculate_area(points: &[Point]) -> f32 {
+        let mut sigma: f32 = 0.0;
         for i in 0..points.len() {
             //next point
             let j = (i + 1) % points.len();
@@ -145,16 +147,16 @@ impl SimplePolygon {
         0.5 * sigma
     }
 
-    pub fn calculate_poi(points: &[Point], diameter: fsize) -> Circle {
+    pub fn calculate_poi(points: &[Point], diameter: f32) -> Circle {
         //need to make a dummy simple polygon, because the pole generation algorithm
         //relies on many of the methods provided by the simple polygon struct
         let dummy_sp = {
-            let bbox = SimplePolygon::generate_bounding_box(points);
-            let area = SimplePolygon::calculate_area(points);
-            let dummy_poi = Circle::new(Point(fsize::MAX, fsize::MAX), fsize::MAX);
+            let bbox = SPolygon::generate_bounding_box(points);
+            let area = SPolygon::calculate_area(points);
+            let dummy_poi = Circle::new(Point(f32::MAX, f32::MAX), f32::MAX);
 
-            SimplePolygon {
-                points: points.to_vec(),
+            SPolygon {
+                vertices: points.to_vec(),
                 bbox,
                 area,
                 diameter,
@@ -163,20 +165,11 @@ impl SimplePolygon {
             }
         };
 
-        generate_next_pole(&dummy_sp, &[])
-    }
-
-    pub fn center_around_centroid(mut self) -> (SimplePolygon, Transformation) {
-        let Point(c_x, c_y) = self.centroid();
-        let transformation = Transformation::from_translation((-c_x, -c_y));
-
-        self.transform(&transformation);
-
-        (self, transformation)
+        compute_pole(&dummy_sp, &[])
     }
 }
 
-impl Shape for SimplePolygon {
+impl Shape for SPolygon {
     fn centroid(&self) -> Point {
         //based on: https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
 
@@ -184,10 +177,10 @@ impl Shape for SimplePolygon {
         let mut c_x = 0.0;
         let mut c_y = 0.0;
 
-        for i in 0..self.n_points() {
-            let j = if i == self.n_points() - 1 { 0 } else { i + 1 };
-            let Point(x_i, y_i) = self.get_point(i);
-            let Point(x_j, y_j) = self.get_point(j);
+        for i in 0..self.n_vertices() {
+            let j = if i == self.n_vertices() - 1 { 0 } else { i + 1 };
+            let Point(x_i, y_i) = self.vertex(i);
+            let Point(x_j, y_j) = self.vertex(j);
             c_x += (x_i + x_j) * (x_i * y_j - x_j * y_i);
             c_y += (y_i + y_j) * (x_i * y_j - x_j * y_i);
         }
@@ -198,24 +191,24 @@ impl Shape for SimplePolygon {
         (c_x, c_y).into()
     }
 
-    fn area(&self) -> fsize {
+    fn area(&self) -> f32 {
         self.area
     }
 
-    fn bbox(&self) -> AARectangle {
+    fn bbox(&self) -> Rect {
         self.bbox.clone()
     }
 
-    fn diameter(&self) -> fsize {
+    fn diameter(&self) -> f32 {
         self.diameter
     }
 }
 
-impl Transformable for SimplePolygon {
+impl Transformable for SPolygon {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
         //destructuring pattern to ensure that the code is updated when the struct changes
-        let SimplePolygon {
-            points,
+        let SPolygon {
+            vertices: points,
             bbox,
             area: _,
             diameter: _,
@@ -236,17 +229,17 @@ impl Transformable for SimplePolygon {
         }
 
         //regenerate bounding box
-        *bbox = SimplePolygon::generate_bounding_box(points);
+        *bbox = SPolygon::generate_bounding_box(points);
 
         self
     }
 }
 
-impl TransformableFrom for SimplePolygon {
+impl TransformableFrom for SPolygon {
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self {
         //destructuring pattern to ensure that the code is updated when the struct changes
-        let SimplePolygon {
-            points,
+        let SPolygon {
+            vertices: points,
             bbox,
             area: _,
             diameter: _,
@@ -254,7 +247,7 @@ impl TransformableFrom for SimplePolygon {
             surrogate,
         } = self;
 
-        for (p, ref_p) in points.iter_mut().zip(&reference.points) {
+        for (p, ref_p) in points.iter_mut().zip(&reference.vertices) {
             p.transform_from(ref_p, t);
         }
 
@@ -265,13 +258,13 @@ impl TransformableFrom for SimplePolygon {
             surrogate.transform_from(reference.surrogate(), t);
         }
         //regenerate bounding box
-        *bbox = SimplePolygon::generate_bounding_box(points);
+        *bbox = SPolygon::generate_bounding_box(points);
 
         self
     }
 }
 
-impl CollidesWith<Point> for SimplePolygon {
+impl CollidesWith<Point> for SPolygon {
     fn collides_with(&self, point: &Point) -> bool {
         //based on the ray casting algorithm: https://en.wikipedia.org/wiki/Point_in_polygon#Ray_casting_algorithm
         match self.bbox().collides_with(point) {
@@ -307,8 +300,11 @@ impl CollidesWith<Point> for SimplePolygon {
     }
 }
 
-impl DistanceTo<Point> for SimplePolygon {
-    fn sq_distance_to(&self, point: &Point) -> fsize {
+impl DistanceTo<Point> for SPolygon {
+    fn distance_to(&self, point: &Point) -> f32 {
+        self.sq_distance_to(point).sqrt()
+    }
+    fn sq_distance_to(&self, point: &Point) -> f32 {
         match self.collides_with(point) {
             true => 0.0,
             false => self
@@ -318,18 +314,15 @@ impl DistanceTo<Point> for SimplePolygon {
                 .unwrap(),
         }
     }
-    fn distance_to(&self, point: &Point) -> fsize {
-        self.sq_distance_to(point).sqrt()
-    }
 }
 
-impl SeparationDistance<Point> for SimplePolygon {
-    fn separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
+impl SeparationDistance<Point> for SPolygon {
+    fn separation_distance(&self, point: &Point) -> (GeoPosition, f32) {
         let (position, sq_distance) = self.sq_separation_distance(point);
         (position, sq_distance.sqrt())
     }
 
-    fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
+    fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, f32) {
         let distance_to_closest_edge = self
             .edge_iter()
             .map(|edge| edge.sq_distance_to(point))
@@ -343,13 +336,13 @@ impl SeparationDistance<Point> for SimplePolygon {
     }
 }
 
-impl<T> From<T> for SimplePolygon
+impl<T> From<T> for SPolygon
 where
-    T: Borrow<AARectangle>,
+    T: Borrow<Rect>,
 {
     fn from(r: T) -> Self {
         let r = r.borrow();
-        SimplePolygon::new(vec![
+        SPolygon::new(vec![
             (r.x_min, r.y_min).into(),
             (r.x_max, r.y_min).into(),
             (r.x_max, r.y_max).into(),

@@ -7,8 +7,8 @@ use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::quadtree::qt_partial_hazard::{QTHazPartial, RelevantEdges};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::AARectangle;
-use crate::geometry::primitives::SimplePolygon;
+use crate::geometry::primitives::Rect;
+use crate::geometry::primitives::SPolygon;
 use crate::util::assertions;
 
 /// Manifestation of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
@@ -44,7 +44,7 @@ impl QTHazard {
     /// Returns the resulting QTHazards after constricting to the provided quadrants.
     /// The quadrants should be ordered according to the [Cartesian system](https://en.wikipedia.org/wiki/Quadrant_(plane_geometry))
     /// and should all be inside the bounds from which `self` was created.
-    pub fn constrict(&self, quadrants: [&AARectangle; 4]) -> [Option<Self>; 4] {
+    pub fn constrict(&self, quadrants: [&Rect; 4]) -> [Option<Self>; 4] {
         debug_assert!(assertions::quadrants_have_valid_layout(&quadrants));
 
         match &self.presence {
@@ -81,7 +81,7 @@ impl QTHazard {
                     //Add the relevant edges to the presences in the quadrants
                     match &partial_haz.edges {
                         RelevantEdges::All => {
-                            for edge_i in 0..shape.n_points() {
+                            for edge_i in 0..shape.n_vertices() {
                                 q_presences = Self::add_edge_to_q_presences(
                                     edge_i,
                                     &shape,
@@ -108,7 +108,7 @@ impl QTHazard {
                         if q_presences[i].is_none() {
                             //Check if a neighbor is already resolved, if so this quadrant will have the same presence
                             //Nodes with Entire and None are never neighboring (they are always separated by a node with Partial),
-                            let [n_0, n_1] = AARectangle::QUADRANT_NEIGHBOR_LAYOUT[i];
+                            let [n_0, n_1] = Rect::QUADRANT_NEIGHBOR_LAYOUT[i];
                             q_presences[i] = match (&q_presences[n_0], &q_presences[n_1]) {
                                 (Some(QTHazPresence::Entire), _) => Some(QTHazPresence::Entire),
                                 (_, Some(QTHazPresence::Entire)) => Some(QTHazPresence::Entire),
@@ -144,11 +144,11 @@ impl QTHazard {
 
     fn add_edge_to_q_presences(
         edge_index: usize,
-        shape: &Arc<SimplePolygon>,
-        quadrants: [&AARectangle; 4],
+        shape: &Arc<SPolygon>,
+        quadrants: [&Rect; 4],
         mut q_presences: [Option<QTHazPresence>; 4],
     ) -> [Option<QTHazPresence>; 4] {
-        let edge = shape.get_edge(edge_index);
+        let edge = shape.edge(edge_index);
         //check for which quadrants the edge is relevant
         for (q_index, quad) in quadrants.iter().enumerate() {
             if quad.collides_with(&edge) {

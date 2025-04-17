@@ -5,7 +5,6 @@ use std::time::Instant;
 
 #[cfg(doc)]
 use crate::entities::bin_packing::BPProblem;
-use crate::fsize;
 
 /// Snapshot of [`BPProblem`] at a specific moment.
 /// Can be used to restore [`BPProblem`] to a previous state.
@@ -24,18 +23,18 @@ pub struct BPSolution {
 }
 
 impl BPSolution {
-    pub fn density(&self, instance: &BPInstance) -> fsize {
+    pub fn density(&self, instance: &BPInstance) -> f32 {
         let total_bin_area = self
             .layout_snapshots
             .values()
             .map(|ls| ls.bin.area())
-            .sum::<fsize>();
+            .sum::<f32>();
 
         let total_item_area = self
             .layout_snapshots
             .values()
             .map(|ls| ls.placed_item_area(instance))
-            .sum::<fsize>();
+            .sum::<f32>();
 
         total_item_area / total_bin_area
     }

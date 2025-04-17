@@ -2,10 +2,9 @@ use std::sync::Arc;
 
 use crate::collision_detection::hazards::filter::QZHazardFilter;
 use crate::entities::general::original_shape::OriginalShape;
-use crate::fsize;
 use crate::geometry::geo_enums::AllowedRotation;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::SimplePolygon;
+use crate::geometry::primitives::SPolygon;
 use crate::util::SPSurrogateConfig;
 
 /// Item to be produced.
@@ -15,7 +14,7 @@ pub struct Item {
     /// Contour of the item as defined in the input file
     pub shape_orig: Arc<OriginalShape>,
     /// Contour of the item to be used for collision detection
-    pub shape_cd: Arc<SimplePolygon>,
+    pub shape_cd: Arc<SPolygon>,
     /// Possible rotations in which to place the item
     pub allowed_rotation: AllowedRotation,
     /// The quality of the item, if `None` the item requires full quality
@@ -56,7 +55,7 @@ impl Item {
         }
     }
 
-    pub fn area(&self) -> fsize {
+    pub fn area(&self) -> f32 {
         self.shape_orig.area()
     }
 }

@@ -1,15 +1,15 @@
 mod piers;
-mod poi;
+mod pole;
 mod sp_surrogate;
 
 #[doc(inline)]
 pub use piers::generate_piers;
 
 #[doc(inline)]
-pub use poi::generate_poles;
+pub use pole::generate_surrogate_poles;
 
 #[doc(inline)]
-pub use poi::generate_next_pole;
+pub use pole::compute_pole;
 
 #[doc(inline)]
 pub use sp_surrogate::SPSurrogate;

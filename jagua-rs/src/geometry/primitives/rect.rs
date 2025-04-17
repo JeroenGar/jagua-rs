@@ -1,4 +1,3 @@
-use crate::fsize;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{
     AlmostCollidesWith, CollidesWith, DistanceTo, SeparationDistance, Shape,
@@ -11,15 +10,15 @@ use std::cmp::Ordering;
 
 ///Axis-aligned rectangle
 #[derive(Clone, Debug, PartialEq, Copy)]
-pub struct AARectangle {
-    pub x_min: fsize,
-    pub y_min: fsize,
-    pub x_max: fsize,
-    pub y_max: fsize,
+pub struct Rect {
+    pub x_min: f32,
+    pub y_min: f32,
+    pub x_max: f32,
+    pub y_max: f32,
 }
 
-impl AARectangle {
-    pub fn new(x_min: fsize, y_min: fsize, x_max: fsize, y_max: fsize) -> Self {
+impl Rect {
+    pub fn new(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> Self {
         debug_assert!(
             x_min < x_max && y_min < y_max,
             "invalid AARectangle, x_min: {}, x_max: {}, y_min: {}, y_max: {}",
@@ -28,7 +27,7 @@ impl AARectangle {
             y_min,
             y_max
         );
-        AARectangle {
+        Rect {
             x_min,
             y_min,
             x_max,
@@ -36,8 +35,8 @@ impl AARectangle {
         }
     }
 
-    /// Returns the relation between self and another AARectangle
-    pub fn relation_to(&self, other: &AARectangle) -> GeoRelation {
+    /// Returns the geometric relation between `self` and another [`Rect`].
+    pub fn relation_to(&self, other: &Rect) -> GeoRelation {
         if self.collides_with(other) {
             if self.x_min <= other.x_min
                 && self.y_min <= other.y_min
@@ -61,7 +60,7 @@ impl AARectangle {
 
     /// Returns the relation between self and another AARectangle, with a tolerance for floating point precision.
     /// Leaning towards `Surrounding` and `Enclosed` instead of `Intersecting` in edge cases.
-    pub fn almost_relation_to(&self, other: &AARectangle) -> GeoRelation {
+    pub fn almost_relation_to(&self, other: &Rect) -> GeoRelation {
         if self.almost_collides_with(other) {
             if FPA::from(self.x_min) <= FPA::from(other.x_min)
                 && FPA::from(self.y_min) <= FPA::from(other.y_min)
@@ -83,8 +82,9 @@ impl AARectangle {
         }
     }
 
-    /// Returns the rectangle that is the result of inflating the smallest dimension of the rectangle to match the largest dimension
-    pub fn inflate_to_square(&self) -> AARectangle {
+    /// Returns a new rectangle with the same centroid but inflated
+    /// to be the minimum square that contains `self`.
+    pub fn inflate_to_square(&self) -> Rect {
         let width = self.x_max - self.x_min;
         let height = self.y_max - self.y_min;
         let mut dx = 0.0;
@@ -94,7 +94,7 @@ impl AARectangle {
         } else if width < height {
             dx = (height - width) / 2.0;
         }
-        AARectangle::new(
+        Rect::new(
             self.x_min - dx,
             self.y_min - dy,
             self.x_max + dx,
@@ -102,16 +102,17 @@ impl AARectangle {
         )
     }
 
-    pub fn scale(self, factor: fsize) -> Self {
+    /// Returns a new rectangle with the same centroid but scaled by `factor`.
+    pub fn scale(self, factor: f32) -> Self {
         let dx = (self.x_max - self.x_min) * (factor - 1.0) / 2.0;
         let dy = (self.y_max - self.y_min) * (factor - 1.0) / 2.0;
         self.resize_by(dx, dy)
             .expect("scaling should not lead to invalid rectangle")
     }
 
-    /// Returns a new rectangle with the same center but expanded by `dx` in both x-directions and by `dy` in both y-directions.
+    /// Returns a new rectangle with the same centroid as `self` but expanded by `dx` in both x-directions and by `dy` in both y-directions.
     /// If the new rectangle is invalid (x_min >= x_max or y_min >= y_max), returns None.
-    pub fn resize_by(mut self, dx: fsize, dy: fsize) -> Option<Self> {
+    pub fn resize_by(mut self, dx: f32, dy: f32) -> Option<Self> {
         self.x_min -= dx;
         self.y_min -= dy;
         self.x_max += dx;
@@ -128,7 +129,7 @@ impl AARectangle {
     /// For all quadrants, contains indices of the two neighbors of the quadrant at that index.
     pub const QUADRANT_NEIGHBOR_LAYOUT: [[usize; 2]; 4] = [[1, 3], [0, 2], [1, 3], [0, 2]];
 
-    /// Returns the 4 quadrants of the rectangle.
+    /// Returns the 4 quadrants of `self`.
     /// Ordered in the same way as quadrants in a cartesian plane:
     /// <https://en.wikipedia.org/wiki/Quadrant_(plane_geometry)>
     pub fn quadrants(&self) -> [Self; 4] {
@@ -143,7 +144,7 @@ impl AARectangle {
         [q1, q2, q3, q4]
     }
 
-    /// Returns the four corners, in the same order as [AARectangle::quadrants].
+    /// Returns the four corners of `self`, in the same order as [Rect::quadrants].
     pub fn corners(&self) -> [Point; 4] {
         [
             Point(self.x_max, self.y_max),
@@ -153,7 +154,7 @@ impl AARectangle {
         ]
     }
 
-    /// Returns the four edges of the rectangle, in the same order as [AARectangle::quadrants].
+    /// Returns the four edges that make up `self`, in the same order as [Rect::quadrants].
     pub fn edges(&self) -> [Edge; 4] {
         let c = self.corners();
         [
@@ -163,37 +164,38 @@ impl AARectangle {
             Edge::new(c[3], c[0]),
         ]
     }
-
-    pub fn width(&self) -> fsize {
+    pub fn width(&self) -> f32 {
         self.x_max - self.x_min
     }
 
-    pub fn height(&self) -> fsize {
+    pub fn height(&self) -> f32 {
         self.y_max - self.y_min
     }
 
-    pub fn from_intersection(a: &AARectangle, b: &AARectangle) -> Option<AARectangle> {
-        let x_min = fsize::max(a.x_min, b.x_min);
-        let y_min = fsize::max(a.y_min, b.y_min);
-        let x_max = fsize::min(a.x_max, b.x_max);
-        let y_max = fsize::min(a.y_max, b.y_max);
+    /// Returns the largest rectangle that is contained in both `a` and `b`.
+    pub fn intersection(a: &Rect, b: &Rect) -> Option<Rect> {
+        let x_min = f32::max(a.x_min, b.x_min);
+        let y_min = f32::max(a.y_min, b.y_min);
+        let x_max = f32::min(a.x_max, b.x_max);
+        let y_max = f32::min(a.y_max, b.y_max);
         if x_min < x_max && y_min < y_max {
-            Some(AARectangle::new(x_min, y_min, x_max, y_max))
+            Some(Rect::new(x_min, y_min, x_max, y_max))
         } else {
             None
         }
     }
 
-    pub fn bounding_rectangle(a: &AARectangle, b: &AARectangle) -> AARectangle {
-        let x_min = fsize::min(a.x_min, b.x_min);
-        let y_min = fsize::min(a.y_min, b.y_min);
-        let x_max = fsize::max(a.x_max, b.x_max);
-        let y_max = fsize::max(a.y_max, b.y_max);
-        AARectangle::new(x_min, y_min, x_max, y_max)
+    /// Returns the smallest rectangle that contains both `a` and `b`.
+    pub fn bounding_rect(a: &Rect, b: &Rect) -> Rect {
+        let x_min = f32::min(a.x_min, b.x_min);
+        let y_min = f32::min(a.y_min, b.y_min);
+        let x_max = f32::max(a.x_max, b.x_max);
+        let y_max = f32::max(a.y_max, b.y_max);
+        Rect::new(x_min, y_min, x_max, y_max)
     }
 }
 
-impl Shape for AARectangle {
+impl Shape for Rect {
     fn centroid(&self) -> Point {
         Point(
             (self.x_min + self.x_max) / 2.0,
@@ -201,38 +203,38 @@ impl Shape for AARectangle {
         )
     }
 
-    fn area(&self) -> fsize {
+    fn area(&self) -> f32 {
         (self.x_max - self.x_min) * (self.y_max - self.y_min)
     }
 
-    fn bbox(&self) -> AARectangle {
+    fn bbox(&self) -> Rect {
         self.clone()
     }
 
-    fn diameter(&self) -> fsize {
+    fn diameter(&self) -> f32 {
         let dx = self.x_max - self.x_min;
         let dy = self.y_max - self.y_min;
         (dx.powi(2) + dy.powi(2)).sqrt()
     }
 }
 
-impl CollidesWith<AARectangle> for AARectangle {
+impl CollidesWith<Rect> for Rect {
     #[inline(always)]
-    fn collides_with(&self, other: &AARectangle) -> bool {
-        fsize::max(self.x_min, other.x_min) <= fsize::min(self.x_max, other.x_max)
-            && fsize::max(self.y_min, other.y_min) <= fsize::min(self.y_max, other.y_max)
+    fn collides_with(&self, other: &Rect) -> bool {
+        f32::max(self.x_min, other.x_min) <= f32::min(self.x_max, other.x_max)
+            && f32::max(self.y_min, other.y_min) <= f32::min(self.y_max, other.y_max)
     }
 }
 
-impl AlmostCollidesWith<AARectangle> for AARectangle {
+impl AlmostCollidesWith<Rect> for Rect {
     #[inline(always)]
-    fn almost_collides_with(&self, other: &AARectangle) -> bool {
-        FPA(fsize::max(self.x_min, other.x_min)) <= FPA(fsize::min(self.x_max, other.x_max))
-            && FPA(fsize::max(self.y_min, other.y_min)) <= FPA(fsize::min(self.y_max, other.y_max))
+    fn almost_collides_with(&self, other: &Rect) -> bool {
+        FPA(f32::max(self.x_min, other.x_min)) <= FPA(f32::min(self.x_max, other.x_max))
+            && FPA(f32::max(self.y_min, other.y_min)) <= FPA(f32::min(self.y_max, other.y_max))
     }
 }
 
-impl CollidesWith<Point> for AARectangle {
+impl CollidesWith<Point> for Rect {
     #[inline(always)]
     fn collides_with(&self, point: &Point) -> bool {
         let Point(x, y) = *point;
@@ -240,7 +242,7 @@ impl CollidesWith<Point> for AARectangle {
     }
 }
 
-impl AlmostCollidesWith<Point> for AARectangle {
+impl AlmostCollidesWith<Point> for Rect {
     #[inline(always)]
     fn almost_collides_with(&self, point: &Point) -> bool {
         let (x, y) = (*point).into();
@@ -251,7 +253,7 @@ impl AlmostCollidesWith<Point> for AARectangle {
     }
 }
 
-impl CollidesWith<Edge> for AARectangle {
+impl CollidesWith<Edge> for Rect {
     #[inline(always)]
     fn collides_with(&self, edge: &Edge) -> bool {
         //inspired by: https://stackoverflow.com/questions/99353/how-to-test-if-a-line-segment-intersects-an-axis-aligned-rectange-in-2d
@@ -301,11 +303,11 @@ impl CollidesWith<Edge> for AARectangle {
     }
 }
 
-impl DistanceTo<Point> for AARectangle {
+impl DistanceTo<Point> for Rect {
     #[inline(always)]
-    fn sq_distance_to(&self, point: &Point) -> fsize {
+    fn sq_distance_to(&self, point: &Point) -> f32 {
         let Point(x, y) = *point;
-        let mut distance: fsize = 0.0;
+        let mut distance: f32 = 0.0;
         if x < self.x_min {
             distance += (x - self.x_min).powi(2);
         } else if x > self.x_max {
@@ -320,20 +322,20 @@ impl DistanceTo<Point> for AARectangle {
     }
 
     #[inline(always)]
-    fn distance_to(&self, point: &Point) -> fsize {
+    fn distance_to(&self, point: &Point) -> f32 {
         self.sq_distance_to(point).sqrt()
     }
 }
 
-impl SeparationDistance<Point> for AARectangle {
+impl SeparationDistance<Point> for Rect {
     #[inline(always)]
-    fn separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
+    fn separation_distance(&self, point: &Point) -> (GeoPosition, f32) {
         let (position, sq_distance) = self.sq_separation_distance(point);
         (position, sq_distance.sqrt())
     }
 
     #[inline(always)]
-    fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
+    fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, f32) {
         match self.collides_with(point) {
             false => (GeoPosition::Exterior, self.sq_distance_to(point)),
             true => {

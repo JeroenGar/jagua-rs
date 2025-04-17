@@ -2,20 +2,16 @@ use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hazards::detector::HazardDetector;
 use crate::collision_detection::hazards::filter::HazardFilter;
-use crate::collision_detection::hpg::grid::Grid;
-use crate::collision_detection::hpg::hazard_proximity_grid::{DirtyState, HazardProximityGrid};
-use crate::collision_detection::hpg::hpg_cell::HPGCell;
 use crate::collision_detection::quadtree::QTNode;
-use crate::fsize;
 use crate::geometry::Transformation;
 use crate::geometry::fail_fast::SPSurrogate;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable, TransformableFrom};
-use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
-use crate::geometry::primitives::SimplePolygon;
+use crate::geometry::primitives::SPolygon;
 use crate::util::CDEConfig;
 use crate::util::assertions;
 use itertools::Itertools;
@@ -28,9 +24,8 @@ pub struct CDEngine {
     pub quadtree: QTNode,
     pub static_hazards: Vec<Hazard>,
     pub dynamic_hazards: Vec<Hazard>,
-    pub haz_prox_grid: Option<HazardProximityGrid>,
     pub config: CDEConfig,
-    pub bbox: AARectangle,
+    pub bbox: Rect,
     pub uncommitted_deregisters: Vec<Hazard>,
 }
 
@@ -38,20 +33,10 @@ pub struct CDEngine {
 #[derive(Clone, Debug)]
 pub struct CDESnapshot {
     dynamic_hazards: Vec<Hazard>,
-    grid: Option<Grid<HPGCell>>,
 }
 
 impl CDEngine {
-    pub fn new(bbox: AARectangle, static_hazards: Vec<Hazard>, config: CDEConfig) -> CDEngine {
-        let haz_prox_grid = match config.hpg_n_cells {
-            0 => None,
-            hpg_n_cells => Some(HazardProximityGrid::new(
-                bbox.clone(),
-                &static_hazards,
-                hpg_n_cells,
-            )),
-        };
-
+    pub fn new(bbox: Rect, static_hazards: Vec<Hazard>, config: CDEConfig) -> CDEngine {
         let mut qt_root = QTNode::new(config.quadtree_depth, bbox.clone());
 
         for haz in static_hazards.iter() {
@@ -62,7 +47,6 @@ impl CDEngine {
             quadtree: qt_root,
             static_hazards,
             dynamic_hazards: vec![],
-            haz_prox_grid,
             config,
             bbox,
             uncommitted_deregisters: vec![],
@@ -94,9 +78,6 @@ impl CDEngine {
                 hazard
             }
         };
-        if let Some(hpg) = self.haz_prox_grid.as_mut() {
-            hpg.register_hazard(&hazard)
-        }
         self.dynamic_hazards.push(hazard);
 
         debug_assert!(assertions::qt_contains_no_dangling_hazards(self));
@@ -128,22 +109,13 @@ impl CDEngine {
                 self.uncommitted_deregisters.push(hazard);
             }
         }
-        if let Some(hpg) = self.haz_prox_grid.as_mut() {
-            hpg.deregister_hazard(hazard_entity, self.dynamic_hazards.iter(), commit_instant)
-        }
         debug_assert!(assertions::qt_contains_no_dangling_hazards(self));
     }
 
     pub fn create_snapshot(&mut self) -> CDESnapshot {
         self.commit_deregisters();
-        assert!(
-            self.haz_prox_grid
-                .as_ref()
-                .map_or(true, |hpg| !hpg.is_dirty())
-        );
         CDESnapshot {
             dynamic_hazards: self.dynamic_hazards.clone(),
-            grid: self.haz_prox_grid.as_ref().map(|hpg| hpg.grid.clone()),
         }
     }
 
@@ -197,22 +169,13 @@ impl CDEngine {
             self.dynamic_hazards.push(hazard);
         }
 
-        //Hazard proximity grid
-        if let Some(hpg) = self.haz_prox_grid.as_mut() {
-            hpg.restore(snapshot.grid.clone().expect("no hpg in snapshot"));
-        }
-
         debug_assert!(self.dynamic_hazards.len() == snapshot.dynamic_hazards.len());
     }
 
     /// Commits all pending deregisters by actually removing them from the quadtree
-    /// and flushing the hazard proximity grid.
     pub fn commit_deregisters(&mut self) {
-        for uc_haz in self.uncommitted_deregisters.drain(..) {
-            self.quadtree.deregister_hazard(uc_haz.entity);
-        }
-        if let Some(hpg) = self.haz_prox_grid.as_mut() {
-            hpg.flush_deregisters(self.dynamic_hazards.iter())
+        for uncommitted_hazard in self.uncommitted_deregisters.drain(..) {
+            self.quadtree.deregister_hazard(uncommitted_hazard.entity);
         }
     }
 
@@ -224,36 +187,12 @@ impl CDEngine {
         1 + self.quadtree.get_number_of_children()
     }
 
-    pub fn bbox(&self) -> &AARectangle {
+    pub fn bbox(&self) -> &Rect {
         &self.bbox
-    }
-
-    pub fn smallest_qt_node_dimension(&self) -> fsize {
-        let bbox = &self.quadtree.bbox;
-        let level = self.quadtree.level;
-        //every level, the dimension is halved
-        bbox.width() / (2.0 as fsize).powi(level as i32)
     }
 
     pub fn config(&self) -> CDEConfig {
         self.config
-    }
-
-    /// If the grid has uncommitted deregisters, it is considered dirty and cannot be accessed.
-    /// To flush all the changes, call [`Self::flush_haz_prox_grid`].
-    pub fn haz_prox_grid(&self) -> Result<&HazardProximityGrid, DirtyState> {
-        let grid = self.haz_prox_grid.as_ref().expect("no hpg present");
-        match grid.is_dirty() {
-            true => Err(DirtyState),
-            false => Ok(grid),
-        }
-    }
-
-    /// Flushes all uncommitted deregisters in the [`HazardProximityGrid`].
-    pub fn flush_haz_prox_grid(&mut self) {
-        if let Some(hpg) = self.haz_prox_grid.as_mut() {
-            hpg.flush_deregisters(self.dynamic_hazards.iter())
-        }
     }
 
     pub fn has_uncommitted_deregisters(&self) -> bool {
@@ -287,9 +226,9 @@ impl CDEngine {
     /// * `filter` - Hazard filter to be applied
     pub fn surrogate_or_poly_collides(
         &self,
-        reference_shape: &SimplePolygon,
+        reference_shape: &SPolygon,
         transform: &Transformation,
-        buffer_shape: &mut SimplePolygon,
+        buffer_shape: &mut SPolygon,
         filter: &impl HazardFilter,
     ) -> bool {
         //Begin with checking the surrogate for collisions
@@ -307,7 +246,7 @@ impl CDEngine {
     /// # Arguments
     /// * `shape` - The shape (already transformed) to be checked for collisions
     /// * `filter` - Hazard filter to be applied
-    pub fn poly_collides(&self, shape: &SimplePolygon, filter: &impl HazardFilter) -> bool {
+    pub fn poly_collides(&self, shape: &SPolygon, filter: &impl HazardFilter) -> bool {
         match self.bbox.relation_to(&shape.bbox()) {
             //Not fully inside bbox => definite collision
             GeoRelation::Disjoint | GeoRelation::Enclosed | GeoRelation::Intersecting => true,
@@ -377,7 +316,7 @@ impl CDEngine {
 
     fn poly_collides_by_edge_intersection(
         &self,
-        shape: &SimplePolygon,
+        shape: &SPolygon,
         filter: &impl HazardFilter,
     ) -> bool {
         shape
@@ -387,7 +326,7 @@ impl CDEngine {
 
     fn poly_collides_by_containment(
         &self,
-        shape: &SimplePolygon,
+        shape: &SPolygon,
         filter: &impl HazardFilter,
     ) -> bool {
         //collect all active and non-ignored hazards
@@ -396,7 +335,7 @@ impl CDEngine {
             .any(|haz| self.poly_or_hazard_are_contained(shape, haz))
     }
 
-    pub fn poly_or_hazard_are_contained(&self, shape: &SimplePolygon, haz: &Hazard) -> bool {
+    pub fn poly_or_hazard_are_contained(&self, shape: &SPolygon, haz: &Hazard) -> bool {
         //Due to possible fp issues, we check if the bboxes are "almost" related
         //"almost" meaning that, when edges are very close together, they are considered equal.
         //Some relations which would normally be seen as Intersecting are now being considered Enclosed/Surrounding
@@ -437,7 +376,7 @@ impl CDEngine {
     /// Collects all hazards with which the polygon collides and reports them to the detector.
     pub fn collect_poly_collisions(
         &self,
-        shape: &SimplePolygon,
+        shape: &SPolygon,
         detector: &mut impl HazardDetector,
     ) {
         if self.bbox.relation_to(&shape.bbox()) != GeoRelation::Surrounding {
@@ -478,7 +417,7 @@ impl CDEngine {
     /// This is an overestimation, as it is limited by the quadtree resolution.
     pub fn collect_potential_hazards_within(
         &self,
-        bbox: &AARectangle,
+        bbox: &Rect,
         detector: &mut impl HazardDetector,
     ) {
         self.quadtree

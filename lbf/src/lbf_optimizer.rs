@@ -9,7 +9,7 @@ use rand::Rng;
 use thousands::Separable;
 
 use jagua_rs::collision_detection::hazard_filter;
-use jagua_rs::fsize;
+;
 use jagua_rs::geometry::convex_hull::convex_hull_from_surrogate;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::SimplePolygon;
@@ -316,7 +316,7 @@ pub fn sample_layout(
                 (*best_opt, *best_cost) = (p_opt, cost);
             }
         }
-        let progress_pct = i as fsize / ls_sample_budget as fsize;
+        let progress_pct = i as f32 / ls_sample_budget as f32;
         ls_sampler.decay_stddev(progress_pct);
     }
 

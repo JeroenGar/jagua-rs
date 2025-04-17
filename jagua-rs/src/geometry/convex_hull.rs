@@ -1,25 +1,24 @@
-use crate::fsize;
 use crate::geometry::primitives::Point;
-use crate::geometry::primitives::SimplePolygon;
+use crate::geometry::primitives::SPolygon;
 use ordered_float::OrderedFloat;
 
-/// Returns the indices of the points in the [`SimplePolygon`] that form the convex hull
-pub fn convex_hull_indices(shape: &SimplePolygon) -> Vec<usize> {
-    let c_hull = convex_hull_from_points(shape.points.clone());
+/// Returns the indices of the points in the [`SPolygon`] that form the convex hull
+pub fn convex_hull_indices(shape: &SPolygon) -> Vec<usize> {
+    let c_hull = convex_hull_from_points(shape.vertices.clone());
     let mut indices = vec![];
     for p in c_hull.iter() {
-        indices.push(shape.points.iter().position(|x| x == p).unwrap());
+        indices.push(shape.vertices.iter().position(|x| x == p).unwrap());
     }
     indices
 }
 
-/// Reconstitutes the convex hull of a [`SimplePolygon`] using its surrogate
-pub fn convex_hull_from_surrogate(s: &SimplePolygon) -> Result<Vec<Point>, &'static str> {
+/// Reconstitutes the convex hull of a [`SPolygon`] using its surrogate
+pub fn convex_hull_from_surrogate(s: &SPolygon) -> Result<Vec<Point>, &'static str> {
     if let Some(surr) = s.surrogate.as_ref() {
         Ok(surr
             .convex_hull_indices
             .iter()
-            .map(|&i| s.points[i])
+            .map(|&i| s.vertices[i])
             .collect())
     } else {
         Err("No surrogate available")
@@ -58,6 +57,6 @@ fn grow_convex_hull(mut h: Vec<Point>, next: Point) -> Vec<Point> {
     h
 }
 
-fn cross(a: Point, b: Point, c: Point) -> fsize {
+fn cross(a: Point, b: Point, c: Point) -> f32 {
     (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0)
 }

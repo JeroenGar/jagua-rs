@@ -6,11 +6,10 @@ use itertools::Itertools;
 use jagua_rs::collision_detection::CDEngine;
 use jagua_rs::collision_detection::hazards::filter::HazardFilter;
 use jagua_rs::entities::general::{Instance, Item};
-use jagua_rs::fsize;
 use jagua_rs::geometry::DTransformation;
 use jagua_rs::geometry::convex_hull::convex_hull_from_surrogate;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
-use jagua_rs::geometry::primitives::SimplePolygon;
+use jagua_rs::geometry::primitives::SPolygon;
 use log::debug;
 use ordered_float::NotNan;
 use rand::Rng;
@@ -98,7 +97,7 @@ pub fn search(
                 (*best_sample, *best_cost) = (d_transf, cost);
             }
         }
-        let progress_pct = i as fsize / ls_sample_budget as fsize;
+        let progress_pct = i as f32 / ls_sample_budget as f32;
         ls_sampler.decay_stddev(progress_pct);
     }
 
@@ -112,7 +111,7 @@ pub fn item_placement_order(instance: &impl Instance) -> Vec<usize> {
     (0..instance.items().len())
         .sorted_by_cached_key(|i| {
             let item = &instance.items()[*i].0;
-            let ch = SimplePolygon::new(
+            let ch = SPolygon::new(
                 convex_hull_from_surrogate(&item.shape_cd)
                     .expect("items should have a surrogate generated"),
             );

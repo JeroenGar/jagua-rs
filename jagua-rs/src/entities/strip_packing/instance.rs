@@ -1,7 +1,6 @@
 use crate::entities::general::Bin;
 use crate::entities::general::Instance;
 use crate::entities::general::Item;
-use crate::fsize;
 use crate::geometry::geo_traits::Shape;
 use crate::util::{ShapeModifyConfig, assertions};
 
@@ -11,9 +10,9 @@ pub struct SPInstance {
     /// The items to be packed and their quantities
     pub items: Vec<(Item, usize)>,
     /// The total area of the items
-    pub item_area: fsize,
+    pub item_area: f32,
     /// The (fixed) height of the strip
-    pub strip_height: fsize,
+    pub strip_height: f32,
     /// The config used to modify the shape of the strip
     pub strip_modify_config: ShapeModifyConfig,
 }
@@ -21,14 +20,14 @@ pub struct SPInstance {
 impl SPInstance {
     pub fn new(
         items: Vec<(Item, usize)>,
-        strip_height: fsize,
+        strip_height: f32,
         strip_modify_config: ShapeModifyConfig,
     ) -> Self {
         assert!(assertions::instance_item_bin_ids_correct(&items, &[]));
 
         let item_area = items
             .iter()
-            .map(|(item, qty)| item.shape_orig.area() * *qty as fsize)
+            .map(|(item, qty)| item.shape_orig.area() * *qty as f32)
             .sum();
 
         Self {

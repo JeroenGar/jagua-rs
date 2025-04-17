@@ -3,7 +3,6 @@ use crate::entities::bin_packing::BPSolution;
 use crate::entities::general::Instance;
 use crate::entities::general::Layout;
 use crate::entities::general::{PItemKey, PlacedItem};
-use crate::fsize;
 use crate::geometry::DTransformation;
 use crate::util::assertions;
 use itertools::Itertools;
@@ -154,14 +153,14 @@ impl BPProblem {
         debug_assert!(assertions::bpproblem_matches_solution(self, solution));
     }
 
-    pub fn density(&self) -> fsize {
-        let total_bin_area = self.layouts.values().map(|l| l.bin.area()).sum::<fsize>();
+    pub fn density(&self) -> f32 {
+        let total_bin_area = self.layouts.values().map(|l| l.bin.area()).sum::<f32>();
 
         let total_item_area = self
             .layouts
             .values()
             .map(|l| l.placed_item_area(&self.instance))
-            .sum::<fsize>();
+            .sum::<f32>();
 
         total_item_area / total_bin_area
     }
@@ -208,10 +207,6 @@ impl BPProblem {
         self.missing_item_qtys[item_id] += 1;
     }
 
-    /// Makes sure that the all collision detection engines are completely updated with the changes made to the layouts.
-    pub fn flush_changes(&mut self) {
-        self.layouts.values_mut().for_each(|l| l.flush_changes());
-    }
 }
 
 #[derive(Clone, Debug, Copy)]

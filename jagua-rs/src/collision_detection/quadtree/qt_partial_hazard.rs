@@ -5,12 +5,12 @@ use std::sync::{Arc, Weak};
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::SimplePolygon;
+use crate::geometry::primitives::SPolygon;
 
 /// Defines a set of edges from a hazard that is partially active in the [`QTNode`](crate::collision_detection::quadtree::QTNode).
 #[derive(Clone, Debug)]
 pub struct QTHazPartial {
-    pub shape: Weak<SimplePolygon>,
+    pub shape: Weak<SPolygon>,
     pub edges: RelevantEdges,
 }
 
@@ -27,14 +27,14 @@ where
 }
 
 impl QTHazPartial {
-    pub fn new(shape: Arc<SimplePolygon>, edge_indices: RelevantEdges) -> Self {
+    pub fn new(shape: Arc<SPolygon>, edge_indices: RelevantEdges) -> Self {
         Self {
             shape: Arc::downgrade(&shape),
             edges: edge_indices,
         }
     }
 
-    pub fn shape_arc(&self) -> Arc<SimplePolygon> {
+    pub fn shape_arc(&self) -> Arc<SPolygon> {
         self.shape
             .upgrade()
             .expect("polygon reference is not alive")
@@ -71,14 +71,14 @@ impl<T: QTQueryable> CollidesWith<T> for QTHazPartial {
                 0 => unreachable!("edge indices should not be empty"),
                 1..=BBOX_CHECK_THRESHOLD_MINUS_1 => indices
                     .iter()
-                    .any(|&i| entity.collides_with(&shape.get_edge(i))),
+                    .any(|&i| entity.collides_with(&shape.edge(i))),
                 BBOX_CHECK_THRESHOLD.. => {
                     if !entity.collides_with(&shape.bbox()) {
                         return false;
                     }
                     indices
                         .iter()
-                        .any(|&i| entity.collides_with(&shape.get_edge(i)))
+                        .any(|&i| entity.collides_with(&shape.edge(i)))
                 }
             },
         }
