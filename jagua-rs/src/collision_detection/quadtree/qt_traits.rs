@@ -1,8 +1,8 @@
 use crate::geometry::geo_traits::{CollidesWith, Shape};
-use crate::geometry::primitives::Rect;
 #[cfg(doc)]
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::Rect;
 
 /// Common trait for all geometric primitives that can be directly queried in the quadtree
 /// for collisions with the edges of the registered hazards. These include: [Rect], [Edge] and [Circle].

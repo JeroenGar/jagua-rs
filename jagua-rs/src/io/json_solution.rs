@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-
 /// Representation of a solution
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]

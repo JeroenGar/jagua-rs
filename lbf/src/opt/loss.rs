@@ -19,7 +19,7 @@ impl LBFLoss {
     pub fn from_bbox(bbox: &Rect) -> Self {
         Self {
             x_max: bbox.x_max,
-            y_max: bbox.y_max
+            y_max: bbox.y_max,
         }
     }
 

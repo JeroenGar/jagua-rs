@@ -2,8 +2,8 @@ use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{
     CollidesWith, DistanceTo, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Point;
+use crate::geometry::primitives::Rect;
 
 /// Line segment between two [`Point`]s
 #[derive(Clone, Debug, PartialEq, Copy)]

@@ -7,8 +7,8 @@ pub mod hazards;
 pub mod quadtree;
 
 #[doc(inline)]
+pub use cd_engine::CDEConfig;
+#[doc(inline)]
 pub use cd_engine::CDESnapshot;
 #[doc(inline)]
 pub use cd_engine::CDEngine;
-#[doc(inline)]
-pub use cd_engine::CDEConfig;

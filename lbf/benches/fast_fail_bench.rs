@@ -7,13 +7,15 @@ use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::geometry::convex_hull;
-use jagua_rs::geometry::fail_fast::{SPSurrogate, generate_piers, generate_surrogate_poles, SPSurrogateConfig};
+use jagua_rs::geometry::fail_fast::{
+    SPSurrogate, SPSurrogateConfig, generate_piers, generate_surrogate_poles,
+};
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::SPolygon;
 use jagua_rs::io::json_instance::JsonInstance;
+use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
-use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 
 criterion_main!(benches);
 criterion_group!(benches, fast_fail_query_bench);

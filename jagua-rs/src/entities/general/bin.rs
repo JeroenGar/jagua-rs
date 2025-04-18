@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 
-use crate::collision_detection::{CDEConfig, CDEngine};
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::{CDEConfig, CDEngine};
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::Rect;

@@ -5,10 +5,10 @@ use jagua_rs::collision_detection::hazards::filter::HazardFilter;
 use jagua_rs::collision_detection::quadtree::QTHazPresence;
 use jagua_rs::collision_detection::quadtree::QTNode;
 use jagua_rs::entities::general::OriginalShape;
+use jagua_rs::geometry;
 use jagua_rs::geometry::primitives::Edge;
 use jagua_rs::geometry::primitives::Point;
 use jagua_rs::geometry::primitives::SPolygon;
-use jagua_rs::geometry;
 
 pub fn original_shape_data(
     original: &OriginalShape,

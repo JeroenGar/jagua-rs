@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-
 /// The JSON representation of a problem instance
 #[derive(Serialize, Deserialize, Clone)]
 pub struct JsonInstance {

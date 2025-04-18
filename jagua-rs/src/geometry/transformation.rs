@@ -13,7 +13,6 @@ pub struct Transformation {
 }
 
 impl Transformation {
-
     /// Creates a transformation with no effect.
     pub const fn empty() -> Self {
         Self {

@@ -1,6 +1,7 @@
 use crate::config::LBFConfig;
 use crate::opt::loss::LBFLoss;
 use crate::samplers::ls_sampler::LSSampler;
+use crate::samplers::uniform_rect_sampler::UniformRectSampler;
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEngine;
 use jagua_rs::collision_detection::hazards::filter::HazardFilter;
@@ -13,7 +14,6 @@ use log::debug;
 use ordered_float::NotNan;
 use rand::Rng;
 use std::cmp::{Ordering, Reverse};
-use crate::samplers::uniform_rect_sampler::UniformRectSampler;
 
 /// Search the layout (i.e. CDE) for a valid placement of the item, with minimal loss.
 pub fn search(

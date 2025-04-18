@@ -7,10 +7,10 @@ use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable, TransformableFrom};
-use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
+use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 use crate::util::assertions;
 use itertools::Itertools;
@@ -315,11 +315,7 @@ impl CDEngine {
             .any(|e| self.quadtree.collides(&e, filter).is_some())
     }
 
-    fn poly_collides_by_containment(
-        &self,
-        shape: &SPolygon,
-        filter: &impl HazardFilter,
-    ) -> bool {
+    fn poly_collides_by_containment(&self, shape: &SPolygon, filter: &impl HazardFilter) -> bool {
         //collect all active and non-ignored hazards
         self.all_hazards()
             .filter(|h| h.active && !filter.is_irrelevant(&h.entity))
@@ -365,11 +361,7 @@ impl CDEngine {
     }
 
     /// Collects all hazards with which the polygon collides and reports them to the detector.
-    pub fn collect_poly_collisions(
-        &self,
-        shape: &SPolygon,
-        detector: &mut impl HazardDetector,
-    ) {
+    pub fn collect_poly_collisions(&self, shape: &SPolygon, detector: &mut impl HazardDetector) {
         if self.bbox.relation_to(&shape.bbox()) != GeoRelation::Surrounding {
             detector.push(HazardEntity::BinExterior)
         }

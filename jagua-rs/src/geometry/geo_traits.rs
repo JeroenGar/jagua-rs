@@ -1,7 +1,7 @@
 use crate::geometry::Transformation;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Point;
+use crate::geometry::primitives::Rect;
 
 /// Trait for types that can detect collisions between `self` and `other` of type `T`.
 pub trait CollidesWith<T> {

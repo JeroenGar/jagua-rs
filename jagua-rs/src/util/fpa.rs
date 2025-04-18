@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display};
 
-
 ///Wrapper around the [`float_cmp::approx_eq!()`] macro for easy comparison of floats with a certain tolerance.
 ///Two FPAs are considered equal if they are within a certain tolerance of each other.
 #[derive(Debug, Clone, Copy)]

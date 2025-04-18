@@ -1,5 +1,6 @@
 use std::time::Instant;
 
+use crate::collision_detection::CDEConfig;
 use crate::entities::bin_packing::BPInstance;
 use crate::entities::bin_packing::BPSolution;
 use crate::entities::general::Item;
@@ -11,9 +12,10 @@ use crate::geometry::DTransformation;
 use crate::geometry::Transformation;
 use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Point;
+use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
+use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 use crate::io::json_instance::{JsonBin, JsonInstance, JsonItem, JsonShape, JsonSimplePoly};
 use crate::io::json_solution::{
     JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
@@ -23,8 +25,6 @@ use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
-use crate::collision_detection::CDEConfig;
-use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 
 /// Parses a `JsonInstance` into an `Instance`.
 pub struct Parser {
@@ -115,9 +115,7 @@ impl Parser {
                     width,
                     height,
                 } => Rect::new(*x_min, *y_min, x_min + width, y_min + height).into(),
-                JsonShape::SimplePolygon(jsp) => {
-                    SPolygon::new(json_simple_poly_to_points(jsp))
-                }
+                JsonShape::SimplePolygon(jsp) => SPolygon::new(json_simple_poly_to_points(jsp)),
                 JsonShape::Polygon(_) => {
                     unimplemented!("No support for polygon shapes yet")
                 }
@@ -173,9 +171,7 @@ impl Parser {
                     width,
                     height,
                 } => Rect::new(*x_min, *y_min, x_min + width, y_min + height).into(),
-                JsonShape::SimplePolygon(jsp) => {
-                    SPolygon::new(json_simple_poly_to_points(jsp))
-                }
+                JsonShape::SimplePolygon(jsp) => SPolygon::new(json_simple_poly_to_points(jsp)),
                 JsonShape::Polygon(jp) => SPolygon::new(json_simple_poly_to_points(&jp.outer)),
                 JsonShape::MultiPolygon(_) => {
                     unimplemented!("No support for multipolygon shapes yet")

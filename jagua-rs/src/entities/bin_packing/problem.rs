@@ -206,7 +206,6 @@ impl BPProblem {
     fn deregister_included_item(&mut self, item_id: usize) {
         self.missing_item_qtys[item_id] += 1;
     }
-
 }
 
 #[derive(Clone, Debug, Copy)]

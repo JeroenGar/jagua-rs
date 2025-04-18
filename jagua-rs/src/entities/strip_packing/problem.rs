@@ -1,3 +1,4 @@
+use crate::collision_detection::CDEConfig;
 use crate::entities::general::Bin;
 use crate::entities::general::Instance;
 use crate::entities::general::Layout;
@@ -10,7 +11,6 @@ use crate::geometry::primitives::Rect;
 use crate::util::assertions;
 use itertools::Itertools;
 use std::time::Instant;
-use crate::collision_detection::CDEConfig;
 
 /// Modifiable counterpart of [`SPInstance`]: items can be placed and removed, strip can be extended or fitted.
 #[derive(Clone)]
@@ -152,7 +152,6 @@ impl SPProblem {
     pub fn density(&self) -> f32 {
         self.layout.density(&self.instance)
     }
-
 }
 
 /// Represents a placement of an item in the strip packing problem.

@@ -5,10 +5,10 @@ use rand_distr::num_traits::FloatConst;
 
 use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{CollidesWith, DistanceTo, Shape, Transformable};
-use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
+use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 
 static RAYS_PER_ANGLE: usize = if cfg!(debug_assertions) { 10 } else { 200 };
@@ -212,11 +212,7 @@ fn min_distances_to_rays(points: &[Point], rays: &[Edge], forfeit_distance: f32)
         .collect_vec()
 }
 
-fn min_distances_to_poles(
-    points: &[Point],
-    poles: &[Circle],
-    forfeit_distance: f32,
-) -> Vec<f32> {
+fn min_distances_to_poles(points: &[Point], poles: &[Circle], forfeit_distance: f32) -> Vec<f32> {
     points
         .iter()
         .map(|p| {

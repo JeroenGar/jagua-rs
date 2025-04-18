@@ -5,15 +5,15 @@ use ordered_float::{NotNan, OrderedFloat};
 
 use crate::geometry::Transformation;
 use crate::geometry::convex_hull::convex_hull_from_points;
-use crate::geometry::fail_fast::{SPSurrogate, compute_pole, SPSurrogateConfig};
+use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig, compute_pole};
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
     CollidesWith, DistanceTo, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
+use crate::geometry::primitives::Rect;
 use crate::util::FPA;
 
 /// A Simple Polygon is a polygon that does not intersect itself and contains no holes.

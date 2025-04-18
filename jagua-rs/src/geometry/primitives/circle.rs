@@ -1,13 +1,13 @@
-use std::cmp::Ordering;
-use std::f32::consts::PI;
 use crate::geometry::Transformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
     CollidesWith, DistanceTo, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
+use crate::geometry::primitives::Rect;
+use std::cmp::Ordering;
+use std::f32::consts::PI;
 
 /// Circle
 #[derive(Clone, Debug, PartialEq, Copy)]

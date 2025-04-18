@@ -1,7 +1,9 @@
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::{Shape, Transformable};
-use crate::geometry::primitives::{Rect, Point, SPolygon};
-use crate::geometry::shape_modification::{offset_shape, simplify_shape, ShapeModifyConfig, ShapeModifyMode};
+use crate::geometry::primitives::{Point, Rect, SPolygon};
+use crate::geometry::shape_modification::{
+    ShapeModifyConfig, ShapeModifyMode, offset_shape, simplify_shape,
+};
 
 #[derive(Clone, Debug)]
 /// A [`SPolygon`] exactly as is defined in the input file

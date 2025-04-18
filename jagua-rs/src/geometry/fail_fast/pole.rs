@@ -1,8 +1,8 @@
 use std::collections::VecDeque;
 
 use crate::geometry::geo_traits::{CollidesWith, DistanceTo, SeparationDistance, Shape};
-use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Circle;
+use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 
 /// Computes the *pole* - the largest circle which is both inside of `shape` while being outside all other `poles`.

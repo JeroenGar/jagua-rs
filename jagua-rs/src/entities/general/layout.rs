@@ -121,7 +121,6 @@ impl Layout {
         &self.cde
     }
 
-
     /// Returns true if all the items are placed without colliding
     pub fn is_feasible(&self) -> bool {
         self.placed_items.iter().all(|(pk, pi)| {

@@ -12,13 +12,13 @@ use jagua_rs::io::json_instance::JsonInstance;
 use lbf::config::LBFConfig;
 use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
+use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 use std::sync::Arc;
-use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 
 criterion_main!(benches);
 criterion_group!(

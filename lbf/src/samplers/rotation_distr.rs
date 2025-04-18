@@ -1,9 +1,9 @@
-use std::f32::consts::PI;
 use rand::Rng;
 use rand::prelude::Distribution;
 use rand::prelude::IndexedRandom;
 use rand_distr::Normal;
 use rand_distr::Uniform;
+use std::f32::consts::PI;
 
 use jagua_rs::entities::general::Item;
 use jagua_rs::geometry::geo_enums::RotationRange;
@@ -52,9 +52,7 @@ impl NormalRotDistr {
     pub fn from_item(item: &Item, r_ref: f32, stddev: f32) -> Self {
         match &item.allowed_rotation {
             RotationRange::None => NormalRotDistr::None,
-            RotationRange::Continuous => {
-                NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap())
-            }
+            RotationRange::Continuous => NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap()),
             RotationRange::Discrete(_) => NormalRotDistr::Discrete(r_ref),
         }
     }

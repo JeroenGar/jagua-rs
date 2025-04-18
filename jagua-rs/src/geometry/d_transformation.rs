@@ -1,8 +1,8 @@
 use std::borrow::Borrow;
 use std::fmt::Display;
 
-use ordered_float::NotNan;
 use crate::geometry::Transformation;
+use ordered_float::NotNan;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Copy, Default)]
 /// [Proper rigid transformation](https://en.wikipedia.org/wiki/Rigid_transformation),
