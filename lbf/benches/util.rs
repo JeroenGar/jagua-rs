@@ -2,10 +2,8 @@ use itertools::Itertools;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPPlacement;
 use jagua_rs::entities::strip_packing::{SPInstance, SPProblem};
-;
 use jagua_rs::io::json_instance::JsonInstance;
 use jagua_rs::io::parser::Parser;
-use jagua_rs::util::{CDEConfig, SPSurrogateConfig};
 use lbf::config::LBFConfig;
 use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
@@ -15,6 +13,8 @@ use rand::SeedableRng;
 use rand::prelude::{IteratorRandom, SmallRng};
 use std::any::Any;
 use std::path::Path;
+use jagua_rs::collision_detection::CDEConfig;
+use jagua_rs::geometry::fail_fast::SPSurrogateConfig;
 
 pub const SWIM_PATH: &str = "../assets/swim.json";
 pub const N_ITEMS_REMOVED: usize = 5;
@@ -75,13 +75,11 @@ pub fn create_lbf_problem(
             lbf_optimizer.instance.item(item_id).shape_cd.n_vertices()
         );
     }
-    problem.flush_changes();
 
     {
         let draw_options = SvgDrawOptions {
             quadtree: true,
             surrogate: true,
-            haz_prox_grid: false,
             ..SvgDrawOptions::default()
         };
         let svg = io::layout_to_svg::layout_to_svg(&problem.layout, &instance, draw_options);

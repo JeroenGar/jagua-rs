@@ -5,7 +5,6 @@ use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPInstance;
-;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::geometry::primitives::Point;
 use jagua_rs::geometry::primitives::SPolygon;
@@ -13,13 +12,13 @@ use jagua_rs::io::json_instance::JsonInstance;
 use lbf::config::LBFConfig;
 use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
-use lbf::samplers::hpg_sampler::HPGSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 use std::sync::Arc;
+use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 
 criterion_main!(benches);
 criterion_group!(
@@ -91,10 +90,9 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
         };*/
 
         let samples = {
-            let mut hpg_sampler = HPGSampler::new(instance.item(0), layout.cde())
-                .expect("should be able to create HPGSampler");
+            let sampler = UniformRectSampler::new(layout.cde().bbox(), instance.item(0));
             (0..N_TOTAL_SAMPLES)
-                .map(|_| hpg_sampler.sample(&mut rng))
+                .map(|_| sampler.sample(&mut rng))
                 .collect_vec()
         };
 

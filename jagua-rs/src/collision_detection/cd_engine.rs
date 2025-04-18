@@ -178,8 +178,8 @@ impl CDEngine {
         1 + self.quadtree.get_number_of_children()
     }
 
-    pub fn bbox(&self) -> &Rect {
-        &self.bbox
+    pub fn bbox(&self) -> Rect {
+        self.bbox
     }
 
     pub fn config(&self) -> CDEConfig {

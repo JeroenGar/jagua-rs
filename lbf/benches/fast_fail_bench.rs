@@ -6,18 +6,14 @@ use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
-;
 use jagua_rs::geometry::convex_hull;
-use jagua_rs::geometry::fail_fast::{SPSurrogate, generate_piers, generate_surrogate_poles};
-use jagua_rs::geometry::geo_traits::DistanceTo;
+use jagua_rs::geometry::fail_fast::{SPSurrogate, generate_piers, generate_surrogate_poles, SPSurrogateConfig};
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
-use jagua_rs::geometry::primitives::Circle;
 use jagua_rs::geometry::primitives::SPolygon;
 use jagua_rs::io::json_instance::JsonInstance;
-use jagua_rs::util::SPSurrogateConfig;
-use lbf::samplers::hpg_sampler::HPGSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
+use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 
 criterion_main!(benches);
 criterion_group!(benches, fast_fail_query_bench);
@@ -76,7 +72,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     let samples = ITEMS_ID_TO_TEST
         .iter()
         .map(|&item_id| {
-            let mut sampler = HPGSampler::new(instance.item(item_id), layout.cde()).unwrap();
+            let sampler = UniformRectSampler::new(layout.cde().bbox, instance.item(item_id));
             (0..N_TOTAL_SAMPLES)
                 .map(|_| sampler.sample(&mut rng))
                 .collect_vec()
@@ -155,28 +151,20 @@ pub fn create_custom_surrogate(
     n_poles: usize,
     n_piers: usize,
 ) -> SPSurrogate {
+    let sp_config = SPSurrogateConfig {
+        n_pole_limits: [(n_poles, 0.0); 3],
+        n_ff_poles: n_poles,
+        n_ff_piers: n_piers,
+    };
+
     let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
     let mut poles = vec![simple_poly.poi.clone()];
     poles.extend(generate_surrogate_poles(
         simple_poly,
-        &[(n_poles, 0.0), (n_poles, 0.0), (n_poles, 0.0)],
+        &sp_config.n_pole_limits,
     ));
-    let poles_bounding_circle = Circle::bounding_circle(&poles);
 
-    let max_distance_point_to_pole = simple_poly
-        .vertices
-        .iter()
-        .map(|p| {
-            poles
-                .iter()
-                .map(|c| c.distance_to(p))
-                .fold(f32::MAX, |acc, d| f32::min(acc, d))
-        })
-        .fold(f32::MIN, |acc, d| f32::max(acc, d));
-
-    let n_ff_poles = usize::min(n_poles, poles.len());
-    let relevant_poles_for_piers = &poles[0..n_ff_poles];
-    let piers = generate_piers(simple_poly, n_piers, relevant_poles_for_piers);
+    let piers = generate_piers(simple_poly, n_piers, &poles);
     let convex_hull_area = SPolygon::new(
         convex_hull_indices
             .iter()
@@ -189,11 +177,8 @@ pub fn create_custom_surrogate(
         convex_hull_indices,
         poles,
         piers,
-        pole_bounding_circle: poles_bounding_circle,
-        max_distance_point_to_pole,
-        n_ff_poles,
         convex_hull_area,
-        config: SPSurrogateConfig::none(),
+        config: sp_config,
     };
 
     surrogate

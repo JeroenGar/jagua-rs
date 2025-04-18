@@ -11,7 +11,6 @@ use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, Haza
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPPlacement;
-;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
@@ -75,8 +74,6 @@ fn quadtree_update_bench(c: &mut Criterion) {
 
                 //println!("Removing item with id: {}\n", pi_uid.item_id);
                 problem.remove_item(pkey, true);
-
-                problem.flush_changes();
 
                 problem.place_item(p_opt);
             })
@@ -193,7 +190,6 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 };
 
                 problem.remove_item(pkey, true);
-                problem.flush_changes();
 
                 let item_id = p_opt.item_id;
                 let item = instance.item(item_id);

@@ -55,7 +55,7 @@ impl LSSampler {
     }
 
     /// Creates a new sampler with default standard deviation ranges: [SD_TRANSL] and [SD_ROT].
-    pub fn from_defaults(item: &Item, ref_transform: DTransformation, bbox: &Rect) -> Self {
+    pub fn from_defaults(item: &Item, ref_transform: DTransformation, bbox: Rect) -> Self {
         let max_dim = f32::max(bbox.width(), bbox.height());
         let sd_transl_range = (SD_TRANSL.0 * max_dim, SD_TRANSL.1 * max_dim);
         Self::new(item, ref_transform, sd_transl_range, SD_ROT)
