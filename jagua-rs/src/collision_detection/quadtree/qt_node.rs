@@ -6,7 +6,7 @@ use crate::collision_detection::quadtree::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
-use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Rect;
 use tribool::Tribool;
 
 /// Quadtree node
@@ -15,7 +15,7 @@ pub struct QTNode {
     /// The level of the node in the tree, 0 being the bottom-most level
     pub level: u8,
     /// The bounding box of the node
-    pub bbox: AARectangle,
+    pub bbox: Rect,
     /// The children of the node, if any
     pub children: Option<Box<[QTNode; 4]>>,
     /// The hazards present in the node
@@ -23,7 +23,7 @@ pub struct QTNode {
 }
 
 impl QTNode {
-    pub fn new(level: u8, bbox: AARectangle) -> Self {
+    pub fn new(level: u8, bbox: Rect) -> Self {
         QTNode {
             level,
             bbox,
@@ -222,7 +222,7 @@ impl QTNode {
     /// and `Tribool::Indeterminate` if it is not possible to determine whether the entity collides with any hazard.
     pub fn definitely_collides<T>(&self, entity: &T, filter: &impl HazardFilter) -> Tribool
     where
-        T: CollidesWith<AARectangle>,
+        T: CollidesWith<Rect>,
     {
         match self.hazards.strongest(filter) {
             None => Tribool::False,
@@ -255,7 +255,7 @@ impl QTNode {
     /// and `Tribool::Indeterminate` if it is not possible to determine whether the entity collides with any hazard.
     pub fn definitely_collides_with<T>(&self, entity: &T, hazard_entity: HazardEntity) -> Tribool
     where
-        T: CollidesWith<AARectangle>,
+        T: CollidesWith<Rect>,
     {
         match self.hazards.get(hazard_entity) {
             None => Tribool::False, //Node does not contain entity
@@ -290,7 +290,7 @@ impl QTNode {
     /// by the resolution of the quadtree.
     pub fn collect_potential_hazards_within(
         &self,
-        bbox: &AARectangle,
+        bbox: &Rect,
         detector: &mut impl HazardDetector,
     ) {
         match bbox.collides_with(&self.bbox) {

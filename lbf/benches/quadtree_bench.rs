@@ -11,10 +11,9 @@ use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, Haza
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPPlacement;
-use jagua_rs::fsize;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::io::json_instance::JsonInstance;
-use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
+use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 
 use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
 
@@ -43,8 +42,6 @@ fn quadtree_update_bench(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
-    //disable haz prox grid
-    config.cde_config.hpg_n_cells = 1;
 
     let mut group = c.benchmark_group("quadtree_update");
     for depth in QT_DEPTHS {
@@ -76,8 +73,6 @@ fn quadtree_update_bench(c: &mut Criterion) {
                 //println!("Removing item with id: {}\n", pi_uid.item_id);
                 problem.remove_item(pkey, true);
 
-                problem.flush_changes();
-
                 problem.place_item(p_opt);
             })
         });
@@ -94,8 +89,6 @@ fn quadtree_query_bench(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
-    //disable haz prox grid
-    config.cde_config.hpg_n_cells = 1;
 
     let mut group = c.benchmark_group("quadtree_query");
     for depth in QT_DEPTHS {
@@ -109,7 +102,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformAARectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
+        let sampler = UniformRectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -142,7 +135,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
         });
         println!(
             "valid: {:.3}%",
-            n_valid as fsize / (n_valid + n_invalid) as fsize * 100.0
+            n_valid as f32 / (n_valid + n_invalid) as f32 * 100.0
         );
     }
     group.finish();
@@ -155,8 +148,6 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
-    //disable haz prox grid
-    config.cde_config.hpg_n_cells = 1;
 
     let mut group = c.benchmark_group("quadtree_query_update_1000_1");
     for depth in QT_DEPTHS {
@@ -169,7 +160,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         let (mut problem, _) = util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformAARectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
+        let sampler = UniformRectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -193,7 +184,6 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 };
 
                 problem.remove_item(pkey, true);
-                problem.flush_changes();
 
                 let item_id = p_opt.item_id;
                 let item = instance.item(item_id);
@@ -222,8 +212,6 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
-    //disable haz prox grid
-    config.cde_config.hpg_n_cells = 1;
 
     let mut group = c.benchmark_group("quadtree_collect_query");
     for depth in QT_DEPTHS {
@@ -237,7 +225,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformAARectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
+        let sampler = UniformRectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -276,8 +264,8 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
         });
         println!(
             "valid: {:.3}%, avg # detected: {:.3}",
-            n_valid as fsize / (n_valid + n_invalid) as fsize * 100.0,
-            n_detected as fsize / (n_valid + n_invalid) as fsize
+            n_valid as f32 / (n_valid + n_invalid) as f32 * 100.0,
+            n_detected as f32 / (n_valid + n_invalid) as f32
         );
     }
     group.finish();

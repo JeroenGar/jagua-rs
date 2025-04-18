@@ -1,5 +1,6 @@
 use std::time::Instant;
 
+use crate::collision_detection::CDEConfig;
 use crate::entities::bin_packing::BPInstance;
 use crate::entities::bin_packing::BPSolution;
 use crate::entities::general::Item;
@@ -7,20 +8,18 @@ use crate::entities::general::{Bin, InferiorQualityZone, N_QUALITIES};
 use crate::entities::general::{Instance, OriginalShape};
 use crate::entities::strip_packing::SPInstance;
 use crate::entities::strip_packing::SPSolution;
-use crate::fsize;
 use crate::geometry::DTransformation;
 use crate::geometry::Transformation;
-use crate::geometry::geo_enums::AllowedRotation;
+use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Point;
-use crate::geometry::primitives::SimplePolygon;
+use crate::geometry::primitives::Rect;
+use crate::geometry::primitives::SPolygon;
+use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 use crate::io::json_instance::{JsonBin, JsonInstance, JsonItem, JsonShape, JsonSimplePoly};
 use crate::io::json_solution::{
     JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
 };
-use crate::util::ShapeModifyMode;
-use crate::util::{CDEConfig, ShapeModifyConfig};
 use itertools::Itertools;
 use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
@@ -42,8 +41,8 @@ impl Parser {
     /// If enabled, every hazard is inflated/deflated by half this value. See [`ShapeModifyConfig::offset`].
     pub fn new(
         cde_config: CDEConfig,
-        poly_simpl_tolerance: Option<fsize>,
-        min_item_separation: Option<fsize>,
+        poly_simpl_tolerance: Option<f32>,
+        min_item_separation: Option<f32>,
     ) -> Parser {
         let shape_modify_config = ShapeModifyConfig {
             offset: min_item_separation.map(|f| f / 2.0),
@@ -115,10 +114,8 @@ impl Parser {
                     y_min,
                     width,
                     height,
-                } => AARectangle::new(*x_min, *y_min, x_min + width, y_min + height).into(),
-                JsonShape::SimplePolygon(jsp) => {
-                    SimplePolygon::new(json_simple_poly_to_points(jsp))
-                }
+                } => Rect::new(*x_min, *y_min, x_min + width, y_min + height).into(),
+                JsonShape::SimplePolygon(jsp) => SPolygon::new(json_simple_poly_to_points(jsp)),
                 JsonShape::Polygon(_) => {
                     unimplemented!("No support for polygon shapes yet")
                 }
@@ -128,7 +125,7 @@ impl Parser {
             };
             OriginalShape {
                 pre_transform: centering_transformation(&shape),
-                shape: shape,
+                shape,
                 modify_mode: ShapeModifyMode::Inflate,
                 modify_config: self.shape_modify_config,
             }
@@ -140,12 +137,12 @@ impl Parser {
         let allowed_orientations = match json_item.allowed_orientations.as_ref() {
             Some(a_o) => {
                 if a_o.is_empty() || (a_o.len() == 1 && a_o[0] == 0.0) {
-                    AllowedRotation::None
+                    RotationRange::None
                 } else {
-                    AllowedRotation::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
+                    RotationRange::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
                 }
             }
-            None => AllowedRotation::Continuous,
+            None => RotationRange::Continuous,
         };
 
         let item = Item::new(
@@ -173,11 +170,9 @@ impl Parser {
                     y_min,
                     width,
                     height,
-                } => AARectangle::new(*x_min, *y_min, x_min + width, y_min + height).into(),
-                JsonShape::SimplePolygon(jsp) => {
-                    SimplePolygon::new(json_simple_poly_to_points(jsp))
-                }
-                JsonShape::Polygon(jp) => SimplePolygon::new(json_simple_poly_to_points(&jp.outer)),
+                } => Rect::new(*x_min, *y_min, x_min + width, y_min + height).into(),
+                JsonShape::SimplePolygon(jsp) => SPolygon::new(json_simple_poly_to_points(jsp)),
+                JsonShape::Polygon(jp) => SPolygon::new(json_simple_poly_to_points(&jp.outer)),
                 JsonShape::MultiPolygon(_) => {
                     unimplemented!("No support for multipolygon shapes yet")
                 }
@@ -196,7 +191,7 @@ impl Parser {
                 let json_holes = &jp.inner;
                 json_holes
                     .iter()
-                    .map(|jsp| SimplePolygon::new(json_simple_poly_to_points(jsp)))
+                    .map(|jsp| SPolygon::new(json_simple_poly_to_points(jsp)))
                     .collect_vec()
             }
             JsonShape::MultiPolygon(_) => {
@@ -216,9 +211,9 @@ impl Parser {
                             y_min,
                             width,
                             height,
-                        } => AARectangle::new(*x_min, *y_min, x_min + width, y_min + height).into(),
+                        } => Rect::new(*x_min, *y_min, x_min + width, y_min + height).into(),
                         JsonShape::SimplePolygon(jsp) => {
-                            SimplePolygon::new(json_simple_poly_to_points(jsp))
+                            SPolygon::new(json_simple_poly_to_points(jsp))
                         }
                         JsonShape::Polygon(_) => {
                             unimplemented!("No support for polygon to simplepolygon conversion yet")
@@ -399,7 +394,7 @@ pub fn absolute_to_internal_transform(
         .decompose()
 }
 
-pub fn centering_transformation(shape: &SimplePolygon) -> DTransformation {
+pub fn centering_transformation(shape: &SPolygon) -> DTransformation {
     let Point(cx, cy) = shape.centroid();
     DTransformation::new(0.0, (-cx, -cy))
 }

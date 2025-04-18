@@ -1,9 +1,7 @@
-use serde::{Deserialize, Serialize};
-
-use jagua_rs::fsize;
-use jagua_rs::util::{CDEConfig, SPSurrogateConfig};
-
 use crate::io::svg_util::SvgDrawOptions;
+use jagua_rs::collision_detection::CDEConfig;
+use jagua_rs::geometry::fail_fast::SPSurrogateConfig;
+use serde::{Deserialize, Serialize};
 
 /// Configuration for the LBF optimizer
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
@@ -11,10 +9,10 @@ pub struct LBFConfig {
     /// Configuration of the Collision Detection Engine
     pub cde_config: CDEConfig,
     /// Max deviation from the original polygon area as a fraction. If undefined, the algorithm will run without simplification
-    pub poly_simpl_tolerance: Option<fsize>,
+    pub poly_simpl_tolerance: Option<f32>,
     /// Minimum distance between items and other hazards.
     /// If undefined, the algorithm will run without this constraint
-    pub min_item_separation: Option<fsize>,
+    pub min_item_separation: Option<f32>,
     /// Seed for the PRNG. If undefined, the algorithm will run in non-deterministic mode using entropy
     pub prng_seed: Option<u64>,
     /// Total budget of samples per item per layout
@@ -31,7 +29,6 @@ impl Default for LBFConfig {
         Self {
             cde_config: CDEConfig {
                 quadtree_depth: 5,
-                hpg_n_cells: 2000,
                 item_surrogate_config: SPSurrogateConfig {
                     n_pole_limits: [(100, 0.0), (20, 0.75), (10, 0.90)],
                     n_ff_poles: 2,

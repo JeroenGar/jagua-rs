@@ -1,23 +1,24 @@
-use crate::fsize;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::{Shape, Transformable};
-use crate::geometry::primitives::{AARectangle, Point, SimplePolygon};
-use crate::util::{ShapeModifyConfig, ShapeModifyMode, offset_shape, simplify_shape};
+use crate::geometry::primitives::{Point, Rect, SPolygon};
+use crate::geometry::shape_modification::{
+    ShapeModifyConfig, ShapeModifyMode, offset_shape, simplify_shape,
+};
 
 #[derive(Clone, Debug)]
-/// A [`SimplePolygon`] exactly as is defined in the input file
+/// A [`SPolygon`] exactly as is defined in the input file
 ///
 /// Also contains all required operation to convert it to a shape that can be used internally.
 /// Currently, these are centering and simplification operations, but could be extended in the future.
 pub struct OriginalShape {
-    pub shape: SimplePolygon,
+    pub shape: SPolygon,
     pub pre_transform: DTransformation,
     pub modify_mode: ShapeModifyMode,
     pub modify_config: ShapeModifyConfig,
 }
 
 impl OriginalShape {
-    pub fn convert_to_internal(&self) -> SimplePolygon {
+    pub fn convert_to_internal(&self) -> SPolygon {
         // Apply the transformation
         let mut internal = self.shape.transform_clone(&self.pre_transform.compose());
 
@@ -38,15 +39,15 @@ impl Shape for OriginalShape {
         self.shape.centroid()
     }
 
-    fn area(&self) -> fsize {
+    fn area(&self) -> f32 {
         self.shape.area()
     }
 
-    fn bbox(&self) -> AARectangle {
+    fn bbox(&self) -> Rect {
         self.shape.bbox()
     }
 
-    fn diameter(&self) -> fsize {
+    fn diameter(&self) -> f32 {
         self.shape.diameter()
     }
 }

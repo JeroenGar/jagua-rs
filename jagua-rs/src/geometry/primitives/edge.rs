@@ -1,12 +1,11 @@
-use crate::fsize;
 use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{
     CollidesWith, DistanceTo, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Point;
+use crate::geometry::primitives::Rect;
 
-/// Line segment
+/// Line segment between two [`Point`]s
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub struct Edge {
     pub start: Point,
@@ -22,7 +21,7 @@ impl Edge {
         Edge { start, end }
     }
 
-    pub fn extend_at_front(mut self, d: fsize) -> Self {
+    pub fn extend_at_front(mut self, d: f32) -> Self {
         //extend the line at the front by distance d
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
         let l = self.diameter();
@@ -31,7 +30,7 @@ impl Edge {
         self
     }
 
-    pub fn extend_at_back(mut self, d: fsize) -> Self {
+    pub fn extend_at_back(mut self, d: f32) -> Self {
         //extend the line at the back by distance d
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
         let l = self.diameter();
@@ -40,7 +39,7 @@ impl Edge {
         self
     }
 
-    pub fn scale(mut self, factor: fsize) -> Self {
+    pub fn scale(mut self, factor: f32) -> Self {
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
         self.start.0 -= dx * (factor - 1.0) / 2.0;
         self.start.1 -= dy * (factor - 1.0) / 2.0;
@@ -90,20 +89,20 @@ impl Edge {
         Point(xx, yy)
     }
 
-    pub fn x_min(&self) -> fsize {
-        fsize::min(self.start.0, self.end.0)
+    pub fn x_min(&self) -> f32 {
+        f32::min(self.start.0, self.end.0)
     }
 
-    pub fn y_min(&self) -> fsize {
-        fsize::min(self.start.1, self.end.1)
+    pub fn y_min(&self) -> f32 {
+        f32::min(self.start.1, self.end.1)
     }
 
-    pub fn x_max(&self) -> fsize {
-        fsize::max(self.start.0, self.end.0)
+    pub fn x_max(&self) -> f32 {
+        f32::max(self.start.0, self.end.0)
     }
 
-    pub fn y_max(&self) -> fsize {
-        fsize::max(self.start.1, self.end.1)
+    pub fn y_max(&self) -> f32 {
+        f32::max(self.start.1, self.end.1)
     }
 }
 
@@ -135,22 +134,22 @@ impl Shape for Edge {
         )
     }
 
-    fn area(&self) -> fsize {
+    fn area(&self) -> f32 {
         0.0
     }
 
-    fn bbox(&self) -> AARectangle {
-        AARectangle::new(self.x_min(), self.y_min(), self.x_max(), self.y_max())
+    fn bbox(&self) -> Rect {
+        Rect::new(self.x_min(), self.y_min(), self.x_max(), self.y_max())
     }
 
-    fn diameter(&self) -> fsize {
+    fn diameter(&self) -> f32 {
         self.start.distance_to(&self.end)
     }
 }
 
 impl DistanceTo<Point> for Edge {
     #[inline(always)]
-    fn sq_distance_to(&self, point: &Point) -> fsize {
+    fn sq_distance_to(&self, point: &Point) -> f32 {
         let Point(x, y) = point;
         let Point(xx, yy) = self.closest_point_on_edge(point);
 
@@ -159,8 +158,8 @@ impl DistanceTo<Point> for Edge {
     }
 
     #[inline(always)]
-    fn distance_to(&self, point: &Point) -> fsize {
-        fsize::sqrt(self.sq_distance_to(point))
+    fn distance_to(&self, point: &Point) -> f32 {
+        f32::sqrt(self.sq_distance_to(point))
     }
 }
 
@@ -174,17 +173,17 @@ impl CollidesWith<Edge> for Edge {
     }
 }
 
-impl CollidesWith<AARectangle> for Edge {
+impl CollidesWith<Rect> for Edge {
     #[inline(always)]
-    fn collides_with(&self, other: &AARectangle) -> bool {
+    fn collides_with(&self, other: &Rect) -> bool {
         other.collides_with(self)
     }
 }
 
 #[inline(always)]
 fn edge_intersection(e1: &Edge, e2: &Edge, calculate_location: bool) -> Intersection {
-    if fsize::max(e1.x_min(), e2.x_min()) > fsize::min(e1.x_max(), e2.x_max())
-        || fsize::max(e1.y_min(), e2.y_min()) > fsize::min(e1.y_max(), e2.y_max())
+    if f32::max(e1.x_min(), e2.x_min()) > f32::min(e1.x_max(), e2.x_max())
+        || f32::max(e1.y_min(), e2.y_min()) > f32::min(e1.y_max(), e2.y_max())
     {
         //bounding boxes do not overlap
         return Intersection::No;

@@ -3,7 +3,6 @@ use crate::collision_detection::{CDESnapshot, CDEngine};
 use crate::entities::general::Item;
 use crate::entities::general::{Bin, Instance};
 use crate::entities::general::{PItemKey, PlacedItem};
-use crate::fsize;
 use crate::geometry::DTransformation;
 use crate::util::assertions;
 use slotmap::SlotMap;
@@ -104,27 +103,22 @@ impl Layout {
 
     /// The current density of the layout defined as the ratio of the area of the items placed to the area of the bin.
     /// Uses the original shapes of items and bin to calculate the area.
-    pub fn density(&self, instance: &impl Instance) -> fsize {
+    pub fn density(&self, instance: &impl Instance) -> f32 {
         self.placed_item_area(instance) / self.bin.area()
     }
 
     /// The sum of the areas of the items placed in the layout (using the original shapes of the items).
-    pub fn placed_item_area(&self, instance: &impl Instance) -> fsize {
+    pub fn placed_item_area(&self, instance: &impl Instance) -> f32 {
         self.placed_items
             .iter()
             .map(|(_, pi)| instance.item(pi.item_id))
             .map(|item| item.area())
-            .sum::<fsize>()
+            .sum::<f32>()
     }
 
     /// Returns the collision detection engine for this layout
     pub fn cde(&self) -> &CDEngine {
         &self.cde
-    }
-
-    /// Makes sure that the collision detection engine is completely updated with the changes made to the layout.
-    pub fn flush_changes(&mut self) {
-        self.cde.flush_haz_prox_grid();
     }
 
     /// Returns true if all the items are placed without colliding
@@ -148,16 +142,16 @@ pub struct LayoutSnapshot {
 
 impl LayoutSnapshot {
     /// Equivalent to [`Layout::density`]
-    pub fn density(&self, instance: &impl Instance) -> fsize {
+    pub fn density(&self, instance: &impl Instance) -> f32 {
         self.placed_item_area(instance) / self.bin.area()
     }
 
     /// Equivalent to [`Layout::placed_item_area`]
-    pub fn placed_item_area(&self, instance: &impl Instance) -> fsize {
+    pub fn placed_item_area(&self, instance: &impl Instance) -> f32 {
         self.placed_items
             .iter()
             .map(|(_, pi)| instance.item(pi.item_id))
             .map(|item| item.area())
-            .sum::<fsize>()
+            .sum::<f32>()
     }
 }

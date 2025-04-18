@@ -3,7 +3,7 @@ pub mod convex_hull;
 
 mod d_transformation;
 
-/// All logic related to fail-fast surrogate and its generation
+/// The *fail-fast surrogate* and all logic pertaining to its generation
 pub mod fail_fast;
 
 /// Set of enums representing various geometric properties
@@ -12,9 +12,12 @@ pub mod geo_enums;
 /// Set of traits representing various geometric properties & operations
 pub mod geo_traits;
 
-/// Set of atomic building blocks for the geometry module
+/// Set of geometric primitives - atomic building blocks for the geometry module
 pub mod primitives;
 mod transformation;
+
+/// Set of function to modify geometric shapes
+pub mod shape_modification;
 
 #[doc(inline)]
 pub use d_transformation::DTransformation;

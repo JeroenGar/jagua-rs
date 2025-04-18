@@ -40,10 +40,6 @@ harness = false
 #name = "edge_sensitivity_bench"
 #harness = false
 
-[[bench]]
-name = "hpg_bench"
-harness = false
-
 [profile.release]
 opt-level = 3
 

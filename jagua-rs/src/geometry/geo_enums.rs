@@ -1,5 +1,3 @@
-use crate::fsize;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum GeoPosition {
     Exterior,
@@ -21,11 +19,11 @@ pub enum GeoRelation {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum AllowedRotation {
-    /// No rotation is allowed
+pub enum RotationRange {
+    /// No rotation allowed
     None,
-    /// Any rotation is allowed
+    /// A continuous range of rotations
     Continuous,
-    /// Only a limited set of rotations is allowed
-    Discrete(Vec<fsize>),
+    /// A discrete set of rotations
+    Discrete(Vec<f32>),
 }

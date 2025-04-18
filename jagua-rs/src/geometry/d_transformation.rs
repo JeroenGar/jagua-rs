@@ -1,23 +1,21 @@
 use std::borrow::Borrow;
 use std::fmt::Display;
 
+use crate::geometry::Transformation;
 use ordered_float::NotNan;
 
-use crate::fsize;
-use crate::geometry::Transformation;
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Copy)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Copy, Default)]
 /// [Proper rigid transformation](https://en.wikipedia.org/wiki/Rigid_transformation),
 /// decomposed into a rotation followed by a translation.
 pub struct DTransformation {
     /// The rotation in radians
-    pub rotation: NotNan<fsize>,
+    pub rotation: NotNan<f32>,
     /// The translation in the x and y-axis
-    pub translation: (NotNan<fsize>, NotNan<fsize>),
+    pub translation: (NotNan<f32>, NotNan<f32>),
 }
 
 impl DTransformation {
-    pub fn new(rotation: fsize, translation: (fsize, fsize)) -> Self {
+    pub fn new(rotation: f32, translation: (f32, f32)) -> Self {
         Self {
             rotation: NotNan::new(rotation).expect("rotation is NaN"),
             translation: (
@@ -28,23 +26,23 @@ impl DTransformation {
     }
 
     pub const fn empty() -> Self {
-        const _0: NotNan<fsize> = unsafe { NotNan::new_unchecked(0.0) };
+        const _0: NotNan<f32> = unsafe { NotNan::new_unchecked(0.0) };
         Self {
             rotation: _0,
             translation: (_0, _0),
         }
     }
 
-    pub fn rotation(&self) -> fsize {
+    pub fn rotation(&self) -> f32 {
         self.rotation.into()
     }
 
-    pub fn translation(&self) -> (fsize, fsize) {
+    pub fn translation(&self) -> (f32, f32) {
         (self.translation.0.into(), self.translation.1.into())
     }
 
     pub fn compose(&self) -> Transformation {
-        Transformation::from_dt(self)
+        self.into()
     }
 }
 

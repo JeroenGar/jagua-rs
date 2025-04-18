@@ -1,8 +1,6 @@
 use crate::collision_detection::CDEngine;
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::hpg::hazard_proximity_grid::HazardProximityGrid;
-use crate::collision_detection::hpg::hpg_cell::HPGCellUpdate;
 use crate::collision_detection::quadtree::QTHazPresence;
 use crate::collision_detection::quadtree::QTHazard;
 use crate::collision_detection::quadtree::QTNode;
@@ -14,7 +12,7 @@ use crate::entities::general::Layout;
 use crate::entities::general::LayoutSnapshot;
 use crate::entities::strip_packing::SPProblem;
 use crate::entities::strip_packing::SPSolution;
-use crate::geometry::primitives::AARectangle;
+use crate::geometry::primitives::Rect;
 use itertools::Itertools;
 use log::error;
 use std::collections::HashSet;
@@ -347,59 +345,9 @@ fn hazards_match(chv1: &[Hazard], chv2: &[Hazard]) -> bool {
     true
 }
 
-pub fn hpg_update_no_affected_cells_remain(
-    to_register: &Hazard,
-    hpg: &mut HazardProximityGrid,
-) -> bool {
-    //To ensure the boundary fill algorithm did not miss any cells, we check all the cells to make sure no cells were affected
-    let old_cells = hpg.grid.cells.clone();
-
-    //do a full sweep of the grid, and collect the affected cells
-    let undetected_cells_indices = hpg
-        .grid
-        .cells
-        .iter_mut()
-        .enumerate()
-        .flat_map(|(i, cell)| cell.as_mut().map(|cell| (i, cell)))
-        .map(|(i, cell)| (i, cell.register_hazard(to_register)))
-        .filter(|(_i, res)| res == &HPGCellUpdate::Affected)
-        .map(|(i, _res)| i)
-        .collect_vec();
-
-    if !undetected_cells_indices.is_empty() {
-        //print the affected cells by row and col
-        let undetected_row_cols = undetected_cells_indices
-            .iter()
-            .map(|i| hpg.grid.to_row_col(*i).unwrap())
-            .collect_vec();
-        println!(
-            "{} detected affected cells, radius: {}",
-            undetected_cells_indices.len(),
-            hpg.cell_radius
-        );
-        for (&i, (row, col)) in undetected_cells_indices
-            .iter()
-            .zip(undetected_row_cols.iter())
-        {
-            println!(
-                "cell [{},{}] with {} neighbors",
-                row,
-                col,
-                hpg.grid.get_neighbors(i).map(|j| j != i).iter().count()
-            );
-            println!("old {:?}", &old_cells[i].as_ref().unwrap().uni_prox);
-            println!("new {:?}", &hpg.grid.cells[i].as_ref().unwrap().uni_prox);
-            println!()
-        }
-        false
-    } else {
-        true
-    }
-}
-
-/// Checks if the quadrants follow the layout set in [AARectangle::QUADRANT_NEIGHBOR_LAYOUT]
-pub fn quadrants_have_valid_layout(quadrants: &[&AARectangle; 4]) -> bool {
-    let layout = AARectangle::QUADRANT_NEIGHBOR_LAYOUT;
+/// Checks if the quadrants follow the layout set in [Rect::QUADRANT_NEIGHBOR_LAYOUT]
+pub fn quadrants_have_valid_layout(quadrants: &[&Rect; 4]) -> bool {
+    let layout = Rect::QUADRANT_NEIGHBOR_LAYOUT;
     for (idx, q) in quadrants.iter().enumerate() {
         //make sure they share two points (an edge) with each neighbor
         let [n_0, n_1] = layout[idx];
