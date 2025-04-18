@@ -42,8 +42,6 @@ fn quadtree_update_bench(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
-    //disable haz prox grid
-    config.cde_config.hpg_n_cells = 1;
 
     let mut group = c.benchmark_group("quadtree_update");
     for depth in QT_DEPTHS {
@@ -91,8 +89,6 @@ fn quadtree_query_bench(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
-    //disable haz prox grid
-    config.cde_config.hpg_n_cells = 1;
 
     let mut group = c.benchmark_group("quadtree_query");
     for depth in QT_DEPTHS {
@@ -152,8 +148,6 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
-    //disable haz prox grid
-    config.cde_config.hpg_n_cells = 1;
 
     let mut group = c.benchmark_group("quadtree_query_update_1000_1");
     for depth in QT_DEPTHS {
@@ -218,8 +212,6 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
-    //disable haz prox grid
-    config.cde_config.hpg_n_cells = 1;
 
     let mut group = c.benchmark_group("quadtree_collect_query");
     for depth in QT_DEPTHS {

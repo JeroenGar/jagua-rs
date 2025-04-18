@@ -51,7 +51,6 @@ fn fast_fail_query_bench(c: &mut Criterion) {
 
     let mut config = create_base_config();
     config.cde_config.quadtree_depth = 5;
-    config.cde_config.hpg_n_cells = 2000;
 
     let instance = util::create_instance(
         &json_instance,

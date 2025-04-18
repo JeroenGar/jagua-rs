@@ -29,7 +29,6 @@ impl Default for LBFConfig {
         Self {
             cde_config: CDEConfig {
                 quadtree_depth: 5,
-                hpg_n_cells: 2000,
                 item_surrogate_config: SPSurrogateConfig {
                     n_pole_limits: [(100, 0.0), (20, 0.75), (10, 0.90)],
                     n_ff_poles: 2,

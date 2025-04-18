@@ -413,8 +413,6 @@ impl CDEngine {
 pub struct CDEConfig {
     ///Maximum depth of the quadtree
     pub quadtree_depth: u8,
-    ///Target number of cells in the Hazard Proximity Grid (set to 0 to disable)
-    pub hpg_n_cells: usize,
     ///Configuration of the surrogate generation for items
     pub item_surrogate_config: SPSurrogateConfig,
 }
