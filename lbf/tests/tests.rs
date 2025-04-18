@@ -78,7 +78,6 @@ mod tests {
                     break;
                 }
             }
-            problem.flush_changes();
 
             let solution = opt.problem.save();
             // second optimization run
@@ -118,8 +117,6 @@ mod tests {
                     break;
                 }
             }
-            // flush changes
-            problem.flush_changes();
 
             let solution = opt.problem.save();
             // second optimization run

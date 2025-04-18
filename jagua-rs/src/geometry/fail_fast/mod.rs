@@ -13,3 +13,6 @@ pub use pole::compute_pole;
 
 #[doc(inline)]
 pub use sp_surrogate::SPSurrogate;
+
+#[doc(inline)]
+pub use sp_surrogate::SPSurrogateConfig;

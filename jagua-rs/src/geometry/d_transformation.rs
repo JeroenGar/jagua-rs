@@ -2,10 +2,9 @@ use std::borrow::Borrow;
 use std::fmt::Display;
 
 use ordered_float::NotNan;
-
 use crate::geometry::Transformation;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Copy)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Copy, Default)]
 /// [Proper rigid transformation](https://en.wikipedia.org/wiki/Rigid_transformation),
 /// decomposed into a rotation followed by a translation.
 pub struct DTransformation {
@@ -43,7 +42,7 @@ impl DTransformation {
     }
 
     pub fn compose(&self) -> Transformation {
-        Transformation::from_dt(self)
+        self.into()
     }
 }
 

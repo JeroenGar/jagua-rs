@@ -1,11 +1,11 @@
+use serde::{Deserialize, Serialize};
 use crate::geometry::Transformation;
 use crate::geometry::convex_hull;
 use crate::geometry::fail_fast::{piers, pole};
-use crate::geometry::geo_traits::{DistanceTo, Shape, Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{Shape, Transformable, TransformableFrom};
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::SPolygon;
-use crate::util::SPSurrogateConfig;
 
 #[derive(Clone, Debug)]
 /// Surrogate representation of a [`SPolygon`] - a 'light-weight' representation that
@@ -36,8 +36,7 @@ impl SPSurrogate {
                 .collect(),
         )
         .area();
-        let mut poles = pole::generate_surrogate_poles(simple_poly, &config.n_pole_limits);
-        let pole_bounding_circle = Circle::bounding_circle(&poles);
+        let poles = pole::generate_surrogate_poles(simple_poly, &config.n_pole_limits);
         let n_ff_poles = usize::min(config.n_ff_poles, poles.len());
         let relevant_poles_for_piers = &poles[0..n_ff_poles]; //poi + all poles that will be checked during fail fast are relevant for piers
         let piers = piers::generate_piers(simple_poly, config.n_ff_piers, relevant_poles_for_piers);
@@ -110,3 +109,32 @@ impl TransformableFrom for SPSurrogate {
         self
     }
 }
+
+/// maximum number of definable pole limits, increase if needed
+const N_POLE_LIMITS: usize = 3;
+
+/// Configuration of the [`SPSurrogate`](crate::geometry::fail_fast::SPSurrogate) generation
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+pub struct SPSurrogateConfig {
+    ///Limits on the number of poles to be generated at different coverage levels.
+    ///For example: [(100, 0.0), (20, 0.75), (10, 0.90)]:
+    ///While the coverage is below 75% the generation will stop at 100 poles.
+    ///If 75% coverage with 20 or more poles the generation will stop.
+    ///If 90% coverage with 10 or more poles the generation will stop.
+    pub n_pole_limits: [(usize, f32); N_POLE_LIMITS],
+    ///Number of poles to test during fail-fast
+    pub n_ff_poles: usize,
+    ///number of piers to test during fail-fast
+    pub n_ff_piers: usize,
+}
+
+impl SPSurrogateConfig {
+    pub fn none() -> Self {
+        Self {
+            n_pole_limits: [(0, 0.0); N_POLE_LIMITS],
+            n_ff_poles: 0,
+            n_ff_piers: 0,
+        }
+    }
+}
+

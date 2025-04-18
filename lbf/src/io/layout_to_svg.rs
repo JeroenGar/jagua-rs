@@ -3,7 +3,6 @@ use crate::io::{svg_export, svg_util};
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::general::{Instance, Layout, LayoutSnapshot};
 use jagua_rs::geometry::geo_traits::{Shape, Transformable};
-use jagua_rs::geometry::primitives::Circle;
 use jagua_rs::geometry::{DTransformation, Transformation};
 use jagua_rs::io::parser;
 use svg::Document;

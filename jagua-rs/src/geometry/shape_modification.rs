@@ -15,9 +15,9 @@ use crate::geometry::primitives::SPolygon;
 /// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::position) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ShapeModifyMode {
-    /// Modify the shape to be strictly larger than the original.
+    /// Modify the shape to be strictly larger than the original (superset).
     Inflate,
-    /// Modify the shape to be strictly smaller than the original.
+    /// Modify the shape to be strictly smaller than the original (subset).
     Deflate,
 }
 
@@ -33,13 +33,15 @@ pub struct ShapeModifyConfig {
     pub offset: Option<f32>,
 }
 
-/// Simplifies a [`SPolygon`] according to the given [`ShapeModifyMode`].
-/// The number of edges is reduced by one at a time, until either
-/// the change in area would exceed the `max_area_delta` or the number of edges < 4.
+/// Simplifies a [`SPolygon`] by reducing the number of edges.
+///
+/// The simplified shape will either be a subset or a superset of the original shape, depending on the [`ShapeModifyMode`].
+/// The procedure sequentially eliminates edges until either the change in area (ratio)
+/// exceeds `max_area_delta` or the number of edges < 4.
 pub fn simplify_shape(
     shape: &SPolygon,
     mode: ShapeModifyMode,
-    max_area_delta: f32,
+    max_area_change_ratio: f32,
 ) -> SPolygon {
     let original_area = shape.area();
 
@@ -103,7 +105,7 @@ pub fn simplify_shape(
             let new_shape = execute_candidate(&ref_points, best_candidate);
             let new_shape_area = SPolygon::calculate_area(&new_shape);
             let area_delta = (new_shape_area - original_area).abs() / original_area;
-            if area_delta <= max_area_delta {
+            if area_delta <= max_area_change_ratio {
                 debug!(
                     "Simplified {:?} causing {:.2}% area change",
                     best_candidate,

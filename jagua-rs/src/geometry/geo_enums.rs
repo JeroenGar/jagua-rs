@@ -20,11 +20,11 @@ pub enum GeoRelation {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum AllowedRotation {
-    /// No rotation is allowed
+pub enum RotationRange {
+    /// No rotation allowed
     None,
-    /// Any rotation is allowed
+    /// A continuous range of rotations
     Continuous,
-    /// Only a limited set of rotations is allowed
+    /// A discrete set of rotations
     Discrete(Vec<f32>),
 }

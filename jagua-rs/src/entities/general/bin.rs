@@ -2,18 +2,18 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 
-use crate::collision_detection::CDEngine;
+use crate::collision_detection::{CDEConfig, CDEngine};
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
-use crate::util::{CDEConfig, ShapeModifyConfig, ShapeModifyMode};
 
 #[cfg(doc)]
 use crate::entities::general::Item;
 use crate::entities::general::original_shape::OriginalShape;
+use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 
 /// A container in which [`Item`]'s can be placed.
 #[derive(Clone, Debug)]

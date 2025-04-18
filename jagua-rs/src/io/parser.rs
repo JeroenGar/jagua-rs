@@ -9,7 +9,7 @@ use crate::entities::strip_packing::SPInstance;
 use crate::entities::strip_packing::SPSolution;
 use crate::geometry::DTransformation;
 use crate::geometry::Transformation;
-use crate::geometry::geo_enums::AllowedRotation;
+use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Point;
@@ -18,13 +18,13 @@ use crate::io::json_instance::{JsonBin, JsonInstance, JsonItem, JsonShape, JsonS
 use crate::io::json_solution::{
     JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
 };
-use crate::util::ShapeModifyMode;
-use crate::util::{CDEConfig, ShapeModifyConfig};
 use itertools::Itertools;
 use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
+use crate::collision_detection::CDEConfig;
+use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 
 /// Parses a `JsonInstance` into an `Instance`.
 pub struct Parser {
@@ -127,7 +127,7 @@ impl Parser {
             };
             OriginalShape {
                 pre_transform: centering_transformation(&shape),
-                shape: shape,
+                shape,
                 modify_mode: ShapeModifyMode::Inflate,
                 modify_config: self.shape_modify_config,
             }
@@ -139,12 +139,12 @@ impl Parser {
         let allowed_orientations = match json_item.allowed_orientations.as_ref() {
             Some(a_o) => {
                 if a_o.is_empty() || (a_o.len() == 1 && a_o[0] == 0.0) {
-                    AllowedRotation::None
+                    RotationRange::None
                 } else {
-                    AllowedRotation::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
+                    RotationRange::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
                 }
             }
-            None => AllowedRotation::Continuous,
+            None => RotationRange::Continuous,
         };
 
         let item = Item::new(

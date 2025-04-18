@@ -10,3 +10,5 @@ pub mod quadtree;
 pub use cd_engine::CDESnapshot;
 #[doc(inline)]
 pub use cd_engine::CDEngine;
+#[doc(inline)]
+pub use cd_engine::CDEConfig;

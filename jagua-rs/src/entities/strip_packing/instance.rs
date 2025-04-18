@@ -2,7 +2,8 @@ use crate::entities::general::Bin;
 use crate::entities::general::Instance;
 use crate::entities::general::Item;
 use crate::geometry::geo_traits::Shape;
-use crate::util::{ShapeModifyConfig, assertions};
+use crate::geometry::shape_modification::ShapeModifyConfig;
+use crate::util::assertions;
 
 #[derive(Debug, Clone)]
 /// Instance of the Strip Packing Problem: a set of items to be packed into a single strip with a fixed height and variable width.

@@ -1,7 +1,5 @@
 use std::collections::VecDeque;
 
-use ordered_float::NotNan;
-
 use crate::geometry::geo_traits::{CollidesWith, DistanceTo, SeparationDistance, Shape};
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::Circle;

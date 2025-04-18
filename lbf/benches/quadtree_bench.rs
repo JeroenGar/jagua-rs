@@ -14,7 +14,7 @@ use jagua_rs::entities::strip_packing::SPPlacement;
 ;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use jagua_rs::io::json_instance::JsonInstance;
-use lbf::samplers::uniform_rect_sampler::UniformAARectSampler;
+use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 
 use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
 
@@ -109,7 +109,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformAARectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
+        let sampler = UniformRectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -169,7 +169,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         let (mut problem, _) = util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformAARectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
+        let sampler = UniformRectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -237,7 +237,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformAARectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
+        let sampler = UniformRectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)

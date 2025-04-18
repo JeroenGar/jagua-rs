@@ -13,6 +13,8 @@ pub struct Transformation {
 }
 
 impl Transformation {
+
+    /// Creates a transformation with no effect.
     pub const fn empty() -> Self {
         Self {
             matrix: EMPTY_MATRIX,
@@ -31,32 +33,31 @@ impl Transformation {
         }
     }
 
-    pub fn from_dt(dt: &DTransformation) -> Self {
-        Self {
-            matrix: rot_transl_m(dt.rotation(), dt.translation()),
-        }
-    }
-
+    /// Applies a rotation to `self`.
     pub fn rotate(mut self, angle: f32) -> Self {
         self.matrix = dot_prod(&rot_m(angle), &self.matrix);
         self
     }
 
+    /// Applies a translation to `self`.
     pub fn translate(mut self, (tx, ty): (f32, f32)) -> Self {
         self.matrix = dot_prod(&transl_m((tx, ty)), &self.matrix);
         self
     }
 
+    /// Applies a translation followed by a rotation to `self`.
     pub fn rotate_translate(mut self, angle: f32, (tx, ty): (f32, f32)) -> Self {
         self.matrix = dot_prod(&rot_transl_m(angle, (tx, ty)), &self.matrix);
         self
     }
 
+    /// Applies a rotation followed by a translation to `self`.
     pub fn translate_rotate(mut self, (tx, ty): (f32, f32), angle: f32) -> Self {
         self.matrix = dot_prod(&transl_rot_m((tx, ty), angle), &self.matrix);
         self
     }
 
+    /// Applies `other` to `self`.
     pub fn transform(mut self, other: &Self) -> Self {
         self.matrix = dot_prod(&other.matrix, &self.matrix);
         self
@@ -66,6 +67,7 @@ impl Transformation {
         self.rotate_translate(other.rotation(), other.translation())
     }
 
+    /// Generates the transformation that undoes the effect of `self`.
     pub fn inverse(mut self) -> Self {
         self.matrix = inverse(&self.matrix);
         self
@@ -92,7 +94,17 @@ where
     T: Borrow<DTransformation>,
 {
     fn from(dt: T) -> Self {
-        Self::from_dt(dt.borrow())
+        let rot = dt.borrow().rotation();
+        let transl = dt.borrow().translation();
+        Self {
+            matrix: rot_transl_m(rot, transl),
+        }
+    }
+}
+
+impl Default for Transformation {
+    fn default() -> Self {
+        Self::empty()
     }
 }
 

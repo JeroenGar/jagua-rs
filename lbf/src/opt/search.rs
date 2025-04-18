@@ -1,6 +1,5 @@
 use crate::config::LBFConfig;
 use crate::opt::loss::LBFLoss;
-use crate::samplers::hpg_sampler::HPGSampler;
 use crate::samplers::ls_sampler::LSSampler;
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEngine;
@@ -14,6 +13,7 @@ use log::debug;
 use ordered_float::NotNan;
 use rand::Rng;
 use std::cmp::{Ordering, Reverse};
+use crate::samplers::uniform_rect_sampler::UniformRectSampler;
 
 /// Search the layout (i.e. CDE) for a valid placement of the item, with minimal loss.
 pub fn search(
@@ -38,11 +38,10 @@ pub fn search(
     let ls_sample_budget = (config.n_samples as f32 * config.ls_frac) as usize;
     let uni_sample_budget = config.n_samples - ls_sample_budget;
 
-    //uniform sampling within the valid cells of the Hazard Proximity Grid, tracking the best valid insertion option
-    let mut hpg_sampler = HPGSampler::new(item, cde)?;
+    let mut bin_sampler = UniformRectSampler::new(cde.bbox().clone(), item);
 
     for i in 0..uni_sample_budget {
-        let d_transf = hpg_sampler.sample(rng);
+        let d_transf = bin_sampler.sample(rng);
         let transf = d_transf.compose();
         if !cde.surrogate_collides(surrogate, &transf, filter) {
             //if no collision is detected on the surrogate, apply the transformation
@@ -59,15 +58,17 @@ pub fn search(
 
             if worth_testing && !cde.poly_collides(&buffer, filter) {
                 //sample is valid and improves on the current best
-                hpg_sampler.tighten(cost);
                 debug!("[UNI: {i}/{uni_sample_budget}] better: {} ", &d_transf);
 
                 best = Some((d_transf, cost));
+
+                let tightened_sampling_bbox = cost.tighten_sample_bbox(bin_sampler.bbox);
+                bin_sampler = UniformRectSampler::new(tightened_sampling_bbox, item);
             }
         }
     }
 
-    *sample_counter += hpg_sampler.n_samples;
+    *sample_counter += uni_sample_budget;
 
     //if a valid sample was found during the uniform sampling, perform local search around it
     let (best_sample, best_cost) = best.as_mut()?;

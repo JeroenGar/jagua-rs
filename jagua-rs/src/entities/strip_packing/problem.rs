@@ -7,10 +7,10 @@ use crate::entities::strip_packing::SPSolution;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::Rect;
-use crate::util::CDEConfig;
 use crate::util::assertions;
 use itertools::Itertools;
 use std::time::Instant;
+use crate::collision_detection::CDEConfig;
 
 /// Modifiable counterpart of [`SPInstance`]: items can be placed and removed, strip can be extended or fitted.
 #[derive(Clone)]

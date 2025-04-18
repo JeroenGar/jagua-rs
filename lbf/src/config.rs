@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
-
-use jagua_rs::util::{CDEConfig, SPSurrogateConfig};
-
+use jagua_rs::collision_detection::CDEConfig;
+use jagua_rs::geometry::fail_fast::SPSurrogateConfig;
 use crate::io::svg_util::SvgDrawOptions;
 
 /// Configuration for the LBF optimizer

@@ -21,7 +21,7 @@ impl Rect {
     pub fn new(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> Self {
         debug_assert!(
             x_min < x_max && y_min < y_max,
-            "invalid AARectangle, x_min: {}, x_max: {}, y_min: {}, y_max: {}",
+            "invalid rectangle, x_min: {}, x_max: {}, y_min: {}, y_max: {}",
             x_min,
             x_max,
             y_min,
@@ -58,8 +58,8 @@ impl Rect {
         }
     }
 
-    /// Returns the relation between self and another AARectangle, with a tolerance for floating point precision.
-    /// Leaning towards `Surrounding` and `Enclosed` instead of `Intersecting` in edge cases.
+    /// Returns the [`GeoRelation`] between `self` and another [`Rect`], with a tolerance for floating point precision.
+    /// In edge cases, this method will lean towards `Surrounding` and `Enclosed` instead of `Intersecting`.
     pub fn almost_relation_to(&self, other: &Rect) -> GeoRelation {
         if self.almost_collides_with(other) {
             if FPA::from(self.x_min) <= FPA::from(other.x_min)
@@ -296,7 +296,7 @@ impl CollidesWith<Edge> for Rect {
             return false;
         }
 
-        //The only possible that remains is that the edge collides with one of the edges of the AARectangle
+        //The only possible that remains is that the edge collides with one of the edges of the rectangle
         self.edges()
             .iter()
             .any(|rect_edge| edge.collides_with(rect_edge))

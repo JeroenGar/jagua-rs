@@ -4,7 +4,7 @@ use crate::collision_detection::hazards::detector::HazardDetector;
 use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::quadtree::QTNode;
 use crate::geometry::Transformation;
-use crate::geometry::fail_fast::SPSurrogate;
+use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable, TransformableFrom};
 use crate::geometry::primitives::Rect;
@@ -12,9 +12,9 @@ use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SPolygon;
-use crate::util::CDEConfig;
 use crate::util::assertions;
 use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 use tribool::Tribool;
 
 /// The Collision Detection Engine (CDE).
@@ -27,12 +27,6 @@ pub struct CDEngine {
     pub config: CDEConfig,
     pub bbox: Rect,
     pub uncommitted_deregisters: Vec<Hazard>,
-}
-
-/// Snapshot of the state of [`CDEngine`]. Can be used to restore to a previous state.
-#[derive(Clone, Debug)]
-pub struct CDESnapshot {
-    dynamic_hazards: Vec<Hazard>,
 }
 
 impl CDEngine {
@@ -90,9 +84,6 @@ impl CDEngine {
     /// <br>
     /// Can be beneficial not to `commit_instant` if multiple hazards are to be deregistered, or if the chance of
     /// restoring from a snapshot with the hazard present is high.
-    /// <br>
-    /// Call [`Self::commit_deregisters`] to commit all uncommitted deregisters in both quadtree & hazard proximity grid
-    /// or [`Self::flush_haz_prox_grid`] to just clear the hazard proximity grid.
     pub fn deregister_hazard(&mut self, hazard_entity: HazardEntity, commit_instant: bool) {
         let haz_index = self
             .dynamic_hazards
@@ -423,4 +414,21 @@ impl CDEngine {
         self.quadtree
             .collect_potential_hazards_within(bbox, detector);
     }
+}
+
+///Configuration of the [`CDEngine`]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+pub struct CDEConfig {
+    ///Maximum depth of the quadtree
+    pub quadtree_depth: u8,
+    ///Target number of cells in the Hazard Proximity Grid (set to 0 to disable)
+    pub hpg_n_cells: usize,
+    ///Configuration of the surrogate generation for items
+    pub item_surrogate_config: SPSurrogateConfig,
+}
+
+/// Snapshot of the state of [`CDEngine`]. Can be used to restore to a previous state.
+#[derive(Clone, Debug)]
+pub struct CDESnapshot {
+    dynamic_hazards: Vec<Hazard>,
 }
