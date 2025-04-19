@@ -1,16 +1,15 @@
 use crate::config::LBFConfig;
 use crate::opt::loss::LBFLoss;
-use crate::samplers::hpg_sampler::HPGSampler;
 use crate::samplers::ls_sampler::LSSampler;
+use crate::samplers::uniform_rect_sampler::UniformRectSampler;
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEngine;
 use jagua_rs::collision_detection::hazards::filter::HazardFilter;
 use jagua_rs::entities::general::{Instance, Item};
-use jagua_rs::fsize;
 use jagua_rs::geometry::DTransformation;
 use jagua_rs::geometry::convex_hull::convex_hull_from_surrogate;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
-use jagua_rs::geometry::primitives::SimplePolygon;
+use jagua_rs::geometry::primitives::SPolygon;
 use log::debug;
 use ordered_float::NotNan;
 use rand::Rng;
@@ -39,11 +38,10 @@ pub fn search(
     let ls_sample_budget = (config.n_samples as f32 * config.ls_frac) as usize;
     let uni_sample_budget = config.n_samples - ls_sample_budget;
 
-    //uniform sampling within the valid cells of the Hazard Proximity Grid, tracking the best valid insertion option
-    let mut hpg_sampler = HPGSampler::new(item, cde)?;
+    let mut bin_sampler = UniformRectSampler::new(cde.bbox().clone(), item);
 
     for i in 0..uni_sample_budget {
-        let d_transf = hpg_sampler.sample(rng);
+        let d_transf = bin_sampler.sample(rng);
         let transf = d_transf.compose();
         if !cde.surrogate_collides(surrogate, &transf, filter) {
             //if no collision is detected on the surrogate, apply the transformation
@@ -60,15 +58,17 @@ pub fn search(
 
             if worth_testing && !cde.poly_collides(&buffer, filter) {
                 //sample is valid and improves on the current best
-                hpg_sampler.tighten(cost);
                 debug!("[UNI: {i}/{uni_sample_budget}] better: {} ", &d_transf);
 
                 best = Some((d_transf, cost));
+
+                let tightened_sampling_bbox = cost.tighten_sample_bbox(bin_sampler.bbox);
+                bin_sampler = UniformRectSampler::new(tightened_sampling_bbox, item);
             }
         }
     }
 
-    *sample_counter += hpg_sampler.n_samples;
+    *sample_counter += uni_sample_budget;
 
     //if a valid sample was found during the uniform sampling, perform local search around it
     let (best_sample, best_cost) = best.as_mut()?;
@@ -98,7 +98,7 @@ pub fn search(
                 (*best_sample, *best_cost) = (d_transf, cost);
             }
         }
-        let progress_pct = i as fsize / ls_sample_budget as fsize;
+        let progress_pct = i as f32 / ls_sample_budget as f32;
         ls_sampler.decay_stddev(progress_pct);
     }
 
@@ -112,7 +112,7 @@ pub fn item_placement_order(instance: &impl Instance) -> Vec<usize> {
     (0..instance.items().len())
         .sorted_by_cached_key(|i| {
             let item = &instance.items()[*i].0;
-            let ch = SimplePolygon::new(
+            let ch = SPolygon::new(
                 convex_hull_from_surrogate(&item.shape_cd)
                     .expect("items should have a surrogate generated"),
             );

@@ -3,61 +3,60 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use ordered_float::NotNan;
 
-use crate::fsize;
 use crate::geometry::DTransformation;
 
 #[derive(Clone, Debug)]
 ///The matrix form of [`DTransformation`].
 ///[read more](https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/geometry/geo-tran.html)
 pub struct Transformation {
-    matrix: [[NotNan<fsize>; 3]; 3],
+    matrix: [[NotNan<f32>; 3]; 3],
 }
 
 impl Transformation {
+    /// Creates a transformation with no effect.
     pub const fn empty() -> Self {
         Self {
             matrix: EMPTY_MATRIX,
         }
     }
 
-    pub fn from_translation((tx, ty): (fsize, fsize)) -> Self {
+    pub fn from_translation((tx, ty): (f32, f32)) -> Self {
         Self {
             matrix: transl_m((tx, ty)),
         }
     }
 
-    pub fn from_rotation(angle: fsize) -> Self {
+    pub fn from_rotation(angle: f32) -> Self {
         Self {
             matrix: rot_m(angle),
         }
     }
 
-    pub fn from_dt(dt: &DTransformation) -> Self {
-        Self {
-            matrix: rot_transl_m(dt.rotation(), dt.translation()),
-        }
-    }
-
-    pub fn rotate(mut self, angle: fsize) -> Self {
+    /// Applies a rotation to `self`.
+    pub fn rotate(mut self, angle: f32) -> Self {
         self.matrix = dot_prod(&rot_m(angle), &self.matrix);
         self
     }
 
-    pub fn translate(mut self, (tx, ty): (fsize, fsize)) -> Self {
+    /// Applies a translation to `self`.
+    pub fn translate(mut self, (tx, ty): (f32, f32)) -> Self {
         self.matrix = dot_prod(&transl_m((tx, ty)), &self.matrix);
         self
     }
 
-    pub fn rotate_translate(mut self, angle: fsize, (tx, ty): (fsize, fsize)) -> Self {
+    /// Applies a translation followed by a rotation to `self`.
+    pub fn rotate_translate(mut self, angle: f32, (tx, ty): (f32, f32)) -> Self {
         self.matrix = dot_prod(&rot_transl_m(angle, (tx, ty)), &self.matrix);
         self
     }
 
-    pub fn translate_rotate(mut self, (tx, ty): (fsize, fsize), angle: fsize) -> Self {
+    /// Applies a rotation followed by a translation to `self`.
+    pub fn translate_rotate(mut self, (tx, ty): (f32, f32), angle: f32) -> Self {
         self.matrix = dot_prod(&transl_rot_m((tx, ty), angle), &self.matrix);
         self
     }
 
+    /// Applies `other` to `self`.
     pub fn transform(mut self, other: &Self) -> Self {
         self.matrix = dot_prod(&other.matrix, &self.matrix);
         self
@@ -67,6 +66,7 @@ impl Transformation {
         self.rotate_translate(other.rotation(), other.translation())
     }
 
+    /// Generates the transformation that undoes the effect of `self`.
     pub fn inverse(mut self) -> Self {
         self.matrix = inverse(&self.matrix);
         self
@@ -76,7 +76,7 @@ impl Transformation {
         self.matrix == EMPTY_MATRIX
     }
 
-    pub fn matrix(&self) -> &[[NotNan<fsize>; 3]; 3] {
+    pub fn matrix(&self) -> &[[NotNan<f32>; 3]; 3] {
         &self.matrix
     }
 
@@ -93,16 +93,26 @@ where
     T: Borrow<DTransformation>,
 {
     fn from(dt: T) -> Self {
-        Self::from_dt(dt.borrow())
+        let rot = dt.borrow().rotation();
+        let transl = dt.borrow().translation();
+        Self {
+            matrix: rot_transl_m(rot, transl),
+        }
     }
 }
 
-const _0: NotNan<fsize> = unsafe { NotNan::new_unchecked(0.0) };
-const _1: NotNan<fsize> = unsafe { NotNan::new_unchecked(1.0) };
+impl Default for Transformation {
+    fn default() -> Self {
+        Self::empty()
+    }
+}
 
-const EMPTY_MATRIX: [[NotNan<fsize>; 3]; 3] = [[_1, _0, _0], [_0, _1, _0], [_0, _0, _1]];
+const _0: NotNan<f32> = unsafe { NotNan::new_unchecked(0.0) };
+const _1: NotNan<f32> = unsafe { NotNan::new_unchecked(1.0) };
 
-fn rot_m(angle: fsize) -> [[NotNan<fsize>; 3]; 3] {
+const EMPTY_MATRIX: [[NotNan<f32>; 3]; 3] = [[_1, _0, _0], [_0, _1, _0], [_0, _0, _1]];
+
+fn rot_m(angle: f32) -> [[NotNan<f32>; 3]; 3] {
     let (sin, cos) = angle.sin_cos();
     let cos = NotNan::new(cos).expect("cos is NaN");
     let sin = NotNan::new(sin).expect("sin is NaN");
@@ -110,7 +120,7 @@ fn rot_m(angle: fsize) -> [[NotNan<fsize>; 3]; 3] {
     [[cos, -sin, _0], [sin, cos, _0], [_0, _0, _1]]
 }
 
-fn transl_m((tx, ty): (fsize, fsize)) -> [[NotNan<fsize>; 3]; 3] {
+fn transl_m((tx, ty): (f32, f32)) -> [[NotNan<f32>; 3]; 3] {
     let h = NotNan::new(tx).expect("tx is NaN");
     let k = NotNan::new(ty).expect("ty is NaN");
 
@@ -118,7 +128,7 @@ fn transl_m((tx, ty): (fsize, fsize)) -> [[NotNan<fsize>; 3]; 3] {
 }
 
 //rotation followed by translation
-fn rot_transl_m(angle: fsize, (tx, ty): (fsize, fsize)) -> [[NotNan<fsize>; 3]; 3] {
+fn rot_transl_m(angle: f32, (tx, ty): (f32, f32)) -> [[NotNan<f32>; 3]; 3] {
     let (sin, cos) = angle.sin_cos();
     let cos = NotNan::new(cos).expect("cos is NaN");
     let sin = NotNan::new(sin).expect("sin is NaN");
@@ -129,7 +139,7 @@ fn rot_transl_m(angle: fsize, (tx, ty): (fsize, fsize)) -> [[NotNan<fsize>; 3]; 
 }
 
 //translation followed by rotation
-fn transl_rot_m((tx, ty): (fsize, fsize), angle: fsize) -> [[NotNan<fsize>; 3]; 3] {
+fn transl_rot_m((tx, ty): (f32, f32), angle: f32) -> [[NotNan<f32>; 3]; 3] {
     let (sin, cos) = angle.sin_cos();
     let cos = NotNan::new(cos).expect("cos is NaN");
     let sin = NotNan::new(sin).expect("sin is NaN");

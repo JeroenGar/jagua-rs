@@ -1,4 +1,3 @@
-use geo::CoordsIter;
 use geo_offset::Offset;
 use itertools::Itertools;
 use log::{debug, info};
@@ -6,19 +5,18 @@ use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-use crate::fsize;
 use crate::geometry::geo_traits::{CollidesWith, Shape};
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
-use crate::geometry::primitives::SimplePolygon;
+use crate::geometry::primitives::SPolygon;
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
 /// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::position) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ShapeModifyMode {
-    /// Modify the shape to be strictly larger than the original.
+    /// Modify the shape to be strictly larger than the original (superset).
     Inflate,
-    /// Modify the shape to be strictly smaller than the original.
+    /// Modify the shape to be strictly smaller than the original (subset).
     Deflate,
 }
 
@@ -27,26 +25,28 @@ pub struct ShapeModifyConfig {
     /// Maximum deviation of the simplified polygon with respect to the original polygon area as a ratio.
     /// If undefined, no simplification is performed.
     /// See [`simplify_shape`]
-    pub simplify_tolerance: Option<fsize>,
+    pub simplify_tolerance: Option<f32>,
     /// Offset by which to inflate or deflate the polygon.
     /// If undefined, no offset is applied.
     /// See [`offset_shape`]
-    pub offset: Option<fsize>,
+    pub offset: Option<f32>,
 }
 
-/// Simplifies a [`SimplePolygon`] according to the given [`ShapeModifyMode`].
-/// The number of edges is reduced by one at a time, until either
-/// the change in area would exceed the `max_area_delta` or the number of edges < 4.
+/// Simplifies a [`SPolygon`] by reducing the number of edges.
+///
+/// The simplified shape will either be a subset or a superset of the original shape, depending on the [`ShapeModifyMode`].
+/// The procedure sequentially eliminates edges until either the change in area (ratio)
+/// exceeds `max_area_delta` or the number of edges < 4.
 pub fn simplify_shape(
-    shape: &SimplePolygon,
+    shape: &SPolygon,
     mode: ShapeModifyMode,
-    max_area_delta: fsize,
-) -> SimplePolygon {
+    max_area_change_ratio: f32,
+) -> SPolygon {
     let original_area = shape.area();
 
-    let mut ref_points = shape.points.clone();
+    let mut ref_points = shape.vertices.clone();
 
-    for _ in 0..shape.n_points() {
+    for _ in 0..shape.n_vertices() {
         let n_points = ref_points.len() as isize;
         if n_points < 4 {
             //can't simplify further
@@ -95,16 +95,16 @@ pub fn simplify_shape(
             .iter()
             .sorted_by_cached_key(|c| {
                 calculate_area_delta(&ref_points, c)
-                    .unwrap_or_else(|_| NotNan::new(fsize::INFINITY).expect("area delta is NaN"))
+                    .unwrap_or_else(|_| NotNan::new(f32::INFINITY).expect("area delta is NaN"))
             })
             .find(|c| candidate_is_valid(&ref_points, c));
 
         //if it is within the area change constraints, execute the candidate
         if let Some(best_candidate) = best_candidate {
             let new_shape = execute_candidate(&ref_points, best_candidate);
-            let new_shape_area = SimplePolygon::calculate_area(&new_shape);
+            let new_shape_area = SPolygon::calculate_area(&new_shape);
             let area_delta = (new_shape_area - original_area).abs() / original_area;
-            if area_delta <= max_area_delta {
+            if area_delta <= max_area_change_ratio {
                 debug!(
                     "Simplified {:?} causing {:.2}% area change",
                     best_candidate,
@@ -120,13 +120,13 @@ pub fn simplify_shape(
     }
 
     //Convert it back to a simple polygon
-    let simpl_shape = SimplePolygon::new(ref_points);
+    let simpl_shape = SPolygon::new(ref_points);
 
-    if simpl_shape.n_points() < shape.n_points() {
+    if simpl_shape.n_vertices() < shape.n_vertices() {
         info!(
             "[PS] simplified from {} to {} edges with {:.3}% area difference",
-            shape.n_points(),
-            simpl_shape.n_points(),
+            shape.n_vertices(),
+            simpl_shape.n_vertices(),
             (simpl_shape.area() - shape.area()) / shape.area() * 100.0
         );
     } else {
@@ -139,7 +139,7 @@ pub fn simplify_shape(
 fn calculate_area_delta(
     shape: &[Point],
     candidate: &Candidate,
-) -> Result<NotNan<fsize>, InvalidCandidate> {
+) -> Result<NotNan<f32>, InvalidCandidate> {
     //calculate the difference in area of the shape if the candidate were to be executed
     let area = match candidate {
         Candidate::Collinear(_) => 0.0,
@@ -323,33 +323,35 @@ impl CornerType {
     }
 }
 
-/// Offsets a [`SimplePolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
+/// Offsets a [`SPolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
 /// Relies on the [`geo_offset`](https://crates.io/crates/geo_offset) crate.
-pub fn offset_shape(sp: &SimplePolygon, mode: ShapeModifyMode, distance: fsize) -> SimplePolygon {
-    // Convert Vec<Point> to geo::LineString
-    let exterior: geo::LineString<fsize> = sp.points.iter().map(|p| (p.0, p.1)).collect();
-
-    // Create a polygon (assuming no holes)
-    let geo_polygon = geo::Polygon::new(exterior, vec![]);
-
+pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> SPolygon {
     let offset = match mode {
         ShapeModifyMode::Deflate => -distance,
         ShapeModifyMode::Inflate => distance,
     };
 
-    // Inflate the polygon
-    let inflated = geo_polygon.offset(offset).unwrap();
+    // Convert the SPolygon to a geo_types::Polygon
+    let geo_poly =
+        geo_types::Polygon::new(sp.vertices.iter().map(|p| (p.0, p.1)).collect(), vec![]);
 
-    // Convert back to Vec<Point>
-    let mut inflated_points = inflated
-        .exterior_coords_iter()
-        .map(|p| Point(p.x, p.y))
+    // Create the offset geo_types::Polygon
+    let geo_poly_offset = geo_poly
+        .offset(offset)
+        .expect("something went wrong during polygon offset")
+        .0
+        .remove(0);
+
+    let mut points_offset = geo_poly_offset
+        .exterior()
+        .points()
+        .map(|p| Point(p.x(), p.y()))
         .collect_vec();
-    //remove the last point if it is the same as the first
-    if inflated_points.len() > 1 && inflated_points[0] == inflated_points[inflated_points.len() - 1]
-    {
-        inflated_points.pop();
+
+    //pop the last point if it is the same as the first
+    if points_offset.first() == points_offset.last() {
+        points_offset.pop();
     }
 
-    SimplePolygon::new(inflated_points)
+    SPolygon::new(points_offset)
 }

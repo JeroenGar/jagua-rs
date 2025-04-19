@@ -1,13 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::fsize;
-
 /// Representation of a solution
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct JsonSolution {
     /// Sum of the area of the produced items divided by the sum of the area of the containers
-    pub density: fsize,
+    pub density: f32,
     /// The time it took to generate the solution in seconds
     pub run_time_sec: u64,
     /// Layouts which compose the solution
@@ -41,9 +39,9 @@ pub struct JsonPlacedItem {
 #[serde(rename_all = "PascalCase")]
 pub struct JsonTransformation {
     /// The rotation angle in radians
-    pub rotation: fsize,
+    pub rotation: f32,
     /// The translation vector (x, y)
-    pub translation: (fsize, fsize),
+    pub translation: (f32, f32),
 }
 
 /// Some statistics about the layout
@@ -51,7 +49,7 @@ pub struct JsonTransformation {
 #[serde(rename_all = "PascalCase")]
 pub struct JsonLayoutStats {
     /// The percentage of the container that is packed with items
-    pub density: fsize,
+    pub density: f32,
 }
 
 /// Type of container that was used
@@ -67,9 +65,9 @@ pub enum JsonContainer {
     Strip {
         /// The width of the strip (variable)
         #[serde(rename = "Width")]
-        width: fsize,
+        width: f32,
         /// The height of the strip (fixed)
         #[serde(rename = "Height")]
-        height: fsize,
+        height: f32,
     },
 }

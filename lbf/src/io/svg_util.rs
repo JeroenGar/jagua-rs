@@ -2,7 +2,6 @@ use std::convert::Into;
 use std::fmt::{Display, Formatter};
 
 use jagua_rs::entities::general::N_QUALITIES;
-use jagua_rs::fsize;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy, Default)]
@@ -13,9 +12,6 @@ pub struct SvgDrawOptions {
     ///Draw the quadtree on top
     #[serde(default)]
     pub quadtree: bool,
-    ///Draw the hazard proximity grid on top
-    #[serde(default)]
-    pub haz_prox_grid: bool,
     ///Draw the fail fast surrogate on top of each item
     #[serde(default)]
     pub surrogate: bool,
@@ -26,12 +22,12 @@ pub struct SvgDrawOptions {
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
 pub struct SvgLayoutTheme {
-    pub stroke_width_multiplier: fsize,
+    pub stroke_width_multiplier: f32,
     pub bin_fill: Color,
     pub item_fill: Color,
     pub hole_fill: Color,
     pub qz_fill: [Color; N_QUALITIES],
-    pub qz_stroke_opac: fsize,
+    pub qz_stroke_opac: f32,
 }
 
 impl Default for SvgLayoutTheme {
@@ -86,12 +82,12 @@ impl SvgLayoutTheme {
     }
 }
 
-pub fn change_brightness(color: Color, fraction: fsize) -> Color {
+pub fn change_brightness(color: Color, fraction: f32) -> Color {
     let Color(r, g, b) = color;
 
-    let r = (r as fsize * fraction) as u8;
-    let g = (g as fsize * fraction) as u8;
-    let b = (b as fsize * fraction) as u8;
+    let r = (r as f32 * fraction) as u8;
+    let g = (g as f32 * fraction) as u8;
+    let b = (b as f32 * fraction) as u8;
     Color(r, g, b)
 }
 
@@ -100,9 +96,9 @@ pub fn blend_colors(color_1: Color, color_2: Color) -> Color {
     let Color(r_1, g_1, b_1) = color_1;
     let Color(r_2, g_2, b_2) = color_2;
 
-    let r = ((r_1 as fsize * 0.5) + (r_2 as fsize * 0.5)) as u8;
-    let g = ((g_1 as fsize * 0.5) + (g_2 as fsize * 0.5)) as u8;
-    let b = ((b_1 as fsize * 0.5) + (b_2 as fsize * 0.5)) as u8;
+    let r = ((r_1 as f32 * 0.5) + (r_2 as f32 * 0.5)) as u8;
+    let g = ((g_1 as f32 * 0.5) + (g_2 as f32 * 0.5)) as u8;
+    let b = ((b_1 as f32 * 0.5) + (b_2 as f32 * 0.5)) as u8;
 
     Color(r, g, b)
 }

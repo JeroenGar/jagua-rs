@@ -1,16 +1,14 @@
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display};
 
-use crate::fsize;
-
 ///Wrapper around the [`float_cmp::approx_eq!()`] macro for easy comparison of floats with a certain tolerance.
 ///Two FPAs are considered equal if they are within a certain tolerance of each other.
 #[derive(Debug, Clone, Copy)]
-pub struct FPA(pub fsize);
+pub struct FPA(pub f32);
 
 impl<T> From<T> for FPA
 where
-    T: Into<fsize>,
+    T: Into<f32>,
 {
     fn from(n: T) -> Self {
         FPA(n.into())
@@ -19,7 +17,7 @@ where
 
 impl PartialEq<Self> for FPA {
     fn eq(&self, other: &Self) -> bool {
-        float_cmp::approx_eq!(fsize, self.0, other.0)
+        float_cmp::approx_eq!(f32, self.0, other.0)
     }
 }
 

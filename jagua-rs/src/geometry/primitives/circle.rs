@@ -1,24 +1,23 @@
-use std::cmp::Ordering;
-
 use crate::geometry::Transformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
     CollidesWith, DistanceTo, SeparationDistance, Shape, Transformable, TransformableFrom,
 };
-use crate::geometry::primitives::AARectangle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
-use crate::{PI, fsize};
+use crate::geometry::primitives::Rect;
+use std::cmp::Ordering;
+use std::f32::consts::PI;
 
 /// Circle
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub struct Circle {
     pub center: Point,
-    pub radius: fsize,
+    pub radius: f32,
 }
 
 impl Circle {
-    pub fn new(center: Point, radius: fsize) -> Self {
+    pub fn new(center: Point, radius: f32) -> Self {
         debug_assert!(
             radius.is_finite() && radius >= 0.0,
             "invalid circle radius: {}",
@@ -92,16 +91,16 @@ impl CollidesWith<Edge> for Circle {
     }
 }
 
-impl CollidesWith<AARectangle> for Circle {
+impl CollidesWith<Rect> for Circle {
     #[inline(always)]
-    fn collides_with(&self, rect: &AARectangle) -> bool {
+    fn collides_with(&self, rect: &Rect) -> bool {
         //Based on: https://yal.cc/rectangle-circle-intersection-test/
 
         let Point(c_x, c_y) = self.center;
 
         //x and y coordinates inside the rectangle, closest to the circle center
-        let nearest_x = fsize::max(rect.x_min, fsize::min(c_x, rect.x_max));
-        let nearest_y = fsize::max(rect.y_min, fsize::min(c_y, rect.y_max));
+        let nearest_x = f32::max(rect.x_min, f32::min(c_x, rect.x_max));
+        let nearest_y = f32::max(rect.y_min, f32::min(c_y, rect.y_max));
 
         (nearest_x - c_x).powi(2) + (nearest_y - c_y).powi(2) <= self.radius.powi(2)
     }
@@ -114,11 +113,11 @@ impl CollidesWith<Point> for Circle {
 }
 
 impl DistanceTo<Point> for Circle {
-    fn sq_distance_to(&self, other: &Point) -> fsize {
+    fn sq_distance_to(&self, other: &Point) -> f32 {
         self.distance_to(other).powi(2)
     }
 
-    fn distance_to(&self, point: &Point) -> fsize {
+    fn distance_to(&self, point: &Point) -> f32 {
         let Point(x, y) = point;
         let Point(cx, cy) = self.center;
         let sq_d = (x - cx).powi(2) + (y - cy).powi(2);
@@ -126,34 +125,34 @@ impl DistanceTo<Point> for Circle {
             0.0 //point is inside circle
         } else {
             //point is outside circle
-            fsize::sqrt(sq_d) - self.radius
+            f32::sqrt(sq_d) - self.radius
         }
     }
 }
 
 impl SeparationDistance<Point> for Circle {
-    fn separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
+    fn separation_distance(&self, point: &Point) -> (GeoPosition, f32) {
         let Point(x, y) = point;
         let Point(cx, cy) = self.center;
-        let d_center = fsize::sqrt((x - cx).powi(2) + (y - cy).powi(2));
+        let d_center = f32::sqrt((x - cx).powi(2) + (y - cy).powi(2));
         match d_center.partial_cmp(&self.radius).unwrap() {
             Ordering::Less | Ordering::Equal => (GeoPosition::Interior, self.radius - d_center),
             Ordering::Greater => (GeoPosition::Exterior, d_center - self.radius),
         }
     }
 
-    fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, fsize) {
+    fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, f32) {
         let (pos, distance) = self.separation_distance(point);
         (pos, distance.powi(2))
     }
 }
 
 impl DistanceTo<Circle> for Circle {
-    fn sq_distance_to(&self, other: &Circle) -> fsize {
+    fn sq_distance_to(&self, other: &Circle) -> f32 {
         self.distance_to(other).powi(2)
     }
 
-    fn distance_to(&self, other: &Circle) -> fsize {
+    fn distance_to(&self, other: &Circle) -> f32 {
         match self.separation_distance(other) {
             (GeoPosition::Interior, _) => 0.0,
             (GeoPosition::Exterior, d) => d,
@@ -162,7 +161,7 @@ impl DistanceTo<Circle> for Circle {
 }
 
 impl SeparationDistance<Circle> for Circle {
-    fn separation_distance(&self, other: &Circle) -> (GeoPosition, fsize) {
+    fn separation_distance(&self, other: &Circle) -> (GeoPosition, f32) {
         let sq_center_dist = self.center.sq_distance_to(&other.center);
         let sq_radii_sum = (self.radius + other.radius).powi(2);
         if sq_center_dist < sq_radii_sum {
@@ -174,18 +173,18 @@ impl SeparationDistance<Circle> for Circle {
         }
     }
 
-    fn sq_separation_distance(&self, other: &Circle) -> (GeoPosition, fsize) {
+    fn sq_separation_distance(&self, other: &Circle) -> (GeoPosition, f32) {
         let (pos, distance) = self.separation_distance(other);
         (pos, distance.powi(2))
     }
 }
 
 impl DistanceTo<Edge> for Circle {
-    fn sq_distance_to(&self, e: &Edge) -> fsize {
+    fn sq_distance_to(&self, e: &Edge) -> f32 {
         self.distance_to(e).powi(2)
     }
 
-    fn distance_to(&self, e: &Edge) -> fsize {
+    fn distance_to(&self, e: &Edge) -> f32 {
         match self.separation_distance(e) {
             (GeoPosition::Interior, _) => 0.0,
             (GeoPosition::Exterior, d) => d,
@@ -194,7 +193,7 @@ impl DistanceTo<Edge> for Circle {
 }
 
 impl SeparationDistance<Edge> for Circle {
-    fn separation_distance(&self, e: &Edge) -> (GeoPosition, fsize) {
+    fn separation_distance(&self, e: &Edge) -> (GeoPosition, f32) {
         let distance_to_center = e.distance_to(&self.center);
         if distance_to_center < self.radius {
             (GeoPosition::Interior, self.radius - distance_to_center)
@@ -203,7 +202,7 @@ impl SeparationDistance<Edge> for Circle {
         }
     }
 
-    fn sq_separation_distance(&self, e: &Edge) -> (GeoPosition, fsize) {
+    fn sq_separation_distance(&self, e: &Edge) -> (GeoPosition, f32) {
         let (pos, distance) = self.separation_distance(e);
         (pos, distance.powi(2))
     }
@@ -214,16 +213,16 @@ impl Shape for Circle {
         self.center
     }
 
-    fn area(&self) -> fsize {
+    fn area(&self) -> f32 {
         self.radius * self.radius * PI
     }
 
-    fn bbox(&self) -> AARectangle {
+    fn bbox(&self) -> Rect {
         let (r, x, y) = (self.radius, self.center.0, self.center.1);
-        AARectangle::new(x - r, y - r, x + r, y + r)
+        Rect::new(x - r, y - r, x + r, y + r)
     }
 
-    fn diameter(&self) -> fsize {
+    fn diameter(&self) -> f32 {
         self.radius * 2.0
     }
 }

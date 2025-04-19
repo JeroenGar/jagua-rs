@@ -1,6 +1,6 @@
 [package]
 name = "jagua-rs"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/JeroenGar/jagua-rs"
@@ -23,7 +23,7 @@ rayon = "1.9"
 slotmap = "1.0"
 float-cmp = "0.10"
 geo-offset = "0.4.0"
-geo = "0.30.0"
+geo-types = "0.7.16"
 
 [features]
 # Switches from f32 to f64 for floating point numbers in the library

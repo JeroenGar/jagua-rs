@@ -1,11 +1,11 @@
 use itertools::Itertools;
+use jagua_rs::collision_detection::CDEConfig;
 use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPPlacement;
 use jagua_rs::entities::strip_packing::{SPInstance, SPProblem};
-use jagua_rs::fsize;
+use jagua_rs::geometry::fail_fast::SPSurrogateConfig;
 use jagua_rs::io::json_instance::JsonInstance;
 use jagua_rs::io::parser::Parser;
-use jagua_rs::util::{CDEConfig, SPSurrogateConfig};
 use lbf::config::LBFConfig;
 use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
@@ -22,7 +22,7 @@ pub const N_ITEMS_REMOVED: usize = 5;
 pub fn create_instance(
     json_instance: &JsonInstance,
     cde_config: CDEConfig,
-    poly_simpl_tolerance: Option<fsize>,
+    poly_simpl_tolerance: Option<f32>,
 ) -> SPInstance {
     let parser = Parser::new(cde_config, poly_simpl_tolerance, None);
     let instance = parser.parse(json_instance);
@@ -72,16 +72,14 @@ pub fn create_lbf_problem(
         info!(
             "Removed item: {} with {} edges",
             item_id,
-            lbf_optimizer.instance.item(item_id).shape_cd.n_points()
+            lbf_optimizer.instance.item(item_id).shape_cd.n_vertices()
         );
     }
-    problem.flush_changes();
 
     {
         let draw_options = SvgDrawOptions {
             quadtree: true,
             surrogate: true,
-            haz_prox_grid: false,
             ..SvgDrawOptions::default()
         };
         let svg = io::layout_to_svg::layout_to_svg(&problem.layout, &instance, draw_options);
@@ -95,7 +93,6 @@ pub fn create_base_config() -> LBFConfig {
     LBFConfig {
         cde_config: CDEConfig {
             quadtree_depth: 5,
-            hpg_n_cells: 2000,
             item_surrogate_config: SPSurrogateConfig {
                 n_pole_limits: [(100, 0.0), (20, 0.75), (10, 0.90)],
                 n_ff_poles: 4,

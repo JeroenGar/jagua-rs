@@ -146,7 +146,6 @@ The configuration file has the following structure:
 {
   "cde_config": { //Configuration of the collision detection engine
     "quadtree_depth": 5, //Maximum depth of the quadtree is 5
-    "hpg_n_cells": 2000, //The hazard proximity grid contains 2000 cells
     "item_surrogate_config": {
       "n_pole_limits": [[100, 0.0], [20, 0.75], [10, 0.90]], //See docs for details 
       "n_ff_poles": 2, //Two poles will be used for fail-fast collision detection

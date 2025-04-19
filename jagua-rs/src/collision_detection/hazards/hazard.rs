@@ -1,7 +1,7 @@
 use crate::entities::general::{PItemKey, PlacedItem};
 use crate::geometry::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::primitives::SimplePolygon;
+use crate::geometry::primitives::SPolygon;
 use std::borrow::Borrow;
 use std::sync::Arc;
 
@@ -12,13 +12,13 @@ pub struct Hazard {
     /// The entity inducing the hazard
     pub entity: HazardEntity,
     /// The shape of the hazard
-    pub shape: Arc<SimplePolygon>,
+    pub shape: Arc<SPolygon>,
     /// Hazards can be either active or inactive, inactive hazards are not considered during collision detection
     pub active: bool,
 }
 
 impl Hazard {
-    pub fn new(entity: HazardEntity, shape: Arc<SimplePolygon>) -> Self {
+    pub fn new(entity: HazardEntity, shape: Arc<SPolygon>) -> Self {
         Self {
             entity,
             shape,

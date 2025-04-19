@@ -2,11 +2,10 @@ use std::sync::Arc;
 
 use crate::collision_detection::hazards::filter::QZHazardFilter;
 use crate::entities::general::original_shape::OriginalShape;
-use crate::fsize;
-use crate::geometry::geo_enums::AllowedRotation;
+use crate::geometry::fail_fast::SPSurrogateConfig;
+use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::SimplePolygon;
-use crate::util::SPSurrogateConfig;
+use crate::geometry::primitives::SPolygon;
 
 /// Item to be produced.
 #[derive(Clone, Debug)]
@@ -15,9 +14,9 @@ pub struct Item {
     /// Contour of the item as defined in the input file
     pub shape_orig: Arc<OriginalShape>,
     /// Contour of the item to be used for collision detection
-    pub shape_cd: Arc<SimplePolygon>,
+    pub shape_cd: Arc<SPolygon>,
     /// Possible rotations in which to place the item
-    pub allowed_rotation: AllowedRotation,
+    pub allowed_rotation: RotationRange,
     /// The quality of the item, if `None` the item requires full quality
     pub base_quality: Option<usize>,
     /// Filter for hazards that the item is unaffected by
@@ -32,7 +31,7 @@ impl Item {
     pub fn new(
         id: usize,
         original_shape: OriginalShape,
-        allowed_rotation: AllowedRotation,
+        allowed_rotation: RotationRange,
         base_quality: Option<usize>,
         surrogate_config: SPSurrogateConfig,
         value: u64,
@@ -56,7 +55,7 @@ impl Item {
         }
     }
 
-    pub fn area(&self) -> fsize {
+    pub fn area(&self) -> f32 {
         self.shape_orig.area()
     }
 }
