@@ -1,4 +1,3 @@
-use geo::CoordsIter;
 use geo_offset::Offset;
 use itertools::Itertools;
 use log::{debug, info};
@@ -327,30 +326,32 @@ impl CornerType {
 /// Offsets a [`SPolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
 /// Relies on the [`geo_offset`](https://crates.io/crates/geo_offset) crate.
 pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> SPolygon {
-    // Convert Vec<Point> to geo::LineString
-    let exterior: geo::LineString<f32> = sp.vertices.iter().map(|p| (p.0, p.1)).collect();
-
-    // Create a polygon (assuming no holes)
-    let geo_polygon = geo::Polygon::new(exterior, vec![]);
-
     let offset = match mode {
         ShapeModifyMode::Deflate => -distance,
         ShapeModifyMode::Inflate => distance,
     };
 
-    // Inflate the polygon
-    let inflated = geo_polygon.offset(offset).unwrap();
+    // Convert the SPolygon to a geo_types::Polygon
+    let geo_poly =
+        geo_types::Polygon::new(sp.vertices.iter().map(|p| (p.0, p.1)).collect(), vec![]);
 
-    // Convert back to Vec<Point>
-    let mut inflated_points = inflated
-        .exterior_coords_iter()
-        .map(|p| Point(p.x, p.y))
+    // Create the offset geo_types::Polygon
+    let geo_poly_offset = geo_poly
+        .offset(offset)
+        .expect("something went wrong during polygon offset")
+        .0
+        .remove(0);
+
+    let mut points_offset = geo_poly_offset
+        .exterior()
+        .points()
+        .map(|p| Point(p.x(), p.y()))
         .collect_vec();
-    //remove the last point if it is the same as the first
-    if inflated_points.len() > 1 && inflated_points[0] == inflated_points[inflated_points.len() - 1]
-    {
-        inflated_points.pop();
+
+    //pop the last point if it is the same as the first
+    if points_offset.first() == points_offset.last() {
+        points_offset.pop();
     }
 
-    SPolygon::new(inflated_points)
+    SPolygon::new(points_offset)
 }
