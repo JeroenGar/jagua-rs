@@ -35,12 +35,12 @@ impl QTNode {
     pub fn register_hazard(&mut self, hazard: QTHazard) {
         fn register_to_children(children: &mut Option<Box<[QTNode; 4]>>, hazard: &QTHazard) {
             if let Some(children) = children.as_mut() {
-                let child_bboxes = [0, 1, 2, 3].map(|i| &children[i].bbox);
+                let child_bboxes = [0, 1, 2, 3].map(|i| children[i].bbox);
                 let c_hazards = hazard.constrict(child_bboxes);
 
-                for (i, c_hazard) in c_hazards.into_iter().enumerate() {
-                    if let Some(c_hazard) = c_hazard {
-                        children[i].register_hazard(c_hazard);
+                if let Some(c_hazards) = c_hazards {
+                    for (child, c_hazard) in children.iter_mut().zip(c_hazards) {
+                        child.register_hazard(c_hazard);
                     }
                 }
             }
@@ -288,11 +288,7 @@ impl QTNode {
     /// Used to gather all hazards that within a given bounding box.
     /// May overestimate the hazards that are present in the bounding box, since it is limited
     /// by the resolution of the quadtree.
-    pub fn collect_potential_hazards_within(
-        &self,
-        bbox: &Rect,
-        detector: &mut impl HazardDetector,
-    ) {
+    pub fn collect_potential_hazards_within(&self, bbox: Rect, detector: &mut impl HazardDetector) {
         match bbox.collides_with(&self.bbox) {
             false => return, //Entity does not collide with the node
             true => match self.children.as_ref() {

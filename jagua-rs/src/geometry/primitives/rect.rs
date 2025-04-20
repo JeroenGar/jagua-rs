@@ -36,8 +36,8 @@ impl Rect {
     }
 
     /// Returns the geometric relation between `self` and another [`Rect`].
-    pub fn relation_to(&self, other: &Rect) -> GeoRelation {
-        if self.collides_with(other) {
+    pub fn relation_to(&self, other: Rect) -> GeoRelation {
+        if self.collides_with(&other) {
             if self.x_min <= other.x_min
                 && self.y_min <= other.y_min
                 && self.x_max >= other.x_max
@@ -60,8 +60,8 @@ impl Rect {
 
     /// Returns the [`GeoRelation`] between `self` and another [`Rect`], with a tolerance for floating point precision.
     /// In edge cases, this method will lean towards `Surrounding` and `Enclosed` instead of `Intersecting`.
-    pub fn almost_relation_to(&self, other: &Rect) -> GeoRelation {
-        if self.almost_collides_with(other) {
+    pub fn almost_relation_to(&self, other: Rect) -> GeoRelation {
+        if self.almost_collides_with(&other) {
             if FPA::from(self.x_min) <= FPA::from(other.x_min)
                 && FPA::from(self.y_min) <= FPA::from(other.y_min)
                 && FPA::from(self.x_max) >= FPA::from(other.x_max)
@@ -173,7 +173,7 @@ impl Rect {
     }
 
     /// Returns the largest rectangle that is contained in both `a` and `b`.
-    pub fn intersection(a: &Rect, b: &Rect) -> Option<Rect> {
+    pub fn intersection(a: Rect, b: Rect) -> Option<Rect> {
         let x_min = f32::max(a.x_min, b.x_min);
         let y_min = f32::max(a.y_min, b.y_min);
         let x_max = f32::min(a.x_max, b.x_max);
@@ -186,7 +186,7 @@ impl Rect {
     }
 
     /// Returns the smallest rectangle that contains both `a` and `b`.
-    pub fn bounding_rect(a: &Rect, b: &Rect) -> Rect {
+    pub fn bounding_rect(a: Rect, b: Rect) -> Rect {
         let x_min = f32::min(a.x_min, b.x_min);
         let y_min = f32::min(a.y_min, b.y_min);
         let x_max = f32::max(a.x_max, b.x_max);

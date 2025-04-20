@@ -9,7 +9,7 @@ use crate::geometry::primitives::SPolygon;
 /// Closely related to [Pole of Inaccessibility (PoI)](https://en.wikipedia.org/wiki/Pole_of_inaccessibility),
 /// and inspired by Mapbox's [`polylabel`](https://github.com/mapbox/polylabel) algorithm.
 pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Circle {
-    let square_bbox = shape.bbox().inflate_to_square();
+    let square_bbox = shape.bbox.inflate_to_square();
     let root = POINode::new(square_bbox, MAX_POI_TREE_DEPTH, shape, poles);
     let mut queue = VecDeque::from([root]);
     let mut best: Option<Circle> = None;

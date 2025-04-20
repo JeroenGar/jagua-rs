@@ -195,7 +195,7 @@ impl Shape for SPolygon {
     }
 
     fn bbox(&self) -> Rect {
-        self.bbox.clone()
+        self.bbox
     }
 
     fn diameter(&self) -> f32 {

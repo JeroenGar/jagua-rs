@@ -141,13 +141,19 @@ impl QTHazardVec {
 }
 
 fn order_by_descending_strength(qth1: &QTHazard, qth2: &QTHazard) -> Ordering {
+    let qth_presence_sortkey = |qth: &QTHazard| match qth.presence {
+        QTHazPresence::None => 0,
+        QTHazPresence::Partial(_) => 1,
+        QTHazPresence::Entire => 2,
+    };
+
     //sort in descending order of active (true > false) then by presence (Entire > Partial > None)
     qth1.active
         .cmp(&qth2.active)
         .then({
-            let pres1: u8 = (&qth1.presence).into();
-            let pres2: u8 = (&qth2.presence).into();
-            pres1.cmp(&pres2)
+            let sk1 = qth_presence_sortkey(qth1);
+            let sk2 = qth_presence_sortkey(qth2);
+            sk1.cmp(&sk2)
         })
         .reverse()
 }

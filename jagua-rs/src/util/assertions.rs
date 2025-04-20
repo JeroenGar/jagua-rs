@@ -224,6 +224,14 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
 }
 
 fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
+    let hashable = |h: &QTHazard| {
+        let p_sk = match h.presence {
+            QTHazPresence::None => 0,
+            QTHazPresence::Partial(_) => 1,
+            QTHazPresence::Entire => 2,
+        };
+        (h.entity, h.active, p_sk)
+    };
     match (qn1, qn2) {
         (Some(qn1), Some(qn2)) => {
             //if both nodes exist
@@ -234,14 +242,14 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             let active_haz_1 = hv1
                 .active_hazards()
                 .iter()
-                .map(|h| (&h.entity, h.active, (&h.presence).into()))
-                .collect::<HashSet<(&HazardEntity, bool, u8)>>();
+                .map(|h| hashable(h))
+                .collect::<HashSet<(HazardEntity, bool, u8)>>();
 
             let active_haz_2 = hv2
                 .active_hazards()
                 .iter()
-                .map(|h| (&h.entity, h.active, (&h.presence).into()))
-                .collect::<HashSet<(&HazardEntity, bool, u8)>>();
+                .map(|h| hashable(h))
+                .collect::<HashSet<(HazardEntity, bool, u8)>>();
 
             let active_in_1_but_not_2 = active_haz_1
                 .difference(&active_haz_2)
@@ -346,7 +354,7 @@ fn hazards_match(chv1: &[Hazard], chv2: &[Hazard]) -> bool {
 }
 
 /// Checks if the quadrants follow the layout set in [Rect::QUADRANT_NEIGHBOR_LAYOUT]
-pub fn quadrants_have_valid_layout(quadrants: &[&Rect; 4]) -> bool {
+pub fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
     let layout = Rect::QUADRANT_NEIGHBOR_LAYOUT;
     for (idx, q) in quadrants.iter().enumerate() {
         //make sure they share two points (an edge) with each neighbor

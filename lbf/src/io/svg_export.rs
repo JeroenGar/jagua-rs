@@ -67,7 +67,7 @@ fn qt_node_data(
                 Some(ch) => match ch.presence {
                     QTHazPresence::Entire => data_eh = draw(data_eh),
                     QTHazPresence::Partial(_) => data_ph = draw(data_ph),
-                    QTHazPresence::None => unreachable!(),
+                    QTHazPresence::None => data_nh = draw(data_nh),
                 },
                 None => data_nh = draw(data_nh),
             }

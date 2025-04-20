@@ -44,7 +44,7 @@ impl Shape for OriginalShape {
     }
 
     fn bbox(&self) -> Rect {
-        self.shape.bbox()
+        self.shape.bbox
     }
 
     fn diameter(&self) -> f32 {

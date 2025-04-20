@@ -26,7 +26,7 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge>
     }
 
     //Start by creating a set of N_TESTS_PER_ANGLE vertical lines across the bounding box
-    let bbox = shape.bbox();
+    let bbox = shape.bbox;
     let expanded_bbox = bbox.clone().inflate_to_square();
     let centroid = shape.centroid();
     //vertical ray from the centroid
@@ -35,7 +35,7 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge>
         Point(centroid.0, centroid.1 + 2.0 * expanded_bbox.height()),
     );
 
-    let transformations = generate_ray_transformations(&expanded_bbox, RAYS_PER_ANGLE, N_ANGLES);
+    let transformations = generate_ray_transformations(expanded_bbox, RAYS_PER_ANGLE, N_ANGLES);
 
     //transform the base edge by each transformation
     let rays = transformations
@@ -46,7 +46,7 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge>
     //clip the lines to the shape
     let clipped_rays = rays.iter().flat_map(|l| clip(shape, l)).collect_vec();
     let grid_of_unrepresented_points =
-        generate_unrepresented_point_grid(&expanded_bbox, shape, poles, N_POINTS_PER_DIMENSION);
+        generate_unrepresented_point_grid(expanded_bbox, shape, poles, N_POINTS_PER_DIMENSION);
 
     let mut selected_piers = Vec::new();
 
@@ -91,7 +91,7 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge>
 }
 
 fn generate_ray_transformations(
-    bbox: &Rect,
+    bbox: Rect,
     rays_per_angle: usize,
     n_angles: usize,
 ) -> Vec<Transformation> {
@@ -150,7 +150,7 @@ fn clip(shape: &SPolygon, ray: &Edge) -> Vec<Edge> {
 }
 
 fn generate_unrepresented_point_grid(
-    bbox: &Rect,
+    bbox: Rect,
     shape: &SPolygon,
     poles: &[Circle],
     n_points_per_dimension: usize,

@@ -16,7 +16,7 @@ pub struct LBFLoss {
 }
 
 impl LBFLoss {
-    pub fn from_bbox(bbox: &Rect) -> Self {
+    pub fn from_bbox(bbox: Rect) -> Self {
         Self {
             x_max: bbox.x_max,
             y_max: bbox.y_max,
@@ -24,7 +24,7 @@ impl LBFLoss {
     }
 
     pub fn from_shape(shape: &SPolygon) -> Self {
-        LBFLoss::from_bbox(&shape.bbox())
+        LBFLoss::from_bbox(shape.bbox())
     }
 
     pub fn cost(&self) -> f32 {
@@ -38,7 +38,7 @@ impl LBFLoss {
 
         dbg!(x_max_bound, cost);
 
-        let mut tightened_bbox = sample_bbox.clone();
+        let mut tightened_bbox = sample_bbox;
         tightened_bbox.x_max = f32::min(sample_bbox.x_max, x_max_bound);
 
         tightened_bbox

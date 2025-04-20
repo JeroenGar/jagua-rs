@@ -71,7 +71,7 @@ impl Bin {
                 .map(|qz| qz.to_hazards())
                 .flatten();
             hazards.extend(qz_hazards);
-            let base_cde = CDEngine::new(outer_int.bbox().inflate_to_square(), hazards, cde_config);
+            let base_cde = CDEngine::new(outer_int.bbox.inflate_to_square(), hazards, cde_config);
             Arc::new(base_cde)
         };
 
