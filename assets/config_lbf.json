@@ -11,5 +11,10 @@
   "min_item_separation": 0.0,
   "prng_seed": 0,
   "n_samples": 5000,
-  "ls_frac": 0.2
+  "ls_frac": 0.2,
+  "svg_draw_options": {
+    "use_internal_shapes": false,
+    "quadtree": false,
+    "surrogate": false
+  }
 }

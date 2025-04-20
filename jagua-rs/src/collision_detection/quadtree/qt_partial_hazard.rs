@@ -1,10 +1,8 @@
-use std::borrow::Borrow;
 use std::hash::Hash;
 use std::sync::{Arc, Weak};
 
-use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
-use crate::geometry::geo_traits::{CollidesWith, Shape};
+use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::SPolygon;
 
 /// Defines a set of edges from a hazard that is partially active in the [`QTNode`](crate::collision_detection::quadtree::QTNode).
@@ -14,37 +12,18 @@ pub struct QTHazPartial {
     pub edges: RelevantEdges,
 }
 
-impl<T> From<T> for QTHazPartial
-where
-    T: Borrow<Hazard>,
-{
-    fn from(hazard: T) -> Self {
-        Self {
-            shape: Arc::downgrade(&hazard.borrow().shape),
-            edges: RelevantEdges::All,
-        }
-    }
-}
-
 impl QTHazPartial {
-    pub fn new(shape: Arc<SPolygon>, edge_indices: RelevantEdges) -> Self {
-        Self {
-            shape: Arc::downgrade(&shape),
-            edges: edge_indices,
-        }
-    }
-
     pub fn shape_arc(&self) -> Arc<SPolygon> {
         self.shape
             .upgrade()
             .expect("polygon reference is not alive")
     }
 
-    pub fn encompasses_all_edges(&self) -> bool {
+    pub fn all_edges(&self) -> bool {
         self.edges == RelevantEdges::All
     }
 
-    pub fn add_edge_index(&mut self, index: usize) {
+    pub fn register_edge(&mut self, index: usize) {
         match &mut self.edges {
             RelevantEdges::All => panic!("cannot add edge to a hazard that encompasses all edges"),
             RelevantEdges::Some(indices) => {
@@ -63,7 +42,7 @@ impl<T: QTQueryable> CollidesWith<T> for QTHazPartial {
     fn collides_with(&self, entity: &T) -> bool {
         let shape = self.shape_arc();
         match &self.edges {
-            RelevantEdges::All => match entity.collides_with(&shape.bbox()) {
+            RelevantEdges::All => match entity.collides_with(&shape.bbox) {
                 false => false,
                 true => shape.edge_iter().any(|e| entity.collides_with(&e)),
             },
@@ -73,7 +52,7 @@ impl<T: QTQueryable> CollidesWith<T> for QTHazPartial {
                     .iter()
                     .any(|&i| entity.collides_with(&shape.edge(i))),
                 BBOX_CHECK_THRESHOLD.. => {
-                    if !entity.collides_with(&shape.bbox()) {
+                    if !entity.collides_with(&shape.bbox) {
                         return false;
                     }
                     indices

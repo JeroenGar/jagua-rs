@@ -12,6 +12,9 @@ pub mod samplers;
 
 pub static EPOCH: Lazy<Instant> = Lazy::new(Instant::now);
 
+//limits the number of items to be placed, for debugging purposes
+pub const ITEM_LIMIT: usize = usize::MAX;
+
 pub enum LBFSolution {
     BP(BPSolution),
     SP(SPSolution),

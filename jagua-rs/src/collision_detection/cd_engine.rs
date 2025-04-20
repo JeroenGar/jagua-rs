@@ -2,11 +2,11 @@ use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hazards::detector::HazardDetector;
 use crate::collision_detection::hazards::filter::HazardFilter;
-use crate::collision_detection::quadtree::QTNode;
+use crate::collision_detection::quadtree::{QTHazard, QTNode};
 use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
-use crate::geometry::geo_traits::{CollidesWith, Shape, Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{CollidesWith, Transformable, TransformableFrom};
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
@@ -31,10 +31,11 @@ pub struct CDEngine {
 
 impl CDEngine {
     pub fn new(bbox: Rect, static_hazards: Vec<Hazard>, config: CDEConfig) -> CDEngine {
-        let mut qt_root = QTNode::new(config.quadtree_depth, bbox.clone());
+        let mut qt_root = QTNode::new(config.quadtree_depth, bbox);
 
         for haz in static_hazards.iter() {
-            qt_root.register_hazard(haz.into());
+            let qt_haz = QTHazard::from_qt_root(qt_root.bbox, haz);
+            qt_root.register_hazard(qt_haz);
         }
 
         CDEngine {
@@ -68,7 +69,8 @@ impl CDEngine {
                 unc_hazard
             }
             None => {
-                self.quadtree.register_hazard((&hazard).into());
+                let qt_haz = QTHazard::from_qt_root(self.bbox, &hazard);
+                self.quadtree.register_hazard(qt_haz);
                 hazard
             }
         };
@@ -156,7 +158,8 @@ impl CDEngine {
         }
 
         for hazard in hazards_to_add {
-            self.quadtree.register_hazard((&hazard).into());
+            let qt_haz = QTHazard::from_qt_root(self.bbox, &hazard);
+            self.quadtree.register_hazard(qt_haz);
             self.dynamic_hazards.push(hazard);
         }
 
@@ -238,7 +241,7 @@ impl CDEngine {
     /// * `shape` - The shape (already transformed) to be checked for collisions
     /// * `filter` - Hazard filter to be applied
     pub fn poly_collides(&self, shape: &SPolygon, filter: &impl HazardFilter) -> bool {
-        match self.bbox.relation_to(&shape.bbox()) {
+        match self.bbox.relation_to(shape.bbox) {
             //Not fully inside bbox => definite collision
             GeoRelation::Disjoint | GeoRelation::Enclosed | GeoRelation::Intersecting => true,
             GeoRelation::Surrounding => {
@@ -327,7 +330,7 @@ impl CDEngine {
         //"almost" meaning that, when edges are very close together, they are considered equal.
         //Some relations which would normally be seen as Intersecting are now being considered Enclosed/Surrounding
         let haz_shape = haz.shape.as_ref();
-        let bbox_relation = haz_shape.bbox().almost_relation_to(&shape.bbox());
+        let bbox_relation = haz_shape.bbox.almost_relation_to(shape.bbox);
 
         let (s_mu, s_omega) = match bbox_relation {
             GeoRelation::Surrounding => (shape, haz_shape), //inclusion possible
@@ -362,7 +365,7 @@ impl CDEngine {
 
     /// Collects all hazards with which the polygon collides and reports them to the detector.
     pub fn collect_poly_collisions(&self, shape: &SPolygon, detector: &mut impl HazardDetector) {
-        if self.bbox.relation_to(&shape.bbox()) != GeoRelation::Surrounding {
+        if self.bbox.relation_to(shape.bbox) != GeoRelation::Surrounding {
             detector.push(HazardEntity::BinExterior)
         }
 
@@ -398,11 +401,7 @@ impl CDEngine {
 
     /// Collects all hazards potentially colliding with the given bounding box.
     /// This is an overestimation, as it is limited by the quadtree resolution.
-    pub fn collect_potential_hazards_within(
-        &self,
-        bbox: &Rect,
-        detector: &mut impl HazardDetector,
-    ) {
+    pub fn collect_potential_hazards_within(&self, bbox: Rect, detector: &mut impl HazardDetector) {
         self.quadtree
             .collect_potential_hazards_within(bbox, detector);
     }
