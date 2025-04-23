@@ -187,10 +187,7 @@ pub fn layout_to_svg(
                 true => pi.d_transf,
                 false => {
                     let item = instance.item(pi.item_id);
-                    parser::internal_to_absolute_transform(
-                        &pi.d_transf,
-                        &item.shape_orig.pre_transform,
-                    )
+                    parser::int_to_ext_transformation(&pi.d_transf, &item.shape_orig.pre_transform)
                 }
             };
             let title = Title::new(format!("item, id: {}, transf: [{}]", pi.item_id, dtransf));

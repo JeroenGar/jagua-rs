@@ -280,10 +280,8 @@ pub fn compose_json_solution_spp(
             let item_index = placed_item.item_id;
             let item = instance.item(item_index);
 
-            let abs_transf = internal_to_absolute_transform(
-                &placed_item.d_transf,
-                &item.shape_orig.pre_transform,
-            );
+            let abs_transf =
+                int_to_ext_transformation(&placed_item.d_transf, &item.shape_orig.pre_transform);
 
             JsonPlacedItem {
                 index: item_index,
@@ -326,7 +324,7 @@ pub fn compose_json_solution_bpp(
                     let item_index = placed_item.item_id;
                     let item = instance.item(item_index);
 
-                    let abs_transf = internal_to_absolute_transform(
+                    let abs_transf = int_to_ext_transformation(
                         &placed_item.d_transf,
                         &item.shape_orig.pre_transform,
                     );
@@ -368,8 +366,9 @@ fn json_simple_poly_to_points(jsp: &JsonSimplePoly) -> Vec<Point> {
     (0..n_vertices).map(|i| Point::from(jsp.0[i])).collect_vec()
 }
 
-pub fn internal_to_absolute_transform(
-    internal_transf: &DTransformation,
+/// Converts an internal (used within jagua-rs) transformation to an external transformation (based on the original shapes).
+pub fn int_to_ext_transformation(
+    int_transf: &DTransformation,
     pre_transf: &DTransformation,
 ) -> DTransformation {
     //1. apply the pre-transform
@@ -377,12 +376,13 @@ pub fn internal_to_absolute_transform(
 
     Transformation::empty()
         .transform_from_decomposed(pre_transf)
-        .transform_from_decomposed(internal_transf)
+        .transform_from_decomposed(int_transf)
         .decompose()
 }
 
-pub fn absolute_to_internal_transform(
-    absolute_transf: &DTransformation,
+/// Converts an external transformation (based on the original shapes) to an internal transformation (used within jagua-rs).
+pub fn ext_to_int_transformation(
+    ext_transf: &DTransformation,
     pre_transf: &DTransformation,
 ) -> DTransformation {
     //1. undo pre-transform
@@ -390,7 +390,7 @@ pub fn absolute_to_internal_transform(
 
     Transformation::empty()
         .transform(&pre_transf.compose().inverse())
-        .transform_from_decomposed(absolute_transf)
+        .transform_from_decomposed(ext_transf)
         .decompose()
 }
 
