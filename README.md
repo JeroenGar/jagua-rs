@@ -2,6 +2,8 @@
 
 ### A fast and fearless collision detection engine for 2D irregular cutting and packing problems.
 
+This library is designed to be used as a backend by optimization algorithms.
+
 <img src="img/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
 ### ‼️ See [`sparrow`](https://github.com/JeroenGar/sparrow) for a state-of-the-art optimization algorithm based on `jagua-rs` ‼️
