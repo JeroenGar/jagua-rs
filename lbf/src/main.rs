@@ -7,8 +7,8 @@ use std::path::Path;
 use clap::Parser as ClapParser;
 use jagua_rs::entities::bin_packing::BPInstance;
 use jagua_rs::entities::strip_packing::SPInstance;
-use jagua_rs::io::parser;
-use jagua_rs::io::parser::Parser;
+use jagua_rs::io::export::{export_bpp_solution, export_spp_solution};
+use jagua_rs::io::parse::Parser;
 use lbf::config::LBFConfig;
 use lbf::io::cli::Cli;
 use lbf::io::json_output::JsonOutput;
@@ -103,7 +103,7 @@ fn main() {
     //output
     match (&instance, &solution) {
         (LBFInstance::SP(spi), LBFSolution::SP(sol)) => {
-            let json_sol = parser::compose_json_solution_spp(&sol, spi, *EPOCH);
+            let json_sol = export_spp_solution(&sol, spi, *EPOCH);
             let json_output = JsonOutput {
                 instance: json_instance.clone(),
                 solution: json_sol,
@@ -121,7 +121,7 @@ fn main() {
             );
         }
         (LBFInstance::BP(bpi), LBFSolution::BP(sol)) => {
-            let json_sol = parser::compose_json_solution_bpp(&sol, bpi, *EPOCH);
+            let json_sol = export_bpp_solution(&sol, bpi, *EPOCH);
             let json_output = JsonOutput {
                 instance: json_instance.clone(),
                 solution: json_sol,

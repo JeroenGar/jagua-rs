@@ -1,15 +1,10 @@
-use std::time::Instant;
-
 use crate::collision_detection::CDEConfig;
 use crate::entities::bin_packing::BPInstance;
-use crate::entities::bin_packing::BPSolution;
 use crate::entities::general::Item;
 use crate::entities::general::{Bin, InferiorQualityZone, N_QUALITIES};
 use crate::entities::general::{Instance, OriginalShape};
 use crate::entities::strip_packing::SPInstance;
-use crate::entities::strip_packing::SPSolution;
 use crate::geometry::DTransformation;
-use crate::geometry::Transformation;
 use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::Point;
@@ -17,9 +12,6 @@ use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 use crate::io::json_instance::{JsonBin, JsonInstance, JsonItem, JsonShape, JsonSimplePoly};
-use crate::io::json_solution::{
-    JsonContainer, JsonLayout, JsonLayoutStats, JsonPlacedItem, JsonSolution, JsonTransformation,
-};
 use itertools::Itertools;
 use log::{Level, log};
 use rayon::iter::IndexedParallelIterator;
@@ -261,101 +253,6 @@ impl Parser {
     }
 }
 
-/// Composes a `JsonSolution` from a `SPSolution` and an `SPInstance`.
-pub fn compose_json_solution_spp(
-    solution: &SPSolution,
-    instance: &SPInstance,
-    epoch: Instant,
-) -> JsonSolution {
-    let container = JsonContainer::Strip {
-        width: solution.strip_width,
-        height: instance.strip_height,
-    };
-
-    let placed_items = solution
-        .layout_snapshot
-        .placed_items
-        .values()
-        .map(|placed_item| {
-            let item_index = placed_item.item_id;
-            let item = instance.item(item_index);
-
-            let abs_transf =
-                int_to_ext_transformation(&placed_item.d_transf, &item.shape_orig.pre_transform);
-
-            JsonPlacedItem {
-                index: item_index,
-                transformation: JsonTransformation {
-                    rotation: abs_transf.rotation(),
-                    translation: abs_transf.translation(),
-                },
-            }
-        })
-        .collect::<Vec<JsonPlacedItem>>();
-    let statistics = JsonLayoutStats {
-        density: solution.density(instance),
-    };
-    JsonSolution {
-        layouts: vec![JsonLayout {
-            container,
-            placed_items,
-            statistics,
-        }],
-        density: solution.density(instance),
-        run_time_sec: solution.time_stamp.duration_since(epoch).as_secs(),
-    }
-}
-
-/// Composes a `JsonSolution` from a `BPSolution` and an `BPInstance`.
-pub fn compose_json_solution_bpp(
-    solution: &BPSolution,
-    instance: &BPInstance,
-    epoch: Instant,
-) -> JsonSolution {
-    let layouts = solution
-        .layout_snapshots
-        .iter()
-        .map(|(_, sl)| {
-            let container = JsonContainer::Bin { index: sl.bin.id };
-            let placed_items = sl
-                .placed_items
-                .values()
-                .map(|placed_item| {
-                    let item_index = placed_item.item_id;
-                    let item = instance.item(item_index);
-
-                    let abs_transf = int_to_ext_transformation(
-                        &placed_item.d_transf,
-                        &item.shape_orig.pre_transform,
-                    );
-
-                    JsonPlacedItem {
-                        index: item_index,
-                        transformation: JsonTransformation {
-                            rotation: abs_transf.rotation(),
-                            translation: abs_transf.translation(),
-                        },
-                    }
-                })
-                .collect::<Vec<JsonPlacedItem>>();
-            let statistics = JsonLayoutStats {
-                density: sl.density(instance),
-            };
-            JsonLayout {
-                container,
-                placed_items,
-                statistics,
-            }
-        })
-        .collect::<Vec<JsonLayout>>();
-
-    JsonSolution {
-        layouts,
-        density: solution.density(instance),
-        run_time_sec: solution.time_stamp.duration_since(epoch).as_secs(),
-    }
-}
-
 fn json_simple_poly_to_points(jsp: &JsonSimplePoly) -> Vec<Point> {
     //Strip the last vertex if it is the same as the first one
     let n_vertices = match jsp.0[0] == jsp.0[jsp.0.len() - 1] {
@@ -366,34 +263,7 @@ fn json_simple_poly_to_points(jsp: &JsonSimplePoly) -> Vec<Point> {
     (0..n_vertices).map(|i| Point::from(jsp.0[i])).collect_vec()
 }
 
-/// Converts an internal (used within jagua-rs) transformation to an external transformation (based on the original shapes).
-pub fn int_to_ext_transformation(
-    int_transf: &DTransformation,
-    pre_transf: &DTransformation,
-) -> DTransformation {
-    //1. apply the pre-transform
-    //2. apply the internal transformation
-
-    Transformation::empty()
-        .transform_from_decomposed(pre_transf)
-        .transform_from_decomposed(int_transf)
-        .decompose()
-}
-
-/// Converts an external transformation (based on the original shapes) to an internal transformation (used within jagua-rs).
-pub fn ext_to_int_transformation(
-    ext_transf: &DTransformation,
-    pre_transf: &DTransformation,
-) -> DTransformation {
-    //1. undo pre-transform
-    //2. do the absolute transformation
-
-    Transformation::empty()
-        .transform(&pre_transf.compose().inverse())
-        .transform_from_decomposed(ext_transf)
-        .decompose()
-}
-
+/// Returns a transformation that translates the shape's centroid to the origin.
 pub fn centering_transformation(shape: &SPolygon) -> DTransformation {
     let Point(cx, cy) = shape.centroid();
     DTransformation::new(0.0, (-cx, -cy))

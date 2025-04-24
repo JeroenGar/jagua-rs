@@ -3,17 +3,17 @@
 //!
 //! This library is designed to be used in optimization algorithms for solving irregular 2D cutting and packing problems.
 
-/// Everything collision detection engine related
+/// Everything related to the Collision Detection Engine
 pub mod collision_detection;
 
-/// Entities to model 2D irregular cutting and packing problems
+/// Entities to model 2D Irregular Cutting and Packing Problems
 pub mod entities;
 
 /// Geometric primitives and base algorithms
 pub mod geometry;
 
-/// Parser and JSON (de)serialization
+/// Importing problem instances into and exporting solutions out of this library
 pub mod io;
 
-/// Helper functions
+/// Helper functions which do not belong to any specific module
 pub mod util;

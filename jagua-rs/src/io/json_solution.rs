@@ -1,6 +1,9 @@
+use crate::geometry::DTransformation;
 use serde::{Deserialize, Serialize};
 
-/// Representation of a solution
+/// A solution to a `JsonInstance`.
+/// Used to export solutions outside the library.
+
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct JsonSolution {
@@ -70,4 +73,13 @@ pub enum JsonContainer {
         #[serde(rename = "Height")]
         height: f32,
     },
+}
+
+impl From<DTransformation> for JsonTransformation {
+    fn from(dt: DTransformation) -> Self {
+        JsonTransformation {
+            rotation: dt.rotation(),
+            translation: dt.translation(),
+        }
+    }
 }
