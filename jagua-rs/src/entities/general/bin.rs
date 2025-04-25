@@ -68,8 +68,7 @@ impl Bin {
             let qz_hazards = quality_zones
                 .iter()
                 .flatten()
-                .map(|qz| qz.to_hazards())
-                .flatten();
+                .flat_map(|qz| qz.to_hazards());
             hazards.extend(qz_hazards);
             let base_cde = CDEngine::new(outer_int.bbox.inflate_to_square(), hazards, cde_config);
             Arc::new(base_cde)
