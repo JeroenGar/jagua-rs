@@ -23,11 +23,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Check formatting jagua-rs
+      - name: fmt jagua-rs
         run: |
           cd jagua-rs
           cargo fmt --all -- --check
-      - name: Check formatting lbf
+      - name: fmt lbf
         run: |
           cd lbf
           cargo fmt --all -- --check
@@ -54,6 +54,15 @@ jobs:
         run: |
           cd lbf
           cargo doc
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: clippy jagua-rs
+        run: |
+          cd jagua-rs
+          cargo clippy --all-targets --all-features -- -D warnings
   tests:
     runs-on: ubuntu-latest
     steps:
