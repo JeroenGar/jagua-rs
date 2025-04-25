@@ -86,6 +86,6 @@ impl HazardDetector for BasicHazardDetector {
         self.pi_hazards
             .iter()
             .map(|(_, h)| h)
-            .chain(self.other.iter().map(|h| h))
+            .chain(self.other.iter())
     }
 }
