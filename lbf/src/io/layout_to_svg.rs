@@ -24,7 +24,7 @@ pub fn layout_to_svg(
 ) -> Document {
     let bin = &layout.bin;
 
-    let vbox = bin.outer_orig.bbox().clone().scale(1.05);
+    let vbox = bin.outer_orig.bbox().scale(1.05);
 
     let theme = &options.theme;
 
