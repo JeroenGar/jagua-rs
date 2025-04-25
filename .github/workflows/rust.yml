@@ -44,12 +44,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: fmt
         run: cargo fmt --all -- --check
-      - name: build
-        run: cargo build --all-targets --profile test
       - name: clippy
-        run: cargo clippy --all-targets --all-features --profile test -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings
       - name: doc
         run: cargo doc
+      - name: build
+        run: cargo build --all-targets --profile test
       - name: test
         run: cargo test --verbose
       - name: run README example
