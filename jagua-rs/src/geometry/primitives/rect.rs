@@ -208,7 +208,7 @@ impl Shape for Rect {
     }
 
     fn bbox(&self) -> Rect {
-        self.clone()
+        *self
     }
 
     fn diameter(&self) -> f32 {

@@ -25,7 +25,7 @@ pub struct LBFOptimizerBP {
 impl LBFOptimizerBP {
     pub fn new(instance: BPInstance, config: LBFConfig, rng: SmallRng) -> Self {
         assert!(config.n_samples > 0);
-        let problem = BPProblem::new(instance.clone()).into();
+        let problem = BPProblem::new(instance.clone());
         Self {
             instance,
             problem,
@@ -101,7 +101,7 @@ fn search_layouts(
     sample_counter: &mut usize,
 ) -> Option<BPPlacement> {
     //search all existing layouts and closed bins with remaining stock
-    let open_layouts = problem.layouts.keys().map(|lk| BPLayoutType::Open(lk));
+    let open_layouts = problem.layouts.keys().map(BPLayoutType::Open);
     let bins_with_stock =
         problem
             .bin_qtys

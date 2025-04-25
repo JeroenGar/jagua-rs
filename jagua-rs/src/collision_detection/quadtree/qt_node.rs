@@ -181,38 +181,35 @@ impl QTNode {
     ) {
         //TODO: This seems to be the fastest version of this function
         //      Check if the other collision functions can also be improved.
-        match entity.collides_with(&self.bbox) {
-            false => return, //Entity does not collide with the node
-            true => match self.hazards.strongest(detector) {
-                None => return, //Any hazards present are not relevant
-                Some(_) => match self.children.as_ref() {
-                    Some(children) => {
-                        //Do not perform any CD on this level, check the children
-                        children.iter().for_each(|child| {
-                            child.collect_collisions(entity, detector);
-                        })
-                    }
-                    None => {
-                        //No children, detect all Entire hazards and check the Partial ones
-                        for hz in self.hazards.active_hazards().iter() {
-                            match &hz.presence {
-                                QTHazPresence::None => (),
-                                QTHazPresence::Entire => {
-                                    if !detector.contains(&hz.entity) {
-                                        detector.push(hz.entity)
-                                    }
-                                }
-                                QTHazPresence::Partial(p_haz) => {
-                                    if !detector.contains(&hz.entity) && p_haz.collides_with(entity)
-                                    {
-                                        detector.push(hz.entity);
-                                    }
-                                }
+        if !(entity.collides_with(&self.bbox) && self.hazards.strongest(detector).is_some()) {
+            // Entity does not collide with the node or any hazards present are not relevant
+            return;
+        }
+        match self.children.as_ref() {
+            Some(children) => {
+                //Do not perform any CD on this level, check the children
+                children.iter().for_each(|child| {
+                    child.collect_collisions(entity, detector);
+                })
+            }
+            None => {
+                //No children, detect all Entire hazards and check the Partial ones
+                for hz in self.hazards.active_hazards().iter() {
+                    match &hz.presence {
+                        QTHazPresence::None => (),
+                        QTHazPresence::Entire => {
+                            if !detector.contains(&hz.entity) {
+                                detector.push(hz.entity)
+                            }
+                        }
+                        QTHazPresence::Partial(p_haz) => {
+                            if !detector.contains(&hz.entity) && p_haz.collides_with(entity) {
+                                detector.push(hz.entity);
                             }
                         }
                     }
-                },
-            },
+                }
+            }
         }
     }
 
@@ -289,36 +286,36 @@ impl QTNode {
     /// May overestimate the hazards that are present in the bounding box, since it is limited
     /// by the resolution of the quadtree.
     pub fn collect_potential_hazards_within(&self, bbox: Rect, detector: &mut impl HazardDetector) {
-        match bbox.collides_with(&self.bbox) {
-            false => return, //Entity does not collide with the node
-            true => match self.children.as_ref() {
-                Some(children) => {
-                    //Do not perform any CD on this level, check the children
-                    children.iter().for_each(|child| {
-                        child.collect_potential_hazards_within(bbox, detector);
-                    })
-                }
-                None => {
-                    //No children, detect all Entire hazards and check the Partial ones
-                    for hz in self.hazards.active_hazards().iter() {
-                        match &hz.presence {
-                            QTHazPresence::None => (),
-                            QTHazPresence::Entire => {
-                                if !detector.contains(&hz.entity) {
-                                    detector.push(hz.entity)
-                                }
+        if !bbox.collides_with(&self.bbox) {
+            return;
+        }
+        match self.children.as_ref() {
+            Some(children) => {
+                //Do not perform any CD on this level, check the children
+                children.iter().for_each(|child| {
+                    child.collect_potential_hazards_within(bbox, detector);
+                })
+            }
+            None => {
+                //No children, detect all Entire hazards and check the Partial ones
+                for hz in self.hazards.active_hazards().iter() {
+                    match &hz.presence {
+                        QTHazPresence::None => (),
+                        QTHazPresence::Entire => {
+                            if !detector.contains(&hz.entity) {
+                                detector.push(hz.entity)
                             }
-                            QTHazPresence::Partial(_) => {
-                                // If the hazards is partially present, add it.
-                                // We are limited by the resolution of the quadtree
-                                if !detector.contains(&hz.entity) {
-                                    detector.push(hz.entity);
-                                }
+                        }
+                        QTHazPresence::Partial(_) => {
+                            // If the hazards is partially present, add it.
+                            // We are limited by the resolution of the quadtree
+                            if !detector.contains(&hz.entity) {
+                                detector.push(hz.entity);
                             }
                         }
                     }
                 }
-            },
+            }
         }
     }
 }

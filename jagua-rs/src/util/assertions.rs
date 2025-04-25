@@ -242,13 +242,13 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             let active_haz_1 = hv1
                 .active_hazards()
                 .iter()
-                .map(|h| hashable(h))
+                .map(hashable)
                 .collect::<HashSet<(HazardEntity, bool, u8)>>();
 
             let active_haz_2 = hv2
                 .active_hazards()
                 .iter()
-                .map(|h| hashable(h))
+                .map(hashable)
                 .collect::<HashSet<(HazardEntity, bool, u8)>>();
 
             let active_in_1_but_not_2 = active_haz_1
@@ -291,7 +291,7 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
     ) {
         (None, None) => true,
         (Some(c1), None) => {
-            let qn1_has_partial_hazards = qn1.map_or(false, |qn| {
+            let qn1_has_partial_hazards = qn1.is_some_and(|qn| {
                 qn.hazards
                     .active_hazards()
                     .iter()
@@ -307,7 +307,7 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             true
         }
         (None, Some(c2)) => {
-            let qn2_has_partial_hazards = qn2.map_or(false, |qn| {
+            let qn2_has_partial_hazards = qn2.is_some_and(|qn| {
                 qn.hazards
                     .active_hazards()
                     .iter()
@@ -367,14 +367,14 @@ pub fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
             2,
             n_0_corners
                 .iter()
-                .filter(|c| q_corners.iter().find(|qc| qc == c).is_some())
+                .filter(|c| q_corners.iter().any(|qc| &qc == c))
                 .count()
         );
         assert_eq!(
             2,
             n_1_corners
                 .iter()
-                .filter(|c| q_corners.iter().find(|qc| qc == c).is_some())
+                .filter(|c| q_corners.iter().any(|qc| &qc == c))
                 .count()
         );
     }

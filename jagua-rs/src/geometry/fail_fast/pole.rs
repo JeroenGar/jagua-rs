@@ -34,7 +34,7 @@ pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Circle {
 ///Generates a set of 'poles' for a shape according to specified coverage limits.
 ///See [`compute_pole`] for details on what a 'pole' is.
 pub fn generate_surrogate_poles(shape: &SPolygon, n_pole_limits: &[(usize, f32)]) -> Vec<Circle> {
-    let mut all_poles = vec![shape.poi.clone()];
+    let mut all_poles = vec![shape.poi];
     let mut total_pole_area = shape.poi.area();
 
     //Generate the poles until one of the pole number / coverage limits is reached

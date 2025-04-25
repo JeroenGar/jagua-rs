@@ -25,7 +25,7 @@ impl LBFOptimizerSP {
     pub fn new(instance: SPInstance, config: LBFConfig, rng: SmallRng) -> Self {
         assert!(config.n_samples > 0);
         let strip_width = instance.item_area * 2.0 / instance.strip_height; //initiate with 50% usage
-        let problem = SPProblem::new(instance.clone(), strip_width, config.cde_config).into();
+        let problem = SPProblem::new(instance.clone(), strip_width, config.cde_config);
         Self {
             instance,
             problem,
@@ -44,7 +44,7 @@ impl LBFOptimizerSP {
             while self.problem.missing_item_qtys[item_index] > 0 {
                 let placement = match &item.hazard_filter {
                     None => search(
-                        &self.problem.layout.cde(),
+                        self.problem.layout.cde(),
                         item,
                         &self.config,
                         &mut self.rng,
@@ -52,7 +52,7 @@ impl LBFOptimizerSP {
                         &NoHazardFilter,
                     ),
                     Some(hf) => search(
-                        &self.problem.layout.cde(),
+                        self.problem.layout.cde(),
                         item,
                         &self.config,
                         &mut self.rng,

@@ -38,7 +38,7 @@ pub fn search(
     let ls_sample_budget = (config.n_samples as f32 * config.ls_frac) as usize;
     let uni_sample_budget = config.n_samples - ls_sample_budget;
 
-    let mut bin_sampler = UniformRectSampler::new(cde.bbox().clone(), item);
+    let mut bin_sampler = UniformRectSampler::new(cde.bbox(), item);
 
     for i in 0..uni_sample_budget {
         let d_transf = bin_sampler.sample(rng);
