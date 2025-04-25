@@ -25,7 +25,7 @@ pub struct LBFOptimizerBP {
 impl LBFOptimizerBP {
     pub fn new(instance: BPInstance, config: LBFConfig, rng: SmallRng) -> Self {
         assert!(config.n_samples > 0);
-        let problem = BPProblem::new(instance.clone()).into();
+        let problem = BPProblem::new(instance.clone());
         Self {
             instance,
             problem,
