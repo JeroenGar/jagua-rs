@@ -36,7 +36,7 @@ fn main() {
         }
         Some(config_file) => {
             let file = File::open(config_file).unwrap_or_else(|err| {
-                panic!("[MAIN] Config file could not be opened: {}", err);
+                panic!("[MAIN] Config file could not be opened: {err}");
             });
             let reader = BufReader::new(file);
             serde_json::from_reader(reader).unwrap_or_else(|err| {
@@ -71,7 +71,7 @@ fn main() {
 
     let solution_path = args
         .solution_folder
-        .join(format!("sol_{}.json", input_file_stem));
+        .join(format!("sol_{input_file_stem}.json"));
 
     if !args.solution_folder.exists() {
         fs::create_dir_all(&args.solution_folder).unwrap_or_else(|_| {
@@ -113,7 +113,7 @@ fn main() {
 
             let svg_path = args
                 .solution_folder
-                .join(format!("sol_{}.svg", input_file_stem));
+                .join(format!("sol_{input_file_stem}.svg"));
 
             io::write_svg(
                 &s_layout_to_svg(&sol.layout_snapshot, spi, config.svg_draw_options),
@@ -133,7 +133,7 @@ fn main() {
             for (i, (_, s_layout)) in sol.layout_snapshots.iter().enumerate() {
                 let svg_path = args
                     .solution_folder
-                    .join(format!("sol_{}_{}.svg", input_file_stem, i));
+                    .join(format!("sol_{input_file_stem}_{i}.svg"));
                 io::write_svg(
                     &s_layout_to_svg(s_layout, bpi, config.svg_draw_options),
                     Path::new(&svg_path),

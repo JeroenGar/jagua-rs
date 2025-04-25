@@ -75,7 +75,7 @@ pub fn init_logger(level_filter: LevelFilter) {
                 thread_name,
             );
 
-            out.finish(format_args!("{:<27}{}", prefix, message))
+            out.finish(format_args!("{prefix:<27}{message}"))
         })
         // Add blanket level filter -
         .level(level_filter)
