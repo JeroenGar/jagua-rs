@@ -182,9 +182,9 @@ impl QTNode {
         //TODO: This seems to be the fastest version of this function
         //      Check if the other collision functions can also be improved.
         match entity.collides_with(&self.bbox) {
-            false => return, //Entity does not collide with the node
+            false => (), //Entity does not collide with the node
             true => match self.hazards.strongest(detector) {
-                None => return, //Any hazards present are not relevant
+                None => (), //Any hazards present are not relevant
                 Some(_) => match self.children.as_ref() {
                     Some(children) => {
                         //Do not perform any CD on this level, check the children
@@ -290,7 +290,7 @@ impl QTNode {
     /// by the resolution of the quadtree.
     pub fn collect_potential_hazards_within(&self, bbox: Rect, detector: &mut impl HazardDetector) {
         match bbox.collides_with(&self.bbox) {
-            false => return, //Entity does not collide with the node
+            false => (), //Entity does not collide with the node
             true => match self.children.as_ref() {
                 Some(children) => {
                     //Do not perform any CD on this level, check the children
