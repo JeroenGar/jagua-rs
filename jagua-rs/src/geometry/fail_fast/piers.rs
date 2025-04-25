@@ -84,7 +84,7 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge>
 
         match min_loss_ray {
             None => panic!("No ray found"),
-            Some(ray) => selected_piers.push(ray.clone()),
+            Some(ray) => selected_piers.push(*ray),
         }
     }
     selected_piers
