@@ -123,7 +123,7 @@ pub fn layout_to_svg(
                     false => {
                         // The original shape is drawn on the SVG, we need to inverse the pre-transform
                         let pre_transform = item.shape_orig.pre_transform.compose();
-                        
+
                         pre_transform.inverse()
                     }
                 };
