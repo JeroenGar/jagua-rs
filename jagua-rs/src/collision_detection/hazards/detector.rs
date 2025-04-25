@@ -55,7 +55,7 @@ impl HazardDetector for BasicHazardDetector {
     fn contains(&self, haz: &HazardEntity) -> bool {
         match haz {
             HazardEntity::PlacedItem { pk, .. } => self.pi_hazards.contains_key(*pk),
-            _ => self.other.iter().find(|&h| h == haz).is_some(),
+            _ => self.other.iter().any(|h| h == haz),
         }
     }
 

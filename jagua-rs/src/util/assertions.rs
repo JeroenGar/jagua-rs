@@ -367,14 +367,14 @@ pub fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
             2,
             n_0_corners
                 .iter()
-                .filter(|c| q_corners.iter().find(|qc| qc == c).is_some())
+                .filter(|c| q_corners.iter().any(|qc| &qc == c))
                 .count()
         );
         assert_eq!(
             2,
             n_1_corners
                 .iter()
-                .filter(|c| q_corners.iter().find(|qc| qc == c).is_some())
+                .filter(|c| q_corners.iter().any(|qc| &qc == c))
                 .count()
         );
     }
