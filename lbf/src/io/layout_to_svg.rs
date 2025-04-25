@@ -123,8 +123,8 @@ pub fn layout_to_svg(
                     false => {
                         // The original shape is drawn on the SVG, we need to inverse the pre-transform
                         let pre_transform = item.shape_orig.pre_transform.compose();
-                        let inv_pre_transform = pre_transform.inverse();
-                        inv_pre_transform
+                        
+                        pre_transform.inverse()
                     }
                 };
                 let mut surrogate_group = Group::new().set("id", format!("surrogate_{}", item.id));
