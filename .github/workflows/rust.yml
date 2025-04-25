@@ -19,6 +19,7 @@ env:
 
 jobs:
   jagua-rs-ci:
+    name: jagua-rs CI
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -35,6 +36,7 @@ jobs:
       - name: doc
         run: cargo doc
   lbf-ci:
+    name: lbf CI
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -49,8 +51,8 @@ jobs:
       - name: doc
         run: cargo doc
       - name: build
-        run: cargo build --all-targets --profile test
+        run: cargo build --all-targets
       - name: test
         run: cargo test --verbose
       - name: run README example
-        run: cargo run --release -- -i ../assets/swim.json -c ../assets/config_lbf.json -s ../solutions
+        run: cargo run --profile release -- -i ../assets/swim.json -c ../assets/config_lbf.json -s ../solutions
