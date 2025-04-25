@@ -242,13 +242,13 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             let active_haz_1 = hv1
                 .active_hazards()
                 .iter()
-                .map(|h| hashable(h))
+                .map(hashable)
                 .collect::<HashSet<(HazardEntity, bool, u8)>>();
 
             let active_haz_2 = hv2
                 .active_hazards()
                 .iter()
-                .map(|h| hashable(h))
+                .map(hashable)
                 .collect::<HashSet<(HazardEntity, bool, u8)>>();
 
             let active_in_1_but_not_2 = active_haz_1
