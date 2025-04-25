@@ -82,5 +82,5 @@ pub fn init_logger(level_filter: LevelFilter) {
         .chain(std::io::stdout())
         .apply()
         .expect("could not initialize logger");
-    log!(Level::Info, "Epoch: {}", jiff::Timestamp::now().to_string());
+    log!(Level::Info, "Epoch: {}", jiff::Timestamp::now());
 }
