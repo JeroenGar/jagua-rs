@@ -8,7 +8,7 @@ use std::cmp::Ordering;
 /// <br>
 /// This is a performance optimization to be able to quickly return the "strongest" hazard
 /// Strongest meaning the first active hazard with the highest [`QTHazPresence`] (`Entire` > `Partial` > `None`)
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct QTHazardVec {
     hazards: Vec<QTHazard>,
     n_active: usize,
@@ -16,10 +16,7 @@ pub struct QTHazardVec {
 
 impl QTHazardVec {
     pub fn new() -> Self {
-        QTHazardVec {
-            hazards: Vec::new(),
-            n_active: 0,
-        }
+        Self::default()
     }
 
     pub fn add(&mut self, haz: QTHazard) {

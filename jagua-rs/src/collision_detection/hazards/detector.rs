@@ -34,7 +34,7 @@ where
 
 /// Basic implementation of a [`HazardDetector`].
 /// Hazards from [`HazardEntity::PlacedItem`] have instant lookups, the rest are stored in a Vec.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct BasicHazardDetector {
     pi_hazards: SecondaryMap<PItemKey, HazardEntity>,
     other: Vec<HazardEntity>,
@@ -42,10 +42,7 @@ pub struct BasicHazardDetector {
 
 impl BasicHazardDetector {
     pub fn new() -> Self {
-        BasicHazardDetector {
-            pi_hazards: SecondaryMap::new(),
-            other: Vec::new(),
-        }
+        Self::default()
     }
 
     pub fn clear(&mut self) {
