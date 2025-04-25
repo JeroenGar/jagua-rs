@@ -16,7 +16,7 @@ pub fn original_shape_data(
     draw_internal: bool,
 ) -> Data {
     match draw_internal {
-        true => simple_polygon_data(&internal),
+        true => simple_polygon_data(internal),
         false => simple_polygon_data(&original.shape),
     }
 }

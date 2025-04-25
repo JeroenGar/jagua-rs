@@ -103,7 +103,7 @@ fn main() {
     //output
     match (&instance, &solution) {
         (LBFInstance::SP(spi), LBFSolution::SP(sol)) => {
-            let json_sol = export_spp_solution(&sol, spi, *EPOCH);
+            let json_sol = export_spp_solution(sol, spi, *EPOCH);
             let json_output = JsonOutput {
                 instance: json_instance.clone(),
                 solution: json_sol,
@@ -121,7 +121,7 @@ fn main() {
             );
         }
         (LBFInstance::BP(bpi), LBFSolution::BP(sol)) => {
-            let json_sol = export_bpp_solution(&sol, bpi, *EPOCH);
+            let json_sol = export_bpp_solution(sol, bpi, *EPOCH);
             let json_output = JsonOutput {
                 instance: json_instance.clone(),
                 solution: json_sol,

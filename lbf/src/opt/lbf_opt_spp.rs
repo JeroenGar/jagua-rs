@@ -44,7 +44,7 @@ impl LBFOptimizerSP {
             while self.problem.missing_item_qtys[item_index] > 0 {
                 let placement = match &item.hazard_filter {
                     None => search(
-                        &self.problem.layout.cde(),
+                        self.problem.layout.cde(),
                         item,
                         &self.config,
                         &mut self.rng,
@@ -52,7 +52,7 @@ impl LBFOptimizerSP {
                         &NoHazardFilter,
                     ),
                     Some(hf) => search(
-                        &self.problem.layout.cde(),
+                        self.problem.layout.cde(),
                         item,
                         &self.config,
                         &mut self.rng,
