@@ -40,13 +40,12 @@ fn fast_fail_query_bench(c: &mut Criterion) {
 
     let config_combos = FF_POLES
         .iter()
-        .map(|n_ff_poles| {
+        .flat_map(|n_ff_poles| {
             FF_PIERS
                 .iter()
                 .map(|n_ff_piers| (*n_ff_poles, *n_ff_piers))
                 .collect_vec()
         })
-        .flatten()
         .collect_vec();
 
     let mut config = create_base_config();
@@ -128,7 +127,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
                             true => true,
                             false => {
                                 buffer_shape.transform_from(&item.shape_cd, &transf);
-                                layout.cde().poly_collides(&buffer_shape, &NoHazardFilter)
+                                layout.cde().poly_collides(buffer_shape, &NoHazardFilter)
                             }
                         };
                         match collides {
@@ -159,7 +158,7 @@ pub fn create_custom_surrogate(
     };
 
     let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
-    let mut poles = vec![simple_poly.poi.clone()];
+    let mut poles = vec![simple_poly.poi];
     poles.extend(generate_surrogate_poles(
         simple_poly,
         &sp_config.n_pole_limits,
@@ -174,13 +173,11 @@ pub fn create_custom_surrogate(
     )
     .area();
 
-    let surrogate = SPSurrogate {
+    SPSurrogate {
         convex_hull_indices,
         poles,
         piers,
         convex_hull_area,
         config: sp_config,
-    };
-
-    surrogate
+    }
 }

@@ -45,12 +45,11 @@ impl SPolygon {
         assert_eq!(
             points.iter().unique().count(),
             points.len(),
-            "simple polygon should not contain duplicate points: {:?}",
-            points
+            "simple polygon should not contain duplicate points: {points:?}",
         );
 
         let area = match SPolygon::calculate_area(&points) {
-            area if area == 0.0 => panic!("simple polygon has no area: {:?}", points),
+            0.0 => panic!("simple polygon has no area: {points:?}"),
             area if area < 0.0 => {
                 //edges should always be ordered counterclockwise (positive area)
                 points.reverse();

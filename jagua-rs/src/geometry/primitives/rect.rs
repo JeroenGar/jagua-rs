@@ -21,11 +21,7 @@ impl Rect {
     pub fn new(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> Self {
         debug_assert!(
             x_min < x_max && y_min < y_max,
-            "invalid rectangle, x_min: {}, x_max: {}, y_min: {}, y_max: {}",
-            x_min,
-            x_max,
-            y_min,
-            y_max
+            "invalid rectangle, x_min: {x_min}, x_max: {x_max}, y_min: {y_min}, y_max: {y_max}",
         );
         Rect {
             x_min,

@@ -51,8 +51,7 @@ impl Bin {
                 .iter()
                 .map(|qz| qz.quality)
                 .all(|q| q < N_QUALITIES),
-            "All quality zones must be below N_QUALITIES: {}",
-            N_QUALITIES
+            "All quality zones must be below N_QUALITIES: {N_QUALITIES}"
         );
         let quality_zones = {
             let mut qz = <[_; N_QUALITIES]>::default();

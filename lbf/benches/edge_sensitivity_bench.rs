@@ -103,8 +103,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
 
         g.bench_function(BenchmarkId::from_parameter(edge_multiplier), |b| {
             b.iter(|| {
-                for i in 0..N_ITEMS_REMOVED {
-                    let pi_uid = &selected_pi_uids[i];
+                for pi_uid in selected_pi_uids.iter().take(N_ITEMS_REMOVED) {
                     let item = instance.item(pi_uid.item_id);
                     let mut buffer_shape = item.shape_cd.as_ref().clone();
                     for dtransf in samples_cycler.next().unwrap() {

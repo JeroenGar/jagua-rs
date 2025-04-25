@@ -31,9 +31,11 @@ mod tests {
     fn test_instance(instance_path: &str) {
         let instance = Path::new(instance_path);
         // parse the instance
-        let mut config = LBFConfig::default();
-        config.n_samples = 100;
-        let json_instance = io::read_json_instance(&instance);
+        let config = LBFConfig {
+            n_samples: 100,
+            ..LBFConfig::default()
+        };
+        let json_instance = io::read_json_instance(instance);
 
         let parser = Parser::new(
             config.cde_config,

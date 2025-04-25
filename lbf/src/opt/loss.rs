@@ -36,8 +36,6 @@ impl LBFLoss {
         let cost = self.cost();
         let x_max_bound = cost / X_MULTIPLIER;
 
-        dbg!(x_max_bound, cost);
-
         let mut tightened_bbox = sample_bbox;
         tightened_bbox.x_max = f32::min(sample_bbox.x_max, x_max_bound);
 

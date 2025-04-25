@@ -73,9 +73,9 @@ pub fn layout_to_svg(
                             options.draw_cd_shapes,
                         ),
                         &[
-                            ("fill", &*format!("{}", color)),
+                            ("fill", &*format!("{color}")),
                             ("fill-opacity", "0.50"),
-                            ("stroke", &*format!("{}", stroke_color)),
+                            ("stroke", &*format!("{stroke_color}")),
                             ("stroke-width", &*format!("{}", 2.0 * stroke_width)),
                             ("stroke-opacity", &*format!("{}", theme.qz_stroke_opac)),
                             ("stroke-dasharray", &*format!("{}", 5.0 * stroke_width)),
@@ -108,8 +108,8 @@ pub fn layout_to_svg(
                         options.draw_cd_shapes,
                     ),
                     &[
-                        ("fill", &*format!("{}", color)),
-                        ("stroke-width", &*format!("{}", stroke_width)),
+                        ("fill", &*format!("{color}")),
+                        ("stroke-width", &*format!("{stroke_width}")),
                         ("fill-rule", "nonzero"),
                         ("stroke", "black"),
                         ("opacity", "0.9"),
@@ -132,19 +132,19 @@ pub fn layout_to_svg(
                     ("fill", "black"),
                     ("fill-opacity", "0.1"),
                     ("stroke", "black"),
-                    ("stroke-width", &*format!("{}", stroke_width)),
+                    ("stroke-width", &*format!("{stroke_width}")),
                     ("stroke-opacity", "0.8"),
                 ];
                 let ff_style = [
                     ("fill", "none"),
                     ("stroke", "black"),
-                    ("stroke-width", &*format!("{}", stroke_width)),
+                    ("stroke-width", &*format!("{stroke_width}")),
                     ("stroke-opacity", "0.8"),
                 ];
                 let no_ff_style = [
                     ("fill", "none"),
                     ("stroke", "black"),
-                    ("stroke-width", &*format!("{}", stroke_width)),
+                    ("stroke-width", &*format!("{stroke_width}")),
                     ("stroke-opacity", "0.5"),
                     ("stroke-dasharray", &*format!("{}", 5.0 * stroke_width)),
                     ("stroke-linecap", "round"),

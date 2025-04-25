@@ -20,13 +20,11 @@ impl Circle {
     pub fn new(center: Point, radius: f32) -> Self {
         debug_assert!(
             radius.is_finite() && radius >= 0.0,
-            "invalid circle radius: {}",
-            radius
+            "invalid circle radius: {radius}",
         );
         debug_assert!(
             center.0.is_finite() && center.1.is_finite(),
-            "invalid circle center: {:?}",
-            center
+            "invalid circle center: {center:?}",
         );
 
         Self { center, radius }
