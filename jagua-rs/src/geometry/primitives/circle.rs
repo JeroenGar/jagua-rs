@@ -21,7 +21,6 @@ impl Circle {
         debug_assert!(
             radius.is_finite() && radius >= 0.0,
             "invalid circle radius: {radius}",
-            
         );
         debug_assert!(
             center.0.is_finite() && center.1.is_finite(),
