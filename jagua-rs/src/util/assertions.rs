@@ -291,7 +291,7 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
     ) {
         (None, None) => true,
         (Some(c1), None) => {
-            let qn1_has_partial_hazards = qn1.map_or(false, |qn| {
+            let qn1_has_partial_hazards = qn1.is_some_and(|qn| {
                 qn.hazards
                     .active_hazards()
                     .iter()
@@ -307,7 +307,7 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             true
         }
         (None, Some(c2)) => {
-            let qn2_has_partial_hazards = qn2.map_or(false, |qn| {
+            let qn2_has_partial_hazards = qn2.is_some_and(|qn| {
                 qn.hazards
                     .active_hazards()
                     .iter()
