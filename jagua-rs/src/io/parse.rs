@@ -29,8 +29,7 @@ impl Parser {
     ///
     /// * `cde_config` - Configuration for the CDE (Collision Detection Engine).
     /// * `poly_simpl_tolerance` - See [`ShapeModifyConfig::simplify_tolerance`].
-    /// * `min_item_separation` - Optional minimum separation distance between items and any other hazard.
-    /// If enabled, every hazard is inflated/deflated by half this value. See [`ShapeModifyConfig::offset`].
+    /// * `min_item_separation` - Optional minimum separation distance between items and any other hazard. If enabled, every hazard is inflated/deflated by half this value. See [`ShapeModifyConfig::offset`].
     pub fn new(
         cde_config: CDEConfig,
         poly_simpl_tolerance: Option<f32>,

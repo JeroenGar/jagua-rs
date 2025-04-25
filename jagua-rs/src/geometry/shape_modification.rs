@@ -233,8 +233,8 @@ fn replacing_vertex_convex_convex_candidate(
     shape: &[Point],
     (c1, c2): (Corner, Corner),
 ) -> Result<Point, InvalidCandidate> {
-    assert_eq!(c1.2, c2.1, "non-consecutive corners {:?},{:?}", c1, c2);
-    assert_eq!(c1.1, c2.0, "non-consecutive corners {:?},{:?}", c1, c2);
+    assert_eq!(c1.2, c2.1, "non-consecutive corners {c1:?},{c2:?}");
+    assert_eq!(c1.1, c2.0, "non-consecutive corners {c1:?},{c2:?}");
 
     let edge_prev = Edge::new(shape[c1.0], shape[c1.1]);
     let edge_next = Edge::new(shape[c2.2], shape[c2.1]);

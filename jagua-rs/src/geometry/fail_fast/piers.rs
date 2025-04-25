@@ -130,7 +130,7 @@ fn clip(shape: &SPolygon, ray: &Edge) -> Vec<Edge> {
         .collect_vec();
 
     //every pair of (sorted) intersections defines a clipped line
-    let clipped_lines = intersections
+    intersections
         .chunks(2)
         .flat_map(|pair| {
             if pair.len() == 1 {
@@ -144,9 +144,7 @@ fn clip(shape: &SPolygon, ray: &Edge) -> Vec<Edge> {
                 None
             }
         })
-        .collect_vec();
-
-    clipped_lines
+        .collect_vec()
 }
 
 fn generate_unrepresented_point_grid(

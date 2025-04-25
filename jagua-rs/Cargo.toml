@@ -12,7 +12,6 @@ homepage = "https://github.com/JeroenGar/jagua-rs"
 
 [dependencies]
 ndarray = "0.16"
-rand = { version = "0.9.0", features = [ "small_rng" ] }
 rand_distr = "0.5"
 ordered-float = "5.0"
 serde = { version = "1.0", features = ["derive"] }
