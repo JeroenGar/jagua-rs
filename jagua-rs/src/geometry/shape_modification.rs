@@ -1,3 +1,4 @@
+#[cfg(feature = "separation-distance")]
 use geo_offset::Offset;
 use itertools::Itertools;
 use log::{debug, info};
@@ -325,6 +326,7 @@ impl CornerType {
 
 /// Offsets a [`SPolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
 /// Relies on the [`geo_offset`](https://crates.io/crates/geo_offset) crate.
+#[cfg(feature = "separation-distance")]
 pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> SPolygon {
     let offset = match mode {
         ShapeModifyMode::Deflate => -distance,
@@ -354,4 +356,11 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> SPol
     }
 
     SPolygon::new(points_offset)
+}
+
+#[cfg(not(feature = "separation-distance"))]
+pub fn offset_shape(_sp: &SPolygon, _mode: ShapeModifyMode, _distance: f32) -> SPolygon {
+    panic!(
+        "cannot offset shape without geo_offset dependency, compile with --features separation to enable this"
+    )
 }
