@@ -21,9 +21,10 @@ tribool = "0.3"
 rayon = "1.10"
 slotmap = "1.0"
 float-cmp = "0.10"
-geo-offset = "0.4.0"
+geo-offset = { version = "0.4.0", optional = true }
 geo-types = "0.7.16"
 
 [features]
-# Switches from f32 to f64 for floating point numbers in the library
-double-precision = []
+default = ["separation-distance"]
+# Enables support for defining a minimum separation distance between items and any hazard.
+separation-distance = ["dep:geo-offset"]

@@ -50,8 +50,10 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: doc
         run: cargo doc
-      - name: build
-        run: cargo build --all-targets
+      - name: build all features
+        run: cargo build --all-targets --all-features
+      - name: build without features
+        run: cargo build --all-targets --no-default-features
       - name: test
         run: cargo test --verbose
       - name: run README example
