@@ -1,9 +1,9 @@
-use crate::entities::{Instance, Layout};
+use crate::entities::{Instance, LayoutSnapshot};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtLayout, ExtPlacedItem};
 
 /// Exports a layout to an external representation.
-pub fn export_layout<'a>(layout: Layout, instance: &impl Instance) -> ExtLayout {
+pub fn export_layout_snapshot<'a>(layout: &LayoutSnapshot, instance: &impl Instance) -> ExtLayout {
     let ext_placed_items = layout
         .placed_items
         .values()

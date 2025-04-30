@@ -11,3 +11,5 @@ pub use problem::SPPlacement;
 pub use problem::SPProblem;
 #[doc(inline)]
 pub use solution::SPSolution;
+#[doc(inline)]
+pub use strip::Strip;

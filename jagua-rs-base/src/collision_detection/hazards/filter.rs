@@ -10,11 +10,11 @@ pub trait HazardFilter {
 #[derive(Clone, Debug)]
 pub struct NoHazardFilter;
 
-/// Deems all hazards induced by the [`Container`](crate::entities::general::Container) as irrelevant.
+/// Deems all hazards induced by the [`Container`](crate::entities::Container) as irrelevant.
 #[derive(Clone, Debug)]
 pub struct ContainerHazardFilter;
 
-/// Deems hazards induced by [`InferiorQualityZone`](crate::entities::general::InferiorQualityZone)s above a cutoff quality as irrelevant.
+/// Deems hazards induced by [`InferiorQualityZone`](crate::entities::InferiorQualityZone)s above a cutoff quality as irrelevant.
 #[derive(Clone, Debug)]
 pub struct QZHazardFilter(pub usize);
 

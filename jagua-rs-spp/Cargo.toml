@@ -1,6 +1,6 @@
 [package]
 name = "jagua-rs-spp"
-description = "Strip Packing Problem for jagua-rs"
+description = "Model of the Strip Packing Problem for jagua-rs"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -13,3 +13,5 @@ homepage.workspace = true
 [dependencies]
 jagua-rs-base = { path = "../jagua-rs-base"}
 serde = { workspace = true }
+itertools = { workspace = true }
+rayon = { workspace = true }

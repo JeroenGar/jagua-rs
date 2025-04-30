@@ -1,14 +1,13 @@
-use crate::entities::general::LayoutSnapshot;
-use crate::entities::strip_packing::SPInstance;
-#[cfg(doc)]
-use crate::entities::strip_packing::SPProblem;
 use std::time::Instant;
+use jagua_rs_base::entities::LayoutSnapshot;
+use crate::entities::SPInstance;
+use crate::entities::strip::Strip;
 
-/// Snapshot of [`SPProblem`] at a specific moment. Can be used to restore [`SPProblem`] to a previous state.
+/// Snapshot of [`SPProblem`](crate::entities::SPProblem) at a specific moment. Can be used to restore to a previous state.
 #[derive(Debug, Clone)]
 pub struct SPSolution {
     /// Width of the strip
-    pub strip_width: f32,
+    pub strip: Strip,
     /// Snapshot of the strip
     pub layout_snapshot: LayoutSnapshot,
     /// Instant the solution was created

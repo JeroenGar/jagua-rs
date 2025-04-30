@@ -13,9 +13,10 @@ use crate::io::ext_repr::{ExtContainer, ExtItem, ExtSPolygon, ExtShape};
 use itertools::Itertools;
 
 /// Converts external representations of items and containers into internal ones.
+#[derive(Clone, Debug, Copy)]
 pub struct Importer {
-    shape_modify_config: ShapeModifyConfig,
-    cde_config: CDEConfig,
+    pub shape_modify_config: ShapeModifyConfig,
+    pub cde_config: CDEConfig,
 }
 
 impl Importer {

@@ -1,39 +1,33 @@
-use crate::collision_detection::CDEConfig;
-use crate::entities::general::Bin;
-use crate::entities::general::Instance;
-use crate::entities::general::Layout;
-use crate::entities::general::PItemKey;
-use crate::entities::strip_packing::SPInstance;
-use crate::entities::strip_packing::SPSolution;
-use crate::geometry::DTransformation;
-use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::Rect;
-use crate::util::assertions;
+use jagua_rs_base::geometry::DTransformation;
 use itertools::Itertools;
 use std::time::Instant;
+use jagua_rs_base::entities::{Instance, Layout, PItemKey};
+use crate::entities::{SPInstance, SPSolution};
+use crate::entities::strip::Strip;
+use crate::util::assertions::problem_matches_solution;
 
 /// Modifiable counterpart of [`SPInstance`]: items can be placed and removed, strip can be extended or fitted.
 #[derive(Clone)]
 pub struct SPProblem {
     pub instance: SPInstance,
+    pub strip: Strip,
     pub layout: Layout,
     pub missing_item_qtys: Vec<isize>,
 }
 
 impl SPProblem {
-    pub fn new(instance: SPInstance, strip_width: f32, cde_config: CDEConfig) -> Self {
-        let strip_height = instance.strip_height;
+    pub fn new(instance: SPInstance) -> Self {
         let missing_item_qtys = instance
             .items
             .iter()
             .map(|(_, qty)| *qty as isize)
             .collect_vec();
-        let strip_bbox = Rect::new(0.0, 0.0, strip_width, strip_height);
-        let strip_bin = Bin::from_strip(0, strip_bbox, cde_config, instance.strip_modify_config);
-        let layout = Layout::new(strip_bin);
+        let strip = instance.base_strip;
+        let layout = Layout::new(strip.into());
 
         Self {
             instance,
+            strip,
             layout,
             missing_item_qtys,
         }
@@ -41,14 +35,8 @@ impl SPProblem {
 
     /// Modifies the width of the strip in the back, keeping the front fixed.
     pub fn change_strip_width(&mut self, new_width: f32) {
-        let new_bbox = Rect::new(0.0, 0.0, new_width, self.strip_height());
-        let new_bin = Bin::from_strip(
-            0,
-            new_bbox,
-            self.layout.bin.base_cde.config(),
-            self.instance.strip_modify_config,
-        );
-        self.layout.change_bin(new_bin);
+        self.strip.set_width(new_width);
+        self.layout.swap_container(self.strip.into());
     }
 
     /// Shrinks the strip to the minimum width that fits all items.
@@ -66,16 +54,9 @@ impl SPProblem {
             * 1.00001;
 
         // add the shape offset if any, the strip needs to be at least `offset` wider than the items
-        let fitted_width = item_x_max + self.instance.strip_modify_config.offset.unwrap_or(0.0);
-
-        let new_bbox = Rect::new(0.0, 0.0, fitted_width, self.strip_height());
-        let new_bin = Bin::from_strip(
-            0,
-            new_bbox,
-            self.layout.bin.base_cde.config(),
-            self.instance.strip_modify_config,
-        );
-        self.layout.change_bin(new_bin);
+        let fitted_width = item_x_max + self.strip.shape_modify_config.offset.unwrap_or(0.0);
+        
+        self.change_strip_width(fitted_width);
         debug_assert!(feasible_before == self.layout.is_feasible());
     }
 
@@ -99,23 +80,26 @@ impl SPProblem {
         }
     }
 
+    /// Takes a snapshot of the current state of the problem and returns it as a [`SPSolution`].
     pub fn save(&mut self) -> SPSolution {
         let solution = SPSolution {
             layout_snapshot: self.layout.save(),
-            strip_width: self.strip_width(),
+            strip: self.strip,
             time_stamp: Instant::now(),
         };
 
-        debug_assert!(assertions::spproblem_matches_solution(self, &solution));
+        debug_assert!(problem_matches_solution(self, &solution));
 
         solution
     }
 
+    /// Restores the state of the problem to the given [`SPSolution`].
     pub fn restore(&mut self, solution: &SPSolution) {
-        // restore or recreate the layout
-        if self.strip_width() == solution.strip_width {
+        if self.strip == solution.strip {
+            // the strip is the same, restore the layout
             self.layout.restore(&solution.layout_snapshot);
         } else {
+            // the strip has changed, rebuild the layout
             self.layout = Layout::from_snapshot(&solution.layout_snapshot);
         }
 
@@ -130,15 +114,7 @@ impl SPProblem {
             .iter()
             .for_each(|(_, pi)| self.missing_item_qtys[pi.item_id] -= 1);
 
-        debug_assert!(assertions::spproblem_matches_solution(self, solution));
-    }
-
-    pub fn strip_width(&self) -> f32 {
-        self.layout.bin.outer_orig.bbox().width()
-    }
-
-    pub fn strip_height(&self) -> f32 {
-        self.layout.bin.outer_orig.bbox().height()
+        debug_assert!(problem_matches_solution(self, solution));
     }
 
     fn register_included_item(&mut self, item_id: usize) {

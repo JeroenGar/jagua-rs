@@ -4,12 +4,12 @@ use crate::entities::{SPProblem, SPSolution};
 
 pub fn problem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
     let SPSolution {
-        strip_width,
+        strip,
         layout_snapshot,
         time_stamp: _,
     } = sol;
 
-    assert_eq!(*strip_width, spp.strip_width());
+    assert_eq!(*strip, spp.strip);
     assert_eq!(spp.density(), sol.density(&spp.instance));
     assert!(layouts_match(&spp.layout, layout_snapshot));
 

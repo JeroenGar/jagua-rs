@@ -66,6 +66,7 @@ pub struct ExtPolygon {
 /// External representation of a [`SPolygon`](crate::geometry::primitives::SPolygon).
 /// A polygon with no holes and no self-intersections.
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct ExtSPolygon(pub Vec<(f32, f32)>);
 
 /// A zone with a specific quality level

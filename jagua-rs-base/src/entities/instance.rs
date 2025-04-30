@@ -6,18 +6,14 @@ use std::any::Any;
 /// This trait defines shared functionality between any instance variant.
 pub trait Instance: Any {
     /// All items
-    fn items(&self) -> &[Item];
+    fn items(&self) -> impl Iterator<Item=&Item>;
 
     /// All containers
-    fn containers(&self) -> &[Container];
+    fn containers(&self) -> impl Iterator<Item=&Container>;
     
     /// A specific item
-    fn item(&self, id: usize) -> &Item {
-        &self.items()[id]
-    }
+    fn item(&self, id: usize) -> &Item;
 
     /// A specific container
-    fn container(&self, id: usize) -> &Container {
-        &self.containers()[id]
-    }
+    fn container(&self, id: usize) -> &Container;
 }

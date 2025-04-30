@@ -1,13 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["jagua-rs-base", "jagua-rs-bpp", "jagua-rs-spp", "lbf"]
+members = ["jagua-rs-base", "jagua-rs-bpp", "jagua-rs-spp","jagua-rs","lbf"]
 
 [workspace.package]
-name = "jagua-rs"
 version = "0.4.2"
 edition = "2024"
 license = "MPL-2.0"
-license-file = "LICENSE"
 repository = "https://github.com/JeroenGar/jagua-rs"
 authors = ["Jeroen Gardeyn"]
 description = "A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems"

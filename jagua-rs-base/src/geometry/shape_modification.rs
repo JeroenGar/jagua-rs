@@ -21,7 +21,7 @@ pub enum ShapeModifyMode {
     Deflate,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq)]
 pub struct ShapeModifyConfig {
     /// Maximum deviation of the simplified polygon with respect to the original polygon area as a ratio.
     /// If undefined, no simplification is performed.

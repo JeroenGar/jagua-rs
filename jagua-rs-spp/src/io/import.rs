@@ -1,55 +1,47 @@
-use jagua_rs_base::entities::{Container, Instance};
+use itertools::Itertools;
+use rayon::prelude::*;
+use jagua_rs_base::entities::Item;
 use jagua_rs_base::geometry::shape_modification::ShapeModifyConfig;
-use jagua_rs_base::io::json_instance::JsonInstance;
+use jagua_rs_base::io::import::Importer;
+use crate::entities::{SPInstance, Strip};
+use crate::io::ext_repr::ExtSPInstance;
 
-/// Parses a `JsonInstance` into an `Instance`.
-pub fn parse(&self, json_instance: &JsonInstance) -> Box<dyn Instance> {
-    let items = json_instance
-        .items
-        .par_iter()
-        .enumerate()
-        .map(|(item_id, json_item)| self.parse_item(json_item, item_id))
-        .collect();
+pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> SPInstance {
+    let items: Vec<(Item, usize)> = {
+        let mut items: Vec<(Item, usize)> = ext_instance
+            .items
+            .par_iter()
+            .map(|ext_item| {
+                let item = importer.import_item(&ext_item.base);
+                let demand = ext_item.demand as usize;
+                (item, demand)
+            })
+            .collect();
+        
+        items.sort_by_key(|(item, _)| item.id);
+        assert!(
+            items.iter().enumerate().all(|(i, (item, _))| item.id == i),
+            "All items should have consecutive IDs starting from 0. IDs: {:?}", items.iter().map(|(item, _)| item.id).sorted().collect_vec()
+        );
+        items
+    };
+    
+    let total_item_area = items.iter().map(|(item, demand)| item.area() * *demand as f32).sum::<f32>();
 
-    match (json_instance.bins.as_ref(), json_instance.strip.as_ref()) {
-        (Some(json_bins), None) => {
-            //bin packing instance
-            let bins: Vec<(Container, usize)> = json_bins
-                .par_iter()
-                .enumerate()
-                .map(|(bin_id, json_bin)| self.parse_bin(json_bin, bin_id))
-                .collect();
-            let bpi = BPInstance::new(items, bins);
-            log!(
-                    Level::Info,
-                    "[PARSE] bin packing instance \"{}\": {} items ({} unique), {} bins ({} unique)",
-                    json_instance.name,
-                    bpi.total_item_qty(),
-                    bpi.items.len(),
-                    bpi.bins.iter().map(|(_, qty)| *qty).sum::<usize>(),
-                    bpi.bins.len()
-                );
-            Box::new(bpi)
-        }
-        (None, Some(json_strip)) => {
-            let strip_modify_config = ShapeModifyConfig {
-                offset: self.shape_modify_config.offset,
-                simplify_tolerance: None,
-            };
-            let spi = SPInstance::new(items, json_strip.height, strip_modify_config);
-            log!(
-                    Level::Info,
-                    "[PARSE] strip packing instance \"{}\": {} items ({} unique), {} strip height",
-                    json_instance.name,
-                    spi.total_item_qty(),
-                    spi.items.len(),
-                    spi.strip_height
-                );
-            Box::new(spi)
-        }
-        (Some(_), Some(_)) => {
-            panic!("Both bins and strip packing specified, has to be one or the other")
-        }
-        (None, None) => panic!("Neither bins or strips specified"),
-    }
+    let fixed_height = ext_instance.strip_height;
+    
+    // Initialize the base width for 100% density
+    let width = total_item_area / fixed_height;
+    
+    let base_strip = Strip {
+        fixed_height,
+        cde_config: importer.cde_config,
+        shape_modify_config: ShapeModifyConfig {
+            offset: importer.shape_modify_config.offset,
+            simplify_tolerance: None,
+        },
+        width,
+    };
+    
+    SPInstance::new(items, base_strip)
 }
