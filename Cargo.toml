@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = ["jagua-rs-base", "jagua-rs-bpp", "jagua-rs-spp", "lbf"]
+
+[workspace.package]
+name = "jagua-rs"
+version = "0.4.2"
+edition = "2024"
+license = "MPL-2.0"
+license-file = "LICENSE"
+repository = "https://github.com/JeroenGar/jagua-rs"
+authors = ["Jeroen Gardeyn"]
+description = "A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems"
+readme = "README.md"
+keywords = ["nesting", "packing", "strip", "bin", "irregular"]
+homepage = "https://github.com/JeroenGar/jagua-rs"
+
+[workspace.dependencies]
+ndarray = "0.16"
+rand_distr = "0.5"
+ordered-float = "5.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+itertools = "0.14"
+tribool = "0.3"
+rayon = "1.10"
+slotmap = "1.0"
+float-cmp = "0.10"
