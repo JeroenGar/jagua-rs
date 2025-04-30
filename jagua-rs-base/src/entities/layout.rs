@@ -12,35 +12,34 @@ use slotmap::SlotMap;
 ///Each layout maintains a [`CDEngine`], which can be used to check for collisions before placing items.
 #[derive(Clone)]
 pub struct Layout {
-    /// The bin used for this layout
-    pub bin: Container,
-    /// How the items are placed in the bin
+    /// The container used for this layout
+    pub container: Container,
+    /// How the items are placed in the container
     pub placed_items: SlotMap<PItemKey, PlacedItem>,
     /// The collision detection engine for this layout
     cde: CDEngine,
 }
 
 impl Layout {
-    pub fn new(bin: Container) -> Self {
-        let cde = bin.base_cde.as_ref().clone();
+    pub fn new(container: Container) -> Self {
+        let cde = container.base_cde.as_ref().clone();
         Layout {
-            bin,
+            container,
             placed_items: SlotMap::with_key(),
             cde,
         }
     }
 
     pub fn from_snapshot(ls: &LayoutSnapshot) -> Self {
-        let mut layout = Layout::new(ls.bin.clone());
+        let mut layout = Layout::new(ls.container.clone());
         layout.restore(ls);
         layout
     }
 
-    pub fn change_bin(&mut self, bin: Container) {
-        // swap the bin
-        self.bin = bin;
+    pub fn swap_container(&mut self, container: Container) {
+        self.container = container;
         // rebuild the CDE
-        self.cde = self.bin.base_cde.as_ref().clone();
+        self.cde = self.container.base_cde.as_ref().clone();
         for (pk, pi) in self.placed_items.iter() {
             let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
             self.cde.register_hazard(hazard);
@@ -49,14 +48,14 @@ impl Layout {
 
     pub fn save(&mut self) -> LayoutSnapshot {
         LayoutSnapshot {
-            bin: self.bin.clone(),
+            container: self.container.clone(),
             placed_items: self.placed_items.clone(),
             cde_snapshot: self.cde.create_snapshot(),
         }
     }
 
     pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
-        assert_eq!(self.bin.id, layout_snapshot.bin.id);
+        assert_eq!(self.container.id, layout_snapshot.container.id);
         self.placed_items = layout_snapshot.placed_items.clone();
         self.cde.restore(&layout_snapshot.cde_snapshot);
 
@@ -101,10 +100,10 @@ impl Layout {
         &self.placed_items
     }
 
-    /// The current density of the layout defined as the ratio of the area of the items placed to the area of the bin.
-    /// Uses the original shapes of items and bin to calculate the area.
+    /// The current density of the layout defined as the ratio of the area of the items placed to the area of the container.
+    /// Uses the original shapes of items and container to calculate the area.
     pub fn density(&self, instance: &impl Instance) -> f32 {
-        self.placed_item_area(instance) / self.bin.area()
+        self.placed_item_area(instance) / self.container.area()
     }
 
     /// The sum of the areas of the items placed in the layout (using the original shapes of the items).
@@ -134,7 +133,7 @@ impl Layout {
 /// Can be used to restore a [`Layout`] back to a previous state.
 #[derive(Clone, Debug)]
 pub struct LayoutSnapshot {
-    pub bin: Container,
+    pub container: Container,
     pub placed_items: SlotMap<PItemKey, PlacedItem>,
     /// Snapshot of the collision detection engine
     pub cde_snapshot: CDESnapshot,
@@ -143,7 +142,7 @@ pub struct LayoutSnapshot {
 impl LayoutSnapshot {
     /// Equivalent to [`Layout::density`]
     pub fn density(&self, instance: &impl Instance) -> f32 {
-        self.placed_item_area(instance) / self.bin.area()
+        self.placed_item_area(instance) / self.container.area()
     }
 
     /// Equivalent to [`Layout::placed_item_area`]

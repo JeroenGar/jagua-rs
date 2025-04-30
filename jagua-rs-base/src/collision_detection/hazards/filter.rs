@@ -10,9 +10,9 @@ pub trait HazardFilter {
 #[derive(Clone, Debug)]
 pub struct NoHazardFilter;
 
-/// Deems all hazards induced by the [`Bin`](crate::entities::general::Bin) as irrelevant.
+/// Deems all hazards induced by the [`Container`](crate::entities::general::Container) as irrelevant.
 #[derive(Clone, Debug)]
-pub struct BinHazardFilter;
+pub struct ContainerHazardFilter;
 
 /// Deems hazards induced by [`InferiorQualityZone`](crate::entities::general::InferiorQualityZone)s above a cutoff quality as irrelevant.
 #[derive(Clone, Debug)]
@@ -28,12 +28,12 @@ impl HazardFilter for NoHazardFilter {
     }
 }
 
-impl HazardFilter for BinHazardFilter {
+impl HazardFilter for ContainerHazardFilter {
     fn is_irrelevant(&self, entity: &HazardEntity) -> bool {
         match entity {
             HazardEntity::PlacedItem { .. } => false,
-            HazardEntity::BinExterior => true,
-            HazardEntity::BinHole { .. } => true,
+            HazardEntity::Exterior => true,
+            HazardEntity::Hole { .. } => true,
             HazardEntity::InferiorQualityZone { .. } => true,
         }
     }

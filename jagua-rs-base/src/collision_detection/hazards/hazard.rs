@@ -37,11 +37,11 @@ pub enum HazardEntity {
         dt: DTransformation,
         pk: PItemKey,
     },
-    /// Represents all regions outside the bin
-    BinExterior,
-    /// Represents a hole in the bin.
-    BinHole { idx: usize },
-    /// Represents a zone in the bin with a specific quality level that is inferior to the base quality.
+    /// Represents all regions outside the container
+    Exterior,
+    /// Represents a hole in the container.
+    Hole { idx: usize },
+    /// Represents a zone in the container with a specific quality level that is inferior to the base quality.
     InferiorQualityZone { quality: usize, idx: usize },
 }
 
@@ -51,8 +51,8 @@ impl HazardEntity {
     pub fn position(&self) -> GeoPosition {
         match self {
             HazardEntity::PlacedItem { .. } => GeoPosition::Interior,
-            HazardEntity::BinExterior => GeoPosition::Exterior,
-            HazardEntity::BinHole { .. } => GeoPosition::Interior,
+            HazardEntity::Exterior => GeoPosition::Exterior,
+            HazardEntity::Hole { .. } => GeoPosition::Interior,
             HazardEntity::InferiorQualityZone { .. } => GeoPosition::Interior,
         }
     }

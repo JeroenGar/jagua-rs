@@ -7,17 +7,12 @@ use serde::{Deserialize, Serialize};
 pub struct ExtItem {
     /// Unique identifier of the item
     pub id: u64,
-    /// Number of times this item should be produced
-    pub demand: u64,
     /// List of allowed orientations angles (in degrees).
     /// Continuous rotation if not specified
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allowed_orientations: Option<Vec<f32>>,
     /// Shape of the item
     pub shape: ExtShape,
-    /// The value of the item (for knapsack problems).
-    /// 0 if not specified.
-    pub value: Option<u64>,
     /// The minimum required quality of the item.
     /// Maximum quality required if not specified.
     pub min_quality: Option<usize>,
@@ -30,10 +25,6 @@ pub struct ExtItem {
 pub struct ExtContainer {
     /// Unique identifier of the container
     pub id: u64,
-    /// The cost of using this container
-    pub cost: u64,
-    /// Quantity of this container available. Unlimited if not specified
-    pub stock: Option<u64>,
     /// Shape of the container
     pub shape: ExtShape,
     /// Zones within the container with varying quality. Holes in the container shape are treated as zones with quality 0.

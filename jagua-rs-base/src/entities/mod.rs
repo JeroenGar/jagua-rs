@@ -1,4 +1,4 @@
-mod bin;
+mod container;
 mod instance;
 mod item;
 mod layout;
@@ -24,13 +24,13 @@ pub use placed_item::PlacedItem;
 pub use placed_item::PItemKey;
 
 #[doc(inline)]
-pub use bin::Container;
+pub use container::Container;
 
 #[doc(inline)]
-pub use bin::InferiorQualityZone;
+pub use container::InferiorQualityZone;
 
 #[doc(inline)]
 pub use original_shape::OriginalShape;
 
 #[doc(inline)]
-pub use bin::N_QUALITIES;
+pub use container::N_QUALITIES;

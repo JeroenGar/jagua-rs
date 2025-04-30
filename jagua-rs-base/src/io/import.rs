@@ -63,7 +63,6 @@ impl Importer {
             }
         };
 
-        let item_value = ext_item.value.unwrap_or(0);
         let base_quality = ext_item.min_quality;
 
         let allowed_orientations = match ext_item.allowed_orientations.as_ref() {
@@ -83,7 +82,6 @@ impl Importer {
             allowed_orientations,
             base_quality,
             self.cde_config.item_surrogate_config,
-            item_value,
         )
     }
 
@@ -115,7 +113,7 @@ impl Importer {
             }
         };
 
-        let bin_holes = match &ext_cont.shape {
+        let holes = match &ext_cont.shape {
             ExtShape::SimplePolygon(_) | ExtShape::Rectangle { .. } => vec![],
             ExtShape::Polygon(jp) => {
                 let json_holes = &jp.inner;
@@ -155,7 +153,7 @@ impl Importer {
             .collect_vec();
 
         //merge the container holes with quality == 0
-        shapes_inferior_qzones[0].extend(bin_holes);
+        shapes_inferior_qzones[0].extend(holes);
 
         //convert the shapes to inferior quality zones
         let quality_zones = shapes_inferior_qzones
@@ -178,7 +176,6 @@ impl Importer {
         Container::new(
             ext_cont.id as usize,
             original_outer,
-            ext_cont.cost,
             quality_zones,
             self.cde_config,
         )

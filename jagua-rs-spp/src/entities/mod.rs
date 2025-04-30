@@ -1,6 +1,7 @@
 mod instance;
 mod problem;
 mod solution;
+mod strip;
 
 #[doc(inline)]
 pub use instance::SPInstance;

@@ -366,7 +366,7 @@ impl CDEngine {
     /// Collects all hazards with which the polygon collides and reports them to the detector.
     pub fn collect_poly_collisions(&self, shape: &SPolygon, detector: &mut impl HazardDetector) {
         if self.bbox.relation_to(shape.bbox) != GeoRelation::Surrounding {
-            detector.push(HazardEntity::BinExterior)
+            detector.push(HazardEntity::Exterior)
         }
 
         //collect all colliding entities due to edge intersection

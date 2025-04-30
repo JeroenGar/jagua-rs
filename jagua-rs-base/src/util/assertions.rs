@@ -14,7 +14,7 @@ use std::collections::HashSet;
 //Used in debug_assertion!() blocks
 
 pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool {
-    if layout.bin.id != layout_snapshot.bin.id {
+    if layout.container.id != layout_snapshot.container.id {
         return false;
     }
     for placed_item in layout_snapshot.placed_items.values() {
@@ -161,8 +161,8 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
     //check if every placed item is correctly represented in the quadtree
 
     //rebuild the quadtree
-    let bin = &layout.bin;
-    let mut fresh_cde = bin.base_cde.as_ref().clone();
+    let container = &layout.container;
+    let mut fresh_cde = container.base_cde.as_ref().clone();
     for (pk, pi) in layout.placed_items().iter() {
         let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
         fresh_cde.register_hazard(hazard);
@@ -333,8 +333,8 @@ pub fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
 ///Prints code to rebuild a layout. Intended for debugging purposes.
 pub fn print_layout(layout: &Layout) {
     println!(
-        "let mut layout = Layout::new(0, instance.bin({}).clone());",
-        layout.bin.id
+        "let mut layout = Layout::new(0, instance.container({}).clone());",
+        layout.container.id
     );
     println!();
 

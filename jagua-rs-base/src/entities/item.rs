@@ -23,8 +23,6 @@ pub struct Item {
     pub hazard_filter: Option<QZHazardFilter>,
     /// Configuration for the surrogate generation
     pub surrogate_config: SPSurrogateConfig,
-    /// Value of the item
-    pub value: u64,
 }
 
 impl Item {
@@ -34,7 +32,6 @@ impl Item {
         allowed_rotation: RotationRange,
         base_quality: Option<usize>,
         surrogate_config: SPSurrogateConfig,
-        value: u64,
     ) -> Item {
         let shape_orig = Arc::new(original_shape);
         let shape_int = {
@@ -51,7 +48,6 @@ impl Item {
             min_quality: base_quality,
             hazard_filter,
             surrogate_config,
-            value,
         }
     }
 

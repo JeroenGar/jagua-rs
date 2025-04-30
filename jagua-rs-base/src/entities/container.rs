@@ -5,29 +5,21 @@ use itertools::Itertools;
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::{CDEConfig, CDEngine};
-use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Shape;
-use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
-
-#[cfg(doc)]
-use crate::entities::Item;
 use crate::entities::original_shape::OriginalShape;
-use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 
-/// A container in which [`Item`]'s can be placed.
+/// A container in which [`Item`](crate::entities::Item)'s can be placed.
 #[derive(Clone, Debug)]
 pub struct Container {
     pub id: usize,
-    /// Contour of the bin as defined in the input file
+    /// Contour of the container as defined in the input file
     pub outer_orig: Arc<OriginalShape>,
-    /// Contour of the bin to be used for collision detection
+    /// Contour of the container to be used for collision detection
     pub outer_cd: Arc<SPolygon>,
-    /// The cost of using the bin
-    pub cost: u64,
-    /// Zones of different qualities in the bin, stored per quality.
+    /// Zones of different qualities in the container, stored per quality.
     pub quality_zones: [Option<InferiorQualityZone>; N_QUALITIES],
-    /// The starting state of the `CDEngine` for this bin.
+    /// The starting state of the `CDEngine` for this container.
     pub base_cde: Arc<CDEngine>,
 }
 
@@ -35,7 +27,6 @@ impl Container {
     pub fn new(
         id: usize,
         original_outer: OriginalShape,
-        cost: u64,
         quality_zones: Vec<InferiorQualityZone>,
         cde_config: CDEConfig,
     ) -> Self {
@@ -63,7 +54,7 @@ impl Container {
         };
 
         let base_cde = {
-            let mut hazards = vec![Hazard::new(HazardEntity::BinExterior, outer_int.clone())];
+            let mut hazards = vec![Hazard::new(HazardEntity::Exterior, outer_int.clone())];
             let qz_hazards = quality_zones
                 .iter()
                 .flatten()
@@ -77,40 +68,18 @@ impl Container {
             id,
             outer_cd: outer_int,
             outer_orig,
-            cost,
             quality_zones,
             base_cde,
         }
     }
 
-    /// Create a new `Bin` for a strip-packing problem. Instead of a shape, the bin is always rectangular.
-    pub fn from_strip(
-        id: usize,
-        rect: Rect,
-        cde_config: CDEConfig,
-        shape_modify_config: ShapeModifyConfig,
-    ) -> Self {
-        assert_eq!(rect.x_min, 0.0, "Strip x_min must be 0.0");
-        assert_eq!(rect.y_min, 0.0, "Strip y_min must be 0.0");
-
-        let value = rect.area() as u64;
-        let original = OriginalShape {
-            shape: SPolygon::from(rect),
-            pre_transform: DTransformation::empty(),
-            modify_mode: ShapeModifyMode::Deflate,
-            modify_config: shape_modify_config,
-        };
-
-        Container::new(id, original, value, vec![], cde_config)
-    }
-
-    /// The area of the contour of the bin, excluding holes
+    /// The area of the contour of the container, excluding holes
     pub fn area(&self) -> f32 {
         self.outer_orig.area() - self.quality_zones[0].as_ref().map_or(0.0, |qz| qz.area())
     }
 }
 
-/// Maximum number of qualities that can be used for quality zones in a bin.
+/// Maximum number of qualities that can be used for quality zones in a container.
 pub const N_QUALITIES: usize = 10;
 
 /// Represents a zone of inferior quality in the [`Container`]
@@ -149,7 +118,7 @@ impl InferiorQualityZone {
     pub fn to_hazards(&self) -> impl Iterator<Item = Hazard> {
         self.shapes_cd.iter().enumerate().map(|(idx, shape)| {
             let entity = match self.quality {
-                0 => HazardEntity::BinHole { idx: idx },
+                0 => HazardEntity::Hole { idx: idx },
                 _ => HazardEntity::InferiorQualityZone {
                     quality: self.quality,
                     idx,

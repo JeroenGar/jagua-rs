@@ -21,7 +21,7 @@ pub fn export_layout<'a>(layout: Layout, instance: &impl Instance) -> ExtLayout 
         .collect();
 
     ExtLayout {
-        container_id: layout.bin.id as u64,
+        container_id: layout.container.id as u64,
         placed_items: ext_placed_items,
         density: layout.density(instance),
     }
