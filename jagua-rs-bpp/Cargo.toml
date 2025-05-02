@@ -16,3 +16,4 @@ serde = { workspace = true }
 slotmap = { workspace = true }
 itertools = { workspace = true }
 rayon = { workspace = true }
+anyhow = { workspace = true }

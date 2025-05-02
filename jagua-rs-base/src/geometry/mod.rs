@@ -16,6 +16,8 @@ pub mod geo_traits;
 pub mod primitives;
 mod transformation;
 
+mod original_shape;
+
 /// Set of function to modify geometric shapes
 pub mod shape_modification;
 
@@ -24,3 +26,6 @@ pub use d_transformation::DTransformation;
 
 #[doc(inline)]
 pub use transformation::Transformation;
+
+#[doc(inline)]
+pub use original_shape::OriginalShape;

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 /// Bin Packing Problem instance
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct ExtBPInstance {
     #[serde(rename = "Name")]
     /// The name of the instance

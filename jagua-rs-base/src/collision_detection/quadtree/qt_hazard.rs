@@ -2,7 +2,7 @@ use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::quadtree::qt_partial_hazard::{QTHazPartial, RelevantEdges};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
-use crate::geometry::geo_traits::{CollidesWith, Shape};
+use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 use crate::util::assertions;

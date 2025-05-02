@@ -2,7 +2,6 @@ mod container;
 mod instance;
 mod item;
 mod layout;
-mod original_shape;
 mod placed_item;
 
 #[doc(inline)]
@@ -28,9 +27,6 @@ pub use container::Container;
 
 #[doc(inline)]
 pub use container::InferiorQualityZone;
-
-#[doc(inline)]
-pub use original_shape::OriginalShape;
 
 #[doc(inline)]
 pub use container::N_QUALITIES;

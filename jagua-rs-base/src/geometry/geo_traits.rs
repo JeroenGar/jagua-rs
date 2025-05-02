@@ -1,7 +1,5 @@
 use crate::geometry::Transformation;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::primitives::Point;
-use crate::geometry::primitives::Rect;
 
 /// Trait for types that can detect collisions between `self` and `other` of type `T`.
 pub trait CollidesWith<T> {
@@ -55,19 +53,4 @@ pub trait Transformable: Clone {
 pub trait TransformableFrom: Transformable {
     /// Applies a transformation on the reference object and stores the result in `self`.
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self;
-}
-
-/// Trait for shared properties of geometric primitives.
-pub trait Shape {
-    /// Geometric center of the shape
-    fn centroid(&self) -> Point;
-
-    /// Area of the interior of the shape
-    fn area(&self) -> f32;
-
-    /// Bounding box of the shape
-    fn bbox(&self) -> Rect;
-
-    /// The distance between the two furthest points in the shape.
-    fn diameter(&self) -> f32;
 }

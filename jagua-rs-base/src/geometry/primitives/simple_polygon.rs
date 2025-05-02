@@ -8,13 +8,14 @@ use crate::geometry::convex_hull::convex_hull_from_points;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig, compute_pole};
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::geo_traits::{
-    CollidesWith, DistanceTo, SeparationDistance, Shape, Transformable, TransformableFrom,
+    CollidesWith, DistanceTo, SeparationDistance, Transformable, TransformableFrom,
 };
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::util::FPA;
+use anyhow::{bail, Result};
 
 /// A Simple Polygon is a polygon that does not intersect itself and contains no holes.
 /// It is a closed shape with a finite number of vertices and edges.
@@ -37,19 +38,16 @@ pub struct SPolygon {
 
 impl SPolygon {
     /// Create a new simple polygon from a set of points, expensive operations are performed here! Use [Self::clone()] or [Self::transform()] to avoid recomputation.
-    pub fn new(mut points: Vec<Point>) -> Self {
-        assert!(
-            points.len() >= 3,
-            "simple polygon must have at least 3 points"
-        );
-        assert_eq!(
-            points.iter().unique().count(),
-            points.len(),
-            "simple polygon should not contain duplicate points: {points:?}",
-        );
-
+    pub fn new(mut points: Vec<Point>) -> Result<Self> {
+        if points.len() < 3 {
+            bail!("Simple polygon must have at least 3 points: {points:?}");
+        }
+        if points.iter().unique().count() != points.len() {
+            bail!("Simple polygon should not contain duplicate points: {points:?}");
+        }
+        
         let area = match SPolygon::calculate_area(&points) {
-            0.0 => panic!("simple polygon has no area: {points:?}"),
+            0.0 => bail!("Simple polygon has no area: {points:?}"),
             area if area < 0.0 => {
                 //edges should always be ordered counterclockwise (positive area)
                 points.reverse();
@@ -62,14 +60,14 @@ impl SPolygon {
         let bbox = SPolygon::generate_bounding_box(&points);
         let poi = SPolygon::calculate_poi(&points, diameter);
 
-        SPolygon {
+        Ok(SPolygon {
             vertices: points,
             bbox,
             area,
             diameter,
             poi,
             surrogate: None,
-        }
+        })
     }
 
     pub fn generate_surrogate(&mut self, config: SPSurrogateConfig) {
@@ -85,7 +83,7 @@ impl SPolygon {
 
     pub fn edge(&self, i: usize) -> Edge {
         let j = (i + 1) % self.n_vertices();
-        Edge::new(self.vertices[i], self.vertices[j])
+        Edge::new(self.vertices[i], self.vertices[j]).unwrap()
     }
 
     pub fn edge_iter(&self) -> impl Iterator<Item = Edge> + '_ {
@@ -125,7 +123,7 @@ impl SPolygon {
             x_max = x_max.max(point.0);
             y_max = y_max.max(point.1);
         }
-        Rect::new(x_min, y_min, x_max, y_max)
+        Rect::new(x_min, y_min, x_max, y_max).unwrap()
     }
 
     //https://en.wikipedia.org/wiki/Shoelace_formula
@@ -151,7 +149,7 @@ impl SPolygon {
         let dummy_sp = {
             let bbox = SPolygon::generate_bounding_box(points);
             let area = SPolygon::calculate_area(points);
-            let dummy_poi = Circle::new(Point(f32::MAX, f32::MAX), f32::MAX);
+            let dummy_poi = Circle::new(Point(f32::MAX, f32::MAX), f32::MAX).unwrap();
 
             SPolygon {
                 vertices: points.to_vec(),
@@ -165,13 +163,11 @@ impl SPolygon {
 
         compute_pole(&dummy_sp, &[])
     }
-}
 
-impl Shape for SPolygon {
-    fn centroid(&self) -> Point {
+    pub fn centroid(&self) -> Point {
         //based on: https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
 
-        let area = self.area();
+        let area = self.area;
         let mut c_x = 0.0;
         let mut c_y = 0.0;
 
@@ -187,18 +183,6 @@ impl Shape for SPolygon {
         c_y /= 6.0 * area;
 
         (c_x, c_y).into()
-    }
-
-    fn area(&self) -> f32 {
-        self.area
-    }
-
-    fn bbox(&self) -> Rect {
-        self.bbox
-    }
-
-    fn diameter(&self) -> f32 {
-        self.diameter
     }
 }
 
@@ -265,13 +249,13 @@ impl TransformableFrom for SPolygon {
 impl CollidesWith<Point> for SPolygon {
     fn collides_with(&self, point: &Point) -> bool {
         //based on the ray casting algorithm: https://en.wikipedia.org/wiki/Point_in_polygon#Ray_casting_algorithm
-        match self.bbox().collides_with(point) {
+        match self.bbox.collides_with(point) {
             false => false,
             true => {
                 //horizontal ray shot to the right.
                 //Starting from the point to another point that is certainly outside the shape
                 let point_outside = Point(self.bbox.x_max + self.bbox.width(), point.1);
-                let ray = Edge::new(*point, point_outside);
+                let ray = Edge::new(*point, point_outside).unwrap();
 
                 let mut n_intersections = 0;
                 for edge in self.edge_iter() {
@@ -345,6 +329,6 @@ where
             (r.x_max, r.y_min).into(),
             (r.x_max, r.y_max).into(),
             (r.x_min, r.y_max).into(),
-        ])
+        ]).unwrap()
     }
 }

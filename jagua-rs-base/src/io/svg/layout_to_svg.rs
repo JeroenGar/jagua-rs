@@ -2,7 +2,7 @@ use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hazards::detector::{BasicHazardDetector, HazardDetector};
 use crate::collision_detection::hazards::filter::NoHazardFilter;
 use crate::entities::{Instance, Layout, LayoutSnapshot};
-use crate::geometry::geo_traits::{Shape, Transformable};
+use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::Edge;
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::export::int_to_ext_transformation;

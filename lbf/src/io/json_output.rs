@@ -6,7 +6,7 @@ use jagua_rs_spp::io::ext_repr::{ExtSPInstance, ExtSPSolution};
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
-pub struct JsonSPOutput {
+pub struct SPOutput {
     #[serde(flatten)]
     pub instance: ExtSPInstance,
     pub solution: ExtSPSolution,
@@ -14,7 +14,8 @@ pub struct JsonSPOutput {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct JsonBPPOutput {
+#[serde(rename_all = "PascalCase")]
+pub struct BPOutput {
     #[serde(flatten)]
     pub instance: ExtBPInstance,
     pub solution: ExtBPSolution,

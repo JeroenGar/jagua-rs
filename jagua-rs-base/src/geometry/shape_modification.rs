@@ -6,10 +6,12 @@ use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-use crate::geometry::geo_traits::{CollidesWith, Shape};
+use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SPolygon;
+
+use anyhow::Result;
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
 /// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::position) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
@@ -43,7 +45,7 @@ pub fn simplify_shape(
     mode: ShapeModifyMode,
     max_area_change_ratio: f32,
 ) -> SPolygon {
-    let original_area = shape.area();
+    let original_area = shape.area;
 
     let mut ref_points = shape.vertices.clone();
 
@@ -121,14 +123,14 @@ pub fn simplify_shape(
     }
 
     //Convert it back to a simple polygon
-    let simpl_shape = SPolygon::new(ref_points);
+    let simpl_shape = SPolygon::new(ref_points).unwrap();
 
     if simpl_shape.n_vertices() < shape.n_vertices() {
         info!(
             "[PS] simplified from {} to {} edges with {:.3}% area difference",
             shape.n_vertices(),
             simpl_shape.n_vertices(),
-            (simpl_shape.area() - shape.area()) / shape.area() * 100.0
+            (simpl_shape.area - shape.area) / shape.area * 100.0
         );
     } else {
         info!("[PS] no simplification possible within area change constraints");
@@ -175,7 +177,7 @@ fn candidate_is_valid(shape: &[Point], candidate: &Candidate) -> bool {
     match candidate {
         Candidate::Collinear(_) => true,
         Candidate::Concave(c) => {
-            let new_edge = Edge::new(shape[c.0], shape[c.2]);
+            let new_edge = Edge::new(shape[c.0], shape[c.2]).unwrap();
             let affected_points = [shape[c.0], shape[c.1], shape[c.2]];
 
             //check for self-intersections
@@ -188,8 +190,8 @@ fn candidate_is_valid(shape: &[Point], candidate: &Candidate) -> bool {
             match replacing_vertex_convex_convex_candidate(shape, (*c1, *c2)) {
                 Err(_) => false,
                 Ok(new_vertex) => {
-                    let new_edge_1 = Edge::new(shape[c1.0], new_vertex);
-                    let new_edge_2 = Edge::new(new_vertex, shape[c2.2]);
+                    let new_edge_1 = Edge::new(shape[c1.0], new_vertex).unwrap();
+                    let new_edge_2 = Edge::new(new_vertex, shape[c2.2]).unwrap();
 
                     let affected_points = [shape[c1.1], shape[c1.0], shape[c2.1], shape[c2.2]];
 
@@ -208,7 +210,7 @@ fn edge_iter(points: &[Point]) -> impl Iterator<Item = Edge> + '_ {
     let n_points = points.len();
     (0..n_points).map(move |i| {
         let j = (i + 1) % n_points;
-        Edge::new(points[i], points[j])
+        Edge::new(points[i], points[j]).unwrap()
     })
 }
 
@@ -237,8 +239,8 @@ fn replacing_vertex_convex_convex_candidate(
     assert_eq!(c1.2, c2.1, "non-consecutive corners {c1:?},{c2:?}");
     assert_eq!(c1.1, c2.0, "non-consecutive corners {c1:?},{c2:?}");
 
-    let edge_prev = Edge::new(shape[c1.0], shape[c1.1]);
-    let edge_next = Edge::new(shape[c2.2], shape[c2.1]);
+    let edge_prev = Edge::new(shape[c1.0], shape[c1.1]).unwrap();
+    let edge_next = Edge::new(shape[c2.2], shape[c2.1]).unwrap();
 
     calculate_intersection_in_front(&edge_prev, &edge_next).ok_or(InvalidCandidate)
 }
@@ -327,7 +329,7 @@ impl CornerType {
 /// Offsets a [`SPolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
 /// Relies on the [`geo_offset`](https://crates.io/crates/geo_offset) crate.
 #[cfg(feature = "separation-distance")]
-pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> SPolygon {
+pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Result<SPolygon> {
     let offset = match mode {
         ShapeModifyMode::Deflate => -distance,
         ShapeModifyMode::Inflate => distance,
@@ -339,8 +341,9 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> SPol
 
     // Create the offset geo_types::Polygon
     let geo_poly_offset = geo_poly
-        .offset(offset)
-        .expect("something went wrong during polygon offset")
+        .offset(offset).map_err(|e| {
+            anyhow::anyhow!("Error while offsetting polygon: {:?}", e)
+        })?
         .0
         .remove(0);
 
@@ -359,8 +362,6 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> SPol
 }
 
 #[cfg(not(feature = "separation-distance"))]
-pub fn offset_shape(_sp: &SPolygon, _mode: ShapeModifyMode, _distance: f32) -> SPolygon {
-    panic!(
-        "cannot offset shape without geo_offset dependency, compile with --features separation to enable this"
-    )
+pub fn offset_shape(_sp: &SPolygon, _mode: ShapeModifyMode, _distance: f32) -> Result<SPolygon> {
+    bail!("cannot offset shape without geo_offset dependency, compile with --features separation to enable this")
 }

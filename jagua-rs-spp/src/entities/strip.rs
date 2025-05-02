@@ -1,6 +1,7 @@
+use anyhow::{Result, ensure};
 use jagua_rs_base::collision_detection::CDEConfig;
-use jagua_rs_base::entities::{Container, OriginalShape};
-use jagua_rs_base::geometry::DTransformation;
+use jagua_rs_base::entities::Container;
+use jagua_rs_base::geometry::{DTransformation, OriginalShape};
 use jagua_rs_base::geometry::primitives::{Rect, SPolygon};
 use jagua_rs_base::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 
@@ -17,13 +18,14 @@ impl Strip {
         fixed_height: f32,
         cde_config: CDEConfig,
         shape_modify_config: ShapeModifyConfig,
-    ) -> Self {
-        Strip {
+    ) -> Result<Self> {
+        ensure!(fixed_height > 0.0, "strip height must be positive");
+        Ok(Strip {
             fixed_height,
             cde_config,
             shape_modify_config,
             width: 0.0,
-        }
+        })
     }
 
     pub fn set_width(&mut self, width: f32) {
@@ -36,13 +38,13 @@ impl From<Strip> for Container {
         Container::new(
             0,
             OriginalShape {
-                shape: SPolygon::from(Rect::new(0.0, 0.0, s.width, s.fixed_height)),
+                shape: SPolygon::from(Rect::new(0.0, 0.0, s.width, s.fixed_height).unwrap()),
                 pre_transform: DTransformation::empty(),
                 modify_mode: ShapeModifyMode::Deflate,
                 modify_config: s.shape_modify_config,
             },
             vec![],
             s.cde_config,
-        )
+        ).unwrap()
     }
 }

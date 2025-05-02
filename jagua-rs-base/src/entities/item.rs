@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
 use crate::collision_detection::hazards::filter::QZHazardFilter;
-use crate::entities::original_shape::OriginalShape;
+use crate::geometry::OriginalShape;
 use crate::geometry::fail_fast::SPSurrogateConfig;
 use crate::geometry::geo_enums::RotationRange;
-use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::SPolygon;
+
+use anyhow::Result;
 
 /// Item to be produced.
 #[derive(Clone, Debug)]
@@ -32,15 +33,15 @@ impl Item {
         allowed_rotation: RotationRange,
         base_quality: Option<usize>,
         surrogate_config: SPSurrogateConfig,
-    ) -> Item {
+    ) -> Result<Item> {
         let shape_orig = Arc::new(original_shape);
         let shape_int = {
-            let mut shape_int = shape_orig.convert_to_internal();
+            let mut shape_int = shape_orig.convert_to_internal()?;
             shape_int.generate_surrogate(surrogate_config);
             Arc::new(shape_int)
         };
         let hazard_filter = base_quality.map(QZHazardFilter);
-        Item {
+        Ok(Item {
             id,
             shape_orig,
             shape_cd: shape_int,
@@ -48,7 +49,7 @@ impl Item {
             min_quality: base_quality,
             hazard_filter,
             surrogate_config,
-        }
+        })
     }
 
     pub fn area(&self) -> f32 {

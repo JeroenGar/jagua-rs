@@ -1,12 +1,13 @@
 use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::quadtree::{QTHazPresence, QTNode};
-use crate::entities::{N_QUALITIES, OriginalShape};
+use crate::entities::{N_QUALITIES};
 use crate::geometry;
 use crate::geometry::primitives::{Edge, Point, SPolygon};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::{Display, Formatter};
 use svg::node::element::path::Data;
 use svg::node::element::{Circle, Path};
+use crate::geometry::OriginalShape;
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
 pub struct SvgDrawOptions {
@@ -279,6 +280,7 @@ pub fn edge_data(edge: Edge) -> Data {
         .line_to((edge.end.0, edge.end.1))
 }
 
+#[allow(dead_code)]
 pub fn aa_rect_data(rect: geometry::primitives::Rect) -> Data {
     Data::new()
         .move_to((rect.x_min, rect.y_min))

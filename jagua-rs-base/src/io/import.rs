@@ -1,9 +1,8 @@
 use crate::collision_detection::CDEConfig;
 use crate::entities::Item;
-use crate::entities::OriginalShape;
+use crate::geometry::OriginalShape;
 use crate::entities::{Container, InferiorQualityZone, N_QUALITIES};
 use crate::geometry::geo_enums::RotationRange;
-use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
@@ -11,6 +10,7 @@ use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtContainer, ExtItem, ExtSPolygon, ExtShape};
 use itertools::Itertools;
+use anyhow::{bail, Result};
 
 /// Converts external representations of items and containers into internal ones.
 #[derive(Clone, Debug, Copy)]
@@ -39,7 +39,7 @@ impl Importer {
         }
     }
 
-    pub fn import_item(&self, ext_item: &ExtItem) -> Item {
+    pub fn import_item(&self, ext_item: &ExtItem) -> Result<Item> {
         let original_shape = {
             let shape = match &ext_item.shape {
                 ExtShape::Rectangle {
@@ -47,13 +47,16 @@ impl Importer {
                     y_min,
                     width,
                     height,
-                } => Rect::new(*x_min, *y_min, x_min + width, y_min + height).into(),
-                ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp)),
+                } => {
+                    let rect = Rect::new(*x_min, *y_min, x_min + width, y_min + height)?;
+                    SPolygon::from(rect)
+                },
+                ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp))?,
                 ExtShape::Polygon(_) => {
-                    unimplemented!("No support for polygons with holes yet")
+                    bail!("No support for polygons with holes yet")
                 }
                 ExtShape::MultiPolygon(_) => {
-                    unimplemented!("No support for multipolygons yet")
+                    bail!("No support for multipolygons yet")
                 }
             };
             OriginalShape {
@@ -86,7 +89,7 @@ impl Importer {
         )
     }
 
-    pub fn import_container(&self, ext_cont: &ExtContainer) -> Container {
+    pub fn import_container(&self, ext_cont: &ExtContainer) -> Result<Container> {
         assert!(
             ext_cont.zones.iter().all(|zone| zone.quality < N_QUALITIES),
             "All quality zones must have lower quality than N_QUALITIES, set N_QUALITIES to a higher value if required"
@@ -99,11 +102,11 @@ impl Importer {
                     y_min,
                     width,
                     height,
-                } => Rect::new(*x_min, *y_min, x_min + width, y_min + height).into(),
-                ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp)),
-                ExtShape::Polygon(jp) => SPolygon::new(ext_spoly_to_points(&jp.outer)),
+                } => Rect::new(*x_min, *y_min, x_min + width, y_min + height)?.into(),
+                ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp))?,
+                ExtShape::Polygon(jp) => SPolygon::new(ext_spoly_to_points(&jp.outer))?,
                 ExtShape::MultiPolygon(_) => {
-                    unimplemented!("No support for multipolygon shapes yet")
+                    bail!("No support for multipolygon shapes yet")
                 }
             };
             OriginalShape {
@@ -121,7 +124,7 @@ impl Importer {
                 json_holes
                     .iter()
                     .map(|jsp| SPolygon::new(ext_spoly_to_points(jsp)))
-                    .collect_vec()
+                    .collect::<Result<Vec<SPolygon>>>()?
             }
             ExtShape::MultiPolygon(_) => {
                 unimplemented!("No support for multipolygon shapes yet")
@@ -140,7 +143,7 @@ impl Importer {
                             y_min,
                             width,
                             height,
-                        } => Rect::new(*x_min, *y_min, x_min + width, y_min + height).into(),
+                        } => Rect::new(*x_min, *y_min, x_min + width, y_min + height).map(|r| r.into()),
                         ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp)),
                         ExtShape::Polygon(_) => {
                             unimplemented!("No support for polygon to simplepolygon conversion yet")
@@ -149,9 +152,10 @@ impl Importer {
                             unimplemented!("No support for multipolygon shapes yet")
                         }
                     })
-                    .collect_vec()
+                    .collect::<Result<Vec<SPolygon>>>()
             })
-            .collect_vec();
+            .collect::<Result<Vec<Vec<SPolygon>>>>()?;
+        
 
         //merge the container holes with quality == 0
         shapes_inferior_qzones[0].extend(holes);
@@ -172,7 +176,7 @@ impl Importer {
                     .collect_vec();
                 InferiorQualityZone::new(q, original_shapes)
             })
-            .collect_vec();
+            .collect::<Result<Vec<InferiorQualityZone>>>()?;
 
         Container::new(
             ext_cont.id as usize,

@@ -4,7 +4,7 @@ use ordered_float::NotNan;
 use rand_distr::num_traits::FloatConst;
 
 use crate::geometry::Transformation;
-use crate::geometry::geo_traits::{CollidesWith, DistanceTo, Shape, Transformable};
+use crate::geometry::geo_traits::{CollidesWith, DistanceTo, Transformable};
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
@@ -33,7 +33,7 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge>
     let base_ray = Edge::new(
         Point(centroid.0, centroid.1 - 2.0 * expanded_bbox.height()),
         Point(centroid.0, centroid.1 + 2.0 * expanded_bbox.height()),
-    );
+    ).unwrap();
 
     let transformations = generate_ray_transformations(expanded_bbox, RAYS_PER_ANGLE, N_ANGLES);
 
@@ -83,7 +83,7 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge>
             .map(|(_i, ray)| ray);
 
         match min_loss_ray {
-            None => panic!("No ray found"),
+            None => panic!("no ray found"),
             Some(ray) => selected_piers.push(*ray),
         }
     }
@@ -139,7 +139,7 @@ fn clip(shape: &SPolygon, ray: &Edge) -> Vec<Edge> {
             let start = pair[0];
             let end = pair[1];
             if start != end {
-                Some(Edge::new(start, end).scale(CLIPPING_TRIM))
+                Some(Edge::new(start, end).unwrap().scale(CLIPPING_TRIM))
             } else {
                 None
             }

@@ -1,12 +1,14 @@
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{
-    AlmostCollidesWith, CollidesWith, DistanceTo, SeparationDistance, Shape,
+    AlmostCollidesWith, CollidesWith, DistanceTo, SeparationDistance
 };
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::util::FPA;
 use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
+use anyhow::{ensure};
+use anyhow::Result;
 
 ///Axis-aligned rectangle
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -18,17 +20,23 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub fn new(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> Self {
-        debug_assert!(
-            x_min < x_max && y_min < y_max,
-            "invalid rectangle, x_min: {x_min}, x_max: {x_max}, y_min: {y_min}, y_max: {y_max}",
-        );
-        Rect {
+    pub fn new(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> Result<Self> {
+        ensure!(x_min < x_max && y_min < y_max, "invalid rectangle, x_min: {x_min}, x_max: {x_max}, y_min: {y_min}, y_max: {y_max}");
+        Ok(
+            Rect {
             x_min,
             y_min,
             x_max,
             y_max,
-        }
+        })
+    }
+    
+    pub fn from_diagonal_corners(c1: Point, c2: Point) -> Result<Self> {
+        let x_min = f32::min(c1.x(), c2.x());
+        let y_min = f32::min(c1.y(), c2.y());
+        let x_max = f32::max(c1.x(), c2.x());
+        let y_max = f32::max(c1.y(), c2.y());
+        Rect::new(x_min, y_min, x_max, y_max)
     }
 
     /// Returns the geometric relation between `self` and another [`Rect`].
@@ -95,7 +103,7 @@ impl Rect {
             self.y_min - dy,
             self.x_max + dx,
             self.y_max + dy,
-        )
+        ).unwrap()
     }
 
     /// Returns a new rectangle with the same centroid but scaled by `factor`.
@@ -132,10 +140,10 @@ impl Rect {
         let mid = self.centroid();
         let corners = self.corners();
 
-        let q1 = Edge::new(corners[0], mid).bbox();
-        let q2 = Edge::new(corners[1], mid).bbox();
-        let q3 = Edge::new(corners[2], mid).bbox();
-        let q4 = Edge::new(corners[3], mid).bbox();
+        let q1 = Rect::from_diagonal_corners(corners[0], mid).unwrap();
+        let q2 = Rect::from_diagonal_corners(corners[1], mid).unwrap();
+        let q3 = Rect::from_diagonal_corners(corners[2], mid).unwrap();
+        let q4 = Rect::from_diagonal_corners(corners[3], mid).unwrap();
 
         [q1, q2, q3, q4]
     }
@@ -154,10 +162,10 @@ impl Rect {
     pub fn edges(&self) -> [Edge; 4] {
         let c = self.corners();
         [
-            Edge::new(c[0], c[1]),
-            Edge::new(c[1], c[2]),
-            Edge::new(c[2], c[3]),
-            Edge::new(c[3], c[0]),
+            Edge::new(c[0], c[1]).unwrap(),
+            Edge::new(c[1], c[2]).unwrap(),
+            Edge::new(c[2], c[3]).unwrap(),
+            Edge::new(c[3], c[0]).unwrap(),
         ]
     }
     pub fn width(&self) -> f32 {
@@ -175,7 +183,7 @@ impl Rect {
         let x_max = f32::min(a.x_max, b.x_max);
         let y_max = f32::min(a.y_max, b.y_max);
         if x_min < x_max && y_min < y_max {
-            Some(Rect::new(x_min, y_min, x_max, y_max))
+            Some(Rect::new(x_min, y_min, x_max, y_max).unwrap())
         } else {
             None
         }
@@ -187,27 +195,21 @@ impl Rect {
         let y_min = f32::min(a.y_min, b.y_min);
         let x_max = f32::max(a.x_max, b.x_max);
         let y_max = f32::max(a.y_max, b.y_max);
-        Rect::new(x_min, y_min, x_max, y_max)
+        Rect::new(x_min, y_min, x_max, y_max).unwrap()
     }
-}
-
-impl Shape for Rect {
-    fn centroid(&self) -> Point {
+    
+    pub fn centroid(&self) -> Point {
         Point(
             (self.x_min + self.x_max) / 2.0,
             (self.y_min + self.y_max) / 2.0,
         )
     }
 
-    fn area(&self) -> f32 {
+    pub fn area(&self) -> f32 {
         (self.x_max - self.x_min) * (self.y_max - self.y_min)
     }
-
-    fn bbox(&self) -> Rect {
-        *self
-    }
-
-    fn diameter(&self) -> f32 {
+    
+    pub fn diameter(&self) -> f32 {
         let dx = self.x_max - self.x_min;
         let dy = self.y_max - self.y_min;
         (dx.powi(2) + dy.powi(2)).sqrt()
@@ -301,6 +303,11 @@ impl CollidesWith<Edge> for Rect {
 
 impl DistanceTo<Point> for Rect {
     #[inline(always)]
+    fn distance_to(&self, point: &Point) -> f32 {
+        self.sq_distance_to(point).sqrt()
+    }
+
+    #[inline(always)]
     fn sq_distance_to(&self, point: &Point) -> f32 {
         let Point(x, y) = *point;
         let mut distance: f32 = 0.0;
@@ -315,11 +322,6 @@ impl DistanceTo<Point> for Rect {
             distance += (y - self.y_max).powi(2);
         }
         distance.abs()
-    }
-
-    #[inline(always)]
-    fn distance_to(&self, point: &Point) -> f32 {
-        self.sq_distance_to(point).sqrt()
     }
 }
 

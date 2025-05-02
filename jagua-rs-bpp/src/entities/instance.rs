@@ -2,7 +2,6 @@ use crate::entities::bin::Bin;
 use crate::util::assertions::instance_item_bin_ids_correct;
 use jagua_rs_base::entities::Instance;
 use jagua_rs_base::entities::{Container, Item};
-use jagua_rs_base::geometry::geo_traits::Shape;
 
 #[derive(Debug, Clone)]
 /// Instance of the Bin Packing Problem: a set of items to be packed into a set of bins.

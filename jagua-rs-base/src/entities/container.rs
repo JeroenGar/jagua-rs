@@ -5,9 +5,10 @@ use itertools::Itertools;
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::{CDEConfig, CDEngine};
-use crate::entities::original_shape::OriginalShape;
-use crate::geometry::geo_traits::Shape;
+use crate::geometry::OriginalShape;
 use crate::geometry::primitives::SPolygon;
+
+use anyhow::{ensure, Result};
 
 /// A container in which [`Item`](crate::entities::Item)'s can be placed.
 #[derive(Clone, Debug)]
@@ -29,15 +30,13 @@ impl Container {
         original_outer: OriginalShape,
         quality_zones: Vec<InferiorQualityZone>,
         cde_config: CDEConfig,
-    ) -> Self {
-        let outer_int = Arc::new(original_outer.convert_to_internal());
+    ) -> Result<Self> {
+        let outer = Arc::new(original_outer.convert_to_internal()?);
         let outer_orig = Arc::new(original_outer);
-        assert_eq!(
-            quality_zones.len(),
-            quality_zones.iter().map(|qz| qz.quality).unique().count(),
+        ensure!(quality_zones.len() == quality_zones.iter().map(|qz| qz.quality).unique().count(),
             "Quality zones must have unique qualities"
         );
-        assert!(
+        ensure!(
             quality_zones
                 .iter()
                 .map(|qz| qz.quality)
@@ -54,23 +53,23 @@ impl Container {
         };
 
         let base_cde = {
-            let mut hazards = vec![Hazard::new(HazardEntity::Exterior, outer_int.clone())];
+            let mut hazards = vec![Hazard::new(HazardEntity::Exterior, outer.clone())];
             let qz_hazards = quality_zones
                 .iter()
                 .flatten()
                 .flat_map(|qz| qz.to_hazards());
             hazards.extend(qz_hazards);
-            let base_cde = CDEngine::new(outer_int.bbox.inflate_to_square(), hazards, cde_config);
+            let base_cde = CDEngine::new(outer.bbox.inflate_to_square(), hazards, cde_config);
             Arc::new(base_cde)
         };
 
-        Self {
+        Ok(Self {
             id,
-            outer_cd: outer_int,
+            outer_cd: outer,
             outer_orig,
             quality_zones,
             base_cde,
-        }
+        })
     }
 
     /// The area of the contour of the container, excluding holes
@@ -94,24 +93,23 @@ pub struct InferiorQualityZone {
 }
 
 impl InferiorQualityZone {
-    pub fn new(quality: usize, original_shapes: Vec<OriginalShape>) -> Self {
+    pub fn new(quality: usize, original_shapes: Vec<OriginalShape>) -> Result<Self> {
         assert!(
             quality < N_QUALITIES,
             "Quality must be in range of N_QUALITIES"
         );
-        let shapes = original_shapes
+        let shapes: Result<Vec<Arc<SPolygon>>> = original_shapes
             .iter()
-            .map(|orig| orig.convert_to_internal())
-            .map(Arc::new)
-            .collect_vec();
+            .map(|orig| orig.convert_to_internal().map(Arc::new))
+            .collect();
 
         let original_shapes = original_shapes.into_iter().map(Arc::new).collect_vec();
 
-        Self {
+        Ok(Self {
             quality,
-            shapes_cd: shapes,
+            shapes_cd: shapes?,
             shapes_orig: original_shapes,
-        }
+        })
     }
 
     /// Returns the set of hazards induced by this zone.

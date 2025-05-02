@@ -1,9 +1,8 @@
 use std::time::Instant;
 
-use jagua_rs::entities::bin_packing::BPInstance;
-use jagua_rs::entities::bin_packing::BPSolution;
-use jagua_rs::entities::strip_packing::{SPInstance, SPSolution};
 use once_cell::sync::Lazy;
+use jagua_rs_bpp::entities::{BPInstance, BPSolution};
+use jagua_rs_spp::entities::{SPInstance, SPSolution};
 
 pub mod config;
 pub mod io;

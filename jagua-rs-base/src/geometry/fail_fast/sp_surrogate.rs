@@ -1,7 +1,8 @@
+use itertools::Itertools;
 use crate::geometry::Transformation;
 use crate::geometry::convex_hull;
 use crate::geometry::fail_fast::{piers, pole};
-use crate::geometry::geo_traits::{Shape, Transformable, TransformableFrom};
+use crate::geometry::geo_traits::{Transformable, TransformableFrom};
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::SPolygon;
@@ -29,13 +30,11 @@ impl SPSurrogate {
     /// Expensive operations are performed here!
     pub fn new(simple_poly: &SPolygon, config: SPSurrogateConfig) -> Self {
         let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
-        let convex_hull_area = SPolygon::new(
-            convex_hull_indices
-                .iter()
-                .map(|&i| simple_poly.vertices[i])
-                .collect(),
-        )
-        .area();
+        let convex_hull_points = convex_hull_indices
+            .iter()
+            .map(|&i| simple_poly.vertices[i])
+            .collect_vec();
+        let convex_hull_area = SPolygon::calculate_area(&convex_hull_points);
         let poles = pole::generate_surrogate_poles(simple_poly, &config.n_pole_limits);
         let n_ff_poles = usize::min(config.n_ff_poles, poles.len());
         let relevant_poles_for_piers = &poles[0..n_ff_poles]; //poi + all poles that will be checked during fail fast are relevant for piers

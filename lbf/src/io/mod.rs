@@ -4,6 +4,7 @@ use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
 use log::{Level, LevelFilter, info, log};
+use serde::Serialize;
 use svg::Document;
 
 use crate::EPOCH;
@@ -20,13 +21,13 @@ pub fn read_json_instance(path: &Path) -> JsonInstance {
         .unwrap_or_else(|err| panic!("could not parse instance file: {}, {}", path.display(), err))
 }
 
-pub fn write_json_output(json_output: &JsonOutput, path: &Path) {
+pub fn write_json(json: &impl Serialize, path: &Path) {
     let file = File::create(path)
         .unwrap_or_else(|_| panic!("could not open solution file: {}", path.display()));
 
     let writer = BufWriter::new(file);
 
-    serde_json::to_writer_pretty(writer, &json_output)
+    serde_json::to_writer_pretty(writer, &json)
         .unwrap_or_else(|_| panic!("could not write solution file: {}", path.display()));
 
     info!(
@@ -72,7 +73,7 @@ pub fn init_logger(level_filter: LevelFilter) {
 
             out.finish(format_args!("{prefix:<27}{message}"))
         })
-        // Add blanket level filter -
+        // Add blanket level filter
         .level(level_filter)
         .chain(std::io::stdout())
         .apply()

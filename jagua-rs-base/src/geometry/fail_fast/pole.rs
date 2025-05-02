@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::geometry::geo_traits::{CollidesWith, DistanceTo, SeparationDistance, Shape};
+use crate::geometry::geo_traits::{CollidesWith, DistanceTo, SeparationDistance};
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
@@ -18,7 +18,7 @@ pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Circle {
     while let Some(node) = queue.pop_front() {
         //check if better than current best
         if node.distance > distance(&best) {
-            best = Some(Circle::new(node.bbox.centroid(), node.distance));
+            best = Some(Circle::new(node.bbox.centroid(), node.distance).unwrap());
         }
 
         //see if worth it to split
@@ -44,7 +44,7 @@ pub fn generate_surrogate_poles(shape: &SPolygon, n_pole_limits: &[(usize, f32)]
         total_pole_area += next.area();
         all_poles.push(next);
 
-        let current_coverage = total_pole_area / shape.area();
+        let current_coverage = total_pole_area / shape.area;
 
         //check if any limit in the number of poles is reached at this coverage
         let active_pole_limit = n_pole_limits

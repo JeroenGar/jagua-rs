@@ -1,7 +1,6 @@
 use crate::entities::strip::Strip;
 use crate::util::assertions;
 use jagua_rs_base::entities::{Container, Instance, Item};
-use jagua_rs_base::geometry::geo_traits::Shape;
 use std::iter;
 
 #[derive(Debug, Clone)]

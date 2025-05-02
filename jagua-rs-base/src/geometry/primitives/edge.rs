@@ -1,6 +1,8 @@
+use anyhow::ensure;
+use anyhow::Result;
 use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{
-    CollidesWith, DistanceTo, Shape, Transformable, TransformableFrom,
+    CollidesWith, DistanceTo, Transformable, TransformableFrom,
 };
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
@@ -13,18 +15,15 @@ pub struct Edge {
 }
 
 impl Edge {
-    pub fn new(start: Point, end: Point) -> Self {
-        if start == end {
-            panic!("degenerate edge, {start:?} == {end:?}");
-        }
-
-        Edge { start, end }
+    pub fn new(start: Point, end: Point) -> Result<Self> {
+        ensure!(start != end, "degenerate edge, {start:?} == {end:?}");
+        Ok(Edge { start, end })
     }
 
     pub fn extend_at_front(mut self, d: f32) -> Self {
         //extend the line at the front by distance d
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
-        let l = self.diameter();
+        let l = self.length();
         self.start.0 -= dx * (d / l);
         self.start.1 -= dy * (d / l);
         self
@@ -33,7 +32,7 @@ impl Edge {
     pub fn extend_at_back(mut self, d: f32) -> Self {
         //extend the line at the back by distance d
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
-        let l = self.diameter();
+        let l = self.length();
         self.end.0 += dx * (d / l);
         self.end.1 += dy * (d / l);
         self
@@ -104,6 +103,17 @@ impl Edge {
     pub fn y_max(&self) -> f32 {
         f32::max(self.start.1, self.end.1)
     }
+    
+    pub fn length(&self) -> f32 {
+        self.start.distance_to(&self.end)
+    }
+
+    pub fn centroid(&self) -> Point {
+        Point(
+            (self.start.0 + self.end.0) / 2.0,
+            (self.start.1 + self.end.1) / 2.0,
+        )
+    }
 }
 
 impl Transformable for Edge {
@@ -126,28 +136,12 @@ impl TransformableFrom for Edge {
     }
 }
 
-impl Shape for Edge {
-    fn centroid(&self) -> Point {
-        Point(
-            (self.start.0 + self.end.0) / 2.0,
-            (self.start.1 + self.end.1) / 2.0,
-        )
-    }
-
-    fn area(&self) -> f32 {
-        0.0
-    }
-
-    fn bbox(&self) -> Rect {
-        Rect::new(self.x_min(), self.y_min(), self.x_max(), self.y_max())
-    }
-
-    fn diameter(&self) -> f32 {
-        self.start.distance_to(&self.end)
-    }
-}
-
 impl DistanceTo<Point> for Edge {
+    #[inline(always)]
+    fn distance_to(&self, point: &Point) -> f32 {
+        f32::sqrt(self.sq_distance_to(point))
+    }
+
     #[inline(always)]
     fn sq_distance_to(&self, point: &Point) -> f32 {
         let Point(x, y) = point;
@@ -155,11 +149,6 @@ impl DistanceTo<Point> for Edge {
 
         let (dx, dy) = (x - xx, y - yy);
         dx.powi(2) + dy.powi(2)
-    }
-
-    #[inline(always)]
-    fn distance_to(&self, point: &Point) -> f32 {
-        f32::sqrt(self.sq_distance_to(point))
     }
 }
 
