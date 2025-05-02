@@ -1,6 +1,6 @@
 [package]
 name = "jagua-rs-spp"
-description = "Model of the Strip Packing Problem for jagua-rs"
+description = "Strip Packing Problem module for jagua-rs"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

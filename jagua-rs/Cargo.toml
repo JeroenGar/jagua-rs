@@ -11,9 +11,12 @@ keywords.workspace = true
 homepage.workspace = true
 
 [dependencies]
-jagua-rs-base = { path = "../jagua-rs-base" }
+jagua-rs-base = { path = "../jagua-rs-base", default-features = false}
 jagua-rs-spp = { path = "../jagua-rs-spp", optional = true }
-#jagua-rs-bpp = { path = "../jagua-rs-bpp", optional = true }
+jagua-rs-bpp = { path = "../jagua-rs-bpp", optional = true }
 
 [features]
+default = ["separation-distance"]
+separation-distance = ["jagua-rs-base/separation-distance"]
 spp = ["dep:jagua-rs-spp"]
+bpp = ["dep:jagua-rs-bpp"]

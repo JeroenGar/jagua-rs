@@ -1,11 +1,12 @@
+use crate::entities::{SPInstance, Strip};
+use crate::io::ext_repr::ExtSPInstance;
 use itertools::Itertools;
-use rayon::prelude::*;
 use jagua_rs_base::entities::Item;
 use jagua_rs_base::geometry::shape_modification::ShapeModifyConfig;
 use jagua_rs_base::io::import::Importer;
-use crate::entities::{SPInstance, Strip};
-use crate::io::ext_repr::ExtSPInstance;
+use rayon::prelude::*;
 
+/// Imports an instance into the library
 pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> SPInstance {
     let items: Vec<(Item, usize)> = {
         let mut items: Vec<(Item, usize)> = ext_instance
@@ -17,22 +18,26 @@ pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> SPInstance {
                 (item, demand)
             })
             .collect();
-        
+
         items.sort_by_key(|(item, _)| item.id);
         assert!(
             items.iter().enumerate().all(|(i, (item, _))| item.id == i),
-            "All items should have consecutive IDs starting from 0. IDs: {:?}", items.iter().map(|(item, _)| item.id).sorted().collect_vec()
+            "All items should have consecutive IDs starting from 0. IDs: {:?}",
+            items.iter().map(|(item, _)| item.id).sorted().collect_vec()
         );
         items
     };
-    
-    let total_item_area = items.iter().map(|(item, demand)| item.area() * *demand as f32).sum::<f32>();
+
+    let total_item_area = items
+        .iter()
+        .map(|(item, demand)| item.area() * *demand as f32)
+        .sum::<f32>();
 
     let fixed_height = ext_instance.strip_height;
-    
+
     // Initialize the base width for 100% density
     let width = total_item_area / fixed_height;
-    
+
     let base_strip = Strip {
         fixed_height,
         cde_config: importer.cde_config,
@@ -42,6 +47,6 @@ pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> SPInstance {
         },
         width,
     };
-    
+
     SPInstance::new(items, base_strip)
 }

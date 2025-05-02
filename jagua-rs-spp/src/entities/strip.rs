@@ -9,7 +9,7 @@ pub struct Strip {
     pub fixed_height: f32,
     pub cde_config: CDEConfig,
     pub shape_modify_config: ShapeModifyConfig,
-    pub width: f32
+    pub width: f32,
 }
 
 impl Strip {
@@ -22,27 +22,27 @@ impl Strip {
             fixed_height,
             cde_config,
             shape_modify_config,
-            width: 0.0
+            width: 0.0,
         }
     }
-    
+
     pub fn set_width(&mut self, width: f32) {
         self.width = width;
     }
 }
 
-impl Into<Container> for Strip {
-    fn into(self) -> Container {
+impl From<Strip> for Container {
+    fn from(s: Strip) -> Container {
         Container::new(
             0,
             OriginalShape {
-                shape: SPolygon::from(Rect::new(0.0, 0.0, self.width, self.fixed_height)),
+                shape: SPolygon::from(Rect::new(0.0, 0.0, s.width, s.fixed_height)),
                 pre_transform: DTransformation::empty(),
                 modify_mode: ShapeModifyMode::Deflate,
-                modify_config: self.shape_modify_config,
+                modify_config: s.shape_modify_config,
             },
             vec![],
-            self.cde_config,
+            s.cde_config,
         )
     }
 }

@@ -212,8 +212,7 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
                 let from_2 = **active_in_2_but_not_1.iter().next().unwrap();
                 println!("{}", from_1 == from_2);
                 error!(
-                    "Active hazards don't match {:?} vs {:?}",
-                    active_in_1_but_not_2, active_in_2_but_not_1
+                    "Active hazards don't match {active_in_1_but_not_2:?} vs {active_in_2_but_not_1:?}"
                 );
                 return false;
             }

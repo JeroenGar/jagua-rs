@@ -1,6 +1,6 @@
-use jagua_rs_base::entities::{Item};
-use jagua_rs_base::util::assertions::layouts_match;
 use crate::entities::{SPProblem, SPSolution};
+use jagua_rs_base::entities::Item;
+use jagua_rs_base::util::assertions::layouts_match;
 
 pub fn problem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
     let SPSolution {
@@ -16,7 +16,7 @@ pub fn problem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
     true
 }
 
-pub fn instance_item_ids_correct(items: &Vec<(Item, usize)>) -> bool {
+pub fn instance_item_ids_correct(items: &[(Item, usize)]) -> bool {
     items
         .iter()
         .enumerate()

@@ -7,7 +7,7 @@ use std::iter;
 #[derive(Debug, Clone)]
 /// Instance of the Strip Packing Problem: a set of items to be packed into a single strip with a fixed height and variable width.
 pub struct SPInstance {
-    /// The items to be packed and their quantities
+    /// The items to be packed and their demands
     pub items: Vec<(Item, usize)>,
     /// The height of the strip (fixed)
     pub base_strip: Strip,
@@ -15,7 +15,10 @@ pub struct SPInstance {
 
 impl SPInstance {
     pub fn new(items: Vec<(Item, usize)>, base_strip: Strip) -> Self {
-        assert!(assertions::instance_item_ids_correct(&items), "All items should have consecutive IDs starting from 0");
+        assert!(
+            assertions::instance_item_ids_correct(&items),
+            "All items should have consecutive IDs starting from 0"
+        );
 
         Self { items, base_strip }
     }
@@ -26,7 +29,7 @@ impl SPInstance {
             .map(|(item, qty)| item.shape_orig.area() * *qty as f32)
             .sum()
     }
-    
+
     pub fn item_qty(&self, id: usize) -> usize {
         self.items[id].1
     }

@@ -1,43 +1,59 @@
-use crate::entities::general::Bin;
-use crate::entities::general::Instance;
-use crate::entities::general::Item;
-use crate::geometry::geo_traits::Shape;
-use crate::util::assertions;
+use crate::entities::bin::Bin;
+use crate::util::assertions::instance_item_bin_ids_correct;
+use jagua_rs_base::entities::Instance;
+use jagua_rs_base::entities::{Container, Item};
+use jagua_rs_base::geometry::geo_traits::Shape;
 
 #[derive(Debug, Clone)]
 /// Instance of the Bin Packing Problem: a set of items to be packed into a set of bins.
 pub struct BPInstance {
-    /// Items to be packed in the instance, along with their requested quantities
+    /// The items to be packed and their demands
     pub items: Vec<(Item, usize)>,
-    /// Total area of all items in the instance
-    pub item_area: f32,
-    /// Set of bins available to pack the items, along with their quantities
-    pub bins: Vec<(Bin, usize)>,
+    /// Set of bins available to pack the items
+    pub bins: Vec<Bin>,
 }
 
 impl BPInstance {
-    pub fn new(items: Vec<(Item, usize)>, bins: Vec<(Bin, usize)>) -> Self {
-        assert!(assertions::instance_item_bin_ids_correct(&items, &bins));
+    pub fn new(items: Vec<(Item, usize)>, bins: Vec<Bin>) -> Self {
+        assert!(instance_item_bin_ids_correct(&items, &bins));
 
-        let item_area = items
+        Self { items, bins }
+    }
+
+    pub fn item_area(&self) -> f32 {
+        self.items
             .iter()
             .map(|(item, qty)| item.shape_orig.area() * *qty as f32)
-            .sum();
+            .sum()
+    }
 
-        Self {
-            items,
-            item_area,
-            bins,
-        }
+    pub fn item_qty(&self, id: usize) -> usize {
+        self.items[id].1
+    }
+
+    pub fn bins(&self) -> impl Iterator<Item = &Bin> {
+        self.bins.iter()
+    }
+
+    pub fn bin_qty(&self, id: usize) -> usize {
+        self.bins[id].stock
     }
 }
 
 impl Instance for BPInstance {
-    fn items(&self) -> &[(Item, usize)] {
-        &self.items
+    fn items(&self) -> impl Iterator<Item = &Item> {
+        self.items.iter().map(|(item, _qty)| item)
     }
 
-    fn bins(&self) -> &[(Bin, usize)] {
-        &self.bins
+    fn containers(&self) -> impl Iterator<Item = &Container> {
+        self.bins.iter().map(|bin| &bin.container)
+    }
+
+    fn item(&self, id: usize) -> &Item {
+        &self.items.get(id).unwrap().0
+    }
+
+    fn container(&self, id: usize) -> &Container {
+        &self.bins[id].container
     }
 }

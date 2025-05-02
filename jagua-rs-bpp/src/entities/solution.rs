@@ -1,23 +1,13 @@
-use crate::entities::bin_packing::{BPInstance, LayKey};
-use crate::entities::general::LayoutSnapshot;
+use crate::entities::{BPInstance, LayKey};
+use jagua_rs_base::entities::LayoutSnapshot;
 use slotmap::SecondaryMap;
 use std::time::Instant;
 
-#[cfg(doc)]
-use crate::entities::bin_packing::BPProblem;
-
-/// Snapshot of [`BPProblem`] at a specific moment.
-/// Can be used to restore [`BPProblem`] to a previous state.
+/// Snapshot of [`BPProblem`](crate::entities::BPProblem) at a specific moment.
+/// Can be used to restore to a previous state.
 #[derive(Debug, Clone)]
 pub struct BPSolution {
-    /// Snapshots of all `Layout`s in the `Problem` at the moment the solution was created
     pub layout_snapshots: SecondaryMap<LayKey, LayoutSnapshot>,
-    /// Quantity of placed items for each `Item` in the solution
-    pub placed_item_qtys: Vec<usize>,
-    /// Target quantity of each `Item` in the solution
-    pub target_item_qtys: Vec<usize>,
-    /// Quantity of bins used for each type of bin
-    pub bin_qtys: Vec<usize>,
     /// Instant the solution was created
     pub time_stamp: Instant,
 }
@@ -27,7 +17,7 @@ impl BPSolution {
         let total_bin_area = self
             .layout_snapshots
             .values()
-            .map(|ls| ls.bin.area())
+            .map(|ls| ls.container.area())
             .sum::<f32>();
 
         let total_item_area = self
@@ -37,5 +27,13 @@ impl BPSolution {
             .sum::<f32>();
 
         total_item_area / total_bin_area
+    }
+
+    pub fn cost(&self, instance: &BPInstance) -> u64 {
+        self.layout_snapshots
+            .values()
+            .map(|ls| ls.container.id)
+            .map(|id| instance.bins[id].cost)
+            .sum()
     }
 }

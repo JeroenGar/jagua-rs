@@ -1,7 +1,10 @@
+mod bin;
 mod instance;
 mod problem;
 mod solution;
 
+#[doc(inline)]
+pub use bin::Bin;
 #[doc(inline)]
 pub use instance::BPInstance;
 #[doc(inline)]

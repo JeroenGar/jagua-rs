@@ -1,10 +1,10 @@
-use jagua_rs_base::geometry::DTransformation;
-use itertools::Itertools;
-use std::time::Instant;
-use jagua_rs_base::entities::{Instance, Layout, PItemKey};
-use crate::entities::{SPInstance, SPSolution};
 use crate::entities::strip::Strip;
+use crate::entities::{SPInstance, SPSolution};
 use crate::util::assertions::problem_matches_solution;
+use itertools::Itertools;
+use jagua_rs_base::entities::{Instance, Layout, PItemKey};
+use jagua_rs_base::geometry::DTransformation;
+use std::time::Instant;
 
 /// Modifiable counterpart of [`SPInstance`]: items can be placed and removed, strip can be extended or fitted.
 #[derive(Clone)]
@@ -12,16 +12,12 @@ pub struct SPProblem {
     pub instance: SPInstance,
     pub strip: Strip,
     pub layout: Layout,
-    pub missing_item_qtys: Vec<isize>,
+    pub item_demand_qtys: Vec<usize>,
 }
 
 impl SPProblem {
     pub fn new(instance: SPInstance) -> Self {
-        let missing_item_qtys = instance
-            .items
-            .iter()
-            .map(|(_, qty)| *qty as isize)
-            .collect_vec();
+        let item_demand_qtys = instance.items.iter().map(|(_, qty)| *qty).collect_vec();
         let strip = instance.base_strip;
         let layout = Layout::new(strip.into());
 
@@ -29,7 +25,7 @@ impl SPProblem {
             instance,
             strip,
             layout,
-            missing_item_qtys,
+            item_demand_qtys,
         }
     }
 
@@ -55,7 +51,7 @@ impl SPProblem {
 
         // add the shape offset if any, the strip needs to be at least `offset` wider than the items
         let fitted_width = item_x_max + self.strip.shape_modify_config.offset.unwrap_or(0.0);
-        
+
         self.change_strip_width(fitted_width);
         debug_assert!(feasible_before == self.layout.is_feasible());
     }
@@ -80,7 +76,7 @@ impl SPProblem {
         }
     }
 
-    /// Takes a snapshot of the current state of the problem and returns it as a [`SPSolution`].
+    /// Creates a snapshot of the current state of the problem as a [`SPSolution`].
     pub fn save(&mut self) -> SPSolution {
         let solution = SPSolution {
             layout_snapshot: self.layout.save(),
@@ -103,26 +99,27 @@ impl SPProblem {
             self.layout = Layout::from_snapshot(&solution.layout_snapshot);
         }
 
-        //restore the missing item quantities
-        self.missing_item_qtys
-            .iter_mut()
-            .enumerate()
-            .for_each(|(id, qty)| *qty = self.instance.item_qty(id) as isize);
+        //Restore the item demands
+        {
+            self.item_demand_qtys
+                .iter_mut()
+                .enumerate()
+                .for_each(|(id, qty)| *qty = self.instance.item_qty(id));
 
-        self.layout
-            .placed_items()
-            .iter()
-            .for_each(|(_, pi)| self.missing_item_qtys[pi.item_id] -= 1);
-
+            self.layout
+                .placed_items()
+                .iter()
+                .for_each(|(_, pi)| self.item_demand_qtys[pi.item_id] -= 1);
+        }
         debug_assert!(problem_matches_solution(self, solution));
     }
 
     fn register_included_item(&mut self, item_id: usize) {
-        self.missing_item_qtys[item_id] -= 1;
+        self.item_demand_qtys[item_id] -= 1;
     }
 
     fn deregister_included_item(&mut self, item_id: usize) {
-        self.missing_item_qtys[item_id] += 1;
+        self.item_demand_qtys[item_id] += 1;
     }
 
     pub fn density(&self) -> f32 {

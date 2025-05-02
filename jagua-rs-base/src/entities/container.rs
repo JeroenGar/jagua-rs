@@ -5,9 +5,9 @@ use itertools::Itertools;
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::{CDEConfig, CDEngine};
+use crate::entities::original_shape::OriginalShape;
 use crate::geometry::geo_traits::Shape;
 use crate::geometry::primitives::SPolygon;
-use crate::entities::original_shape::OriginalShape;
 
 /// A container in which [`Item`](crate::entities::Item)'s can be placed.
 #[derive(Clone, Debug)]
@@ -118,7 +118,7 @@ impl InferiorQualityZone {
     pub fn to_hazards(&self) -> impl Iterator<Item = Hazard> {
         self.shapes_cd.iter().enumerate().map(|(idx, shape)| {
             let entity = match self.quality {
-                0 => HazardEntity::Hole { idx: idx },
+                0 => HazardEntity::Hole { idx },
                 _ => HazardEntity::InferiorQualityZone {
                     quality: self.quality,
                     idx,
