@@ -6,16 +6,11 @@ use std::path::Path;
 use log::{Level, LevelFilter, info, log};
 use svg::Document;
 
-use jagua_rs::io::json_instance::JsonInstance;
-
 use crate::EPOCH;
 use crate::io::json_output::JsonOutput;
 
 pub mod cli;
 pub mod json_output;
-pub mod layout_to_svg;
-pub mod svg_export;
-pub mod svg_util;
 
 pub fn read_json_instance(path: &Path) -> JsonInstance {
     let file = File::open(path)

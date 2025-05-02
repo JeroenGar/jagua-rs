@@ -8,8 +8,8 @@ mod tests {
     use jagua_rs::io::parse::Parser;
     use lbf::config::LBFConfig;
     use lbf::io;
-    use lbf::opt::lbf_opt_bpp::LBFOptimizerBP;
-    use lbf::opt::lbf_opt_spp::LBFOptimizerSP;
+    use lbf::opt::lbf_bpp::LBFOptimizerBP;
+    use lbf::opt::lbf_spp::LBFOptimizerSP;
     use rand::SeedableRng;
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;

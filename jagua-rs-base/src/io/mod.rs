@@ -6,3 +6,6 @@ pub mod import;
 
 /// All logic for exporting internal representations into external ones
 pub mod export;
+
+/// All logic for creating SVG from [`Layout`](crate::entities::Layout)s
+pub mod svg;

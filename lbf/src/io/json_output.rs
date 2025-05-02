@@ -1,14 +1,22 @@
 use serde::{Deserialize, Serialize};
 
 use crate::config::LBFConfig;
-use jagua_rs::io::json_instance::JsonInstance;
-use jagua_rs::io::json_solution::JsonSolution;
+use jagua_rs_bpp::io::ext_repr::{ExtBPInstance, ExtBPSolution};
+use jagua_rs_spp::io::ext_repr::{ExtSPInstance, ExtSPSolution};
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
-pub struct JsonOutput {
+pub struct JsonSPOutput {
     #[serde(flatten)]
-    pub instance: JsonInstance,
-    pub solution: JsonSolution,
+    pub instance: ExtSPInstance,
+    pub solution: ExtSPSolution,
+    pub config: LBFConfig,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct JsonBPPOutput {
+    #[serde(flatten)]
+    pub instance: ExtBPInstance,
+    pub solution: ExtBPSolution,
     pub config: LBFConfig,
 }

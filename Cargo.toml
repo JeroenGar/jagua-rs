@@ -24,6 +24,7 @@ tribool = "0.3"
 rayon = "1.10"
 slotmap = "1.0"
 float-cmp = "0.10"
+svg = "0.18.0"
 
 [profile.release]
 opt-level = 3

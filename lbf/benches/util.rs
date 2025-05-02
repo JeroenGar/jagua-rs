@@ -9,7 +9,7 @@ use jagua_rs::io::parse::Parser;
 use lbf::config::LBFConfig;
 use lbf::io;
 use lbf::io::svg_util::SvgDrawOptions;
-use lbf::opt::lbf_opt_spp::LBFOptimizerSP;
+use lbf::opt::lbf_spp::LBFOptimizerSP;
 use log::info;
 use rand::SeedableRng;
 use rand::prelude::{IteratorRandom, SmallRng};

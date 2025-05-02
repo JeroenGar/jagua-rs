@@ -1,6 +1,5 @@
 use jagua_rs_base::entities::Container;
 
-/// A bin in the bin packing problem.
 #[derive(Debug, Clone)]
 pub struct Bin {
     /// Unique identifier for the bin

@@ -14,7 +14,8 @@ new_key_type! {
     pub struct LayKey;
 }
 
-/// Modifiable counterpart of [`BPInstance`]: items can be placed and removed, bins can be opened and closed.
+/// Modifiable counterpart of [`BPInstance`].
+/// Items can be placed and removed, bins can be opened and closed.
 #[derive(Clone)]
 pub struct BPProblem {
     pub instance: BPInstance,
@@ -230,7 +231,7 @@ impl BPProblem {
 }
 
 #[derive(Clone, Debug, Copy)]
-/// Encapsulates all required information to place an `Item` in a `Problem`
+/// Encapsulates all required information to place an [`Item`](jagua_rs_base::entities::Item) in a [`BPProblem`].
 pub struct BPPlacement {
     /// Which layout to place the item in
     pub layout_id: BPLayoutType,
@@ -250,7 +251,7 @@ impl BPPlacement {
     }
 }
 
-/// Enum to distinguish between both existing layouts, and potential new layouts.
+/// Enum to distinguish between both existing [`Layout`]s, and potentially new ones.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BPLayoutType {
     /// An existing layout
