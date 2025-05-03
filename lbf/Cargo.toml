@@ -22,9 +22,11 @@ clap = { workspace = true }
 thousands = { workspace = true }
 itertools = { workspace = true }
 ordered-float = { workspace = true }
+test-case = { workspace = true }
+float-cmp = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.5.1"
+criterion = { workspace = true }
 
 [[bench]]
 name = "quadtree_bench"

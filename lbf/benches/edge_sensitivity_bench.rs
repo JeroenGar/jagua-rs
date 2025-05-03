@@ -1,24 +1,18 @@
-use crate::util::{N_ITEMS_REMOVED, SWIM_PATH};
+use crate::util::{N_ITEMS_REMOVED};
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
-use jagua_rs::entities::general::Instance;
-use jagua_rs::entities::strip_packing::SPInstance;
-use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
+use jagua_rs::geometry::geo_traits::{TransformableFrom};
 use jagua_rs::geometry::primitives::Point;
 use jagua_rs::geometry::primitives::SPolygon;
-use jagua_rs::io::json_instance::JsonInstance;
 use lbf::config::LBFConfig;
-use lbf::io;
-use lbf::io::svg_util::SvgDrawOptions;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
-use std::fs::File;
-use std::io::BufReader;
-use std::path::Path;
 use std::sync::Arc;
+use jagua_rs::entities::Instance;
+use jagua_rs::prob_variants::spp::entities::SPInstance;
 
 criterion_main!(benches);
 criterion_group!(
@@ -50,13 +44,9 @@ fn edge_sensitivity_bench_with_ff(c: &mut Criterion) {
 }
 
 fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
-    let json_instance: JsonInstance =
-        serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
-
     for edge_multiplier in EDGE_MULTIPLIERS {
         let instance = {
-            let instance = util::create_instance(
-                &json_instance,
+             let instance = util::create_instance(
                 config.cde_config,
                 config.poly_simpl_tolerance,
             );
@@ -67,16 +57,16 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         {
-            let draw_options = SvgDrawOptions {
-                quadtree: true,
-                surrogate: true,
-                ..SvgDrawOptions::default()
-            };
-            let svg = io::layout_to_svg::layout_to_svg(&problem.layout, &instance, draw_options);
-            io::write_svg(
-                &svg,
-                Path::new(&format!("edge_sensitivity_{edge_multiplier}.svg")),
-            );
+            // let draw_options = SvgDrawOptions {
+            //     quadtree: true,
+            //     surrogate: true,
+            //     ..SvgDrawOptions::default()
+            // };
+            //let svg = layout_to_svg(&problem.layout, &instance, draw_options, "");
+            // io::write_svg(
+            //     &svg,
+            //     Path::new(&format!("edge_sensitivity_{edge_multiplier}.svg")),
+            // ).unwrap();
         }
 
         let mut rng = SmallRng::seed_from_u64(0);
@@ -156,7 +146,7 @@ fn multiply_edge_count(shape: &SPolygon, multiplier: usize) -> SPolygon {
             start = Point(start.0 + x_step, start.1 + y_step);
         }
     }
-    let new_polygon = SPolygon::new(new_points);
-    assert!(almost::equal(shape.area(), new_polygon.area()));
+    let new_polygon = SPolygon::new(new_points).unwrap();
+    float_cmp::assert_approx_eq!(f32, shape.area, new_polygon.area);
     new_polygon
 }

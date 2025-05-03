@@ -1,6 +1,3 @@
-use std::fs::File;
-use std::io::BufReader;
-
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use rand::SeedableRng;
@@ -9,13 +6,12 @@ use rand::seq::IteratorRandom;
 
 use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, HazardDetector};
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
-use jagua_rs::entities::general::Instance;
-use jagua_rs::entities::strip_packing::SPPlacement;
-use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
-use jagua_rs::io::json_instance::JsonInstance;
+use jagua_rs::entities::Instance;
+use jagua_rs::geometry::geo_traits::TransformableFrom;
+use jagua_rs::prob_variants::spp::entities::SPPlacement;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 
-use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
+use crate::util::{N_ITEMS_REMOVED, create_base_config};
 
 criterion_main!(benches);
 criterion_group!(
@@ -36,8 +32,6 @@ const N_SAMPLES_PER_ITER: usize = 1000;
 /// Benchmark the update operation of the quadtree for different depths
 /// From a solution, created by the LBF optimizer, 5 items are removed and then inserted back again
 fn quadtree_update_bench(c: &mut Criterion) {
-    let json_instance: JsonInstance =
-        serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
     let mut config = create_base_config();
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
@@ -47,7 +41,6 @@ fn quadtree_update_bench(c: &mut Criterion) {
     for depth in QT_DEPTHS {
         config.cde_config.quadtree_depth = depth;
         let instance = util::create_instance(
-            &json_instance,
             config.cde_config,
             config.poly_simpl_tolerance,
         );
@@ -83,8 +76,6 @@ fn quadtree_update_bench(c: &mut Criterion) {
 /// Benchmark the query operation of the quadtree for different depths
 /// We validate 1000 sampled transformations for each of the 5 removed items
 fn quadtree_query_bench(c: &mut Criterion) {
-    let json_instance: JsonInstance =
-        serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
     let mut config = create_base_config();
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
@@ -94,7 +85,6 @@ fn quadtree_query_bench(c: &mut Criterion) {
     for depth in QT_DEPTHS {
         config.cde_config.quadtree_depth = depth;
         let instance = util::create_instance(
-            &json_instance,
             config.cde_config,
             config.poly_simpl_tolerance,
         );
@@ -102,7 +92,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformRectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
+        let sampler = UniformRectSampler::new(layout.container.outer_cd.bbox, instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -142,8 +132,6 @@ fn quadtree_query_bench(c: &mut Criterion) {
 }
 
 fn quadtree_query_update_1000_1(c: &mut Criterion) {
-    let json_instance: JsonInstance =
-        serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
     let mut config = create_base_config();
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
@@ -153,14 +141,13 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
     for depth in QT_DEPTHS {
         config.cde_config.quadtree_depth = depth;
         let instance = util::create_instance(
-            &json_instance,
             config.cde_config,
             config.poly_simpl_tolerance,
         );
         let (mut problem, _) = util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformRectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
+        let sampler = UniformRectSampler::new(layout.container.outer_cd.bbox, instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -206,8 +193,6 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
 /// Instead of merely detecting whether any collisions occur for collisions, we collect all entities that collide
 /// We validate 1000 sampled transformations for each of the 5 removed items
 fn quadtree_collect_query_bench(c: &mut Criterion) {
-    let json_instance: JsonInstance =
-        serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
     let mut config = create_base_config();
     //disable fail fast surrogates
     config.cde_config.item_surrogate_config.n_ff_poles = 0;
@@ -217,7 +202,6 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
     for depth in QT_DEPTHS {
         config.cde_config.quadtree_depth = depth;
         let instance = util::create_instance(
-            &json_instance,
             config.cde_config,
             config.poly_simpl_tolerance,
         );
@@ -225,7 +209,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformRectSampler::new(layout.bin.outer_cd.bbox(), instance.item(0));
+        let sampler = UniformRectSampler::new(layout.container.outer_cd.bbox, instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)

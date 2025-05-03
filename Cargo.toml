@@ -34,6 +34,7 @@ clap = { version = "4.5", features = ["derive"] }
 test-case = "3.3"
 thousands = "0.2.0"
 jiff = "0.2"
+criterion = "0.5"
 
 [profile.release]
 opt-level = 3
