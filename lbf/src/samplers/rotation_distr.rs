@@ -5,7 +5,7 @@ use rand_distr::Normal;
 use rand_distr::Uniform;
 use std::f32::consts::PI;
 
-use jagua_rs::entities::general::Item;
+use jagua_rs::entities::Item;
 use jagua_rs::geometry::geo_enums::RotationRange;
 
 /// Samples a rotation (radians).

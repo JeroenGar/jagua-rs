@@ -4,13 +4,12 @@ use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
-use jagua_rs::entities::bin_packing::{BPInstance, BPProblem, BPSolution};
-use jagua_rs::entities::bin_packing::{BPLayoutType, BPPlacement};
-use jagua_rs::entities::general::{Instance, Item};
 use log::{debug, info};
 use rand::Rng;
 use rand::prelude::SmallRng;
+use jagua_rs::prob_variants::bpp::entities::{BPInstance, BPLayoutType, BPPlacement, BPProblem, BPSolution};
 use thousands::Separable;
+use jagua_rs::entities::{Instance, Item};
 
 /// Left-Bottom-Fill (LBF) optimizer for Bin Packing problems.
 pub struct LBFOptimizerBP {
@@ -38,10 +37,10 @@ impl LBFOptimizerBP {
     pub fn solve(&mut self) -> BPSolution {
         let start = Instant::now();
 
-        'outer: for item_index in item_placement_order(&self.instance) {
-            let item = &self.instance.items()[item_index].0;
+        'outer: for item_id in item_placement_order(&self.instance) {
+            let item = self.instance.item(item_id);
             //place all items of this type
-            'inner: while self.problem.missing_item_qtys[item_index] > 0 {
+            'inner: while self.problem.item_demand_qtys[item_id] > 0 {
                 //find a position and insert it
                 let placement = search_layouts(
                     &self.problem,
@@ -56,14 +55,14 @@ impl LBFOptimizerBP {
                         let l_index = self.problem.place_item(i_opt);
                         info!(
                             "[LBF] placing item {}/{} with id {} at [{}] in Layout {:?}",
-                            self.problem.placed_item_qtys().sum::<usize>(),
+                            self.problem.item_placed_qtys().sum::<usize>(),
                             self.instance.total_item_qty(),
                             i_opt.item_id,
                             i_opt.d_transf,
                             l_index
                         );
                         #[allow(clippy::absurd_extreme_comparisons)]
-                        if self.problem.placed_item_qtys().sum::<usize>() >= ITEM_LIMIT {
+                        if self.problem.item_placed_qtys().sum::<usize>() >= ITEM_LIMIT {
                             break 'outer;
                         }
                     }
@@ -104,7 +103,7 @@ fn search_layouts(
     let open_layouts = problem.layouts.keys().map(BPLayoutType::Open);
     let bins_with_stock =
         problem
-            .bin_qtys
+            .bin_stock_qtys
             .iter()
             .enumerate()
             .filter_map(|(bin_id, qty)| match *qty > 0 {
@@ -117,7 +116,7 @@ fn search_layouts(
         debug!("searching in layout {:?}", layout_id);
         let cde = match layout_id {
             BPLayoutType::Open(lkey) => problem.layouts[lkey].cde(),
-            BPLayoutType::Closed { bin_id } => problem.instance.bin(bin_id).base_cde.as_ref(),
+            BPLayoutType::Closed { bin_id } => problem.instance.container(bin_id).base_cde.as_ref(),
         };
 
         let placement = match &item.hazard_filter {

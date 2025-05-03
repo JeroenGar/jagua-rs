@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
-
+use jagua_rs::prob_variants::bpp::io::ext_repr::{ExtBPInstance, ExtBPSolution};
+use jagua_rs::prob_variants::spp::io::ext_repr::{ExtSPInstance, ExtSPSolution};
 use crate::config::LBFConfig;
-use jagua_rs_bpp::io::ext_repr::{ExtBPInstance, ExtBPSolution};
-use jagua_rs_spp::io::ext_repr::{ExtSPInstance, ExtSPSolution};
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]

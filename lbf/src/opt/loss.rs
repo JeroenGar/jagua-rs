@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
 
-use jagua_rs::geometry::geo_traits::Shape;
 use jagua_rs::geometry::primitives::{Rect, SPolygon};
 
 const X_MULTIPLIER: f32 = 10.0;
@@ -24,7 +23,7 @@ impl LBFLoss {
     }
 
     pub fn from_shape(shape: &SPolygon) -> Self {
-        LBFLoss::from_bbox(shape.bbox())
+        LBFLoss::from_bbox(shape.bbox)
     }
 
     pub fn cost(&self) -> f32 {

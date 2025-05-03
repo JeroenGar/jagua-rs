@@ -4,12 +4,11 @@ use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
-use jagua_rs::entities::general::Instance;
-use jagua_rs::entities::strip_packing::SPPlacement;
-use jagua_rs::entities::strip_packing::{SPInstance, SPProblem, SPSolution};
 use log::info;
 use rand::prelude::SmallRng;
 use thousands::Separable;
+use jagua_rs::entities::Instance;
+use jagua_rs::prob_variants::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution};
 
 /// Left-Bottom-Fill (LBF) optimizer for Strip Packing problems.
 pub struct LBFOptimizerSP {
@@ -24,8 +23,7 @@ pub struct LBFOptimizerSP {
 impl LBFOptimizerSP {
     pub fn new(instance: SPInstance, config: LBFConfig, rng: SmallRng) -> Self {
         assert!(config.n_samples > 0);
-        let strip_width = instance.item_area * 2.0 / instance.strip_height; //initiate with 50% usage
-        let problem = SPProblem::new(instance.clone(), strip_width, config.cde_config);
+        let problem = SPProblem::new(instance.clone());
         Self {
             instance,
             problem,
@@ -38,10 +36,10 @@ impl LBFOptimizerSP {
     pub fn solve(&mut self) -> SPSolution {
         let start = Instant::now();
 
-        'outer: for item_index in item_placement_order(&self.instance) {
-            let item = &self.instance.items()[item_index].0;
+        'outer: for item_id in item_placement_order(&self.instance) {
+            let item = self.instance.item(item_id);
             //place all items of this type
-            while self.problem.missing_item_qtys[item_index] > 0 {
+            while self.problem.item_demand_qtys[item_id] > 0 {
                 let placement = match &item.hazard_filter {
                     None => search(
                         self.problem.layout.cde(),
@@ -82,10 +80,10 @@ impl LBFOptimizerSP {
                     None => {
                         // item does not fit anywhere, increase the strip width
                         self.problem
-                            .change_strip_width(self.problem.strip_width() * 1.1);
+                            .change_strip_width(self.problem.strip.width * 1.1);
                         info!(
                             "[LBF] no placement found, extended strip by 10% to {:.3}",
-                            self.problem.strip_width()
+                            self.problem.strip.width
                         );
                     }
                 }
@@ -95,7 +93,7 @@ impl LBFOptimizerSP {
         self.problem.fit_strip();
         info!(
             "[LBF] fitted strip width to {:.3}",
-            self.problem.strip_width()
+            self.problem.strip.width
         );
 
         let solution = self.problem.save();

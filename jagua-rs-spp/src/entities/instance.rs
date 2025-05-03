@@ -32,6 +32,10 @@ impl SPInstance {
     pub fn item_qty(&self, id: usize) -> usize {
         self.items[id].1
     }
+
+    pub fn total_item_qty(&self) -> usize {
+        self.items.iter().map(|(_, qty)| *qty).sum()
+    }
 }
 
 impl Instance for SPInstance {

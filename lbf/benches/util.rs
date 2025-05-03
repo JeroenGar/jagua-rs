@@ -83,7 +83,7 @@ pub fn create_lbf_problem(
             ..SvgDrawOptions::default()
         };
         let svg = io::layout_to_svg::layout_to_svg(&problem.layout, &instance, draw_options);
-        io::write_svg(&svg, Path::new("bench_layout.svg"));
+        //io::write_svg(&svg, Path::new("bench_layout.svg"));
     }
 
     (problem, p_opts)

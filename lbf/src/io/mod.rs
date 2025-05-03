@@ -6,41 +6,42 @@ use std::path::Path;
 use log::{Level, LevelFilter, info, log};
 use serde::Serialize;
 use svg::Document;
-
 use crate::EPOCH;
-use crate::io::json_output::JsonOutput;
+
+use anyhow::{Result, Context};
+use jagua_rs::prob_variants::bpp::io::ext_repr::ExtBPInstance;
+use jagua_rs::prob_variants::spp::io::ext_repr::ExtSPInstance;
 
 pub mod cli;
-pub mod json_output;
+pub mod output;
 
-pub fn read_json_instance(path: &Path) -> JsonInstance {
-    let file = File::open(path)
-        .unwrap_or_else(|err| panic!("could not open instance file: {}, {}", path.display(), err));
-    let reader = BufReader::new(file);
-    serde_json::from_reader(reader)
-        .unwrap_or_else(|err| panic!("could not parse instance file: {}, {}", path.display(), err))
+pub fn read_spp_instance(path: &Path) -> Result<ExtSPInstance> {
+    let file = File::open(path).context("could not open instance file")?;
+    serde_json::from_reader(BufReader::new(file))
+        .context("not a valid strip packing instance (ExtSPInstance)")
 }
 
-pub fn write_json(json: &impl Serialize, path: &Path) {
-    let file = File::create(path)
-        .unwrap_or_else(|_| panic!("could not open solution file: {}", path.display()));
+pub fn read_bpp_instance(path: &Path) -> Result<ExtBPInstance> {
+    let file = File::open(path).context("could not open instance file")?;
+    serde_json::from_reader(BufReader::new(file))
+        .context("not a valid bin packing instance (ExtBPInstance)")
+}
 
+pub fn write_json(json: &impl Serialize, path: &Path) -> Result<()> {
+    let file = File::create(path)?;
     let writer = BufWriter::new(file);
 
-    serde_json::to_writer_pretty(writer, &json)
-        .unwrap_or_else(|_| panic!("could not write solution file: {}", path.display()));
+    serde_json::to_writer_pretty(writer, &json)?;
 
     info!(
         "Solution JSON written to file://{}",
-        fs::canonicalize(path)
-            .expect("could not canonicalize path")
-            .to_str()
-            .unwrap()
+        fs::canonicalize(path)?.to_str().unwrap()
     );
+    Ok(())
 }
 
-pub fn write_svg(document: &Document, path: &Path) {
-    svg::save(path, document).expect("failed to write svg file");
+pub fn write_svg(document: &Document, path: &Path) -> Result<()> {
+    svg::save(path, document)?;
     info!(
         "Solution SVG written to file://{}",
         fs::canonicalize(path)
@@ -48,9 +49,10 @@ pub fn write_svg(document: &Document, path: &Path) {
             .to_str()
             .unwrap()
     );
+    Ok(())
 }
 
-pub fn init_logger(level_filter: LevelFilter) {
+pub fn init_logger(level_filter: LevelFilter) -> Result<()> {
     fern::Dispatch::new()
         // Perform allocation-free log formatting
         .format(|out, message, record| {
@@ -76,7 +78,7 @@ pub fn init_logger(level_filter: LevelFilter) {
         // Add blanket level filter
         .level(level_filter)
         .chain(std::io::stdout())
-        .apply()
-        .expect("could not initialize logger");
+        .apply()?;
     log!(Level::Info, "Epoch: {}", jiff::Timestamp::now());
+    Ok(())
 }

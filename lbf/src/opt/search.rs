@@ -5,13 +5,11 @@ use crate::samplers::uniform_rect_sampler::UniformRectSampler;
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEngine;
 use jagua_rs::collision_detection::hazards::filter::HazardFilter;
-use jagua_rs::entities::general::{Instance, Item};
+use jagua_rs::entities::{Instance, Item};
 use jagua_rs::geometry::DTransformation;
-use jagua_rs::geometry::convex_hull::convex_hull_from_surrogate;
-use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
-use jagua_rs::geometry::primitives::SPolygon;
+use jagua_rs::geometry::geo_traits::TransformableFrom;
 use log::debug;
-use ordered_float::NotNan;
+use ordered_float::{OrderedFloat};
 use rand::Rng;
 use std::cmp::{Ordering, Reverse};
 
@@ -108,16 +106,11 @@ pub fn search(
 }
 
 pub fn item_placement_order(instance: &impl Instance) -> Vec<usize> {
-    //sort the items by descending diameter of convex hull
-    (0..instance.items().len())
-        .sorted_by_cached_key(|i| {
-            let item = &instance.items()[*i].0;
-            let ch = SPolygon::new(
-                convex_hull_from_surrogate(&item.shape_cd)
-                    .expect("items should have a surrogate generated"),
-            );
-            let ch_diam = NotNan::new(ch.diameter()).expect("convex hull diameter is NaN");
-            Reverse(ch_diam)
+    //sort the items by descending diameter
+    instance.items()
+        .sorted_by_key(|item| {
+            Reverse(OrderedFloat(item.shape_cd.diameter))
         })
+        .map(|item| item.id)
         .collect_vec()
 }

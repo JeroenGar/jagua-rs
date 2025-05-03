@@ -4,7 +4,7 @@ use jagua_rs_base::io::export::export_layout_snapshot;
 use std::time::Instant;
 
 /// Exports a solution out of the library
-pub fn export(solution: &BPSolution, instance: &BPInstance, epoch: Instant) -> ExtBPSolution {
+pub fn export(instance: &BPInstance, solution: &BPSolution, epoch: Instant) -> ExtBPSolution {
     ExtBPSolution {
         cost: solution.cost(instance),
         layouts: solution

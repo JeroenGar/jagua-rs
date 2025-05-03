@@ -43,7 +43,7 @@ pub fn collision_hazards_sorted_correctly(hazards: &[QTHazard]) -> bool {
                 }
             }
             QTHazPresence::None => {
-                panic!("None hazard in collision hazard vec");
+                panic!("None hazard should never be collision hazard vec");
             }
         };
     }
