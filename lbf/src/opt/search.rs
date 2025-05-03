@@ -9,7 +9,7 @@ use jagua_rs::entities::{Instance, Item};
 use jagua_rs::geometry::DTransformation;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use log::debug;
-use ordered_float::{OrderedFloat};
+use ordered_float::OrderedFloat;
 use rand::Rng;
 use std::cmp::{Ordering, Reverse};
 
@@ -107,10 +107,9 @@ pub fn search(
 
 pub fn item_placement_order(instance: &impl Instance) -> Vec<usize> {
     //sort the items by descending diameter
-    instance.items()
-        .sorted_by_key(|item| {
-            Reverse(OrderedFloat(item.shape_cd.diameter))
-        })
+    instance
+        .items()
+        .sorted_by_key(|item| Reverse(OrderedFloat(item.shape_cd.diameter)))
         .map(|item| item.id)
         .collect_vec()
 }

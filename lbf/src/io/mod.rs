@@ -3,12 +3,12 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
+use crate::EPOCH;
 use log::{Level, LevelFilter, info, log};
 use serde::Serialize;
 use svg::Document;
-use crate::EPOCH;
 
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use jagua_rs::prob_variants::bpp::io::ext_repr::ExtBPInstance;
 use jagua_rs::prob_variants::spp::io::ext_repr::ExtSPInstance;
 

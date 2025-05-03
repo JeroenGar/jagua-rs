@@ -2,6 +2,7 @@ use crate::util::{N_ITEMS_REMOVED, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
+use jagua_rs::entities::Instance;
 use jagua_rs::geometry::convex_hull;
 use jagua_rs::geometry::fail_fast::{
     SPSurrogate, SPSurrogateConfig, generate_piers, generate_surrogate_poles,
@@ -11,7 +12,6 @@ use jagua_rs::geometry::primitives::SPolygon;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
-use jagua_rs::entities::Instance;
 
 criterion_main!(benches);
 criterion_group!(benches, fast_fail_query_bench);
@@ -44,10 +44,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     let mut config = create_base_config();
     config.cde_config.quadtree_depth = 5;
 
-    let instance = util::create_instance(
-        config.cde_config,
-        config.poly_simpl_tolerance,
-    );
+    let instance = util::create_instance(config.cde_config, config.poly_simpl_tolerance);
     let (problem, _) = util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
     println!(
@@ -162,7 +159,9 @@ pub fn create_custom_surrogate(
             .iter()
             .map(|&i| simple_poly.vertices[i])
             .collect(),
-    ).unwrap().area;
+    )
+    .unwrap()
+    .area;
 
     SPSurrogate {
         convex_hull_indices,

@@ -8,7 +8,7 @@ use crate::collision_detection::{CDEConfig, CDEngine};
 use crate::geometry::OriginalShape;
 use crate::geometry::primitives::SPolygon;
 
-use anyhow::{ensure, Result};
+use anyhow::{Result, ensure};
 
 /// A container in which [`Item`](crate::entities::Item)'s can be placed.
 #[derive(Clone, Debug)]
@@ -33,7 +33,8 @@ impl Container {
     ) -> Result<Self> {
         let outer = Arc::new(original_outer.convert_to_internal()?);
         let outer_orig = Arc::new(original_outer);
-        ensure!(quality_zones.len() == quality_zones.iter().map(|qz| qz.quality).unique().count(),
+        ensure!(
+            quality_zones.len() == quality_zones.iter().map(|qz| qz.quality).unique().count(),
             "Quality zones must have unique qualities"
         );
         ensure!(

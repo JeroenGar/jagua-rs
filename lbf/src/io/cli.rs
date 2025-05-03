@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use log::LevelFilter;
 
 #[derive(Parser, Debug)]
@@ -19,4 +19,14 @@ pub struct Cli {
         default_value = "info"
     )]
     pub log_level: LevelFilter,
+    #[arg(short, long, value_enum, value_name = "TYPE OF PROBLEM")]
+    pub prob_var: ProblemVariant,
+}
+
+#[derive(ValueEnum, Debug, Clone)]
+pub enum ProblemVariant {
+    #[clap(name = "bpp")]
+    BinPackingProblem,
+    #[clap(name = "spp")]
+    StripPackingProblem,
 }

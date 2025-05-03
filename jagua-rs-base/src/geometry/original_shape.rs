@@ -1,5 +1,5 @@
 use crate::geometry::DTransformation;
-use crate::geometry::geo_traits::{Transformable};
+use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::{Point, Rect, SPolygon};
 use crate::geometry::shape_modification::{
     ShapeModifyConfig, ShapeModifyMode, offset_shape, simplify_shape,

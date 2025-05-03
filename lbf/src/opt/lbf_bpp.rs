@@ -4,12 +4,14 @@ use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
+use jagua_rs::entities::{Instance, Item};
+use jagua_rs::prob_variants::bpp::entities::{
+    BPInstance, BPLayoutType, BPPlacement, BPProblem, BPSolution,
+};
 use log::{debug, info};
 use rand::Rng;
 use rand::prelude::SmallRng;
-use jagua_rs::prob_variants::bpp::entities::{BPInstance, BPLayoutType, BPPlacement, BPProblem, BPSolution};
 use thousands::Separable;
-use jagua_rs::entities::{Instance, Item};
 
 /// Left-Bottom-Fill (LBF) optimizer for Bin Packing problems.
 pub struct LBFOptimizerBP {
@@ -101,15 +103,14 @@ fn search_layouts(
 ) -> Option<BPPlacement> {
     //search all existing layouts and closed bins with remaining stock
     let open_layouts = problem.layouts.keys().map(BPLayoutType::Open);
-    let bins_with_stock =
-        problem
-            .bin_stock_qtys
-            .iter()
-            .enumerate()
-            .filter_map(|(bin_id, qty)| match *qty > 0 {
-                true => Some(BPLayoutType::Closed { bin_id }),
-                false => None,
-            });
+    let bins_with_stock = problem
+        .bin_stock_qtys
+        .iter()
+        .enumerate()
+        .filter_map(|(bin_id, qty)| match *qty > 0 {
+            true => Some(BPLayoutType::Closed { bin_id }),
+            false => None,
+        });
 
     //sequential search until a valid placement is found
     for layout_id in open_layouts.chain(bins_with_stock) {

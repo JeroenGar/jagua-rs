@@ -1,20 +1,20 @@
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
+    use anyhow::Result;
     use jagua_rs::io::import::Importer;
+    use jagua_rs::prob_variants::{bpp, spp};
     use lbf::config::LBFConfig;
     use lbf::io::{read_bpp_instance, read_spp_instance};
     use lbf::opt::lbf_bpp::LBFOptimizerBP;
     use lbf::opt::lbf_spp::LBFOptimizerSP;
+    use rand::SeedableRng;
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;
-    use rand::SeedableRng;
+    use std::path::Path;
     use test_case::test_case;
-    use jagua_rs::prob_variants::{bpp, spp};
-    use anyhow::Result;
 
     const N_ITEMS_TO_REMOVE: usize = 5;
-    
+
     #[test_case("../assets/swim.json"; "swim")]
     #[test_case("../assets/shirts.json"; "shirts")]
     #[test_case("../assets/trousers.json"; "trousers")]
@@ -110,7 +110,6 @@ mod tests {
         }
         Ok(())
     }
-
 
     fn config() -> LBFConfig {
         LBFConfig {

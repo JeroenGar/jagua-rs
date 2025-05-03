@@ -1,14 +1,14 @@
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{
-    AlmostCollidesWith, CollidesWith, DistanceTo, SeparationDistance
+    AlmostCollidesWith, CollidesWith, DistanceTo, SeparationDistance,
 };
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::util::FPA;
+use anyhow::Result;
+use anyhow::ensure;
 use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
-use anyhow::{ensure};
-use anyhow::Result;
 
 ///Axis-aligned rectangle
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -21,16 +21,18 @@ pub struct Rect {
 
 impl Rect {
     pub fn new(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> Result<Self> {
-        ensure!(x_min < x_max && y_min < y_max, "invalid rectangle, x_min: {x_min}, x_max: {x_max}, y_min: {y_min}, y_max: {y_max}");
-        Ok(
-            Rect {
+        ensure!(
+            x_min < x_max && y_min < y_max,
+            "invalid rectangle, x_min: {x_min}, x_max: {x_max}, y_min: {y_min}, y_max: {y_max}"
+        );
+        Ok(Rect {
             x_min,
             y_min,
             x_max,
             y_max,
         })
     }
-    
+
     pub fn from_diagonal_corners(c1: Point, c2: Point) -> Result<Self> {
         let x_min = f32::min(c1.x(), c2.x());
         let y_min = f32::min(c1.y(), c2.y());
@@ -103,7 +105,8 @@ impl Rect {
             self.y_min - dy,
             self.x_max + dx,
             self.y_max + dy,
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     /// Returns a new rectangle with the same centroid but scaled by `factor`.
@@ -197,7 +200,7 @@ impl Rect {
         let y_max = f32::max(a.y_max, b.y_max);
         Rect::new(x_min, y_min, x_max, y_max).unwrap()
     }
-    
+
     pub fn centroid(&self) -> Point {
         Point(
             (self.x_min + self.x_max) / 2.0,
@@ -208,7 +211,7 @@ impl Rect {
     pub fn area(&self) -> f32 {
         (self.x_max - self.x_min) * (self.y_max - self.y_min)
     }
-    
+
     pub fn diameter(&self) -> f32 {
         let dx = self.x_max - self.x_min;
         let dy = self.y_max - self.y_min;

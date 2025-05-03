@@ -1,18 +1,18 @@
-use crate::util::{N_ITEMS_REMOVED};
+use crate::util::N_ITEMS_REMOVED;
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
-use jagua_rs::geometry::geo_traits::{TransformableFrom};
+use jagua_rs::entities::Instance;
+use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::geometry::primitives::Point;
 use jagua_rs::geometry::primitives::SPolygon;
+use jagua_rs::prob_variants::spp::entities::SPInstance;
 use lbf::config::LBFConfig;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
 use std::sync::Arc;
-use jagua_rs::entities::Instance;
-use jagua_rs::prob_variants::spp::entities::SPInstance;
 
 criterion_main!(benches);
 criterion_group!(
@@ -46,10 +46,7 @@ fn edge_sensitivity_bench_with_ff(c: &mut Criterion) {
 fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
     for edge_multiplier in EDGE_MULTIPLIERS {
         let instance = {
-             let instance = util::create_instance(
-                config.cde_config,
-                config.poly_simpl_tolerance,
-            );
+            let instance = util::create_instance(config.cde_config, config.poly_simpl_tolerance);
             modify_instance(instance, edge_multiplier as usize)
         };
 

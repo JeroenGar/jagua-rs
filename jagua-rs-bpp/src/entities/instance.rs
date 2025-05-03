@@ -37,7 +37,7 @@ impl BPInstance {
     pub fn bin_qty(&self, id: usize) -> usize {
         self.bins[id].stock
     }
-    
+
     pub fn total_item_qty(&self) -> usize {
         self.items.iter().map(|(_, qty)| *qty).sum()
     }

@@ -1,7 +1,7 @@
 use crate::collision_detection::CDEConfig;
 use crate::entities::Item;
-use crate::geometry::OriginalShape;
 use crate::entities::{Container, InferiorQualityZone, N_QUALITIES};
+use crate::geometry::OriginalShape;
 use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
@@ -9,8 +9,8 @@ use crate::geometry::primitives::SPolygon;
 use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtContainer, ExtItem, ExtSPolygon, ExtShape};
+use anyhow::{Result, bail};
 use itertools::Itertools;
-use anyhow::{bail, Result};
 
 /// Converts external representations of items and containers into internal ones.
 #[derive(Clone, Debug, Copy)]
@@ -50,7 +50,7 @@ impl Importer {
                 } => {
                     let rect = Rect::new(*x_min, *y_min, x_min + width, y_min + height)?;
                     SPolygon::from(rect)
-                },
+                }
                 ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp))?,
                 ExtShape::Polygon(_) => {
                     bail!("No support for polygons with holes yet")
@@ -143,7 +143,8 @@ impl Importer {
                             y_min,
                             width,
                             height,
-                        } => Rect::new(*x_min, *y_min, x_min + width, y_min + height).map(|r| r.into()),
+                        } => Rect::new(*x_min, *y_min, x_min + width, y_min + height)
+                            .map(|r| r.into()),
                         ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp)),
                         ExtShape::Polygon(_) => {
                             unimplemented!("No support for polygon to simplepolygon conversion yet")
@@ -155,7 +156,6 @@ impl Importer {
                     .collect::<Result<Vec<SPolygon>>>()
             })
             .collect::<Result<Vec<Vec<SPolygon>>>>()?;
-        
 
         //merge the container holes with quality == 0
         shapes_inferior_qzones[0].extend(holes);

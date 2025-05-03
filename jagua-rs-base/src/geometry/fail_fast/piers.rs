@@ -33,7 +33,8 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge>
     let base_ray = Edge::new(
         Point(centroid.0, centroid.1 - 2.0 * expanded_bbox.height()),
         Point(centroid.0, centroid.1 + 2.0 * expanded_bbox.height()),
-    ).unwrap();
+    )
+    .unwrap();
 
     let transformations = generate_ray_transformations(expanded_bbox, RAYS_PER_ANGLE, N_ANGLES);
 

@@ -1,9 +1,9 @@
 use anyhow::{Result, ensure};
 use jagua_rs_base::collision_detection::CDEConfig;
 use jagua_rs_base::entities::Container;
-use jagua_rs_base::geometry::{DTransformation, OriginalShape};
 use jagua_rs_base::geometry::primitives::{Rect, SPolygon};
 use jagua_rs_base::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
+use jagua_rs_base::geometry::{DTransformation, OriginalShape};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub struct Strip {
@@ -45,6 +45,7 @@ impl From<Strip> for Container {
             },
             vec![],
             s.cde_config,
-        ).unwrap()
+        )
+        .unwrap()
     }
 }

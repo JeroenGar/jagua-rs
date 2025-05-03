@@ -341,9 +341,8 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
 
     // Create the offset geo_types::Polygon
     let geo_poly_offset = geo_poly
-        .offset(offset).map_err(|e| {
-            anyhow::anyhow!("Error while offsetting polygon: {:?}", e)
-        })?
+        .offset(offset)
+        .map_err(|e| anyhow::anyhow!("Error while offsetting polygon: {:?}", e))?
         .0
         .remove(0);
 
@@ -363,5 +362,7 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
 
 #[cfg(not(feature = "separation-distance"))]
 pub fn offset_shape(_sp: &SPolygon, _mode: ShapeModifyMode, _distance: f32) -> Result<SPolygon> {
-    bail!("cannot offset shape without geo_offset dependency, compile with --features separation to enable this")
+    bail!(
+        "cannot offset shape without geo_offset dependency, compile with --features separation to enable this"
+    )
 }

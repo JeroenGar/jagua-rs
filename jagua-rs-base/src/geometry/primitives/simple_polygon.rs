@@ -15,7 +15,7 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::util::FPA;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 /// A Simple Polygon is a polygon that does not intersect itself and contains no holes.
 /// It is a closed shape with a finite number of vertices and edges.
@@ -45,7 +45,7 @@ impl SPolygon {
         if points.iter().unique().count() != points.len() {
             bail!("Simple polygon should not contain duplicate points: {points:?}");
         }
-        
+
         let area = match SPolygon::calculate_area(&points) {
             0.0 => bail!("Simple polygon has no area: {points:?}"),
             area if area < 0.0 => {
@@ -329,6 +329,7 @@ where
             (r.x_max, r.y_min).into(),
             (r.x_max, r.y_max).into(),
             (r.x_min, r.y_max).into(),
-        ]).unwrap()
+        ])
+        .unwrap()
     }
 }

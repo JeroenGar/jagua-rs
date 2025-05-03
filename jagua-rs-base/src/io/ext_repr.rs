@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 
 /// External representation of an [`Item`](crate::entities::Item).
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtItem {
     /// Unique identifier of the item
     pub id: u64,
@@ -21,7 +20,6 @@ pub struct ExtItem {
 /// External representation of a [`Container`](crate::entities::Container).
 /// Items can be placed inside containers.
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtContainer {
     /// Unique identifier of the container
     pub id: u64,
@@ -34,8 +32,8 @@ pub struct ExtContainer {
 
 /// Various ways to represent a shape
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(tag = "Type", content = "Data")]
-#[serde(rename_all_fields = "PascalCase")]
+#[serde(tag = "type", content = "data")]
+#[serde(rename_all = "snake_case")]
 pub enum ExtShape {
     /// Axis-aligned rectangle. With its left bottom corner at (x_min, y_min), a width and height
     Rectangle {
@@ -54,7 +52,6 @@ pub enum ExtShape {
 
 /// A polygon represented as an outer boundary and a list of holes
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtPolygon {
     /// The outer boundary of the polygon
     pub outer: ExtSPolygon,
@@ -66,12 +63,10 @@ pub struct ExtPolygon {
 /// External representation of a [`SPolygon`](crate::geometry::primitives::SPolygon).
 /// A polygon with no holes and no self-intersections.
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtSPolygon(pub Vec<(f32, f32)>);
 
 /// A zone with a specific quality level
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtQualityZone {
     /// The quality level of this zone
     pub quality: usize,
@@ -82,7 +77,6 @@ pub struct ExtQualityZone {
 /// External representation of a [`Layout`](crate::entities::Layout).
 /// A layout consists of a container with items placed in a specific configuration.
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtLayout {
     /// The container that was used
     pub container_id: u64,
@@ -95,7 +89,6 @@ pub struct ExtLayout {
 /// External representation of a [`PlacedItem`](crate::entities::PlacedItem).
 /// An item placed in a container with a specific transformation.
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtPlacedItem {
     /// The id of the item in the instance
     pub item_id: u64,
@@ -105,7 +98,6 @@ pub struct ExtPlacedItem {
 
 /// Represents a proper rigid transformation defined as a rotation followed by translation
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtTransformation {
     /// The rotation angle in radians
     pub rotation: f32,

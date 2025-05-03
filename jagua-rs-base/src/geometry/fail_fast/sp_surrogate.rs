@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use crate::geometry::Transformation;
 use crate::geometry::convex_hull;
 use crate::geometry::fail_fast::{piers, pole};
@@ -6,6 +5,7 @@ use crate::geometry::geo_traits::{Transformable, TransformableFrom};
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::SPolygon;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug)]

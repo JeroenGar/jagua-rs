@@ -5,7 +5,7 @@ use jagua_rs_base::entities::Item;
 use jagua_rs_base::io::import::Importer;
 use rayon::prelude::*;
 
-use anyhow::{ensure, Result};
+use anyhow::{Result, ensure};
 
 /// Imports an instance into the library
 pub fn import(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPInstance> {

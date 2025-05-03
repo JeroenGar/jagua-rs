@@ -1,6 +1,10 @@
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEConfig;
+use jagua_rs::entities::Instance;
 use jagua_rs::geometry::fail_fast::SPSurrogateConfig;
+use jagua_rs::io::import::Importer;
+use jagua_rs::prob_variants::spp;
+use jagua_rs::prob_variants::spp::entities::{SPInstance, SPPlacement, SPProblem};
 use lbf::config::LBFConfig;
 use lbf::io;
 use lbf::opt::lbf_spp::LBFOptimizerSP;
@@ -8,18 +12,11 @@ use log::info;
 use rand::SeedableRng;
 use rand::prelude::{IteratorRandom, SmallRng};
 use std::path::Path;
-use jagua_rs::entities::Instance;
-use jagua_rs::io::import::Importer;
-use jagua_rs::prob_variants::spp;
-use jagua_rs::prob_variants::spp::entities::{SPInstance, SPPlacement, SPProblem};
 
 pub const SWIM_PATH: &str = "../assets/swim.json";
 pub const N_ITEMS_REMOVED: usize = 5;
 
-pub fn create_instance(
-    cde_config: CDEConfig,
-    poly_simpl_tolerance: Option<f32>,
-) -> SPInstance {
+pub fn create_instance(cde_config: CDEConfig, poly_simpl_tolerance: Option<f32>) -> SPInstance {
     let ext_instance = io::read_spp_instance(Path::new(SWIM_PATH)).unwrap();
     let importer = Importer::new(cde_config, poly_simpl_tolerance, None);
     spp::io::import(&importer, &ext_instance).unwrap()

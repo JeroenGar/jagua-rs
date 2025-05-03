@@ -3,13 +3,10 @@ use serde::{Deserialize, Serialize};
 
 /// Bin Packing Problem instance
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtBPInstance {
-    #[serde(rename = "Name")]
     /// The name of the instance
     pub name: String,
     /// Set of items to be produced
-    #[serde(rename = "Items")]
     pub items: Vec<ExtItem>,
     /// Set of bins to be used
     pub bins: Vec<ExtBin>,
@@ -17,7 +14,6 @@ pub struct ExtBPInstance {
 
 /// Item with a demand
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtItem {
     #[serde(flatten)]
     /// External representation of the item in the base library
@@ -28,7 +24,6 @@ pub struct ExtItem {
 
 /// Bin with a stock quantity and cost
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtBin {
     #[serde(flatten)]
     pub base: jagua_rs_base::io::ext_repr::ExtContainer,
@@ -40,7 +35,6 @@ pub struct ExtBin {
 
 /// Bin Packing Problem solution
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ExtBPSolution {
     /// Total cost of all the bins used in the solution
     pub cost: u64,

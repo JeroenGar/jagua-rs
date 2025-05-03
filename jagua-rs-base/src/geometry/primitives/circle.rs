@@ -6,10 +6,10 @@ use crate::geometry::geo_traits::{
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
+use anyhow::Result;
+use anyhow::ensure;
 use std::cmp::Ordering;
 use std::f32::consts::PI;
-use anyhow::ensure;
-use anyhow::Result;
 
 /// Circle
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -41,7 +41,8 @@ impl Circle {
             let distance_between_centers = bounding_circle.center.distance_to(&circle.center);
             if bounding_circle.radius < distance_between_centers + circle.radius {
                 // circle not contained in bounding circle, expand
-                let diameter = Edge::new(bounding_circle.center, circle.center).unwrap()
+                let diameter = Edge::new(bounding_circle.center, circle.center)
+                    .unwrap()
                     .extend_at_front(bounding_circle.radius)
                     .extend_at_back(circle.radius);
 
@@ -53,7 +54,7 @@ impl Circle {
         }
         bounding_circle
     }
-    
+
     pub fn area(&self) -> f32 {
         self.radius * self.radius * PI
     }

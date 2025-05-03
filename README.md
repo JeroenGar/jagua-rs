@@ -47,18 +47,18 @@ position without causing any *collisions*.
 - **Robust:**
   - [x] Written in pure Rust 🦀
   - [x] Designed to mimic the exact results of a naive trigonometric approach
-  - [x] Insensitive to the number of edges in the polygons 
+  - [x] Insensitive to the complexity of the shapes
   - [x] Special care is taken to handle edge cases caused by floating-point arithmetic
 - **Adaptable:**
   - [x] Define custom C&P problem variants by creating new `Instance`, `Problem` and `Solution` implementations
-  - [x] Add extra constraints by creating new `Hazards` and `HazardFilters`
+  - [x] Add additional constraints by creating new `Hazards` and `HazardFilters`
     - [x] `Hazards`: abstraction of all spatial constraints into a single model
     - [x] `HazardFilters`: excluding specific `Hazards` from consideration on a per-query basis
 - **Currently supports:**
   - [x] Bin- & strip-packing problems
   - [x] Irregular-shaped items & bins
   - [x] Continuous rotation & translation
-  - [x] Holes and inferior quality zones in the bin
+  - [x] Holes and inferior quality zones in containers
   - [x] Minimum separation distance between an item and any hazard
 
 ## `lbf` ↙️

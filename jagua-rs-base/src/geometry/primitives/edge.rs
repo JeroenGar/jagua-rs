@@ -1,11 +1,9 @@
-use anyhow::ensure;
-use anyhow::Result;
 use crate::geometry::Transformation;
-use crate::geometry::geo_traits::{
-    CollidesWith, DistanceTo, Transformable, TransformableFrom,
-};
+use crate::geometry::geo_traits::{CollidesWith, DistanceTo, Transformable, TransformableFrom};
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
+use anyhow::Result;
+use anyhow::ensure;
 
 /// Line segment between two [`Point`]s
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -103,7 +101,7 @@ impl Edge {
     pub fn y_max(&self) -> f32 {
         f32::max(self.start.1, self.end.1)
     }
-    
+
     pub fn length(&self) -> f32 {
         self.start.distance_to(&self.end)
     }
