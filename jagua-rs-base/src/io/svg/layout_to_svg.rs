@@ -31,7 +31,7 @@ pub fn layout_to_svg(
 ) -> Document {
     let container = &layout.container;
 
-    let vbox = container.outer_orig.bbox().clone().scale(1.10);
+    let vbox = container.outer_orig.bbox().scale(1.10);
 
     let theme = &options.theme;
 
@@ -119,9 +119,9 @@ pub fn layout_to_svg(
                             options.draw_cd_shapes,
                         ),
                         &[
-                            ("fill", &*format!("{}", color)),
+                            ("fill", &*format!("{color}")),
                             ("fill-opacity", "0.50"),
-                            ("stroke", &*format!("{}", stroke_color)),
+                            ("stroke", &*format!("{stroke_color}")),
                             ("stroke-width", &*format!("{}", 2.0 * stroke_width)),
                             ("stroke-opacity", &*format!("{}", theme.qz_stroke_opac)),
                             ("stroke-dasharray", &*format!("{}", 5.0 * stroke_width)),
@@ -154,8 +154,8 @@ pub fn layout_to_svg(
                         options.draw_cd_shapes,
                     ),
                     &[
-                        ("fill", &*format!("{}", color)),
-                        ("stroke-width", &*format!("{}", stroke_width)),
+                        ("fill", &*format!("{color}")),
+                        ("stroke-width", &*format!("{stroke_width}")),
                         ("fill-rule", "nonzero"),
                         ("stroke", "black"),
                         ("fill-opacity", "0.5"),
@@ -168,8 +168,7 @@ pub fn layout_to_svg(
                 false => {
                     // The original shape is drawn on the SVG, we need to inverse the pre-transform
                     let pre_transform = item.shape_orig.pre_transform.compose();
-                    let inv_pre_transform = pre_transform.inverse();
-                    inv_pre_transform
+                    pre_transform.inverse()
                 }
             };
 
@@ -179,19 +178,19 @@ pub fn layout_to_svg(
                     ("fill", "black"),
                     ("fill-opacity", "0.1"),
                     ("stroke", "black"),
-                    ("stroke-width", &*format!("{}", stroke_width)),
+                    ("stroke-width", &*format!("{stroke_width}")),
                     ("stroke-opacity", "0.8"),
                 ];
                 let ff_style = [
                     ("fill", "none"),
                     ("stroke", "black"),
-                    ("stroke-width", &*format!("{}", stroke_width)),
+                    ("stroke-width", &*format!("{stroke_width}")),
                     ("stroke-opacity", "0.8"),
                 ];
                 let no_ff_style = [
                     ("fill", "none"),
                     ("stroke", "black"),
-                    ("stroke-width", &*format!("{}", stroke_width)),
+                    ("stroke-width", &*format!("{stroke_width}")),
                     ("stroke-opacity", "0.5"),
                     ("stroke-dasharray", &*format!("{}", 5.0 * stroke_width)),
                     ("stroke-linecap", "round"),

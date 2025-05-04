@@ -21,40 +21,20 @@ jobs:
   jagua-rs-ci:
     name: jagua-rs CI
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./jagua-rs
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: fmt
         run: cargo fmt --all -- --check
-      - name: build
-        run: cargo build --all-targets
-      - name: clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-      - name: doc
-        run: cargo doc
-  lbf-ci:
-    name: lbf CI
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./lbf
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - name: fmt
-        run: cargo fmt --all -- --check
-      - name: clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-      - name: doc
-        run: cargo doc
       - name: build all features
         run: cargo build --all-targets --all-features
-      - name: build without features
+      - name: build no features
         run: cargo build --all-targets --no-default-features
+      - name: clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: doc
+        run: cargo doc
       - name: test
         run: cargo test --verbose
       - name: run README example
-        run: cargo run --profile release -- -i ../assets/swim.json -c ../assets/config_lbf.json -s ../solutions
+        run: cargo run --package lbf --profile release -- -p spp -i assets/swim.json -c assets/config_lbf.json -s solutions

@@ -114,7 +114,7 @@ fn search_layouts(
 
     //sequential search until a valid placement is found
     for layout_id in open_layouts.chain(bins_with_stock) {
-        debug!("searching in layout {:?}", layout_id);
+        debug!("searching in layout {layout_id:?}");
         let cde = match layout_id {
             BPLayoutType::Open(lkey) => problem.layouts[lkey].cde(),
             BPLayoutType::Closed { bin_id } => problem.instance.container(bin_id).base_cde.as_ref(),

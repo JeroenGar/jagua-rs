@@ -38,7 +38,7 @@ fn main() -> Result<()> {
         }
     };
 
-    info!("Successfully parsed LBFConfig: {:?}", config);
+    info!("Successfully parsed LBFConfig: {config:?}");
 
     let input_file_stem = args.input_file.file_stem().unwrap().to_str().unwrap();
 
@@ -53,7 +53,7 @@ fn main() -> Result<()> {
 
     match args.prob_var {
         ProblemVariant::BinPackingProblem => {
-            let ext_bp_instance = read_bpp_instance(&args.input_file.as_path())?;
+            let ext_bp_instance = read_bpp_instance(args.input_file.as_path())?;
             main_bpp(
                 ext_bp_instance,
                 config,
@@ -62,7 +62,7 @@ fn main() -> Result<()> {
             )
         }
         ProblemVariant::StripPackingProblem => {
-            let ext_sp_instance = read_spp_instance(&args.input_file.as_path())?;
+            let ext_sp_instance = read_spp_instance(args.input_file.as_path())?;
             main_spp(
                 ext_sp_instance,
                 config,

@@ -94,9 +94,10 @@ Concrete example:
 ```bash
 cd lbf
 cargo run --release -- \
-  -i ../assets/swim.json \
-  -c ../assets/config_lbf.json \
-  -s ../solutions
+  -i assets/swim.json \
+  -p spp \
+  -c assets/config_lbf.json \
+  -s solutions
 ```
 
 ### Input
