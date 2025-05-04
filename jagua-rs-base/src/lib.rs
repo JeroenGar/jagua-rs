@@ -1,8 +1,5 @@
-//!
-//! A fast and fearless Collision Detection Engine for 2D irregular cutting and packing problems.
-//!
-//! This library is designed to be used as a backend by optimization algorithms.
-//!
+#![doc = document_features::document_features!()]
+//! The base `jagua-rs` module containing all shared components (problem-type agnostic)
 
 /// Everything related to the Collision Detection Engine
 pub mod collision_detection;

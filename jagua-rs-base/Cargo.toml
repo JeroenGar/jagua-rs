@@ -22,10 +22,11 @@ float-cmp = {workspace = true}
 itertools = {workspace = true}
 svg = {workspace = true}
 anyhow = {workspace = true}
+document-features = {workspace = true}
 geo-offset = { version = "0.4.0", optional = true }
 geo-types = { version = "0.7.16", optional = true }
 
 [features]
 default = ["separation-distance"]
-# Enables support for defining a minimum separation distance between items and any hazard.
+## Enables support for defining a minimum separation distance between items and any hazard.
 separation-distance = ["dep:geo-offset", "dep:geo-types"]

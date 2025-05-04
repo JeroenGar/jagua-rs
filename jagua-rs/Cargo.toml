@@ -14,9 +14,14 @@ homepage.workspace = true
 jagua-rs-base = { path = "../jagua-rs-base", default-features = false}
 jagua-rs-spp = { path = "../jagua-rs-spp", optional = true }
 jagua-rs-bpp = { path = "../jagua-rs-bpp", optional = true }
+document-features = { workspace = true }
 
 [features]
 default = ["separation-distance"]
+#! Optional features
+## Enables support for defining a minimum separation distance between items and any hazard.
 separation-distance = ["jagua-rs-base/separation-distance"]
+## Enables support for the Strip Packing Problem
 spp = ["dep:jagua-rs-spp"]
+## Enables support for the Bin Packing Problem module
 bpp = ["dep:jagua-rs-bpp"]

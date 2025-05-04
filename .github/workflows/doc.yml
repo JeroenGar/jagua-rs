@@ -1,4 +1,4 @@
-name: Docs
+name: Deploy docs
 
 on:
   push:
@@ -18,9 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Build and deploy jagua-rs docs
-        run: |
-          cd lbf
-          RUSTDOCFLAGS="-D warnings" cargo doc --all
+        run: RUSTDOCFLAGS="-D warnings" cargo doc --all
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@v4
         with:
