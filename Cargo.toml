@@ -28,7 +28,6 @@ slotmap = "1.0"
 float-cmp = "0.10"
 svg = "0.18"
 anyhow = "1.0"
-once_cell = "1.21"
 fern = "0.7"
 clap = { version = "4.5", features = ["derive"] }
 test-case = "3.3"

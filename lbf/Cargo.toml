@@ -19,7 +19,6 @@ serde_json = { workspace = true }
 anyhow = { workspace = true }
 fern = { workspace = true }
 log = { workspace = true }
-once_cell = { workspace = true }
 svg = { workspace = true }
 jiff = { workspace = true }
 clap = { workspace = true }
