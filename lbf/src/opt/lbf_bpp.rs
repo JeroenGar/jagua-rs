@@ -5,7 +5,7 @@ use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::{Instance, Item};
-use jagua_rs::prob_variants::bpp::entities::{
+use jagua_rs::probs::bpp::entities::{
     BPInstance, BPLayoutType, BPPlacement, BPProblem, BPSolution,
 };
 use log::{debug, info};

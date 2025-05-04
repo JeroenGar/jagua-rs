@@ -9,8 +9,8 @@ use serde::Serialize;
 use svg::Document;
 
 use anyhow::{Context, Result};
-use jagua_rs::prob_variants::bpp::io::ext_repr::ExtBPInstance;
-use jagua_rs::prob_variants::spp::io::ext_repr::ExtSPInstance;
+use jagua_rs::probs::bpp::io::ext_repr::ExtBPInstance;
+use jagua_rs::probs::spp::io::ext_repr::ExtSPInstance;
 
 pub mod cli;
 pub mod output;

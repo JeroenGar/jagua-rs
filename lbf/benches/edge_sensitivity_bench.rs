@@ -7,7 +7,7 @@ use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::geometry::primitives::Point;
 use jagua_rs::geometry::primitives::SPolygon;
-use jagua_rs::prob_variants::spp::entities::SPInstance;
+use jagua_rs::probs::spp::entities::SPInstance;
 use lbf::config::LBFConfig;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;

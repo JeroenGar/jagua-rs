@@ -5,7 +5,7 @@ use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::Instance;
-use jagua_rs::prob_variants::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution};
+use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution};
 use log::info;
 use rand::prelude::SmallRng;
 use thousands::Separable;

@@ -4,7 +4,7 @@
 pub use jagua_rs_base::*;
 
 /// 2D irregular Cutting and Packing Problem variants.
-pub mod prob_variants {
+pub mod probs {
     /// Strip Packing Problem (SPP) module for `jagua-rs`.
     #[cfg(feature = "spp")]
     pub mod spp {

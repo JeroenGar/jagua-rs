@@ -8,7 +8,7 @@ use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, Haza
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
-use jagua_rs::prob_variants::spp::entities::SPPlacement;
+use jagua_rs::probs::spp::entities::SPPlacement;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 
 use crate::util::{N_ITEMS_REMOVED, create_base_config};

@@ -1,6 +1,6 @@
 use crate::config::LBFConfig;
-use jagua_rs::prob_variants::bpp::io::ext_repr::{ExtBPInstance, ExtBPSolution};
-use jagua_rs::prob_variants::spp::io::ext_repr::{ExtSPInstance, ExtSPSolution};
+use jagua_rs::probs::bpp::io::ext_repr::{ExtBPInstance, ExtBPSolution};
+use jagua_rs::probs::spp::io::ext_repr::{ExtSPInstance, ExtSPSolution};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]

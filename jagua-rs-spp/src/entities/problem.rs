@@ -126,6 +126,10 @@ impl SPProblem {
     pub fn density(&self) -> f32 {
         self.layout.density(&self.instance)
     }
+
+    pub fn strip_width(&self) -> f32 {
+        self.strip.width
+    }
 }
 
 /// Represents a placement of an item in the strip packing problem.

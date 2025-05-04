@@ -2,7 +2,7 @@
 mod tests {
     use anyhow::Result;
     use jagua_rs::io::import::Importer;
-    use jagua_rs::prob_variants::{bpp, spp};
+    use jagua_rs::probs::{bpp, spp};
     use lbf::config::LBFConfig;
     use lbf::io::{read_bpp_instance, read_spp_instance};
     use lbf::opt::lbf_bpp::LBFOptimizerBP;
