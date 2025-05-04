@@ -97,6 +97,7 @@ impl SPProblem {
         } else {
             // the strip has changed, rebuild the layout
             self.layout = Layout::from_snapshot(&solution.layout_snapshot);
+            self.strip = solution.strip.clone();
         }
 
         //Restore the item demands

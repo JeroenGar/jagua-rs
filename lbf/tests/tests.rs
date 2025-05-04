@@ -15,11 +15,19 @@ mod tests {
 
     const N_ITEMS_TO_REMOVE: usize = 5;
 
-    #[test_case("../assets/swim.json"; "swim")]
-    #[test_case("../assets/shirts.json"; "shirts")]
-    #[test_case("../assets/trousers.json"; "trousers")]
-    #[test_case("../assets/mao.json"; "mao")]
     #[test_case("../assets/albano.json"; "albano")]
+    #[test_case("../assets/blaz1.json"; "blaz1")]
+    #[test_case("../assets/dagli.json"; "dagli")]
+    #[test_case("../assets/fu.json"; "fu")]
+    #[test_case("../assets/jakobs1.json"; "jakobs1")]
+    #[test_case("../assets/jakobs2.json"; "jakobs2")]
+    #[test_case("../assets/mao.json"; "mao")]
+    #[test_case("../assets/marques.json"; "marques")]
+    #[test_case("../assets/shapes0.json"; "shapes0")]
+    #[test_case("../assets/shapes1.json"; "shapes1")]
+    #[test_case("../assets/shirts.json"; "shirts")]
+    #[test_case("../assets/swim.json"; "swim")]
+    #[test_case("../assets/trousers.json"; "trousers")]
     fn test_strip_packing(instance_path: &str) -> Result<()> {
         let ext_instance = read_spp_instance(Path::new(instance_path))?;
         let instance = spp::io::import(&importer(), &ext_instance)?;

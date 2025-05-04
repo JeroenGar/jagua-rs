@@ -1,15 +1,15 @@
 {
-  "Name": "Test5",
-  "Items": [
+  "name": "Test5",
+  "items": [
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_0.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 0,
+      "demand": 2,
+      "dxf": "dxf/i_0.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             1.0,
             356.0
@@ -54,14 +54,14 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_1.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 1,
+      "demand": 2,
+      "dxf": "dxf/i_1.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             832.0,
             2203.0
@@ -86,14 +86,14 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_2.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 2,
+      "demand": 2,
+      "dxf": "dxf/i_2.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             832.0,
             4.0
@@ -118,13 +118,13 @@
       }
     },
     {
-      "Demand": 4,
-      "DemandMax": 4,
-      "Dxf": "dxf/i_3.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 3,
+      "demand": 4,
+      "dxf": "dxf/i_3.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             2377.0,
             2373.0
@@ -181,13 +181,13 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_4.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 4,
+      "demand": 2,
+      "dxf": "dxf/i_4.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             815.0,
             2845.0
@@ -248,13 +248,13 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_5.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 5,
+      "demand": 2,
+      "dxf": "dxf/i_5.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             611.0,
             12.0
@@ -307,14 +307,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_6.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 6,
+      "demand": 1,
+      "dxf": "dxf/i_6.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             946.0,
             2910.0
@@ -339,14 +339,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_7.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 7,
+      "demand": 1,
+      "dxf": "dxf/i_7.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             1461.0,
             6236.0
@@ -395,14 +395,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_8.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 8,
+      "demand": 1,
+      "dxf": "dxf/i_8.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             1669.0,
             1308.0
@@ -451,14 +451,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_9.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 9,
+      "demand": 1,
+      "dxf": "dxf/i_9.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             524.0,
             3402.0
@@ -543,13 +543,13 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_10.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 10,
+      "demand": 2,
+      "dxf": "dxf/i_10.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             2289.0,
             1674.0
@@ -650,13 +650,13 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_11.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 11,
+      "demand": 2,
+      "dxf": "dxf/i_11.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             2088.0,
             23.0
@@ -749,13 +749,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_12.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 12,
+      "demand": 1,
+      "dxf": "dxf/i_12.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             2092.0,
             1603.0
@@ -808,13 +808,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_13.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 13,
+      "demand": 1,
+      "dxf": "dxf/i_13.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             1843.0,
             4372.0
@@ -839,13 +839,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_14.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 14,
+      "demand": 1,
+      "dxf": "dxf/i_14.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             170.0,
             3905.0
@@ -894,13 +894,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_15.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 15,
+      "demand": 1,
+      "dxf": "dxf/i_15.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             965.0,
             4380.0
@@ -949,13 +949,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_16.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 16,
+      "demand": 1,
+      "dxf": "dxf/i_16.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             3669.0
@@ -1012,13 +1012,13 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_17.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 17,
+      "demand": 2,
+      "dxf": "dxf/i_17.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             2151.0,
             0.0
@@ -1043,14 +1043,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_18.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 18,
+      "demand": 1,
+      "dxf": "dxf/i_18.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             3699.0,
             3563.0
@@ -1079,13 +1079,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_19.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 19,
+      "demand": 1,
+      "dxf": "dxf/i_19.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             3593.0,
             402.0
@@ -1114,13 +1114,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_20.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 20,
+      "demand": 1,
+      "dxf": "dxf/i_20.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             3643.0,
             393.0
@@ -1181,13 +1181,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_21.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 21,
+      "demand": 1,
+      "dxf": "dxf/i_21.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             447.0,
             3268.0
@@ -1248,13 +1248,13 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_22.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 22,
+      "demand": 2,
+      "dxf": "dxf/i_22.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             903.0,
             2007.0
@@ -1299,14 +1299,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_23.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 23,
+      "demand": 1,
+      "dxf": "dxf/i_23.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             609.0,
             0.0
@@ -1331,14 +1331,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_24.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 24,
+      "demand": 1,
+      "dxf": "dxf/i_24.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             304.0,
             112.0
@@ -1367,14 +1367,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_25.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 25,
+      "demand": 1,
+      "dxf": "dxf/i_25.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             946.0,
             0.0
@@ -1399,14 +1399,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_26.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 26,
+      "demand": 1,
+      "dxf": "dxf/i_26.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             428.0,
             1163.0
@@ -1455,14 +1455,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_27.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 27,
+      "demand": 1,
+      "dxf": "dxf/i_27.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             998.0,
             4.0
@@ -1499,14 +1499,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_28.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 28,
+      "demand": 1,
+      "dxf": "dxf/i_28.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             929.0,
             76.0
@@ -1539,14 +1539,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_29.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 29,
+      "demand": 1,
+      "dxf": "dxf/i_29.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             554.0,
             1442.0
@@ -1627,14 +1627,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_30.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 30,
+      "demand": 1,
+      "dxf": "dxf/i_30.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             1930.0,
             319.0
@@ -1683,13 +1683,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_31.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 31,
+      "demand": 1,
+      "dxf": "dxf/i_31.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             1796.0,
             275.0
@@ -1762,14 +1762,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_32.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 32,
+      "demand": 1,
+      "dxf": "dxf/i_32.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             1363.0,
             8.0
@@ -1850,13 +1850,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_33.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 33,
+      "demand": 1,
+      "dxf": "dxf/i_33.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             1455.0,
             18.0
@@ -1885,13 +1885,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_34.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 34,
+      "demand": 1,
+      "dxf": "dxf/i_34.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             487.0,
             0.0
@@ -1944,13 +1944,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_35.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 35,
+      "demand": 1,
+      "dxf": "dxf/i_35.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             1891.0,
             0.0
@@ -1975,13 +1975,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_36.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 36,
+      "demand": 1,
+      "dxf": "dxf/i_36.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             2.0,
             2832.0
@@ -2030,13 +2030,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_37.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 37,
+      "demand": 1,
+      "dxf": "dxf/i_37.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             799.0,
             2966.0
@@ -2085,13 +2085,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_38.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 38,
+      "demand": 1,
+      "dxf": "dxf/i_38.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             3641.0
@@ -2148,13 +2148,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_39.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 39,
+      "demand": 1,
+      "dxf": "dxf/i_39.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             3715.0,
             4625.0
@@ -2219,13 +2219,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_40.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 40,
+      "demand": 1,
+      "dxf": "dxf/i_40.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             3635.0,
             16.0
@@ -2282,14 +2282,14 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_41.dxf",
-      "BaseQuality": 1,
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 41,
+      "demand": 1,
+      "dxf": "dxf/i_41.dxf",
+      "min_quality": 1,
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             3704.0,
             0.0
@@ -2314,13 +2314,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_42.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 42,
+      "demand": 1,
+      "dxf": "dxf/i_42.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             693.0,
             12.0
@@ -2345,13 +2345,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_43.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 43,
+      "demand": 1,
+      "dxf": "dxf/i_43.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             209.0,
             0.0
@@ -2380,13 +2380,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_44.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 44,
+      "demand": 1,
+      "dxf": "dxf/i_44.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             3551.0,
             23.0
@@ -2411,13 +2411,13 @@
       }
     },
     {
-      "Demand": 1,
-      "DemandMax": 1,
-      "Dxf": "dxf/i_45.dxf",
-      "Zones": [],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "id": 45,
+      "demand": 1,
+      "dxf": "dxf/i_45.dxf",
+      "zones": [],
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             973.0,
             3565.0
@@ -2462,17 +2462,18 @@
       }
     }
   ],
-  "Objects": [
+  "bins": [
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_0.dxf",
-      "Zones": [
+      "id": 0,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_0.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 7954.0,
                 7170.0
@@ -2497,10 +2498,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 2735.0,
                 1740.0
@@ -2525,10 +2526,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3719.0,
                 8165.0
@@ -2553,10 +2554,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8185.0,
                 999.0
@@ -2601,10 +2602,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               559.0,
               5124.0
@@ -2926,7 +2927,7 @@
               5124.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 1778.0,
@@ -3202,15 +3203,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_1.dxf",
-      "Zones": [
+      "id": 1,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_1.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 9458.0,
                 8457.0
@@ -3235,10 +3237,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 4178.0,
                 7884.0
@@ -3267,10 +3269,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 4231.0,
                 2156.0
@@ -3303,10 +3305,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8765.0,
                 1105.0
@@ -3331,10 +3333,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               2765.0,
               1923.0
@@ -3624,7 +3626,7 @@
               1923.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 5945.0,
@@ -4002,15 +4004,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_2.dxf",
-      "Zones": [
+      "id": 2,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_2.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 9104.0,
                 61.0
@@ -4035,10 +4038,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 9108.0,
                 8636.0
@@ -4063,10 +4066,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 4421.0,
                 7558.0
@@ -4091,10 +4094,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3375.0,
                 820.0
@@ -4119,10 +4122,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               66.0,
               4161.0
@@ -4404,7 +4407,7 @@
               4161.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 901.0,
@@ -4816,15 +4819,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_3.dxf",
-      "Zones": [
+      "id": 3,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_3.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8428.0,
                 8382.0
@@ -4849,10 +4853,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3767.0,
                 6948.0
@@ -4877,10 +4881,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8682.0,
                 493.0
@@ -4905,10 +4909,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3633.0,
                 1452.0
@@ -4933,10 +4937,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               266.0,
               3510.0
@@ -5302,7 +5306,7 @@
               3510.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 9956.0,
@@ -5440,15 +5444,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_4.dxf",
-      "Zones": [
+      "id": 4,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_4.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8469.0,
                 580.0
@@ -5473,10 +5478,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8683.0,
                 7434.0
@@ -5501,10 +5506,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3740.0,
                 6066.0
@@ -5529,10 +5534,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3345.0,
                 1609.0
@@ -5557,10 +5562,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               1059.0,
               2626.0
@@ -5802,7 +5807,7 @@
               2626.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 7615.0,
@@ -6072,15 +6077,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_5.dxf",
-      "Zones": [
+      "id": 5,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_5.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 1345.0,
                 824.0
@@ -6105,10 +6111,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 2004.0,
                 7342.0
@@ -6137,10 +6143,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 6435.0,
                 6781.0
@@ -6165,10 +6171,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 6612.0,
                 425.0
@@ -6193,10 +6199,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               835.0,
               379.0
@@ -6470,7 +6476,7 @@
               379.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 6195.0,
@@ -6820,15 +6826,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_6.dxf",
-      "Zones": [
+      "id": 6,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_6.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 9148.0,
                 1745.0
@@ -6853,10 +6860,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 4208.0,
                 1345.0
@@ -6881,10 +6888,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 7794.0,
                 8785.0
@@ -6909,10 +6916,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 4071.0,
                 7630.0
@@ -6937,10 +6944,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               895.0,
               3003.0
@@ -7262,7 +7269,7 @@
               3003.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 8413.0,
@@ -7438,15 +7445,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_7.dxf",
-      "Zones": [
+      "id": 7,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_7.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 9501.0,
                 8450.0
@@ -7471,10 +7479,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3545.0,
                 8461.0
@@ -7499,10 +7507,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3931.0,
                 2704.0
@@ -7527,10 +7535,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 7693.0,
                 601.0
@@ -7555,10 +7563,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               999.0,
               4213.0
@@ -7948,7 +7956,7 @@
               4213.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 6182.0,
@@ -8344,15 +8352,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_8.dxf",
-      "Zones": [
+      "id": 8,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_8.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8327.0,
                 8645.0
@@ -8377,10 +8386,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3705.0,
                 7326.0
@@ -8405,10 +8414,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8213.0,
                 326.0
@@ -8433,10 +8442,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 5027.0,
                 975.0
@@ -8461,10 +8470,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               2972.0,
               326.0
@@ -8814,7 +8823,7 @@
               326.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 9067.0,
@@ -9070,15 +9079,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_9.dxf",
-      "Zones": [
+      "id": 9,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_9.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 4061.0,
                 7905.0
@@ -9107,10 +9117,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 7863.0,
                 8471.0
@@ -9135,10 +9145,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8384.0,
                 866.0
@@ -9163,10 +9173,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 2958.0,
                 1200.0
@@ -9191,10 +9201,10 @@
           }
         },
         {
-          "Quality": 2,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 2,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3247.0,
                 1642.0
@@ -9227,10 +9237,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               838.0,
               3458.0
@@ -9556,7 +9566,7 @@
               3458.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 9648.0,
@@ -9688,15 +9698,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_10.dxf",
-      "Zones": [
+      "id": 10,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_10.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8789.0,
                 8085.0
@@ -9721,10 +9732,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 4158.0,
                 8368.0
@@ -9749,10 +9760,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 4247.0,
                 1580.0
@@ -9777,10 +9788,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 9072.0,
                 309.0
@@ -9805,10 +9816,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               880.0,
               3894.0
@@ -10122,7 +10133,7 @@
               3894.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 3514.0,
@@ -10446,15 +10457,16 @@
       }
     },
     {
-      "Cost": 1,
-      "Stock": 1,
-      "Dxf": "dxf/o_11.dxf",
-      "Zones": [
+      "id": 11,
+      "cost": 1,
+      "stock": 1,
+      "dxf": "dxf/o_11.dxf",
+      "zones": [
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 7999.0,
                 7144.0
@@ -10479,10 +10491,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3545.0,
                 7329.0
@@ -10507,10 +10519,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 8346.0,
                 1439.0
@@ -10535,10 +10547,10 @@
           }
         },
         {
-          "Quality": 1,
-          "Shape": {
-            "Type": "SimplePolygon",
-            "Data": [
+          "quality": 1,
+          "shape": {
+            "type": "simple_polygon",
+            "data": [
               [
                 3821.0,
                 1649.0
@@ -10563,10 +10575,10 @@
           }
         }
       ],
-      "Shape": {
-        "Type": "Polygon",
-        "Data": {
-          "Outer": [
+      "shape": {
+        "type": "polygon",
+        "data": {
+          "outer": [
             [
               1997.0,
               0.0
@@ -10880,7 +10892,7 @@
               0.0
             ]
           ],
-          "Inner": [
+          "inner": [
             [
               [
                 9776.0,

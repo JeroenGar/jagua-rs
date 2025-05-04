@@ -1,17 +1,17 @@
 {
-  "Name": "albano",
-  "Items": [
+  "name": "albano",
+  "items": [
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_0.dxf",
-      "AllowedOrientations": [
+      "id": 0,
+      "demand": 2,
+      "dxf": "dxf/i_0.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             86.0
@@ -76,16 +76,16 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_1.dxf",
-      "AllowedOrientations": [
+      "id": 1,
+      "demand": 2,
+      "dxf": "dxf/i_1.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             0.0
@@ -110,16 +110,16 @@
       }
     },
     {
-      "Demand": 4,
-      "DemandMax": 4,
-      "Dxf": "dxf/i_2.dxf",
-      "AllowedOrientations": [
+      "id": 2,
+      "demand": 4,
+      "dxf": "dxf/i_2.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             173.0
@@ -152,16 +152,16 @@
       }
     },
     {
-      "Demand": 4,
-      "DemandMax": 4,
-      "Dxf": "dxf/i_3.dxf",
-      "AllowedOrientations": [
+      "id": 3,
+      "demand": 4,
+      "dxf": "dxf/i_3.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             74.0,
             0.0
@@ -194,16 +194,16 @@
       }
     },
     {
-      "Demand": 4,
-      "DemandMax": 4,
-      "Dxf": "dxf/i_4.dxf",
-      "AllowedOrientations": [
+      "id": 4,
+      "demand": 4,
+      "dxf": "dxf/i_4.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             0.0
@@ -244,16 +244,16 @@
       }
     },
     {
-      "Demand": 4,
-      "DemandMax": 4,
-      "Dxf": "dxf/i_5.dxf",
-      "AllowedOrientations": [
+      "id": 5,
+      "demand": 4,
+      "dxf": "dxf/i_5.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             0.0
@@ -278,16 +278,16 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_6.dxf",
-      "AllowedOrientations": [
+      "id": 6,
+      "demand": 2,
+      "dxf": "dxf/i_6.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             56.0,
             73.0
@@ -328,16 +328,16 @@
       }
     },
     {
-      "Demand": 2,
-      "DemandMax": 2,
-      "Dxf": "dxf/i_7.dxf",
-      "AllowedOrientations": [
+      "id": 7,
+      "demand": 2,
+      "dxf": "dxf/i_7.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             0.0
@@ -378,7 +378,5 @@
       }
     }
   ],
-  "Strip": {
-    "Height": 4900.0
-  }
+  "strip_height": 4900.0
 }
