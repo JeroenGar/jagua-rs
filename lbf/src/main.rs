@@ -1,33 +1,30 @@
-use std::any::Any;
 use std::fs;
 use std::fs::File;
 use std::io::BufReader;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
+use anyhow::{Context, Result};
 use clap::Parser as ClapParser;
-use jagua_rs::entities::bin_packing::BPInstance;
-use jagua_rs::entities::strip_packing::SPInstance;
-use jagua_rs::io::export::{export_bpp_solution, export_spp_solution};
-use jagua_rs::io::parse::Parser;
+use jagua_rs::io::import::Importer;
+use jagua_rs::io::svg::s_layout_to_svg;
+use jagua_rs::probs::bpp::io::ext_repr::ExtBPInstance;
+use jagua_rs::probs::spp::io::ext_repr::ExtSPInstance;
+use jagua_rs::probs::{bpp, spp};
 use lbf::config::LBFConfig;
-use lbf::io::cli::Cli;
-use lbf::io::json_output::JsonOutput;
-use lbf::io::layout_to_svg::s_layout_to_svg;
-use lbf::opt::lbf_opt_bpp::LBFOptimizerBP;
-use lbf::opt::lbf_opt_spp::LBFOptimizerSP;
-use lbf::{EPOCH, LBFInstance, LBFSolution, io};
-use log::{error, info, warn};
-use mimalloc::MiMalloc;
+use lbf::io::cli::{Cli, ProblemVariant};
+use lbf::io::output::{BPOutput, SPOutput};
+use lbf::io::{read_bpp_instance, read_spp_instance};
+use lbf::opt::lbf_bpp::LBFOptimizerBP;
+use lbf::opt::lbf_spp::LBFOptimizerSP;
+use lbf::{EPOCH, io};
+use log::{info, warn};
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
 
-#[global_allocator]
-static GLOBAL: MiMalloc = MiMalloc;
-
 //more efficient allocator
-fn main() {
+fn main() -> Result<()> {
     let args = Cli::parse();
-    io::init_logger(args.log_level);
+    io::init_logger(args.log_level)?;
 
     let config = match args.config_file {
         None => {
@@ -35,43 +32,15 @@ fn main() {
             LBFConfig::default()
         }
         Some(config_file) => {
-            let file = File::open(config_file).unwrap_or_else(|err| {
-                panic!("[MAIN] Config file could not be opened: {err}");
-            });
+            let file = File::open(config_file)?;
             let reader = BufReader::new(file);
-            serde_json::from_reader(reader).unwrap_or_else(|err| {
-                error!("Config file could not be parsed: {}", err);
-                error!("Omit the --config-file argument to use the default config");
-                panic!();
-            })
+            serde_json::from_reader(reader).context("incorrect config file format")?
         }
     };
 
-    info!("[MAIN] LBFConfig: {:?}", config);
-
-    let json_instance = io::read_json_instance(args.input_file.as_path());
-    let parser = Parser::new(
-        config.cde_config,
-        config.poly_simpl_tolerance,
-        config.min_item_separation,
-    );
-    let instance = {
-        let instance = parser.parse(&json_instance);
-        let any = instance.as_ref() as &dyn Any;
-        if let Some(spi) = any.downcast_ref::<SPInstance>() {
-            LBFInstance::SP(spi.clone())
-        } else if let Some(bpi) = any.downcast_ref::<BPInstance>() {
-            LBFInstance::BP(bpi.clone())
-        } else {
-            panic!("unsupported instance type");
-        }
-    };
+    info!("Successfully parsed LBFConfig: {config:?}");
 
     let input_file_stem = args.input_file.file_stem().unwrap().to_str().unwrap();
-
-    let solution_path = args
-        .solution_folder
-        .join(format!("sol_{input_file_stem}.json"));
 
     if !args.solution_folder.exists() {
         fs::create_dir_all(&args.solution_folder).unwrap_or_else(|_| {
@@ -82,64 +51,106 @@ fn main() {
         });
     }
 
+    match args.prob_var {
+        ProblemVariant::BinPackingProblem => {
+            let ext_bp_instance = read_bpp_instance(args.input_file.as_path())?;
+            main_bpp(
+                ext_bp_instance,
+                config,
+                input_file_stem,
+                args.solution_folder,
+            )
+        }
+        ProblemVariant::StripPackingProblem => {
+            let ext_sp_instance = read_spp_instance(args.input_file.as_path())?;
+            main_spp(
+                ext_sp_instance,
+                config,
+                input_file_stem,
+                args.solution_folder,
+            )
+        }
+    }
+}
+
+fn main_spp(
+    ext_instance: ExtSPInstance,
+    config: LBFConfig,
+    input_stem: &str,
+    output_folder: PathBuf,
+) -> Result<()> {
+    let importer = Importer::new(
+        config.cde_config,
+        config.poly_simpl_tolerance,
+        config.min_item_separation,
+    );
     let rng = match config.prng_seed {
         Some(seed) => SmallRng::seed_from_u64(seed),
         None => SmallRng::from_os_rng(),
     };
+    let instance = spp::io::import(&importer, &ext_instance)?;
+    let sol = LBFOptimizerSP::new(instance.clone(), config, rng).solve();
 
-    let solution = match &instance {
-        LBFInstance::SP(sp) => {
-            let mut optimizer = LBFOptimizerSP::new(sp.clone(), config, rng);
-            let sol = optimizer.solve();
-            LBFSolution::SP(sol)
-        }
-        LBFInstance::BP(bp) => {
-            let mut optimizer = LBFOptimizerBP::new(bp.clone(), config, rng);
-            let sol = optimizer.solve();
-            LBFSolution::BP(sol)
-        }
+    {
+        let output = SPOutput {
+            instance: ext_instance,
+            solution: spp::io::export(&instance, &sol, *EPOCH),
+            config,
+        };
+
+        let solution_path = output_folder.join(format!("sol_{input_stem}.json"));
+
+        io::write_json(&output, Path::new(&solution_path))?;
+    }
+
+    {
+        let svg_path = output_folder.join(format!("sol_{input_stem}.svg"));
+        let svg = s_layout_to_svg(&sol.layout_snapshot, &instance, config.svg_draw_options, "");
+
+        io::write_svg(&svg, Path::new(&svg_path))?;
+    }
+
+    Ok(())
+}
+
+fn main_bpp(
+    ext_instance: ExtBPInstance,
+    config: LBFConfig,
+    input_stem: &str,
+    output_folder: PathBuf,
+) -> Result<()> {
+    let importer = Importer::new(
+        config.cde_config,
+        config.poly_simpl_tolerance,
+        config.min_item_separation,
+    );
+    let rng = match config.prng_seed {
+        Some(seed) => SmallRng::seed_from_u64(seed),
+        None => SmallRng::from_os_rng(),
     };
+    let instance = bpp::io::import(&importer, &ext_instance)?;
+    let sol = LBFOptimizerBP::new(instance.clone(), config, rng).solve();
 
-    //output
-    match (&instance, &solution) {
-        (LBFInstance::SP(spi), LBFSolution::SP(sol)) => {
-            let json_sol = export_spp_solution(sol, spi, *EPOCH);
-            let json_output = JsonOutput {
-                instance: json_instance.clone(),
-                solution: json_sol,
-                config,
-            };
-            io::write_json_output(&json_output, Path::new(&solution_path));
+    {
+        let output = BPOutput {
+            instance: ext_instance,
+            solution: bpp::io::export(&instance, &sol, *EPOCH),
+            config,
+        };
 
-            let svg_path = args
-                .solution_folder
-                .join(format!("sol_{input_file_stem}.svg"));
+        let solution_path = output_folder.join(format!("sol_{input_stem}.json"));
 
-            io::write_svg(
-                &s_layout_to_svg(&sol.layout_snapshot, spi, config.svg_draw_options),
-                Path::new(&svg_path),
-            );
+        io::write_json(&output, Path::new(&solution_path))?;
+    }
+
+    {
+        for (i, s_layout) in sol.layout_snapshots.values().enumerate() {
+            let svg_path = output_folder.join(format!("sol_{input_stem}_{i}.svg"));
+            let svg = s_layout_to_svg(s_layout, &instance, config.svg_draw_options, "");
+
+            io::write_svg(&svg, Path::new(&svg_path))?;
         }
-        (LBFInstance::BP(bpi), LBFSolution::BP(sol)) => {
-            let json_sol = export_bpp_solution(sol, bpi, *EPOCH);
-            let json_output = JsonOutput {
-                instance: json_instance.clone(),
-                solution: json_sol,
-                config,
-            };
+    }
 
-            io::write_json_output(&json_output, Path::new(&solution_path));
-
-            for (i, (_, s_layout)) in sol.layout_snapshots.iter().enumerate() {
-                let svg_path = args
-                    .solution_folder
-                    .join(format!("sol_{input_file_stem}_{i}.svg"));
-                io::write_svg(
-                    &s_layout_to_svg(s_layout, bpi, config.svg_draw_options),
-                    Path::new(&svg_path),
-                );
-            }
-        }
-        _ => panic!("solution and instance types do not match"),
-    };
+    Ok(())
 }

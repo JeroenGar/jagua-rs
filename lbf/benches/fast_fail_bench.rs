@@ -1,18 +1,14 @@
-use std::fs::File;
-use std::io::BufReader;
-
-use crate::util::{N_ITEMS_REMOVED, SWIM_PATH, create_base_config};
+use crate::util::{N_ITEMS_REMOVED, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
-use jagua_rs::entities::general::Instance;
+use jagua_rs::entities::Instance;
 use jagua_rs::geometry::convex_hull;
 use jagua_rs::geometry::fail_fast::{
     SPSurrogate, SPSurrogateConfig, generate_piers, generate_surrogate_poles,
 };
-use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
+use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::geometry::primitives::SPolygon;
-use jagua_rs::io::json_instance::JsonInstance;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
@@ -33,9 +29,6 @@ const N_SAMPLES_PER_ITER: usize = 1000;
 /// Benchmark the query operation of the quadtree for different depths
 /// We validate 1000 sampled transformations for each of the 5 removed items
 fn fast_fail_query_bench(c: &mut Criterion) {
-    let json_instance: JsonInstance =
-        serde_json::from_reader(BufReader::new(File::open(SWIM_PATH).unwrap())).unwrap();
-
     let mut group = c.benchmark_group("fast_fail_query_bench");
 
     let config_combos = FF_POLES
@@ -51,11 +44,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     let mut config = create_base_config();
     config.cde_config.quadtree_depth = 5;
 
-    let instance = util::create_instance(
-        &json_instance,
-        config.cde_config,
-        config.poly_simpl_tolerance,
-    );
+    let instance = util::create_instance(config.cde_config, config.poly_simpl_tolerance);
     let (problem, _) = util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
     println!(
@@ -171,7 +160,8 @@ pub fn create_custom_surrogate(
             .map(|&i| simple_poly.vertices[i])
             .collect(),
     )
-    .area();
+    .unwrap()
+    .area;
 
     SPSurrogate {
         convex_hull_indices,

@@ -4,7 +4,7 @@ use rand_distr::Normal;
 use std::f32::consts::PI;
 
 use crate::samplers::rotation_distr::NormalRotDistr;
-use jagua_rs::entities::general::Item;
+use jagua_rs::entities::Item;
 use jagua_rs::geometry::DTransformation;
 use jagua_rs::geometry::primitives::Rect;
 

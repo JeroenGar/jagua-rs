@@ -1,35 +1,25 @@
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEConfig;
-use jagua_rs::entities::general::Instance;
-use jagua_rs::entities::strip_packing::SPPlacement;
-use jagua_rs::entities::strip_packing::{SPInstance, SPProblem};
+use jagua_rs::entities::Instance;
 use jagua_rs::geometry::fail_fast::SPSurrogateConfig;
-use jagua_rs::io::json_instance::JsonInstance;
-use jagua_rs::io::parse::Parser;
+use jagua_rs::io::import::Importer;
+use jagua_rs::probs::spp;
+use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem};
 use lbf::config::LBFConfig;
 use lbf::io;
-use lbf::io::svg_util::SvgDrawOptions;
-use lbf::opt::lbf_opt_spp::LBFOptimizerSP;
+use lbf::opt::lbf_spp::LBFOptimizerSP;
 use log::info;
 use rand::SeedableRng;
 use rand::prelude::{IteratorRandom, SmallRng};
-use std::any::Any;
 use std::path::Path;
 
 pub const SWIM_PATH: &str = "../assets/swim.json";
 pub const N_ITEMS_REMOVED: usize = 5;
 
-pub fn create_instance(
-    json_instance: &JsonInstance,
-    cde_config: CDEConfig,
-    poly_simpl_tolerance: Option<f32>,
-) -> SPInstance {
-    let parser = Parser::new(cde_config, poly_simpl_tolerance, None);
-    let instance = parser.parse(json_instance);
-    (instance.as_ref() as &dyn Any)
-        .downcast_ref::<SPInstance>()
-        .expect("Expected SPInstance")
-        .clone()
+pub fn create_instance(cde_config: CDEConfig, poly_simpl_tolerance: Option<f32>) -> SPInstance {
+    let ext_instance = io::read_spp_instance(Path::new(SWIM_PATH)).unwrap();
+    let importer = Importer::new(cde_config, poly_simpl_tolerance, None);
+    spp::io::import(&importer, &ext_instance).unwrap()
 }
 
 /// Creates a Strip Packing Problem, fill the layout using with the LBF Optimizer and removes some items from the layout
@@ -77,13 +67,13 @@ pub fn create_lbf_problem(
     }
 
     {
-        let draw_options = SvgDrawOptions {
-            quadtree: true,
-            surrogate: true,
-            ..SvgDrawOptions::default()
-        };
-        let svg = io::layout_to_svg::layout_to_svg(&problem.layout, &instance, draw_options);
-        io::write_svg(&svg, Path::new("bench_layout.svg"));
+        // let draw_options = SvgDrawOptions {
+        //     quadtree: true,
+        //     surrogate: true,
+        //     ..SvgDrawOptions::default()
+        // };
+        // let svg = layout_to_svg(&problem.layout, &instance, draw_options ,"");
+        //io::write_svg(&svg, Path::new("bench_layout.svg"));
     }
 
     (problem, p_opts)

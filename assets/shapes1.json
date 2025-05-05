@@ -1,17 +1,17 @@
 {
-  "Name": "shapes1",
-  "Items": [
+  "name": "shapes1",
+  "items": [
     {
-      "Demand": 15,
-      "DemandMax": 15,
-      "Dxf": "dxf/i_0.dxf",
-      "AllowedOrientations": [
+      "id": 0,
+      "demand": 15,
+      "dxf": "dxf/i_0.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             0.0
@@ -52,16 +52,16 @@
       }
     },
     {
-      "Demand": 7,
-      "DemandMax": 7,
-      "Dxf": "dxf/i_1.dxf",
-      "AllowedOrientations": [
+      "id": 1,
+      "demand": 7,
+      "dxf": "dxf/i_1.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             0.0
@@ -86,16 +86,16 @@
       }
     },
     {
-      "Demand": 9,
-      "DemandMax": 9,
-      "Dxf": "dxf/i_2.dxf",
-      "AllowedOrientations": [
+      "id": 2,
+      "demand": 9,
+      "dxf": "dxf/i_2.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             0.0
@@ -148,16 +148,16 @@
       }
     },
     {
-      "Demand": 12,
-      "DemandMax": 12,
-      "Dxf": "dxf/i_3.dxf",
-      "AllowedOrientations": [
+      "id": 3,
+      "demand": 12,
+      "dxf": "dxf/i_3.dxf",
+      "allowed_orientations": [
         0.0,
         180.0
       ],
-      "Shape": {
-        "Type": "SimplePolygon",
-        "Data": [
+      "shape": {
+        "type": "simple_polygon",
+        "data": [
           [
             0.0,
             0.0
@@ -214,7 +214,5 @@
       }
     }
   ],
-  "Strip": {
-    "Height": 40.0040
-  }
+  "strip_height": 40.0040
 }

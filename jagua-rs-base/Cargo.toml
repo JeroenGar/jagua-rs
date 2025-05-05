@@ -1,0 +1,32 @@
+[package]
+name = "jagua-rs-base"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description.workspace = true
+readme.workspace = true
+keywords.workspace = true
+homepage.workspace = true
+
+[dependencies]
+ndarray = {workspace = true}
+rand_distr = {workspace = true}
+serde = {workspace = true}
+ordered-float = { workspace = true }
+log = {workspace = true}
+tribool = {workspace = true}
+slotmap = {workspace = true}
+float-cmp = {workspace = true}
+itertools = {workspace = true}
+svg = {workspace = true}
+anyhow = {workspace = true}
+document-features = {workspace = true}
+geo-offset = { version = "0.4.0", optional = true }
+geo-types = { version = "0.7.16", optional = true }
+
+[features]
+default = ["separation-distance"]
+## Enables support for defining a minimum separation distance between items and any hazard.
+separation-distance = ["dep:geo-offset", "dep:geo-types"]

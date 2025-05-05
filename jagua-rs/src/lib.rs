@@ -3,18 +3,27 @@
 //!
 //! This library is designed to be used as a backend by optimization algorithms.
 //!
+//! All logic agnostic to a specific problem variant is implemented in the `jagua-rs-base` module.
+//! Specific problem variants can be added by enabling the corresponding feature flag in your `Cargo.toml`.
+//!
+#![doc = document_features::document_features!()]
 
-/// Everything related to the Collision Detection Engine
-pub mod collision_detection;
+#[doc(inline)]
+pub use jagua_rs_base::*;
 
-/// Entities to model 2D Irregular Cutting and Packing Problems
-pub mod entities;
+/// Enabled variants of the 2D irregular Cutting and Packing Problem.
+pub mod probs {
+    /// Strip Packing Problem (SPP) module for `jagua-rs`.
+    #[cfg(feature = "spp")]
+    pub mod spp {
+        #[doc(inline)]
+        pub use jagua_rs_spp::*;
+    }
 
-/// Geometric primitives and base algorithms
-pub mod geometry;
-
-/// Importing problem instances into and exporting solutions out of this library
-pub mod io;
-
-/// Helper functions which do not belong to any specific module
-pub mod util;
+    /// Bin Packing Problem (BPP) module for `jagua-rs`.
+    #[cfg(feature = "bpp")]
+    pub mod bpp {
+        #[doc(inline)]
+        pub use jagua_rs_bpp::*;
+    }
+}

@@ -1,60 +1,38 @@
 #[cfg(test)]
 mod tests {
-    use std::any::Any;
-    use std::path::Path;
-
-    use jagua_rs::entities::bin_packing::BPInstance;
-    use jagua_rs::entities::strip_packing::SPInstance;
-    use jagua_rs::io::parse::Parser;
+    use anyhow::Result;
+    use jagua_rs::io::import::Importer;
+    use jagua_rs::probs::{bpp, spp};
     use lbf::config::LBFConfig;
-    use lbf::io;
-    use lbf::opt::lbf_opt_bpp::LBFOptimizerBP;
-    use lbf::opt::lbf_opt_spp::LBFOptimizerSP;
+    use lbf::io::{read_bpp_instance, read_spp_instance};
+    use lbf::opt::lbf_bpp::LBFOptimizerBP;
+    use lbf::opt::lbf_spp::LBFOptimizerSP;
     use rand::SeedableRng;
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;
+    use std::path::Path;
     use test_case::test_case;
 
     const N_ITEMS_TO_REMOVE: usize = 5;
 
-    #[test_case("../assets/swim.json"; "swim")]
-    #[test_case("../assets/shirts.json"; "shirts")]
-    #[test_case("../assets/trousers.json"; "trousers")]
-    #[test_case("../assets/mao.json"; "mao")]
     #[test_case("../assets/albano.json"; "albano")]
-    #[test_case("../assets/baldacci1.json"; "baldacci1")]
-    #[test_case("../assets/baldacci2.json"; "baldacci2")]
-    #[test_case("../assets/baldacci3.json"; "baldacci3")]
-    #[test_case("../assets/baldacci4.json"; "baldacci4")]
-    #[test_case("../assets/baldacci5.json"; "baldacci5")]
-    #[test_case("../assets/baldacci6.json"; "baldacci6")]
-    fn test_instance(instance_path: &str) {
-        let instance = Path::new(instance_path);
-        // parse the instance
-        let config = LBFConfig {
-            n_samples: 100,
-            ..LBFConfig::default()
-        };
-        let json_instance = io::read_json_instance(instance);
+    #[test_case("../assets/blaz1.json"; "blaz1")]
+    #[test_case("../assets/dagli.json"; "dagli")]
+    #[test_case("../assets/fu.json"; "fu")]
+    #[test_case("../assets/jakobs1.json"; "jakobs1")]
+    #[test_case("../assets/jakobs2.json"; "jakobs2")]
+    #[test_case("../assets/mao.json"; "mao")]
+    #[test_case("../assets/marques.json"; "marques")]
+    #[test_case("../assets/shapes0.json"; "shapes0")]
+    #[test_case("../assets/shapes1.json"; "shapes1")]
+    #[test_case("../assets/shirts.json"; "shirts")]
+    #[test_case("../assets/swim.json"; "swim")]
+    #[test_case("../assets/trousers.json"; "trousers")]
+    fn test_strip_packing(instance_path: &str) -> Result<()> {
+        let ext_instance = read_spp_instance(Path::new(instance_path))?;
+        let instance = spp::io::import(&importer(), &ext_instance)?;
 
-        let parser = Parser::new(
-            config.cde_config,
-            config.poly_simpl_tolerance,
-            config.min_item_separation,
-        );
-        let instance = parser.parse(&json_instance);
-        let any_instance = instance.as_ref() as &dyn Any;
-        if let Some(sp_instance) = any_instance.downcast_ref::<SPInstance>() {
-            test_strip_packing(sp_instance.clone(), config);
-        } else if let Some(bp_instance) = any_instance.downcast_ref::<BPInstance>() {
-            test_bin_packing(bp_instance.clone(), config);
-        } else {
-            panic!("Unknown instance type");
-        }
-    }
-
-    fn test_strip_packing(instance: SPInstance, config: LBFConfig) {
-        let mut opt = LBFOptimizerSP::new(instance, config, SmallRng::seed_from_u64(0));
+        let mut opt = LBFOptimizerSP::new(instance, config(), SmallRng::seed_from_u64(0));
 
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -89,10 +67,20 @@ mod tests {
             // third optimization run
             opt.solve();
         }
+        Ok(())
     }
 
-    fn test_bin_packing(instance: BPInstance, config: LBFConfig) {
-        let mut opt = LBFOptimizerBP::new(instance, config, SmallRng::seed_from_u64(0));
+    #[test_case("../assets/baldacci1.json"; "baldacci1")]
+    #[test_case("../assets/baldacci2.json"; "baldacci2")]
+    #[test_case("../assets/baldacci3.json"; "baldacci3")]
+    #[test_case("../assets/baldacci4.json"; "baldacci4")]
+    #[test_case("../assets/baldacci5.json"; "baldacci5")]
+    #[test_case("../assets/baldacci6.json"; "baldacci6")]
+    fn test_bin_packing(instance_path: &str) -> Result<()> {
+        let ext_instance = read_bpp_instance(Path::new(instance_path))?;
+        let instance = bpp::io::import(&importer(), &ext_instance)?;
+
+        let mut opt = LBFOptimizerBP::new(instance, config(), SmallRng::seed_from_u64(0));
 
         let mut rng = SmallRng::seed_from_u64(0);
 
@@ -128,5 +116,21 @@ mod tests {
             // third optimization run
             opt.solve();
         }
+        Ok(())
+    }
+
+    fn config() -> LBFConfig {
+        LBFConfig {
+            n_samples: 100,
+            ..LBFConfig::default()
+        }
+    }
+
+    fn importer() -> Importer {
+        Importer::new(
+            config().cde_config,
+            config().poly_simpl_tolerance,
+            config().min_item_separation,
+        )
     }
 }
