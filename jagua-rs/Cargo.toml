@@ -23,5 +23,5 @@ default = ["separation-distance"]
 separation-distance = ["jagua-rs-base/separation-distance"]
 ## Enables support for the Strip Packing Problem
 spp = ["dep:jagua-rs-spp"]
-## Enables support for the Bin Packing Problem module
+## Enables support for the Bin Packing Problem
 bpp = ["dep:jagua-rs-bpp"]
