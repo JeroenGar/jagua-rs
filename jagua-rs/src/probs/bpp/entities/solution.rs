@@ -3,7 +3,7 @@ use crate::probs::bpp::entities::{BPInstance, LayKey};
 use slotmap::SecondaryMap;
 use std::time::Instant;
 
-/// Snapshot of [`BPProblem`](crate::entities::BPProblem) at a specific moment.
+/// Snapshot of [`BPProblem`](crate::probs::bpp::entities::BPProblem) at a specific moment.
 /// Can be used to restore to a previous state.
 #[derive(Debug, Clone)]
 pub struct BPSolution {
