@@ -24,7 +24,7 @@ jobs:
         with:
           token: ${{ secrets.DOCS_PAT }}
           branch: gh-pages
-          folder: lbf/target/doc
+          folder: target/doc
           clean: true
           repository-name: JeroenGar/jagua-rs-docs
           commit-message: "auto deploy docs"
