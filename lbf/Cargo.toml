@@ -1,14 +1,13 @@
 [package]
 name = "lbf"
 description = "Left Bottom Fill reference implementation for jagua-rs"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-authors.workspace = true
-readme.workspace = true
-keywords.workspace = true
-homepage.workspace = true
+edition = "2024"
+license = "MPL-2.0"
+repository = "https://github.com/JeroenGar/jagua-rs"
+authors = ["Jeroen Gardeyn"]
+readme = "../README.md"
+keywords = ["nesting", "packing", "strip", "bin", "irregular"]
+homepage = "https://github.com/JeroenGar/jagua-rs"
 
 [dependencies]
 jagua-rs = { path = "../jagua-rs", features = ["spp", "bpp"] }

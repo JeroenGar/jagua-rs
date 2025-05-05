@@ -6,7 +6,7 @@ license = "MPL-2.0"
 repository = "https://github.com/JeroenGar/jagua-rs"
 authors = ["Jeroen Gardeyn"]
 description = "A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems"
-readme = "README.md"
+readme = "../README.md"
 keywords = ["nesting", "packing", "strip", "bin", "irregular"]
 homepage = "https://github.com/JeroenGar/jagua-rs"
 
