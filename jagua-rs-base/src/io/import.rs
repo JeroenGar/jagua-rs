@@ -48,7 +48,7 @@ impl Importer {
                     width,
                     height,
                 } => {
-                    let rect = Rect::new(*x_min, *y_min, x_min + width, y_min + height)?;
+                    let rect = Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)?;
                     SPolygon::from(rect)
                 }
                 ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp))?,
@@ -102,7 +102,7 @@ impl Importer {
                     y_min,
                     width,
                     height,
-                } => Rect::new(*x_min, *y_min, x_min + width, y_min + height)?.into(),
+                } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)?.into(),
                 ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp))?,
                 ExtShape::Polygon(jp) => SPolygon::new(ext_spoly_to_points(&jp.outer))?,
                 ExtShape::MultiPolygon(_) => {
@@ -143,7 +143,7 @@ impl Importer {
                             y_min,
                             width,
                             height,
-                        } => Rect::new(*x_min, *y_min, x_min + width, y_min + height)
+                        } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)
                             .map(|r| r.into()),
                         ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp)),
                         ExtShape::Polygon(_) => {

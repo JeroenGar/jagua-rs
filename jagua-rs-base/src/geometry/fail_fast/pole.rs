@@ -18,7 +18,7 @@ pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Circle {
     while let Some(node) = queue.pop_front() {
         //check if better than current best
         if node.distance > distance(&best) {
-            best = Some(Circle::new(node.bbox.centroid(), node.distance).unwrap());
+            best = Some(Circle::try_new(node.bbox.centroid(), node.distance).unwrap());
         }
 
         //see if worth it to split

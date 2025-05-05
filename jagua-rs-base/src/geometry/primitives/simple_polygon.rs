@@ -82,8 +82,12 @@ impl SPolygon {
     }
 
     pub fn edge(&self, i: usize) -> Edge {
-        let j = (i + 1) % self.n_vertices();
-        Edge::new(self.vertices[i], self.vertices[j]).unwrap()
+        assert!(i < self.n_vertices(), "index out of bounds");
+        let j = if i == self.n_vertices() - 1 { 0 } else { i + 1 };
+        Edge {
+            start: self.vertices[i],
+            end: self.vertices[j],
+        }
     }
 
     pub fn edge_iter(&self) -> impl Iterator<Item = Edge> + '_ {
@@ -123,7 +127,7 @@ impl SPolygon {
             x_max = x_max.max(point.0);
             y_max = y_max.max(point.1);
         }
-        Rect::new(x_min, y_min, x_max, y_max).unwrap()
+        Rect::try_new(x_min, y_min, x_max, y_max).unwrap()
     }
 
     //https://en.wikipedia.org/wiki/Shoelace_formula
@@ -149,7 +153,7 @@ impl SPolygon {
         let dummy_sp = {
             let bbox = SPolygon::generate_bounding_box(points);
             let area = SPolygon::calculate_area(points);
-            let dummy_poi = Circle::new(Point(f32::MAX, f32::MAX), f32::MAX).unwrap();
+            let dummy_poi = Circle::try_new(Point(f32::MAX, f32::MAX), f32::MAX).unwrap();
 
             SPolygon {
                 vertices: points.to_vec(),
@@ -255,7 +259,10 @@ impl CollidesWith<Point> for SPolygon {
                 //horizontal ray shot to the right.
                 //Starting from the point to another point that is certainly outside the shape
                 let point_outside = Point(self.bbox.x_max + self.bbox.width(), point.1);
-                let ray = Edge::new(*point, point_outside).unwrap();
+                let ray = Edge {
+                    start: *point,
+                    end: point_outside,
+                };
 
                 let mut n_intersections = 0;
                 for edge in self.edge_iter() {

@@ -13,7 +13,7 @@ pub struct Edge {
 }
 
 impl Edge {
-    pub fn new(start: Point, end: Point) -> Result<Self> {
+    pub fn try_new(start: Point, end: Point) -> Result<Self> {
         ensure!(start != end, "degenerate edge, {start:?} == {end:?}");
         Ok(Edge { start, end })
     }

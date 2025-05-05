@@ -20,7 +20,7 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub fn new(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> Result<Self> {
+    pub fn try_new(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> Result<Self> {
         ensure!(
             x_min < x_max && y_min < y_max,
             "invalid rectangle, x_min: {x_min}, x_max: {x_max}, y_min: {y_min}, y_max: {y_max}"
@@ -38,7 +38,7 @@ impl Rect {
         let y_min = f32::min(c1.y(), c2.y());
         let x_max = f32::max(c1.x(), c2.x());
         let y_max = f32::max(c1.y(), c2.y());
-        Rect::new(x_min, y_min, x_max, y_max)
+        Rect::try_new(x_min, y_min, x_max, y_max)
     }
 
     /// Returns the geometric relation between `self` and another [`Rect`].
@@ -100,13 +100,12 @@ impl Rect {
         } else if width < height {
             dx = (height - width) / 2.0;
         }
-        Rect::new(
-            self.x_min - dx,
-            self.y_min - dy,
-            self.x_max + dx,
-            self.y_max + dy,
-        )
-        .unwrap()
+        Rect {
+            x_min: self.x_min - dx,
+            y_min: self.y_min - dy,
+            x_max: self.x_max + dx,
+            y_max: self.y_max + dy,
+        }
     }
 
     /// Returns a new rectangle with the same centroid but scaled by `factor`.
@@ -165,10 +164,22 @@ impl Rect {
     pub fn edges(&self) -> [Edge; 4] {
         let c = self.corners();
         [
-            Edge::new(c[0], c[1]).unwrap(),
-            Edge::new(c[1], c[2]).unwrap(),
-            Edge::new(c[2], c[3]).unwrap(),
-            Edge::new(c[3], c[0]).unwrap(),
+            Edge {
+                start: c[0],
+                end: c[1],
+            },
+            Edge {
+                start: c[1],
+                end: c[2],
+            },
+            Edge {
+                start: c[2],
+                end: c[3],
+            },
+            Edge {
+                start: c[3],
+                end: c[0],
+            },
         ]
     }
     pub fn width(&self) -> f32 {
@@ -186,7 +197,12 @@ impl Rect {
         let x_max = f32::min(a.x_max, b.x_max);
         let y_max = f32::min(a.y_max, b.y_max);
         if x_min < x_max && y_min < y_max {
-            Some(Rect::new(x_min, y_min, x_max, y_max).unwrap())
+            Some(Rect {
+                x_min,
+                y_min,
+                x_max,
+                y_max,
+            })
         } else {
             None
         }
@@ -198,7 +214,12 @@ impl Rect {
         let y_min = f32::min(a.y_min, b.y_min);
         let x_max = f32::max(a.x_max, b.x_max);
         let y_max = f32::max(a.y_max, b.y_max);
-        Rect::new(x_min, y_min, x_max, y_max).unwrap()
+        Rect {
+            x_min,
+            y_min,
+            x_max,
+            y_max,
+        }
     }
 
     pub fn centroid(&self) -> Point {

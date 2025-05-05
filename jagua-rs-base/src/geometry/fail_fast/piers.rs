@@ -30,7 +30,7 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge>
     let expanded_bbox = bbox.clone().inflate_to_square();
     let centroid = shape.centroid();
     //vertical ray from the centroid
-    let base_ray = Edge::new(
+    let base_ray = Edge::try_new(
         Point(centroid.0, centroid.1 - 2.0 * expanded_bbox.height()),
         Point(centroid.0, centroid.1 + 2.0 * expanded_bbox.height()),
     )
@@ -140,7 +140,7 @@ fn clip(shape: &SPolygon, ray: &Edge) -> Vec<Edge> {
             let start = pair[0];
             let end = pair[1];
             if start != end {
-                Some(Edge::new(start, end).unwrap().scale(CLIPPING_TRIM))
+                Some(Edge::try_new(start, end).unwrap().scale(CLIPPING_TRIM))
             } else {
                 None
             }

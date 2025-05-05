@@ -177,7 +177,7 @@ fn candidate_is_valid(shape: &[Point], candidate: &Candidate) -> bool {
     match candidate {
         Candidate::Collinear(_) => true,
         Candidate::Concave(c) => {
-            let new_edge = Edge::new(shape[c.0], shape[c.2]).unwrap();
+            let new_edge = Edge::try_new(shape[c.0], shape[c.2]).unwrap();
             let affected_points = [shape[c.0], shape[c.1], shape[c.2]];
 
             //check for self-intersections
@@ -190,8 +190,8 @@ fn candidate_is_valid(shape: &[Point], candidate: &Candidate) -> bool {
             match replacing_vertex_convex_convex_candidate(shape, (*c1, *c2)) {
                 Err(_) => false,
                 Ok(new_vertex) => {
-                    let new_edge_1 = Edge::new(shape[c1.0], new_vertex).unwrap();
-                    let new_edge_2 = Edge::new(new_vertex, shape[c2.2]).unwrap();
+                    let new_edge_1 = Edge::try_new(shape[c1.0], new_vertex).unwrap();
+                    let new_edge_2 = Edge::try_new(new_vertex, shape[c2.2]).unwrap();
 
                     let affected_points = [shape[c1.1], shape[c1.0], shape[c2.1], shape[c2.2]];
 
@@ -210,7 +210,7 @@ fn edge_iter(points: &[Point]) -> impl Iterator<Item = Edge> + '_ {
     let n_points = points.len();
     (0..n_points).map(move |i| {
         let j = (i + 1) % n_points;
-        Edge::new(points[i], points[j]).unwrap()
+        Edge::try_new(points[i], points[j]).unwrap()
     })
 }
 
@@ -239,8 +239,8 @@ fn replacing_vertex_convex_convex_candidate(
     assert_eq!(c1.2, c2.1, "non-consecutive corners {c1:?},{c2:?}");
     assert_eq!(c1.1, c2.0, "non-consecutive corners {c1:?},{c2:?}");
 
-    let edge_prev = Edge::new(shape[c1.0], shape[c1.1]).unwrap();
-    let edge_next = Edge::new(shape[c2.2], shape[c2.1]).unwrap();
+    let edge_prev = Edge::try_new(shape[c1.0], shape[c1.1]).unwrap();
+    let edge_next = Edge::try_new(shape[c2.2], shape[c2.1]).unwrap();
 
     calculate_intersection_in_front(&edge_prev, &edge_next).ok_or(InvalidCandidate)
 }

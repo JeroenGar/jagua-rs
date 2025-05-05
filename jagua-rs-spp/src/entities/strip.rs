@@ -38,7 +38,7 @@ impl From<Strip> for Container {
         Container::new(
             0,
             OriginalShape {
-                shape: SPolygon::from(Rect::new(0.0, 0.0, s.width, s.fixed_height).unwrap()),
+                shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.width, s.fixed_height).unwrap()),
                 pre_transform: DTransformation::empty(),
                 modify_mode: ShapeModifyMode::Deflate,
                 modify_config: s.shape_modify_config,

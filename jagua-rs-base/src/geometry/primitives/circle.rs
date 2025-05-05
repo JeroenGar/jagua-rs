@@ -19,7 +19,7 @@ pub struct Circle {
 }
 
 impl Circle {
-    pub fn new(center: Point, radius: f32) -> Result<Self> {
+    pub fn try_new(center: Point, radius: f32) -> Result<Self> {
         ensure!(
             radius.is_finite() && radius >= 0.0,
             "invalid circle radius: {radius}",
@@ -41,15 +41,17 @@ impl Circle {
             let distance_between_centers = bounding_circle.center.distance_to(&circle.center);
             if bounding_circle.radius < distance_between_centers + circle.radius {
                 // circle not contained in bounding circle, expand
-                let diameter = Edge::new(bounding_circle.center, circle.center)
-                    .unwrap()
-                    .extend_at_front(bounding_circle.radius)
-                    .extend_at_back(circle.radius);
+                let diameter = Edge {
+                    start: bounding_circle.center,
+                    end: circle.center,
+                }
+                .extend_at_front(bounding_circle.radius)
+                .extend_at_back(circle.radius);
 
-                let new_radius = diameter.length() / 2.0;
-                let new_center = diameter.centroid();
-
-                bounding_circle = Circle::new(new_center, new_radius).unwrap();
+                bounding_circle = Circle {
+                    center: diameter.centroid(),
+                    radius: diameter.length() / 2.0,
+                }
             }
         }
         bounding_circle
@@ -61,7 +63,12 @@ impl Circle {
 
     pub fn bbox(&self) -> Rect {
         let (r, x, y) = (self.radius, self.center.0, self.center.1);
-        Rect::new(x - r, y - r, x + r, y + r).unwrap()
+        Rect {
+            x_min: x - r,
+            y_min: y - r,
+            x_max: x + r,
+            y_max: y + r,
+        }
     }
 
     pub fn diameter(&self) -> f32 {
