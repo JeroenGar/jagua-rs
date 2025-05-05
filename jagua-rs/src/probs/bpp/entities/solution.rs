@@ -1,5 +1,5 @@
-use crate::entities::{BPInstance, LayKey};
-use jagua_rs_base::entities::LayoutSnapshot;
+use crate::entities::LayoutSnapshot;
+use crate::probs::bpp::entities::{BPInstance, LayKey};
 use slotmap::SecondaryMap;
 use std::time::Instant;
 

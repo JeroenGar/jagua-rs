@@ -1,6 +1,4 @@
-//! The Bin Packing Problem (BPP) module for `jagua-rs`
-
-/// Entities to model the Bin Packing Problem (BPP)
+/// Entities to model the Strip Packing Problem (SPP)
 pub mod entities;
 
 /// Importing problem instances into and exporting solutions out of this library

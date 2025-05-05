@@ -1,4 +1,4 @@
-use jagua_rs_base::entities::Container;
+use crate::entities::Container;
 
 #[derive(Debug, Clone)]
 pub struct Bin {

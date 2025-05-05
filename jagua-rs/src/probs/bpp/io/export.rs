@@ -1,6 +1,6 @@
-use crate::entities::{BPInstance, BPSolution};
-use crate::io::ext_repr::ExtBPSolution;
-use jagua_rs_base::io::export::export_layout_snapshot;
+use crate::io::export::export_layout_snapshot;
+use crate::probs::bpp::entities::{BPInstance, BPSolution};
+use crate::probs::bpp::io::ext_repr::ExtBPSolution;
 use std::time::Instant;
 
 /// Exports a solution out of the library

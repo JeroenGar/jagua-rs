@@ -1,8 +1,8 @@
-use crate::entities::{BPInstance, Bin};
-use crate::io::ext_repr::ExtBPInstance;
+use crate::entities::Item;
+use crate::io::import::Importer;
+use crate::probs::bpp::entities::{BPInstance, Bin};
+use crate::probs::bpp::io::ext_repr::ExtBPInstance;
 use itertools::Itertools;
-use jagua_rs_base::entities::Item;
-use jagua_rs_base::io::import::Importer;
 use rayon::prelude::*;
 
 use anyhow::{Result, ensure};

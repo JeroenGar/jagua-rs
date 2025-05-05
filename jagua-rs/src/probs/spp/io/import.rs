@@ -1,10 +1,10 @@
-use crate::entities::{SPInstance, Strip};
-use crate::io::ext_repr::ExtSPInstance;
+use crate::entities::Item;
+use crate::geometry::shape_modification::ShapeModifyConfig;
+use crate::io::import::Importer;
+use crate::probs::spp::entities::{SPInstance, Strip};
+use crate::probs::spp::io::ext_repr::ExtSPInstance;
 use anyhow::{Result, ensure};
 use itertools::Itertools;
-use jagua_rs_base::entities::Item;
-use jagua_rs_base::geometry::shape_modification::ShapeModifyConfig;
-use jagua_rs_base::io::import::Importer;
 use rayon::prelude::*;
 
 /// Imports an instance into the library

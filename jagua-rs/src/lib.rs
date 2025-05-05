@@ -5,22 +5,20 @@
 
 #![doc = document_features::document_features!()]
 
-#[doc(inline)]
-pub use jagua_rs_base::*;
+/// Everything related to the Collision Detection Engine
+pub mod collision_detection;
+
+/// Entities to model 2D Irregular Cutting and Packing Problems
+pub mod entities;
+
+/// Geometric primitives and base algorithms
+pub mod geometry;
+
+/// Importing problem instances into and exporting solutions out of this library
+pub mod io;
+
+/// Helper functions which do not belong to any specific module
+pub mod util;
 
 /// Enabled variants of the 2D irregular Cutting and Packing Problem.
-pub mod probs {
-    /// Strip Packing Problem (SPP) module for `jagua-rs`.
-    #[cfg(feature = "spp")]
-    pub mod spp {
-        #[doc(inline)]
-        pub use jagua_rs_spp::*;
-    }
-
-    /// Bin Packing Problem (BPP) module for `jagua-rs`.
-    #[cfg(feature = "bpp")]
-    pub mod bpp {
-        #[doc(inline)]
-        pub use jagua_rs_bpp::*;
-    }
-}
+pub mod probs;

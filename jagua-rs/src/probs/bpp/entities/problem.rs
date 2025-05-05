@@ -1,11 +1,11 @@
-use crate::entities::BPInstance;
-use crate::entities::BPSolution;
-use crate::util::assertions::problem_matches_solution;
+use crate::entities::Instance;
+use crate::entities::Layout;
+use crate::entities::{PItemKey, PlacedItem};
+use crate::geometry::DTransformation;
+use crate::probs::bpp::entities::BPInstance;
+use crate::probs::bpp::entities::BPSolution;
+use crate::probs::bpp::util::assertions::problem_matches_solution;
 use itertools::Itertools;
-use jagua_rs_base::entities::Instance;
-use jagua_rs_base::entities::Layout;
-use jagua_rs_base::entities::{PItemKey, PlacedItem};
-use jagua_rs_base::geometry::DTransformation;
 use slotmap::{SlotMap, new_key_type};
 use std::time::Instant;
 
@@ -231,7 +231,7 @@ impl BPProblem {
 }
 
 #[derive(Clone, Debug, Copy)]
-/// Encapsulates all required information to place an [`Item`](jagua_rs_base::entities::Item) in a [`BPProblem`].
+/// Encapsulates all required information to place an [`Item`](crate::entities::Item) in a [`BPProblem`].
 pub struct BPPlacement {
     /// Which layout to place the item in
     pub layout_id: BPLayoutType,

@@ -1,27 +1,37 @@
 [package]
 name = "jagua-rs"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-authors.workspace = true
-description.workspace = true
-readme.workspace = true
-keywords.workspace = true
-homepage.workspace = true
+version = "0.5.0"
+edition = "2024"
+license = "MPL-2.0"
+repository = "https://github.com/JeroenGar/jagua-rs"
+authors = ["Jeroen Gardeyn"]
+description = "A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems"
+readme = "README.md"
+keywords = ["nesting", "packing", "strip", "bin", "irregular"]
+homepage = "https://github.com/JeroenGar/jagua-rs"
 
 [dependencies]
-jagua-rs-base = { path = "../jagua-rs-base", default-features = false}
-jagua-rs-spp = { path = "../jagua-rs-spp", optional = true }
-jagua-rs-bpp = { path = "../jagua-rs-bpp", optional = true }
-document-features = { workspace = true }
+ndarray = {workspace = true}
+rand_distr = {workspace = true}
+serde = {workspace = true}
+ordered-float = { workspace = true }
+log = {workspace = true}
+tribool = {workspace = true}
+slotmap = {workspace = true}
+float-cmp = {workspace = true}
+itertools = {workspace = true}
+svg = {workspace = true}
+anyhow = {workspace = true}
+document-features = {workspace = true}
+rayon = { workspace = true }
+geo-offset = { version = "0.4.0", optional = true }
+geo-types = { version = "0.7.16", optional = true }
 
 [features]
 default = ["separation-distance"]
-#! Optional features
 ## Enables support for defining a minimum separation distance between items and any hazard.
-separation-distance = ["jagua-rs-base/separation-distance"]
+separation-distance = ["dep:geo-offset", "dep:geo-types"]
 ## Enables support for the Strip Packing Problem
-spp = ["dep:jagua-rs-spp"]
+spp = []
 ## Enables support for the Bin Packing Problem
-bpp = ["dep:jagua-rs-bpp"]
+bpp = []

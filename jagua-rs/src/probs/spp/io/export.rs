@@ -1,6 +1,6 @@
-use crate::entities::{SPInstance, SPSolution};
-use crate::io::ext_repr::ExtSPSolution;
-use jagua_rs_base::io::export::export_layout_snapshot;
+use crate::io::export::export_layout_snapshot;
+use crate::probs::spp::entities::{SPInstance, SPSolution};
+use crate::probs::spp::io::ext_repr::ExtSPSolution;
 use std::time::Instant;
 
 /// Exports a solution out of the library

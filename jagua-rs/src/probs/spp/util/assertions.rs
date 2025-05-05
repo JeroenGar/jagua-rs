@@ -1,6 +1,6 @@
-use crate::entities::{SPProblem, SPSolution};
-use jagua_rs_base::entities::Item;
-use jagua_rs_base::util::assertions::layouts_match;
+use crate::entities::Item;
+use crate::probs::spp::entities::{SPProblem, SPSolution};
+use crate::util::assertions::layouts_match;
 
 pub fn problem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
     let SPSolution {

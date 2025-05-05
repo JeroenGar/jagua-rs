@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["jagua-rs-base", "jagua-rs-bpp", "jagua-rs-spp", "jagua-rs", "lbf"]
+members = ["jagua-rs", "lbf"]
 
 [workspace.package]
 version = "0.5.0"

@@ -1,6 +1,6 @@
-use crate::entities::{BPProblem, BPSolution, Bin};
-use jagua_rs_base::entities::Item;
-use jagua_rs_base::util::assertions::layouts_match;
+use crate::entities::Item;
+use crate::probs::bpp::entities::{BPProblem, BPSolution, Bin};
+use crate::util::assertions::layouts_match;
 
 pub fn problem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
     let BPSolution {

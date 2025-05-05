@@ -1,6 +1,6 @@
-use crate::entities::strip::Strip;
-use crate::util::assertions;
-use jagua_rs_base::entities::{Container, Instance, Item};
+use crate::entities::{Container, Instance, Item};
+use crate::probs::spp::entities::Strip;
+use crate::probs::spp::util::assertions;
 use std::iter;
 
 #[derive(Debug, Clone)]

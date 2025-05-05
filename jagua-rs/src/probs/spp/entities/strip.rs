@@ -1,9 +1,9 @@
+use crate::collision_detection::CDEConfig;
+use crate::entities::Container;
+use crate::geometry::primitives::{Rect, SPolygon};
+use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
+use crate::geometry::{DTransformation, OriginalShape};
 use anyhow::{Result, ensure};
-use jagua_rs_base::collision_detection::CDEConfig;
-use jagua_rs_base::entities::Container;
-use jagua_rs_base::geometry::primitives::{Rect, SPolygon};
-use jagua_rs_base::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
-use jagua_rs_base::geometry::{DTransformation, OriginalShape};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub struct Strip {

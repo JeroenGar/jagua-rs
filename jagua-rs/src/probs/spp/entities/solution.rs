@@ -1,6 +1,6 @@
-use crate::entities::SPInstance;
-use crate::entities::strip::Strip;
-use jagua_rs_base::entities::LayoutSnapshot;
+use crate::entities::LayoutSnapshot;
+use crate::probs::spp::entities::SPInstance;
+use crate::probs::spp::entities::strip::Strip;
 use std::time::Instant;
 
 /// Snapshot of [`SPProblem`](crate::entities::SPProblem) at a specific moment. Can be used to restore to a previous state.

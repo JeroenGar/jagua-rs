@@ -1,15 +1,16 @@
-use jagua_rs_base::io::ext_repr::ExtLayout;
 use serde::{Deserialize, Serialize};
 
-/// Bin Packing Problem instance
+use crate::io::ext_repr::ExtLayout;
+
+/// Strip Packing Problem instance
 #[derive(Serialize, Deserialize, Clone)]
-pub struct ExtBPInstance {
+pub struct ExtSPInstance {
     /// The name of the instance
     pub name: String,
     /// Set of items to be produced
     pub items: Vec<ExtItem>,
-    /// Set of bins to be used
-    pub bins: Vec<ExtBin>,
+    /// Fixed height of the strip
+    pub strip_height: f32,
 }
 
 /// Item with a demand
@@ -17,29 +18,18 @@ pub struct ExtBPInstance {
 pub struct ExtItem {
     #[serde(flatten)]
     /// External representation of the item in the base library
-    pub base: jagua_rs_base::io::ext_repr::ExtItem,
+    pub base: crate::io::ext_repr::ExtItem,
     /// Amount of times this item has to be produced
     pub demand: u64,
 }
 
-/// Bin with a stock quantity and cost
+/// Strip Packing Problem solution
 #[derive(Serialize, Deserialize, Clone)]
-pub struct ExtBin {
-    #[serde(flatten)]
-    pub base: jagua_rs_base::io::ext_repr::ExtContainer,
-    /// The number of copies of this bin available to be use
-    pub stock: usize,
-    /// The cost of using a bin of this type
-    pub cost: u64,
-}
-
-/// Bin Packing Problem solution
-#[derive(Serialize, Deserialize, Clone)]
-pub struct ExtBPSolution {
-    /// Total cost of all the bins used in the solution
-    pub cost: u64,
+pub struct ExtSPSolution {
+    /// The strip width of the solution
+    pub strip_width: f32,
     /// Layouts which compose the solution
-    pub layouts: Vec<ExtLayout>,
+    pub layout: ExtLayout,
     /// Sum of the area of the produced items divided by the sum of the area of the containers
     pub density: f32,
     /// The time it took to generate the solution in seconds
