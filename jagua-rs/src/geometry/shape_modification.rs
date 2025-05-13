@@ -362,7 +362,7 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
 
 #[cfg(not(feature = "separation-distance"))]
 pub fn offset_shape(_sp: &SPolygon, _mode: ShapeModifyMode, _distance: f32) -> Result<SPolygon> {
-    bail!(
+    anyhow::bail!(
         "cannot offset shape without geo_offset dependency, compile with --features separation to enable this"
     )
 }
