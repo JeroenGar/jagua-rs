@@ -5,10 +5,12 @@ use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 
+use anyhow::{Result, anyhow};
+
 /// Computes the *pole* - the largest circle which is both inside of `shape` while being outside all other `poles`.
 /// Closely related to [Pole of Inaccessibility (PoI)](https://en.wikipedia.org/wiki/Pole_of_inaccessibility),
 /// and inspired by Mapbox's [`polylabel`](https://github.com/mapbox/polylabel) algorithm.
-pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Circle {
+pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Result<Circle> {
     let square_bbox = shape.bbox.inflate_to_square();
     let root = POINode::new(square_bbox, MAX_POI_TREE_DEPTH, shape, poles);
     let mut queue = VecDeque::from([root]);
@@ -28,18 +30,25 @@ pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Circle {
             }
         }
     }
-    best.expect("no pole present")
+    best.ok_or(anyhow!(
+        "no pole found with {} levels of recursion. Please check the input shape: {:?}",
+        MAX_POI_TREE_DEPTH,
+        &shape.vertices
+    ))
 }
 
 ///Generates a set of 'poles' for a shape according to specified coverage limits.
 ///See [`compute_pole`] for details on what a 'pole' is.
-pub fn generate_surrogate_poles(shape: &SPolygon, n_pole_limits: &[(usize, f32)]) -> Vec<Circle> {
+pub fn generate_surrogate_poles(
+    shape: &SPolygon,
+    n_pole_limits: &[(usize, f32)],
+) -> Result<Vec<Circle>> {
     let mut all_poles = vec![shape.poi];
     let mut total_pole_area = shape.poi.area();
 
     //Generate the poles until one of the pole number / coverage limits is reached
     loop {
-        let next = compute_pole(shape, &all_poles);
+        let next = compute_pole(shape, &all_poles)?;
 
         total_pole_area += next.area();
         all_poles.push(next);
@@ -64,7 +73,7 @@ pub fn generate_surrogate_poles(shape: &SPolygon, n_pole_limits: &[(usize, f32)]
             "More than 1000 poles were generated, please check the SPSurrogateConfig"
         )
     }
-    all_poles
+    Ok(all_poles)
 }
 
 const MAX_POI_TREE_DEPTH: usize = 10;

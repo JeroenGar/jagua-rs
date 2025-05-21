@@ -58,7 +58,7 @@ impl SPolygon {
 
         let diameter = SPolygon::calculate_diameter(points.clone());
         let bbox = SPolygon::generate_bounding_box(&points);
-        let poi = SPolygon::calculate_poi(&points, diameter);
+        let poi = SPolygon::calculate_poi(&points, diameter)?;
 
         Ok(SPolygon {
             vertices: points,
@@ -70,11 +70,13 @@ impl SPolygon {
         })
     }
 
-    pub fn generate_surrogate(&mut self, config: SPSurrogateConfig) {
+    pub fn generate_surrogate(&mut self, config: SPSurrogateConfig) -> Result<()> {
+        //regenerate the surrogate if it is not present or if the config has changed
         match &self.surrogate {
             Some(surrogate) if surrogate.config == config => {}
-            _ => self.surrogate = Some(SPSurrogate::new(self, config)),
+            _ => self.surrogate = Some(SPSurrogate::new(self, config)?),
         }
+        Ok(())
     }
 
     pub fn vertex(&self, i: usize) -> Point {
@@ -147,7 +149,7 @@ impl SPolygon {
         0.5 * sigma
     }
 
-    pub fn calculate_poi(points: &[Point], diameter: f32) -> Circle {
+    pub fn calculate_poi(points: &[Point], diameter: f32) -> Result<Circle> {
         //need to make a dummy simple polygon, because the pole generation algorithm
         //relies on many of the methods provided by the simple polygon struct
         let dummy_sp = {

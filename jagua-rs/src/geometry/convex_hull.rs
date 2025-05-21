@@ -2,6 +2,8 @@ use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SPolygon;
 use ordered_float::OrderedFloat;
 
+use anyhow::{Result, bail};
+
 /// Returns the indices of the points in the [`SPolygon`] that form the convex hull
 pub fn convex_hull_indices(shape: &SPolygon) -> Vec<usize> {
     let c_hull = convex_hull_from_points(shape.vertices.clone());
@@ -13,7 +15,7 @@ pub fn convex_hull_indices(shape: &SPolygon) -> Vec<usize> {
 }
 
 /// Reconstitutes the convex hull of a [`SPolygon`] using its surrogate
-pub fn convex_hull_from_surrogate(s: &SPolygon) -> Result<Vec<Point>, &'static str> {
+pub fn convex_hull_from_surrogate(s: &SPolygon) -> Result<Vec<Point>> {
     if let Some(surr) = s.surrogate.as_ref() {
         Ok(surr
             .convex_hull_indices
@@ -21,7 +23,7 @@ pub fn convex_hull_from_surrogate(s: &SPolygon) -> Result<Vec<Point>, &'static s
             .map(|&i| s.vertices[i])
             .collect())
     } else {
-        Err("No surrogate available")
+        bail!("no surrogate present")
     }
 }
 

@@ -37,7 +37,7 @@ impl Item {
         let shape_orig = Arc::new(original_shape);
         let shape_int = {
             let mut shape_int = shape_orig.convert_to_internal()?;
-            shape_int.generate_surrogate(surrogate_config);
+            shape_int.generate_surrogate(surrogate_config)?;
             Arc::new(shape_int)
         };
         let hazard_filter = base_quality.map(QZHazardFilter);
