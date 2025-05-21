@@ -148,12 +148,9 @@ pub fn create_custom_surrogate(
 
     let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
     let mut poles = vec![simple_poly.poi];
-    poles.extend(generate_surrogate_poles(
-        simple_poly,
-        &sp_config.n_pole_limits,
-    ));
+    poles.extend(generate_surrogate_poles(simple_poly, &sp_config.n_pole_limits).unwrap());
 
-    let piers = generate_piers(simple_poly, n_piers, &poles);
+    let piers = generate_piers(simple_poly, n_piers, &poles).unwrap();
     let convex_hull_area = SPolygon::new(
         convex_hull_indices
             .iter()
