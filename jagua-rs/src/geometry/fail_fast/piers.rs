@@ -11,6 +11,8 @@ use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 
+use anyhow::{Result, bail};
+
 static RAYS_PER_ANGLE: usize = if cfg!(debug_assertions) { 10 } else { 200 };
 static N_ANGLES: usize = if cfg!(debug_assertions) { 4 } else { 90 };
 static N_POINTS_PER_DIMENSION: usize = if cfg!(debug_assertions) { 10 } else { 100 };
@@ -20,9 +22,9 @@ static ACTION_RADIUS_RATIO: f32 = 0.10;
 /// Generates a set of `n` *piers* - line segments fully contained within `shape`.
 /// This function generates them in such a way as to *cover* areas of the `shape` that are
 /// poorly represented by `poles` as well as possible.
-pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge> {
+pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Result<Vec<Edge>> {
     if n == 0 {
-        return vec![];
+        return Ok(vec![]);
     }
 
     //Start by creating a set of N_TESTS_PER_ANGLE vertical lines across the bounding box
@@ -84,11 +86,11 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Vec<Edge>
             .map(|(_i, ray)| ray);
 
         match min_loss_ray {
-            None => panic!("no ray found"),
+            None => bail!("no ray found"),
             Some(ray) => selected_piers.push(*ray),
         }
     }
-    selected_piers
+    Ok(selected_piers)
 }
 
 fn generate_ray_transformations(

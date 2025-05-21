@@ -8,6 +8,8 @@ use crate::geometry::primitives::SPolygon;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
+use anyhow::Result;
+
 #[derive(Clone, Debug)]
 /// Surrogate representation of a [`SPolygon`] - a 'light-weight' representation that
 /// is fully contained in the original [`SPolygon`].
@@ -28,25 +30,26 @@ pub struct SPSurrogate {
 impl SPSurrogate {
     /// Creates a new [`SPSurrogate`] from a [`SPolygon`] and a configuration.
     /// Expensive operations are performed here!
-    pub fn new(simple_poly: &SPolygon, config: SPSurrogateConfig) -> Self {
+    pub fn new(simple_poly: &SPolygon, config: SPSurrogateConfig) -> Result<Self> {
         let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
         let convex_hull_points = convex_hull_indices
             .iter()
             .map(|&i| simple_poly.vertices[i])
             .collect_vec();
         let convex_hull_area = SPolygon::calculate_area(&convex_hull_points);
-        let poles = pole::generate_surrogate_poles(simple_poly, &config.n_pole_limits);
+        let poles = pole::generate_surrogate_poles(simple_poly, &config.n_pole_limits)?;
         let n_ff_poles = usize::min(config.n_ff_poles, poles.len());
         let relevant_poles_for_piers = &poles[0..n_ff_poles]; //poi + all poles that will be checked during fail fast are relevant for piers
-        let piers = piers::generate_piers(simple_poly, config.n_ff_piers, relevant_poles_for_piers);
+        let piers =
+            piers::generate_piers(simple_poly, config.n_ff_piers, relevant_poles_for_piers)?;
 
-        Self {
+        Ok(Self {
             convex_hull_indices,
             poles,
             piers,
             convex_hull_area,
             config,
-        }
+        })
     }
 
     pub fn ff_poles(&self) -> &[Circle] {
