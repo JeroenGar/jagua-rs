@@ -2,7 +2,7 @@ use crate::entities::Container;
 use crate::entities::Item;
 use std::any::Any;
 
-/// The static (unmodifiable) representation of a problem instance.
+/// The (abstract) static representation of a problem instance.
 /// This trait defines shared functionality between any instance variant.
 pub trait Instance: Any {
     /// All items

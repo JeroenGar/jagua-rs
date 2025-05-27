@@ -7,14 +7,14 @@ use crate::geometry::DTransformation;
 use crate::util::assertions;
 use slotmap::SlotMap;
 
-/// Defines a configuration of [`Item`]s in a [`Container`].
-///It is a mutable representation, and can be modified by placing or removing items.
-///Each layout maintains a [`CDEngine`], which can be used to check for collisions before placing items.
+/// A [`Layout`] is a dynamic representation of items that have been placed in a container at specific positions.
+/// Items can be placed and removed. The container can be swapped. Snapshots can be taken and restored to.
+/// Each layout maintains a [`CDEngine`], which can be used to check for collisions before placing items.
 #[derive(Clone)]
 pub struct Layout {
     /// The container used for this layout
     pub container: Container,
-    /// How the items are placed in the container
+    /// All the items that have been placed in this layout, indexed by a unique key
     pub placed_items: SlotMap<PItemKey, PlacedItem>,
     /// The collision detection engine for this layout
     cde: CDEngine,
@@ -36,6 +36,7 @@ impl Layout {
         layout
     }
 
+    /// Replaces the current container with a new one, rebuilding the collision detection engine accordingly.
     pub fn swap_container(&mut self, container: Container) {
         self.container = container;
         // rebuild the CDE
@@ -46,6 +47,8 @@ impl Layout {
         }
     }
 
+    /// Saves the current state of the layout to be potentially restored to later.
+
     pub fn save(&mut self) -> LayoutSnapshot {
         LayoutSnapshot {
             container: self.container.clone(),
@@ -54,6 +57,7 @@ impl Layout {
         }
     }
 
+    /// Restores the layout to a previous state using a snapshot.
     pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
         assert_eq!(self.container.id, layout_snapshot.container.id);
         self.placed_items = layout_snapshot.placed_items.clone();
@@ -63,6 +67,8 @@ impl Layout {
         debug_assert!(assertions::layouts_match(self, layout_snapshot))
     }
 
+    /// Places an item in the layout at a specific position by applying a transformation.
+    /// Returns the unique key for the placed item.
     pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation) -> PItemKey {
         let pk = self
             .placed_items
@@ -77,6 +83,10 @@ impl Layout {
         pk
     }
 
+    /// Removes an item from the layout by its unique key and returns the removed [`PlacedItem`].
+    /// If `commit_instant` is true, the removal is immediately fully executed to the collision detection engine.
+    /// If false, the item is disabled in the collision detection engine, but not yet fully removed.
+    /// Useful for scenarios with high probability of reverting the removal.
     pub fn remove_item(&mut self, pk: PItemKey, commit_instant: bool) -> PlacedItem {
         let pi = self
             .placed_items
@@ -94,10 +104,6 @@ impl Layout {
     /// True if no items are placed
     pub fn is_empty(&self) -> bool {
         self.placed_items.is_empty()
-    }
-
-    pub fn placed_items(&self) -> &SlotMap<PItemKey, PlacedItem> {
-        &self.placed_items
     }
 
     /// The current density of the layout defined as the ratio of the area of the items placed to the area of the container.
@@ -133,7 +139,9 @@ impl Layout {
 /// Can be used to restore a [`Layout`] back to a previous state.
 #[derive(Clone, Debug)]
 pub struct LayoutSnapshot {
+    /// A copy of the container used in the layout
     pub container: Container,
+    /// A copy of the placed items in the layout
     pub placed_items: SlotMap<PItemKey, PlacedItem>,
     /// Snapshot of the collision detection engine
     pub cde_snapshot: CDESnapshot,

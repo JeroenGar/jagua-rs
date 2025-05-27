@@ -22,8 +22,8 @@ pub enum GeoRelation {
 pub enum RotationRange {
     /// No rotation allowed
     None,
-    /// A continuous range of rotations
+    /// Complete continuous rotation allowed
     Continuous,
-    /// A discrete set of rotations
+    /// Discrete set of rotations allowed
     Discrete(Vec<f32>),
 }

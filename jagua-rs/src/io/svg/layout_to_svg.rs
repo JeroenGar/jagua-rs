@@ -240,7 +240,7 @@ pub fn layout_to_svg(
         let mut surrogate_group = Group::new().set("id", "surrogates").add(surrogate_defs);
         let mut highlight_cd_shapes_group = Group::new().set("id", "highlight_cd_shapes");
 
-        for pi in layout.placed_items().values() {
+        for pi in layout.placed_items.values() {
             let dtransf = match options.draw_cd_shapes {
                 true => pi.d_transf,
                 false => {
@@ -319,7 +319,7 @@ pub fn layout_to_svg(
         false => None,
         true => {
             let mut collision_group = Group::new().set("id", "collision_lines");
-            for (pk, pi) in layout.placed_items().iter() {
+            for (pk, pi) in layout.placed_items.iter() {
                 let detector = {
                     let mut detector = BasicHazardDetector::new();
                     layout

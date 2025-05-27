@@ -19,7 +19,7 @@ pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool 
     }
     for placed_item in layout_snapshot.placed_items.values() {
         if !layout
-            .placed_items()
+            .placed_items
             .values()
             .any(|pi| pi.item_id == placed_item.item_id && pi.d_transf == placed_item.d_transf)
         {
@@ -163,7 +163,7 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
     //rebuild the quadtree
     let container = &layout.container;
     let mut fresh_cde = container.base_cde.as_ref().clone();
-    for (pk, pi) in layout.placed_items().iter() {
+    for (pk, pi) in layout.placed_items.iter() {
         let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
         fresh_cde.register_hazard(hazard);
     }
@@ -337,7 +337,7 @@ pub fn print_layout(layout: &Layout) {
     );
     println!();
 
-    for pi in layout.placed_items().values() {
+    for pi in layout.placed_items.values() {
         let transformation_str = {
             let t_decomp = &pi.d_transf;
             let (tr, (tx, ty)) = (t_decomp.rotation(), t_decomp.translation());

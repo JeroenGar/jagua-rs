@@ -6,6 +6,7 @@ use crate::geometry::{DTransformation, OriginalShape};
 use anyhow::{Result, ensure};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
+/// Represents a rectangular container with fixed height and variable width.
 pub struct Strip {
     pub fixed_height: f32,
     pub cde_config: CDEConfig,

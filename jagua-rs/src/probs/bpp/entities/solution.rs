@@ -7,6 +7,7 @@ use std::time::Instant;
 /// Can be used to restore to a previous state.
 #[derive(Debug, Clone)]
 pub struct BPSolution {
+    /// A map of the layout snapshots, identified by the same keys as in the problem
     pub layout_snapshots: SecondaryMap<LayKey, LayoutSnapshot>,
     /// Instant the solution was created
     pub time_stamp: Instant,

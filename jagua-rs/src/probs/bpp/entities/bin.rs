@@ -1,6 +1,7 @@
 use crate::entities::Container;
 
 #[derive(Debug, Clone)]
+/// A container in the Bin Packing Problem (BPP) with an associated cost and stock.
 pub struct Bin {
     /// Unique identifier for the bin
     pub id: usize,
