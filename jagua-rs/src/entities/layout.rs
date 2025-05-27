@@ -48,7 +48,6 @@ impl Layout {
     }
 
     /// Saves the current state of the layout to be potentially restored to later.
-
     pub fn save(&mut self) -> LayoutSnapshot {
         LayoutSnapshot {
             container: self.container.clone(),
