@@ -50,7 +50,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
                 // Remove an item from the layout
                 let (pkey, pi) = problem
                     .layout
-                    .placed_items()
+                    .placed_items
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
@@ -151,7 +151,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
             b.iter(|| {
                 let (pkey, pi) = problem
                     .layout
-                    .placed_items()
+                    .placed_items
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");

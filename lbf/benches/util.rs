@@ -40,7 +40,7 @@ pub fn create_lbf_problem(
     // Remove some items from the layout
     let placed_items_to_remove = problem
         .layout
-        .placed_items()
+        .placed_items
         .iter()
         .map(|(k, _)| k)
         .choose_multiple(&mut rng, n_items_removed);
@@ -48,7 +48,7 @@ pub fn create_lbf_problem(
     let p_opts = placed_items_to_remove
         .iter()
         .map(|k| {
-            let pi = &problem.layout.placed_items()[*k];
+            let pi = &problem.layout.placed_items[*k];
             SPPlacement {
                 item_id: pi.item_id,
                 d_transf: pi.d_transf,
@@ -57,7 +57,7 @@ pub fn create_lbf_problem(
         .collect_vec();
 
     for pkey in placed_items_to_remove {
-        let item_id = problem.layout.placed_items()[pkey].item_id;
+        let item_id = problem.layout.placed_items[pkey].item_id;
         problem.remove_item(pkey, true);
         info!(
             "Removed item: {} with {} edges",

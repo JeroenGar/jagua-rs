@@ -45,7 +45,7 @@ mod tests {
                 //pick random existing layout
                 let random_placed_item = problem
                     .layout
-                    .placed_items()
+                    .placed_items
                     .iter()
                     .choose(&mut rng)
                     .map(|(key, _)| key);
@@ -94,7 +94,7 @@ mod tests {
                 //pick random existing layout
                 let lkey = problem.layouts.keys().choose(&mut rng).unwrap();
                 let random_placed_item = problem.layouts[lkey]
-                    .placed_items()
+                    .placed_items
                     .iter()
                     .choose(&mut rng)
                     .map(|(key, _)| key);

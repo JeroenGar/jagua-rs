@@ -108,7 +108,7 @@ impl SPProblem {
                 .for_each(|(id, qty)| *qty = self.instance.item_qty(id));
 
             self.layout
-                .placed_items()
+                .placed_items
                 .iter()
                 .for_each(|(_, pi)| self.item_demand_qtys[pi.item_id] -= 1);
         }

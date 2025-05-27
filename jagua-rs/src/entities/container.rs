@@ -14,13 +14,13 @@ use anyhow::{Result, ensure};
 #[derive(Clone, Debug)]
 pub struct Container {
     pub id: usize,
-    /// Contour of the container as defined in the input file
+    /// Original contour of the container as defined in the input
     pub outer_orig: Arc<OriginalShape>,
     /// Contour of the container to be used for collision detection
     pub outer_cd: Arc<SPolygon>,
     /// Zones of different qualities in the container, stored per quality.
     pub quality_zones: [Option<InferiorQualityZone>; N_QUALITIES],
-    /// The starting state of the `CDEngine` for this container.
+    /// The initial state of the `CDEngine` for this container. (equivalent to an empty layout using this container)
     pub base_cde: Arc<CDEngine>,
 }
 

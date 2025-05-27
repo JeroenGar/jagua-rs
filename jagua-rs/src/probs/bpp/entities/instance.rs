@@ -4,7 +4,7 @@ use crate::probs::bpp::entities::bin::Bin;
 use crate::probs::bpp::util::assertions::instance_item_bin_ids_correct;
 
 #[derive(Debug, Clone)]
-/// Instance of the Bin Packing Problem: a set of items to be packed into a set of bins.
+/// Instance of the Bin Packing Problem.
 pub struct BPInstance {
     /// The items to be packed and their demands
     pub items: Vec<(Item, usize)>,

@@ -67,13 +67,13 @@ impl LBFOptimizerSP {
                         });
                         info!(
                             "[LBF] placing item {}/{} with id {} at [{}]",
-                            self.problem.layout.placed_items().len(),
+                            self.problem.layout.placed_items.len(),
                             self.instance.total_item_qty(),
                             item.id,
                             d_transf,
                         );
                         #[allow(clippy::absurd_extreme_comparisons)]
-                        if self.problem.layout.placed_items().len() >= ITEM_LIMIT {
+                        if self.problem.layout.placed_items.len() >= ITEM_LIMIT {
                             break 'outer;
                         }
                     }

@@ -12,11 +12,11 @@ use anyhow::Result;
 #[derive(Clone, Debug)]
 pub struct Item {
     pub id: usize,
-    /// Contour of the item as defined in the input file
+    /// Original contour of the item as defined in the input
     pub shape_orig: Arc<OriginalShape>,
     /// Contour of the item to be used for collision detection
     pub shape_cd: Arc<SPolygon>,
-    /// Possible rotations in which to place the item
+    /// Allowed rotations in which the item can be placed
     pub allowed_rotation: RotationRange,
     /// The minimum quality the item should be produced out of, if `None` the item requires full quality
     pub min_quality: Option<usize>,

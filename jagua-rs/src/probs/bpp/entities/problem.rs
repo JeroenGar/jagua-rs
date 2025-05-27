@@ -14,8 +14,7 @@ new_key_type! {
     pub struct LayKey;
 }
 
-/// Modifiable counterpart of [`BPInstance`].
-/// Items can be placed and removed, bins can be opened and closed.
+/// Dynamic counterpart of [`BPInstance`].
 #[derive(Clone)]
 pub struct BPProblem {
     pub instance: BPInstance,
@@ -37,11 +36,12 @@ impl BPProblem {
         }
     }
 
+    /// Removes a layout from the problem. The bin used by the layout will be closed and all items placed inside it will be deregistered.
     pub fn remove_layout(&mut self, key: LayKey) {
         self.deregister_layout(key);
     }
 
-    /// Places an item according to the given `BPPlacement` in the problem.
+    /// Places an item according to the provided [`BPPlacement`] in the problem.
     pub fn place_item(&mut self, p_opt: BPPlacement) -> (LayKey, PItemKey) {
         let lkey = match p_opt.layout_id {
             BPLayoutType::Open(lkey) => lkey,
@@ -148,7 +148,7 @@ impl BPProblem {
             self.layouts.values().for_each(|layout| {
                 self.bin_stock_qtys[layout.container.id] -= 1;
                 layout
-                    .placed_items()
+                    .placed_items
                     .values()
                     .for_each(|pi| self.item_demand_qtys[pi.item_id] -= 1);
             });
@@ -198,7 +198,7 @@ impl BPProblem {
     fn register_layout(&mut self, layout: Layout) -> LayKey {
         self.open_bin(layout.container.id);
         layout
-            .placed_items()
+            .placed_items
             .values()
             .for_each(|pi| self.register_included_item(pi.item_id));
         self.layouts.insert(layout)
@@ -208,7 +208,7 @@ impl BPProblem {
         let layout = self.layouts.remove(key).expect("layout key not present");
         self.close_bin(layout.container.id);
         layout
-            .placed_items()
+            .placed_items
             .values()
             .for_each(|pi| self.deregister_included_item(pi.item_id));
     }
@@ -233,11 +233,11 @@ impl BPProblem {
 #[derive(Clone, Debug, Copy)]
 /// Encapsulates all required information to place an [`Item`](crate::entities::Item) in a [`BPProblem`].
 pub struct BPPlacement {
-    /// Which layout to place the item in
+    /// Which [`Layout`] to place the item in
     pub layout_id: BPLayoutType,
-    /// The id of the item to be placed
+    /// The id of the [`Item`](crate::entities::Item) to be placed
     pub item_id: usize,
-    /// The decomposition of the transformation
+    /// The transformation to apply to the item when placing it
     pub d_transf: DTransformation,
 }
 
@@ -251,11 +251,11 @@ impl BPPlacement {
     }
 }
 
-/// Enum to distinguish between both existing [`Layout`]s, and potentially new ones.
+/// Enum to distinguish between both open [`Layout`]s, and potentially new ones.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BPLayoutType {
-    /// An existing layout
+    /// An existing layout, identified by its key
     Open(LayKey),
-    /// A layout that does not yet exist, but can be created
+    /// A layout that does not yet exist, but can be created by 'opening' a new bin
     Closed { bin_id: usize },
 }

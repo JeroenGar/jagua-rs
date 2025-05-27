@@ -4,11 +4,11 @@ use crate::probs::spp::util::assertions;
 use std::iter;
 
 #[derive(Debug, Clone)]
-/// Instance of the Strip Packing Problem: a set of items to be packed into a single strip with a fixed height and variable width.
+/// Instance of the Strip Packing Problem.
 pub struct SPInstance {
     /// The items to be packed and their demands
     pub items: Vec<(Item, usize)>,
-    /// The height of the strip (fixed)
+    /// The strip in which to pack the items
     pub base_strip: Strip,
 }
 
