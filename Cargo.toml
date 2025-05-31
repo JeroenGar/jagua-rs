@@ -27,6 +27,7 @@ document-features = "0.2"
 
 [profile.release]
 opt-level = 3
+lto = "fat"
 
 [profile.test]
 opt-level = 3

@@ -26,6 +26,8 @@ jobs:
           branch: gh-pages
           folder: target/doc
           clean: true
+          clean-exclude: |
+            benchmark/**
           repository-name: JeroenGar/jagua-rs-docs
           commit-message: "auto deploy docs"
           single-commit: true
