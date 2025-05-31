@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["PathDebug","PathsDebug","PolyTypeDebug","PolygonDebug","PolygonsDebug","VerticeDebug","VerticesDebug"]};

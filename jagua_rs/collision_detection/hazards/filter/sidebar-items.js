@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["ContainerHazardFilter","EntityHazardFilter","NoHazardFilter","QZHazardFilter"],"trait":["HazardFilter"]};

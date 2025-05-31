@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_ARC_SEGMENTS"],"enum":["EdgeError","OffsetError"],"struct":["Edge"],"trait":["Offset"]};
