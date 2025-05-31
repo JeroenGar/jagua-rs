@@ -168,20 +168,33 @@ impl CollidesWith<Rect> for Edge {
 }
 
 #[inline(always)]
-fn edge_intersection(e1: &Edge, e2: &Edge, calculate_location: bool) -> Intersection {
-    if f32::max(e1.x_min(), e2.x_min()) > f32::min(e1.x_max(), e2.x_max())
-        || f32::max(e1.y_min(), e2.y_min()) > f32::min(e1.y_max(), e2.y_max())
-    {
-        //bounding boxes do not overlap
-        return Intersection::No;
-    }
-
-    //based on: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line_segment
+fn edge_intersection(e1: &Edge, e2: &Edge, calc_loc: bool) -> Intersection {
     let Point(x1, y1) = e1.start;
     let Point(x2, y2) = e1.end;
     let Point(x3, y3) = e2.start;
     let Point(x4, y4) = e2.end;
 
+    // Early exit if bounding boxes do not overlap
+    {
+        let x_min_e1 = x1.min(x2);
+        let x_max_e1 = x1.max(x2);
+        let y_min_e1 = y1.min(y2);
+        let y_max_e1 = y1.max(y2);
+
+        let x_min_e2 = x3.min(x4);
+        let x_max_e2 = x3.max(x4);
+        let y_min_e2 = y3.min(y4);
+        let y_max_e2 = y3.max(y4);
+
+        let x_axis_no_overlap = x_min_e1.max(x_min_e2) > x_max_e1.min(x_max_e2);
+        let y_axis_no_overlap = y_min_e1.max(y_min_e2) > y_max_e1.min(y_max_e2);
+
+        if x_axis_no_overlap || y_axis_no_overlap {
+            return Intersection::No;
+        }
+    }
+
+    //based on: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line_segment
     let t_nom = (x2 - x4) * (y4 - y3) - (y2 - y4) * (x4 - x3);
     let t_denom = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
     let u_nom = (x2 - x4) * (y2 - y1) - (y2 - y4) * (x2 - x1);
@@ -194,13 +207,12 @@ fn edge_intersection(e1: &Edge, e2: &Edge, calculate_location: bool) -> Intersec
         let t = t_nom / t_denom;
         let u = u_nom / u_denom;
         if (0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u) {
-            if calculate_location {
-                let x = x2 + t * (x1 - x2);
-                let y = y2 + t * (y1 - y2);
-                Intersection::Yes(Some(Point(x, y)))
-            } else {
-                Intersection::Yes(None)
-            }
+            //intersection point is within the bounds of both edges
+            let loc = match calc_loc {
+                false => None,
+                true => Some(Point(x2 + t * (x1 - x2), y2 + t * (y1 - y2))),
+            };
+            Intersection::Yes(loc)
         } else {
             Intersection::No
         }

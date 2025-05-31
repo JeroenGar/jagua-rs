@@ -8,7 +8,6 @@ use crate::util::FPA;
 use anyhow::Result;
 use anyhow::ensure;
 use ordered_float::OrderedFloat;
-use std::cmp::Ordering;
 
 ///Axis-aligned rectangle
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -280,14 +279,16 @@ impl CollidesWith<Edge> for Rect {
     fn collides_with(&self, edge: &Edge) -> bool {
         //inspired by: https://stackoverflow.com/questions/99353/how-to-test-if-a-line-segment-intersects-an-axis-aligned-rectange-in-2d
 
-        let x_min = edge.x_min();
-        let x_max = edge.x_max();
-        let y_min = edge.y_min();
-        let y_max = edge.y_max();
+        let e_x_min = edge.x_min();
+        let e_x_max = edge.x_max();
+        let e_y_min = edge.y_min();
+        let e_y_max = edge.y_max();
 
-        //If both end points of the line are entirely outside the range of the rectangle
-        if x_max < self.x_min || x_min > self.x_max || y_max < self.y_min || y_min > self.y_max {
-            return false;
+        let x_no_overlap = e_x_min.max(self.x_min) > e_x_max.min(self.x_max);
+        let y_no_overlap = e_y_min.max(self.y_min) > e_y_max.min(self.y_max);
+
+        if x_no_overlap || y_no_overlap {
+            return false; // Bounding boxes do not overlap
         }
 
         //If either end point of the line is inside the rectangle
@@ -295,26 +296,19 @@ impl CollidesWith<Edge> for Rect {
             return true;
         }
 
-        //If all corners of rectangle are on the same side of the edge, no collision is possible
-        const POINT_EDGE_RELATION: fn(Point, &Edge) -> Ordering =
-            |p: Point, edge: &Edge| -> Ordering {
-                let Point(p_x, p_y) = p;
-                let Point(s_x, s_y) = edge.start;
-                let Point(e_x, e_y) = edge.end;
-                // if 0.0, the point is on the line
-                // if > 0.0, the point is "above" of the line
-                // if < 0.0, the point is "below" the line
-                let v = (p_x - s_x) * (e_y - s_y) - (p_y - s_y) * (e_x - s_x);
-                v.partial_cmp(&0.0).unwrap()
-            };
+        //Determine which side of the edge each corner of the rectangle is on
+        let corner_sides = self.corners().map(|corner| {
+            let Point(p_x, p_y) = corner;
+            let Point(s_x, s_y) = edge.start;
+            let Point(e_x, e_y) = edge.end;
+            // if 0.0, the corner is on the edge
+            // if > 0.0, the corner is "above" of the edge
+            // if < 0.0, the corner is "below" the edge
+            (p_x - s_x) * (e_y - s_y) - (p_y - s_y) * (e_x - s_x)
+        });
 
-        let all_corners_same_side = self
-            .corners()
-            .map(|corner| POINT_EDGE_RELATION(corner, edge))
-            .windows(2)
-            .all(|w| w[0] == w[1]);
-
-        if all_corners_same_side {
+        //No collision if all corners are on the same side of the edge
+        if corner_sides.iter().all(|v| *v > 0.0) || corner_sides.iter().all(|v| *v < 0.0) {
             return false;
         }
 
