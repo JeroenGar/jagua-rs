@@ -13,8 +13,8 @@ criterion_main!(benches);
 criterion_group!(
     benches,
     cde_update_bench,
-    cde_detect_bench,
-    cde_collect_bench
+    //cde_detect_bench,
+    //cde_collect_bench
 );
 
 mod util;

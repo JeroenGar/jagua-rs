@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write  # Added for comment-on-alert
     steps:
       - uses: actions/checkout@v3
         with:
@@ -41,5 +42,5 @@ jobs:
           benchmark-data-dir-path: 'benchmarks'
           save-data-file: true
           gh-pages-branch: 'gh-pages'
-          gh-repository: ${{ github.repository }}
+          gh-repository: https://github.com/${{ github.repository }}
           summary-always: true # Always show benchmark summary in PR comments
