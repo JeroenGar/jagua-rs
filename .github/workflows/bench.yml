@@ -2,7 +2,11 @@ name: Performance Benchmarks
 
 on:
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
+    paths:
+      - '**.rs'
+      - '**.toml'
+      - '**.yml'
   push:
     branches: ["main"]
     paths:

@@ -1,4 +1,4 @@
-# jagua-rs [![Rust CI](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml) [![Docs](https://github.com/JeroenGar/jagua-rs/actions/workflows/doc.yml/badge.svg)](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/) [![Crates.io Version](https://img.shields.io/crates/v/jagua-rs)](https://crates.io/crates/jagua-rs) ![License](https://img.shields.io/crates/l/jagua-rs)
+# jagua-rs [![Rust CI](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml) [![Docs](https://github.com/JeroenGar/jagua-rs/actions/workflows/doc.yml/badge.svg)](https://jeroengar.github.io/jagua-rs/jagua_rs/) [![Crates.io Version](https://img.shields.io/crates/v/jagua-rs)](https://crates.io/crates/jagua-rs) ![License](https://img.shields.io/crates/l/jagua-rs)
 
 ### A fast and fearless collision detection engine for 2D irregular cutting and packing problems.
 
@@ -127,7 +127,7 @@ By default, only the container and the items placed inside it are drawn.
 Optionally, the quadtree, hazard proximity grid and fail-fast surrogates can be drawn on top.
 A custom color theme can also be defined.
 
-All visual options can be configured in the config file, see [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/io/svg_util/struct.SvgDrawOptions.html) for all available
+All visual options can be configured in the config file, see [docs](https://jeroengar.github.io/jagua-rs/jagua_rs/io/svg/struct.SvgDrawOptions.html) for all available
 options.
 
 Some examples of layout SVGs created by `lbf`:
@@ -165,7 +165,7 @@ The configuration file has the following structure:
 }
 ```
 
-See [docs](https://jeroengar.github.io/jagua-rs-docs/lbf/config/struct.LBFConfig.html) for a detailed description of all available configuration options.
+See [docs](https://jeroengar.github.io/jagua-rs/lbf/config/struct.LBFConfig.html) for a detailed description of all available configuration options.
 
 ### Important note
 
@@ -180,25 +180,30 @@ and should  not be used as an optimization algorithm for any real-world use case
 
 For a state-of-the-art optimization algorithm built on top of `jagua-rs` see [`sparrow`](https://github.com/JeroenGar/sparrow) instead.
 
-## Documentation
-
-This library is thoroughly documented with rustdoc. 
-The most recent version is automatically deployed and hosted on GitHub Pages:
-
-- `jagua-rs` docs: [https://jeroengar.github.io/jagua-rs-docs/jagua_rs/](https://jeroengar.github.io/jagua-rs-docs/jagua_rs/)
-- `lbf` docs: [https://jeroengar.github.io/jagua-rs-docs/lbf/](https://jeroengar.github.io/jagua-rs-docs/lbf/)
-
-Alternatively, you can compile the docs locally: `cargo doc --open`.
-
-## Testing
+## Continuous Integration
 
 The `jagua-rs` codebase contains a suite of assertion checks which verify the correctness of the engine.
 These `debug_asserts` are enabled by default in debug and test builds, but are omitted in release builds to maximize performance.
 
-Additionally, `lbf` contains some basic integration tests to validate the general correctness of the engine.
-These tests essentially run the heuristic on a set of input files, using multiple configurations and with assertions enabled.
+On every commit and pull request, the following GitHub Actions workflows are run:
+  - Full compile and format check.
+  - Integration tests to simulate an optimization run on a range of instances/configurations with all checks enabled.
+  - Performance benchmarks to alert in case of regressions (see historical performance [here](https://jeroengar.github.io/jagua-rs/benchmarks/)).
+  - Documentation generation and deployment (see [Documentation](#documentation) section below).
+
+Tests and benchmarks can be run locally with `cargo test` and `cargo bench --bench ci_bench` respectively.
 
 The coverage and granularity of the tests need to be expanded in the future.
+
+## Documentation
+
+This library is thoroughly documented with rustdoc.
+The most recent version is automatically deployed and hosted at:
+
+- `jagua-rs` docs: [https://jeroengar.github.io/jagua-rs/jagua_rs/](https://jeroengar.github.io/jagua-rs/jagua_rs/)
+- `lbf` docs: [https://jeroengar.github.io/jagua-rs/lbf/](https://jeroengar.github.io/jagua-rs/lbf/)
+
+Alternatively, you can build the docs locally: `cargo doc --open`.
 
 ## Development
 
