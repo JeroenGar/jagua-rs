@@ -170,7 +170,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape_cd, transf);
                     let collides = layout.cde().poly_collides(&buffer_shape, &NoHazardFilter);
-                    criterion::black_box(collides); //prevent the compiler from optimizing the loop away
+                    std::hint::black_box(collides); //prevent the compiler from optimizing the loop away
                 }
 
                 problem.place_item(p_opt)

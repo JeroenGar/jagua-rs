@@ -8,7 +8,7 @@ on:
 
 jobs:
   benchmark:
-    name: Performance Regression Check
+    name: Performance Benchmarks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -20,6 +20,9 @@ jobs:
 
       - name: Run benchmarks
         run: cargo bench --bench ci_bench -- --output-format bencher | tee output.txt
+
+      - name: Create benchmark data directory
+        run: mkdir -p benchmark-data
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
