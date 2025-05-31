@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1748699634756,
+  "lastUpdate": 1748699672863,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance jagua-rs": [
@@ -453,6 +453,84 @@ window.BENCHMARK_DATA = {
             "name": "cde_collect_1k/5",
             "value": 5681707,
             "range": "± 516866",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "34694161+JeroenGar@users.noreply.github.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "478adc0df552bcc1ec3a4387aeee6b199f7923ed",
+          "message": "Merge pull request #34 from JeroenGar/feat/docs_on_main_repo\n\ndeploy docs on main repo gh pages",
+          "timestamp": "2025-05-31T15:51:55+02:00",
+          "tree_id": "a25e86a10c9c113adf221336587ee8d76f6ebacc",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/478adc0df552bcc1ec3a4387aeee6b199f7923ed"
+        },
+        "date": 1748699669630,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_update_1k/3",
+            "value": 5293326,
+            "range": "± 19169",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 8960931,
+            "range": "± 44310",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 15291846,
+            "range": "± 254035",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 375555,
+            "range": "± 18121",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 288292,
+            "range": "± 7324",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 266092,
+            "range": "± 4175",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/3",
+            "value": 3799875,
+            "range": "± 234284",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 4574729,
+            "range": "± 467714",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 5698248,
+            "range": "± 513456",
             "unit": "ns/iter"
           }
         ]
