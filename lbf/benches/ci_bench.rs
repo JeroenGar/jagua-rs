@@ -27,7 +27,7 @@ const N_SAMPLES_PER_ITER: usize = 1000;
 fn cde_collect_bench(c: &mut Criterion) {
     let mut config = util::create_base_config();
 
-    let mut group = c.benchmark_group("collision_collect_bench");
+    let mut group = c.benchmark_group("cde_collect_1k");
     for depth in QT_DEPTHS {
         config.cde_config.quadtree_depth = depth;
         let instance = util::create_instance(config.cde_config, config.poly_simpl_tolerance);
@@ -79,7 +79,7 @@ fn cde_collect_bench(c: &mut Criterion) {
 fn cde_detect_bench(c: &mut Criterion) {
     let mut config = util::create_base_config();
 
-    let mut group = c.benchmark_group("collision_detect_bench");
+    let mut group = c.benchmark_group("cde_detect_1k");
     for depth in QT_DEPTHS {
         config.cde_config.quadtree_depth = depth;
         let instance = util::create_instance(config.cde_config, config.poly_simpl_tolerance);
@@ -126,7 +126,7 @@ fn cde_detect_bench(c: &mut Criterion) {
 fn cde_update_bench(c: &mut Criterion) {
     let mut config = create_base_config();
 
-    let mut group = c.benchmark_group("quadtree_update");
+    let mut group = c.benchmark_group("cde_update_1k");
     for depth in QT_DEPTHS {
         config.cde_config.quadtree_depth = depth;
         let instance = util::create_instance(config.cde_config, config.poly_simpl_tolerance);
@@ -134,27 +134,29 @@ fn cde_update_bench(c: &mut Criterion) {
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        group.throughput(criterion::Throughput::Elements(1));
+        group.throughput(criterion::Throughput::Elements(N_SAMPLES_PER_ITER as u64));
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
-                // Remove an item from the layout
-                let (pkey, pi) = problem
-                    .layout
-                    .placed_items
-                    .iter()
-                    .choose(&mut rng)
-                    .expect("No items in layout");
+                for _ in 0..N_SAMPLES_PER_ITER {
+                    // Remove an item from the layout
+                    let (pkey, pi) = problem
+                        .layout
+                        .placed_items
+                        .iter()
+                        .choose(&mut rng)
+                        .expect("No items in layout");
 
-                let p_opt = SPPlacement {
-                    item_id: pi.item_id,
-                    d_transf: pi.d_transf,
-                };
+                    let p_opt = SPPlacement {
+                        item_id: pi.item_id,
+                        d_transf: pi.d_transf,
+                    };
 
-                //println!("Removing item with id: {}\n", pi_uid.item_id);
-                problem.remove_item(pkey, true);
+                    //println!("Removing item with id: {}\n", pi_uid.item_id);
+                    problem.remove_item(pkey, true);
 
-                problem.place_item(p_opt);
+                    problem.place_item(p_opt);
+                }
             })
         });
     }

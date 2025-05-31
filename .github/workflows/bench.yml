@@ -10,8 +10,12 @@ jobs:
   benchmark:
     name: Performance Benchmarks
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch full history for commit comparisons
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -21,9 +25,6 @@ jobs:
       - name: Run benchmarks
         run: cargo bench --bench ci_bench -- --output-format bencher | tee output.txt
 
-      - name: Create benchmark data directory
-        run: mkdir -p benchmark-data
-
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
@@ -31,25 +32,14 @@ jobs:
           tool: 'cargo'
           output-file-path: output.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Do not auto-push to gh-pages in this repo
-          auto-push: false
-          # Generate local files for later deployment
-          save-data-file: true
-          external-data-json-path: ./benchmark-data/data.json
-          # Performance alert settings
-          comment-always: true
-          alert-threshold: '110%'
+          auto-push: true
+          # Enable alerts for performance regressions
+          alert-threshold: '120%' # Alert if performance regresses by more than 20%
+          comment-on-alert: true
           fail-on-alert: false
-          alert-comment-cc-users: '@JeroenGar'
-
-      - name: Deploy benchmark results
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          token: ${{ secrets.DOCS_PAT }}
-          branch: gh-pages
-          folder: benchmark-data
-          repository-name: JeroenGar/jagua-rs-docs
-          target-folder: benchmark
-          clean: false
-          commit-message: "auto deploy benchmark data"
+          alert-comment-cc-users: '@JeroenGar' # Replace with actual username or team
+          benchmark-data-dir-path: 'benchmarks'
+          save-data-file: true
+          gh-pages-branch: 'gh-pages'
+          gh-repository: ${{ github.repository }}
+          summary-always: true # Always show benchmark summary in PR comments
