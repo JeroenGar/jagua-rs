@@ -7,6 +7,7 @@ on:
       - '**.rs'
       - '**.toml'
       - '**.yml'
+  workflow_dispatch: # Added for manual triggering if needed
 
 env:
   CARGO_TERM_COLOR: always
@@ -14,21 +15,22 @@ env:
 jobs:
   rustdoc:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to push to gh-pages branch
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Build and deploy jagua-rs docs
-        run: RUSTDOCFLAGS="-D warnings" cargo doc --all
+      - name: Build jagua-rs docs
+        run: RUSTDOCFLAGS="-D warnings" cargo doc --all # Build all docs, including lbf
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          token: ${{ secrets.DOCS_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
           folder: target/doc
-          clean: true
-          clean-exclude: |
-            benchmark/**
-          repository-name: JeroenGar/jagua-rs-docs
+          clean: true # Automatically remove deleted files from the deploy branch
+          clean-exclude: | # Exclude benchmark data from being cleaned
+            benchmarks
           commit-message: "auto deploy docs"
           single-commit: true
