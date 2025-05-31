@@ -1,4 +1,4 @@
-name: Performance Benchmarks
+name: Perf Benchmarks
 
 on:
   pull_request:
