@@ -42,5 +42,5 @@ jobs:
           benchmark-data-dir-path: 'benchmarks'
           save-data-file: true
           gh-pages-branch: 'gh-pages'
-          gh-repository: https://github.com/${{ github.repository }}
+          gh-repository: github.com/${{ github.repository }}
           summary-always: true # Always show benchmark summary in PR comments

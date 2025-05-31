@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - name: Build and deploy jagua-rs docs
         run: RUSTDOCFLAGS="-D warnings" cargo doc --all
       - name: Deploy docs
