@@ -1,5 +1,6 @@
 [package]
 name = "lbf"
+version = "0.0.1"
 description = "Left Bottom Fill reference implementation for jagua-rs"
 edition = "2024"
 license = "MPL-2.0"
@@ -36,6 +37,10 @@ harness = false
 
 [[bench]]
 name = "fast_fail_bench"
+harness = false
+
+[[bench]]
+name = "ci_bench"
 harness = false
 
 #[[bench]]

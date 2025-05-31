@@ -1,0 +1,51 @@
+name: Benchmark
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write  # Added for comment-on-alert
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch full history for commit comparisons
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run benchmarks
+        env:
+          RUSTFLAGS: '-C target-cpu=native -Awarnings'
+        run: |
+          export RUSTFLAGS=$RUSTFLAGS
+          cargo bench --bench ci_bench -- --output-format bencher | tee output.txt
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Performance jagua-rs
+          tool: 'cargo'
+          output-file-path: output.txt
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          # Enable alerts for performance regressions
+          alert-threshold: '120%' # Alert if performance regresses by more than 20%
+          fail-on-alert: false
+          alert-comment-cc-users: '@JeroenGar' # Replace with actual username or team
+          benchmark-data-dir-path: 'benchmarks'
+          save-data-file: true
+          gh-pages-branch: 'gh-pages'
+          gh-repository: github.com/${{ github.repository }}
+          summary-always: true # Always show benchmark summary in PR comments
+          comment-always: true

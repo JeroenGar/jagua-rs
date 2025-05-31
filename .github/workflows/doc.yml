@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - name: Build and deploy jagua-rs docs
         run: RUSTDOCFLAGS="-D warnings" cargo doc --all
       - name: Deploy docs
@@ -26,6 +27,8 @@ jobs:
           branch: gh-pages
           folder: target/doc
           clean: true
+          clean-exclude: |
+            benchmark/**
           repository-name: JeroenGar/jagua-rs-docs
           commit-message: "auto deploy docs"
           single-commit: true
