@@ -1,4 +1,4 @@
-name: Perf Benchmarks
+name: Perf Tracker
 
 on:
   pull_request:
@@ -17,7 +17,7 @@ on:
 
 jobs:
   benchmark:
-    name: Performance Benchmarks
+    name: CI Benchmarks
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -42,7 +42,7 @@ jobs:
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: jagua-rs Performance
+          name: Performance Tracker
           tool: 'cargo'
           output-file-path: output.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
