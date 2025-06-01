@@ -42,17 +42,18 @@ jobs:
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: Performance jagua-rs
+          name: jagua-rs Performance
           tool: 'cargo'
           output-file-path: output.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
+          # Only push benchmarks when
+          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           # Enable alerts for performance regressions
           alert-threshold: '120%' # Alert if performance regresses by more than 20%
           fail-on-alert: false
           alert-comment-cc-users: '@JeroenGar' # Replace with actual username or team
           benchmark-data-dir-path: 'benchmarks'
-          save-data-file: true
+          save-data-file: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           gh-pages-branch: 'gh-pages'
           gh-repository: github.com/${{ github.repository }}
           summary-always: true # Always show benchmark summary in PR comments

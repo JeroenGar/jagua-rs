@@ -84,7 +84,7 @@ General usage:
 
 ```bash
 cd lbf
-cargo run --release -- \
+cargo run --release --bin lbf -- \
   -i <input file> \
   -c <config file (optional)> \
   -s <solution folder> \
@@ -94,8 +94,7 @@ cargo run --release -- \
 Concrete example:
 
 ```bash
-cd lbf
-cargo run --release -- \
+cargo run --release --bin lbf -- \
   -i assets/swim.json \
   -p spp \
   -c assets/config_lbf.json \

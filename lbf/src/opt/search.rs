@@ -41,7 +41,7 @@ pub fn search(
     for i in 0..uni_sample_budget {
         let d_transf = bin_sampler.sample(rng);
         let transf = d_transf.compose();
-        if !cde.surrogate_collides(surrogate, &transf, filter) {
+        if !cde.detect_surr_collision(surrogate, &transf, filter) {
             //if no collision is detected on the surrogate, apply the transformation
             buffer.transform_from(&item.shape_cd, &transf);
             let cost = LBFLoss::from_shape(&buffer);
@@ -54,7 +54,7 @@ pub fn search(
                 (None, _) => true,
             };
 
-            if worth_testing && !cde.poly_collides(&buffer, filter) {
+            if worth_testing && !cde.detect_poly_collision(&buffer, filter) {
                 //sample is valid and improves on the current best
                 debug!("[UNI: {i}/{uni_sample_budget}] better: {} ", &d_transf);
 
@@ -82,14 +82,14 @@ pub fn search(
     for i in 0..ls_sample_budget {
         let d_transf = ls_sampler.sample(rng);
         let transf = d_transf.compose();
-        if !cde.surrogate_collides(surrogate, &transf, filter) {
+        if !cde.detect_surr_collision(surrogate, &transf, filter) {
             buffer.transform_from(&item.shape_cd, &transf);
             let cost = LBFLoss::from_shape(&buffer);
 
             //only validate the sample if it possibly can replace the current best
             let worth_testing = cost < *best_cost;
 
-            if worth_testing && !cde.poly_collides(&buffer, filter) {
+            if worth_testing && !cde.detect_poly_collision(&buffer, filter) {
                 //sample is valid and improves on the current best
                 ls_sampler.shift_mean(d_transf);
                 debug!("[LS: {i}/{ls_sample_budget}] better: {}", &d_transf);

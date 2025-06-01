@@ -141,7 +141,7 @@ impl QTNode {
                     QTHazPresence::Entire => Some(&strongest_hazard.entity),
                     QTHazPresence::Partial(_) => match &self.children {
                         Some(children) => {
-                            //Check if any of the children intersect with the entity
+                            //Check if any of the children collide with the entity
                             children
                                 .iter()
                                 .map(|child| child.collides(entity, filter))
@@ -179,21 +179,23 @@ impl QTNode {
         entity: &T,
         detector: &mut impl HazardDetector,
     ) {
-        //TODO: This seems to be the fastest version of this function
-        //      Check if the other collision functions can also be improved.
-        if !(entity.collides_with(&self.bbox) && self.hazards.strongest(detector).is_some()) {
-            // Entity does not collide with the node or any hazards present are not relevant
+        if !entity.collides_with(&self.bbox) {
+            // Entity does not collide with the node
             return;
         }
-        match self.children.as_ref() {
-            Some(children) => {
+
+        // Condition to perform collision detection now or pass it to children:
+        let perform_cd_now = self.hazards.n_active_edges() <= 16;
+
+        match (self.children.as_ref(), perform_cd_now) {
+            (Some(children), false) => {
                 //Do not perform any CD on this level, check the children
                 children.iter().for_each(|child| {
                     child.collect_collisions(entity, detector);
                 })
             }
-            None => {
-                //No children, detect all Entire hazards and check the Partial ones
+            (None, _) | (Some(_), true) => {
+                //Check the hazards now
                 for hz in self.hazards.active_hazards().iter() {
                     match &hz.presence {
                         QTHazPresence::None => (),
@@ -213,43 +215,9 @@ impl QTNode {
         }
     }
 
-    /// Used to detect collisions in a broad fashion:
-    /// Returns `Tribool::True` if the entity definitely collides with a hazard,
-    /// `Tribool::False` if the entity definitely does not collide with any hazard,
-    /// and `Tribool::Indeterminate` if it is not possible to determine whether the entity collides with any hazard.
-    pub fn definitely_collides<T>(&self, entity: &T, filter: &impl HazardFilter) -> Tribool
-    where
-        T: CollidesWith<Rect>,
-    {
-        match self.hazards.strongest(filter) {
-            None => Tribool::False,
-            Some(hazard) => match (entity.collides_with(&self.bbox), &hazard.presence) {
-                (false, _) | (_, QTHazPresence::None) => Tribool::False,
-                (true, QTHazPresence::Entire) => Tribool::True,
-                (true, QTHazPresence::Partial(_)) => match &self.children {
-                    Some(children) => {
-                        //There is a partial hazard and the node has children, check all children
-                        let mut result = Tribool::False; //Assume no collision
-                        for i in 0..4 {
-                            let child = &children[i];
-                            match child.definitely_collides(entity, filter) {
-                                Tribool::True => return Tribool::True,
-                                Tribool::Indeterminate => result = Tribool::Indeterminate,
-                                Tribool::False => {}
-                            }
-                        }
-                        result
-                    }
-                    None => Tribool::Indeterminate,
-                },
-            },
-        }
-    }
-
-    /// Used to detect collisions with a single hazard in a broad fashion:
-    /// Returns `Tribool::True` if the entity definitely collides with a hazard,
-    /// `Tribool::False` if the entity definitely does not collide with any hazard,
-    /// and `Tribool::Indeterminate` if it is not possible to determine whether the entity collides with any hazard.
+    /// Detect collisions with a single hazard in a broad fashion.
+    /// Returns either `Tribool::True`, `Tribool::False` when it is able to provide a definite answer,
+    /// otherwise returns `Tribool::Indeterminate`.
     pub fn definitely_collides_with<T>(&self, entity: &T, hazard_entity: HazardEntity) -> Tribool
     where
         T: CollidesWith<Rect>,
@@ -279,43 +247,6 @@ impl QTNode {
                     },
                 },
             },
-        }
-    }
-
-    /// Used to gather all hazards that within a given bounding box.
-    /// May overestimate the hazards that are present in the bounding box, since it is limited
-    /// by the resolution of the quadtree.
-    pub fn collect_potential_hazards_within(&self, bbox: Rect, detector: &mut impl HazardDetector) {
-        if !bbox.collides_with(&self.bbox) {
-            return;
-        }
-        match self.children.as_ref() {
-            Some(children) => {
-                //Do not perform any CD on this level, check the children
-                children.iter().for_each(|child| {
-                    child.collect_potential_hazards_within(bbox, detector);
-                })
-            }
-            None => {
-                //No children, detect all Entire hazards and check the Partial ones
-                for hz in self.hazards.active_hazards().iter() {
-                    match &hz.presence {
-                        QTHazPresence::None => (),
-                        QTHazPresence::Entire => {
-                            if !detector.contains(&hz.entity) {
-                                detector.push(hz.entity)
-                            }
-                        }
-                        QTHazPresence::Partial(_) => {
-                            // If the hazards is partially present, add it.
-                            // We are limited by the resolution of the quadtree
-                            if !detector.contains(&hz.entity) {
-                                detector.push(hz.entity);
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 }

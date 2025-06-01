@@ -12,9 +12,9 @@ use rand::prelude::{IteratorRandom, SmallRng};
 criterion_main!(benches);
 criterion_group!(
     benches,
+    cde_collect_bench,
     cde_update_bench,
     cde_detect_bench,
-    cde_collect_bench
 );
 
 mod util;
@@ -25,7 +25,7 @@ const N_SAMPLES_PER_ITER: usize = 1000;
 /// Benchmark how many complete collision collection queries can be performed every second with different quadtree depths. (no early exit)
 /// The layout is dense.
 fn cde_collect_bench(c: &mut Criterion) {
-    let mut config = util::create_base_config();
+    let mut config = create_base_config();
 
     let mut group = c.benchmark_group("cde_collect_1k");
     for depth in QT_DEPTHS {
@@ -57,11 +57,7 @@ fn cde_collect_bench(c: &mut Criterion) {
                     let d_transf = sampler.sample(&mut rng);
                     let transf = d_transf.compose();
                     //detect collisions with the surrogate
-                    cde.collect_surrogate_collisions(
-                        item.shape_cd.surrogate(),
-                        &transf,
-                        &mut detector,
-                    );
+                    cde.collect_surr_collisions(item.shape_cd.surrogate(), &transf, &mut detector);
                     //detect collisions with the actual shape
                     buffer_shape.transform_from(&item.shape_cd, &transf);
                     cde.collect_poly_collisions(&buffer_shape, &mut detector);
@@ -108,10 +104,13 @@ fn cde_detect_bench(c: &mut Criterion) {
                     let d_transf = sampler.sample(&mut rng);
                     let transf = d_transf.compose();
                     //detect collisions with the surrogate
-                    if !cde.surrogate_collides(item.shape_cd.surrogate(), &transf, &NoHazardFilter)
-                    {
+                    if !cde.detect_surr_collision(
+                        item.shape_cd.surrogate(),
+                        &transf,
+                        &NoHazardFilter,
+                    ) {
                         buffer_shape.transform_from(&item.shape_cd, &transf);
-                        if !cde.poly_collides(&buffer_shape, &NoHazardFilter) {
+                        if !cde.detect_poly_collision(&buffer_shape, &NoHazardFilter) {
                             n_detected += 1;
                         }
                     }

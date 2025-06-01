@@ -129,7 +129,7 @@ impl Layout {
     pub fn is_feasible(&self) -> bool {
         self.placed_items.iter().all(|(pk, pi)| {
             let filter = HazardEntity::from((pk, pi));
-            !self.cde.poly_collides(&pi.shape, &filter)
+            !self.cde.detect_poly_collision(&pi.shape, &filter)
         })
     }
 }

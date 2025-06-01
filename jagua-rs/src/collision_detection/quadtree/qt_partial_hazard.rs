@@ -1,5 +1,5 @@
 use std::hash::Hash;
-use std::sync::{Arc, Weak};
+use std::sync::Arc;
 
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
@@ -8,17 +8,11 @@ use crate::geometry::primitives::SPolygon;
 /// Defines a set of edges from a hazard that is partially active in the [`QTNode`](crate::collision_detection::quadtree::QTNode).
 #[derive(Clone, Debug)]
 pub struct QTHazPartial {
-    pub shape: Weak<SPolygon>,
+    pub shape: Arc<SPolygon>,
     pub edges: RelevantEdges,
 }
 
 impl QTHazPartial {
-    pub fn shape_arc(&self) -> Arc<SPolygon> {
-        self.shape
-            .upgrade()
-            .expect("polygon reference is not alive")
-    }
-
     pub fn all_edges(&self) -> bool {
         self.edges == RelevantEdges::All
     }
@@ -31,34 +25,26 @@ impl QTHazPartial {
             }
         }
     }
+
+    pub fn n_edges(&self) -> usize {
+        match &self.edges {
+            RelevantEdges::All => self.shape.n_vertices(),
+            RelevantEdges::Some(indices) => indices.len(),
+        }
+    }
 }
-
-//check bbox if number of edges is this or greater
-const BBOX_CHECK_THRESHOLD: usize = 10;
-
-const BBOX_CHECK_THRESHOLD_MINUS_1: usize = BBOX_CHECK_THRESHOLD - 1;
 
 impl<T: QTQueryable> CollidesWith<T> for QTHazPartial {
     fn collides_with(&self, entity: &T) -> bool {
-        let shape = self.shape_arc();
-        match &self.edges {
-            RelevantEdges::All => match entity.collides_with(&shape.bbox) {
-                false => false,
-                true => shape.edge_iter().any(|e| entity.collides_with(&e)),
-            },
-            RelevantEdges::Some(indices) => match indices.len() {
-                0 => unreachable!("edge indices should not be empty"),
-                1..=BBOX_CHECK_THRESHOLD_MINUS_1 => indices
+        // If the entity does not collide with the bounding box of the hazard, it cannot collide with the hazard
+        match entity.collides_with(&self.shape.bbox) {
+            false => false,
+            true => match &self.edges {
+                RelevantEdges::All => self.shape.edge_iter().any(|e| entity.collides_with(&e)),
+                RelevantEdges::Some(idxs) => idxs
                     .iter()
-                    .any(|&i| entity.collides_with(&shape.edge(i))),
-                BBOX_CHECK_THRESHOLD.. => {
-                    if !entity.collides_with(&shape.bbox) {
-                        return false;
-                    }
-                    indices
-                        .iter()
-                        .any(|&i| entity.collides_with(&shape.edge(i)))
-                }
+                    .map(|i| self.shape.edge(*i))
+                    .any(|e| entity.collides_with(&e)),
             },
         }
     }

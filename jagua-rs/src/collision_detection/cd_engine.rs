@@ -2,20 +2,16 @@ use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hazards::detector::HazardDetector;
 use crate::collision_detection::hazards::filter::HazardFilter;
-use crate::collision_detection::quadtree::{QTHazard, QTNode};
+use crate::collision_detection::quadtree::{QTHazPresence, QTHazard, QTNode};
 use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
-use crate::geometry::geo_traits::{CollidesWith, Transformable, TransformableFrom};
-use crate::geometry::primitives::Circle;
-use crate::geometry::primitives::Edge;
-use crate::geometry::primitives::Point;
+use crate::geometry::geo_traits::{CollidesWith, Transformable};
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 use crate::util::assertions;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tribool::Tribool;
 
 /// The Collision Detection Engine (CDE).
 /// [`Hazard`]s can be (de)registered and collision queries can be performed.
@@ -210,44 +206,48 @@ impl CDEngine {
             .chain(self.dynamic_hazards.iter())
     }
 
-    ///Checks whether a reference simple polygon, with a transformation applies, collides with any of the hazards.
-    ///The check is first done on the surrogate, then with the actual shape.
-    ///A buffer shape is used as a temporary storage for the transformed shape.
-    /// # Arguments
-    /// * `reference_shape` - The shape to be checked for collisions
-    /// * `transform` - The transformation to be applied to the reference shape
-    /// * `buffer_shape` - A temporary storage for the transformed shape
-    /// * `filter` - Hazard filter to be applied
-    pub fn surrogate_or_poly_collides(
-        &self,
-        reference_shape: &SPolygon,
-        transform: &Transformation,
-        buffer_shape: &mut SPolygon,
-        filter: &impl HazardFilter,
-    ) -> bool {
-        //Begin with checking the surrogate for collisions
-        match self.surrogate_collides(reference_shape.surrogate(), transform, filter) {
-            true => true,
-            false => {
-                //Transform the reference_shape and store the result in the buffer_shape
-                buffer_shape.transform_from(reference_shape, transform);
-                self.poly_collides(buffer_shape, filter)
-            }
-        }
-    }
-
-    ///Checks whether a simple polygon collides with any of the (relevant) hazards
+    /// Checks whether a simple polygon collides with any of the (relevant) hazards
     /// # Arguments
     /// * `shape` - The shape (already transformed) to be checked for collisions
     /// * `filter` - Hazard filter to be applied
-    pub fn poly_collides(&self, shape: &SPolygon, filter: &impl HazardFilter) -> bool {
-        match self.bbox.relation_to(shape.bbox) {
-            //Not fully inside bbox => definite collision
-            GeoRelation::Disjoint | GeoRelation::Enclosed | GeoRelation::Intersecting => true,
-            GeoRelation::Surrounding => {
-                self.poly_collides_by_edge_intersection(shape, filter)
-                    || self.poly_collides_by_containment(shape, filter)
+    pub fn detect_poly_collision(&self, shape: &SPolygon, filter: &impl HazardFilter) -> bool {
+        if self.bbox.relation_to(shape.bbox) != GeoRelation::Surrounding {
+            //The CDE does not capture the entire shape, so we can immediately return true
+            true
+        } else {
+            //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
+            let v_qt_root = self.get_virtual_root(shape);
+
+            // Check for edge intersections with the shape
+            for edge in shape.edge_iter() {
+                if v_qt_root.collides(&edge, filter).is_some() {
+                    return true;
+                }
             }
+
+            // Check for containment of the shape in any of the hazards
+            for qt_hazard in v_qt_root.hazards.active_hazards() {
+                match &qt_hazard.presence {
+                    QTHazPresence::None => {}
+                    QTHazPresence::Entire => unreachable!(
+                        "Entire hazards in the virtual root should have been caught by the edge intersection tests"
+                    ),
+                    QTHazPresence::Partial(qthaz_partial) => {
+                        if !filter.is_irrelevant(&qt_hazard.entity)
+                            && self.poly_or_hazard_are_contained(
+                                shape,
+                                &qthaz_partial.shape,
+                                qt_hazard.entity,
+                            )
+                        {
+                            // The hazard is contained in the shape (or vice versa)
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            false
         }
     }
 
@@ -256,7 +256,7 @@ impl CDEngine {
     /// * `base_surrogate` - The (untransformed) surrogate to be checked for collisions
     /// * `transform` - The transformation to be applied to the surrogate
     /// * `filter` - Hazard filter to be applied
-    pub fn surrogate_collides(
+    pub fn detect_surr_collision(
         &self,
         base_surrogate: &SPSurrogate,
         transform: &Transformation,
@@ -277,59 +277,16 @@ impl CDEngine {
         false
     }
 
-    /// Checks whether a point definitely collides with any of the (relevant) hazards.
-    /// Only fully hazardous nodes in the quadtree are considered.
-    pub fn point_definitely_collides_with(&self, point: &Point, entity: HazardEntity) -> Tribool {
-        match self.bbox.collides_with(point) {
-            false => Tribool::Indeterminate, //point is outside the quadtree, so no information available
-            true => self.quadtree.definitely_collides_with(point, entity),
-        }
-    }
-
-    /// Checks whether an edge definitely collides with any of the (relevant) hazards.
-    /// Only fully hazardous nodes in the quadtree are considered.
-    pub fn edge_definitely_collides(&self, edge: &Edge, filter: &impl HazardFilter) -> Tribool {
-        match !self.bbox.collides_with(&edge.start) || !self.bbox.collides_with(&edge.end) {
-            true => Tribool::True, //if either the start or end of the edge is outside the quadtree, it definitely collides
-            false => self.quadtree.definitely_collides(edge, filter),
-        }
-    }
-
-    /// Checks whether a circle definitely collides with any of the (relevant) hazards.
-    /// Only fully hazardous nodes in the quadtree are considered.
-    pub fn circle_definitely_collides(
-        &self,
-        circle: &Circle,
-        filter: &impl HazardFilter,
-    ) -> Tribool {
-        match self.bbox.collides_with(&circle.center) {
-            false => Tribool::True, //outside the quadtree, so definitely collides
-            true => self.quadtree.definitely_collides(circle, filter),
-        }
-    }
-
-    fn poly_collides_by_edge_intersection(
+    /// Check for collision by containment between a polygon and a hazard.
+    pub fn poly_or_hazard_are_contained(
         &self,
         shape: &SPolygon,
-        filter: &impl HazardFilter,
+        haz_shape: &SPolygon,
+        haz_entity: HazardEntity,
     ) -> bool {
-        shape
-            .edge_iter()
-            .any(|e| self.quadtree.collides(&e, filter).is_some())
-    }
-
-    fn poly_collides_by_containment(&self, shape: &SPolygon, filter: &impl HazardFilter) -> bool {
-        //collect all active and non-ignored hazards
-        self.all_hazards()
-            .filter(|h| h.active && !filter.is_irrelevant(&h.entity))
-            .any(|haz| self.poly_or_hazard_are_contained(shape, haz))
-    }
-
-    pub fn poly_or_hazard_are_contained(&self, shape: &SPolygon, haz: &Hazard) -> bool {
         //Due to possible fp issues, we check if the bboxes are "almost" related
         //"almost" meaning that, when edges are very close together, they are considered equal.
         //Some relations which would normally be seen as Intersecting are now being considered Enclosed/Surrounding
-        let haz_shape = haz.shape.as_ref();
         let bbox_relation = haz_shape.bbox.almost_relation_to(shape.bbox);
 
         let (s_mu, s_omega) = match bbox_relation {
@@ -337,7 +294,7 @@ impl CDEngine {
             GeoRelation::Enclosed => (haz_shape, shape),    //inclusion possible
             GeoRelation::Disjoint | GeoRelation::Intersecting => {
                 //no inclusion is possible
-                return match haz.entity.position() {
+                return match haz_entity.position() {
                     GeoPosition::Interior => false,
                     GeoPosition::Exterior => true,
                 };
@@ -349,7 +306,7 @@ impl CDEngine {
             //maybe the quadtree can help us.
             if let Ok(collides) = self
                 .quadtree
-                .definitely_collides_with(&s_mu.poi.center, haz.entity)
+                .definitely_collides_with(&s_mu.poi.center, haz_entity)
                 .try_into()
             {
                 return collides;
@@ -357,7 +314,7 @@ impl CDEngine {
         }
         let inclusion = s_omega.collides_with(&s_mu.poi.center);
 
-        match haz.entity.position() {
+        match haz_entity.position() {
             GeoPosition::Interior => inclusion,
             GeoPosition::Exterior => !inclusion,
         }
@@ -369,21 +326,36 @@ impl CDEngine {
             detector.push(HazardEntity::Exterior)
         }
 
+        //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
+        let v_quadtree = self.get_virtual_root(shape);
+
         //collect all colliding entities due to edge intersection
         shape
             .edge_iter()
-            .for_each(|e| self.quadtree.collect_collisions(&e, detector));
+            .for_each(|e| v_quadtree.collect_collisions(&e, detector));
 
-        //collect all colliding entities due to containment
-        self.all_hazards().filter(|h| h.active).for_each(|h| {
-            if !detector.contains(&h.entity) && self.poly_or_hazard_are_contained(shape, h) {
-                detector.push(h.entity);
-            }
-        });
+        v_quadtree
+            .hazards
+            .active_hazards()
+            .iter()
+            .for_each(|qt_haz| match &qt_haz.presence {
+                QTHazPresence::Entire | QTHazPresence::None => {}
+                QTHazPresence::Partial(qt_par_haz) => {
+                    if !detector.contains(&qt_haz.entity)
+                        && self.poly_or_hazard_are_contained(
+                            shape,
+                            &qt_par_haz.shape,
+                            qt_haz.entity,
+                        )
+                    {
+                        detector.push(qt_haz.entity);
+                    }
+                }
+            })
     }
 
     /// Collects all hazards with which the surrogate collides and reports them to the detector.
-    pub fn collect_surrogate_collisions(
+    pub fn collect_surr_collisions(
         &self,
         base_surrogate: &SPSurrogate,
         transform: &Transformation,
@@ -399,11 +371,21 @@ impl CDEngine {
         }
     }
 
-    /// Collects all hazards potentially colliding with the given bounding box.
-    /// This is an overestimation, as it is limited by the quadtree resolution.
-    pub fn collect_potential_hazards_within(&self, bbox: Rect, detector: &mut impl HazardDetector) {
-        self.quadtree
-            .collect_potential_hazards_within(bbox, detector);
+    /// Returns the lowest `QTNode` that completely surrounds the bounding box of the shape.
+    /// Can be used to start collision detection from a lower level in the quadtree.
+    pub fn get_virtual_root(&self, shape: &SPolygon) -> &QTNode {
+        let mut v_root = &self.quadtree;
+        while let Some(children) = v_root.children.as_ref() {
+            // Keep going down the tree until we cannot find a child that fully surrounds the shape
+            let surrounding_child = children
+                .iter()
+                .find(|child| child.bbox.relation_to(shape.bbox) == GeoRelation::Surrounding);
+            match surrounding_child {
+                Some(child) => v_root = child,
+                None => break,
+            }
+        }
+        v_root
     }
 }
 
