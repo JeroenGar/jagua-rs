@@ -187,7 +187,7 @@ These `debug_asserts` are enabled by default in debug and test builds, but are o
 On every commit and pull request, the following GitHub Actions workflows are run:
   - Full compile and format check.
   - Integration tests to simulate an optimization run on a range of instances/configurations with all checks enabled.
-  - Performance benchmarks to alert in case of regressions (see historical performance [here](https://jeroengar.github.io/jagua-rs/benchmarks/)).
+  - Performance benchmarks to alert in case of regressions (see historical [Performance Tracker](https://jeroengar.github.io/jagua-rs/benchmarks/)).
   - Documentation generation and deployment (see [Documentation](#documentation) section below).
 
 Tests and benchmarks can be run locally with `cargo test` and `cargo bench --bench ci_bench` respectively.
