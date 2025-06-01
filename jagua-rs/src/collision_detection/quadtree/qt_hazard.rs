@@ -139,10 +139,10 @@ impl QTHazard {
                                 (_, Some(QTHazPresence::None)) => QTHazPresence::None,
                                 _ => {
                                     //Neither of its neighbors is resolved, check its position.
-                                    let haz_pos = self.entity.position();
+                                    let haz_scope = self.entity.scope();
                                     //Since partial presence is not possible, checking whether the center of the quadrant collides or not suffices
                                     let colliding = arc_shape.collides_with(&quadrant.centroid());
-                                    match (haz_pos, colliding) {
+                                    match (haz_scope, colliding) {
                                         (GeoPosition::Interior, true) => QTHazPresence::Entire,
                                         (GeoPosition::Exterior, false) => QTHazPresence::Entire,
                                         _ => QTHazPresence::None,
