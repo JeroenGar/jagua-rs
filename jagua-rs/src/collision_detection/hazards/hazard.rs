@@ -46,9 +46,8 @@ pub enum HazardEntity {
 }
 
 impl HazardEntity {
-    /// Whether the entity induces an 'interior' hazard, meaning everything inside its shape is hazardous.
-    /// Or an 'exterior' hazard, meaning everything outside its shape is hazardous.
-    pub fn position(&self) -> GeoPosition {
+    /// Whether the entity induced a hazard within the entire interior or exterior of its shape
+    pub fn scope(&self) -> GeoPosition {
         match self {
             HazardEntity::PlacedItem { .. } => GeoPosition::Interior,
             HazardEntity::Exterior => GeoPosition::Exterior,

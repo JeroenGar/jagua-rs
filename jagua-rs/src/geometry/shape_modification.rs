@@ -14,7 +14,7 @@ use crate::geometry::primitives::SPolygon;
 use anyhow::Result;
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
-/// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::position) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
+/// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::scope) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ShapeModifyMode {
     /// Modify the shape to be strictly larger than the original (superset).
