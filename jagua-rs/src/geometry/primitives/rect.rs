@@ -44,50 +44,48 @@ impl Rect {
     /// Optimized for `GeoRelation::Disjoint`
     #[inline(always)]
     pub fn relation_to(&self, other: Rect) -> GeoRelation {
-        if self.collides_with(&other) {
-            if self.x_min <= other.x_min
-                && self.y_min <= other.y_min
-                && self.x_max >= other.x_max
-                && self.y_max >= other.y_max
-            {
-                GeoRelation::Surrounding
-            } else if self.x_min >= other.x_min
-                && self.y_min >= other.y_min
-                && self.x_max <= other.x_max
-                && self.y_max <= other.y_max
-            {
-                GeoRelation::Enclosed
-            } else {
-                GeoRelation::Intersecting
-            }
-        } else {
-            GeoRelation::Disjoint
+        if !self.collides_with(&other) {
+            return GeoRelation::Disjoint;
         }
+        if self.x_min <= other.x_min
+            && self.y_min <= other.y_min
+            && self.x_max >= other.x_max
+            && self.y_max >= other.y_max
+        {
+            return GeoRelation::Surrounding;
+        }
+        if self.x_min >= other.x_min
+            && self.y_min >= other.y_min
+            && self.x_max <= other.x_max
+            && self.y_max <= other.y_max
+        {
+            return GeoRelation::Enclosed;
+        }
+        GeoRelation::Intersecting
     }
 
     /// Returns the [`GeoRelation`] between `self` and another [`Rect`], with a tolerance for floating point precision.
     /// In edge cases, this method will lean towards `Surrounding` and `Enclosed` instead of `Intersecting`.
     #[inline(always)]
     pub fn almost_relation_to(&self, other: Rect) -> GeoRelation {
-        if self.almost_collides_with(&other) {
-            if FPA::from(self.x_min) <= FPA::from(other.x_min)
-                && FPA::from(self.y_min) <= FPA::from(other.y_min)
-                && FPA::from(self.x_max) >= FPA::from(other.x_max)
-                && FPA::from(self.y_max) >= FPA::from(other.y_max)
-            {
-                GeoRelation::Surrounding
-            } else if FPA::from(self.x_min) >= FPA::from(other.x_min)
-                && FPA::from(self.y_min) >= FPA::from(other.y_min)
-                && FPA::from(self.x_max) <= FPA::from(other.x_max)
-                && FPA::from(self.y_max) <= FPA::from(other.y_max)
-            {
-                GeoRelation::Enclosed
-            } else {
-                GeoRelation::Intersecting
-            }
-        } else {
-            GeoRelation::Disjoint
+        if !self.almost_collides_with(&other) {
+            return GeoRelation::Disjoint;
         }
+        if FPA::from(self.x_min) <= FPA::from(other.x_min)
+            && FPA::from(self.y_min) <= FPA::from(other.y_min)
+            && FPA::from(self.x_max) >= FPA::from(other.x_max)
+            && FPA::from(self.y_max) >= FPA::from(other.y_max)
+        {
+            return GeoRelation::Surrounding;
+        }
+        if FPA::from(self.x_min) >= FPA::from(other.x_min)
+            && FPA::from(self.y_min) >= FPA::from(other.y_min)
+            && FPA::from(self.x_max) <= FPA::from(other.x_max)
+            && FPA::from(self.y_max) <= FPA::from(other.y_max)
+        {
+            return GeoRelation::Enclosed;
+        }
+        GeoRelation::Intersecting
     }
 
     /// Returns a new rectangle with the same centroid but inflated
