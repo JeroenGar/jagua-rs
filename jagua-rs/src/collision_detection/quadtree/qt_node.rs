@@ -132,6 +132,7 @@ impl QTNode {
         entity: &T,
         filter: &impl HazardFilter,
     ) -> Option<&HazardEntity> {
+        //TODO: Can use a lot more optimization here, (look at `collect_collisions` for example)
         match self.hazards.strongest(filter) {
             None => None,
             Some(strongest_hazard) => match entity.collides_with(&self.bbox) {
@@ -179,21 +180,23 @@ impl QTNode {
         entity: &T,
         detector: &mut impl HazardDetector,
     ) {
-        //TODO: This seems to be the fastest version of this function
-        //      Check if the other collision functions can also be improved.
-        if !entity.collides_with(&self.bbox) || self.hazards.strongest(detector).is_none() {
-            // Entity does not collide with the node or any hazards present are not relevant
+        if !entity.collides_with(&self.bbox) {
+            // Entity does not collide with the node
             return;
         }
-        match self.children.as_ref() {
-            Some(children) => {
+
+        // Condition to perform collision detection now or pass it to children:
+        let perform_cd_now = self.hazards.n_active_edges() <= 16;
+
+        match (self.children.as_ref(), perform_cd_now) {
+            (Some(children), false) => {
                 //Do not perform any CD on this level, check the children
                 children.iter().for_each(|child| {
                     child.collect_collisions(entity, detector);
                 })
             }
-            None => {
-                //No children, detect all Entire hazards and check the Partial ones
+            (None, _) | (Some(_), true) => {
+                //Check the hazards now
                 for hz in self.hazards.active_hazards().iter() {
                     match &hz.presence {
                         QTHazPresence::None => (),

@@ -25,6 +25,13 @@ impl QTHazPartial {
             }
         }
     }
+
+    pub fn n_edges(&self) -> usize {
+        match &self.edges {
+            RelevantEdges::All => self.shape.n_vertices(),
+            RelevantEdges::Some(indices) => indices.len(),
+        }
+    }
 }
 
 impl<T: QTQueryable> CollidesWith<T> for QTHazPartial {

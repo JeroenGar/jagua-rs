@@ -167,6 +167,13 @@ impl QTHazard {
             }
         }
     }
+
+    pub fn n_edges(&self) -> usize {
+        match &self.presence {
+            QTHazPresence::None | QTHazPresence::Entire => 0,
+            QTHazPresence::Partial(partial_haz) => partial_haz.n_edges(),
+        }
+    }
 }
 
 fn compute_edge_collisions_in_quadrant(

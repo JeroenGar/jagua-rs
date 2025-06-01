@@ -11,7 +11,10 @@ use std::cmp::Ordering;
 #[derive(Clone, Debug, Default)]
 pub struct QTHazardVec {
     hazards: Vec<QTHazard>,
-    n_active: usize,
+    /// Number of active hazards in the vector
+    n_active_hazards: usize,
+    /// Number of edges from active hazards in the vector
+    n_active_edges: usize,
 }
 
 impl QTHazardVec {
@@ -34,7 +37,10 @@ impl QTHazardVec {
             .binary_search_by(|probe| order_by_descending_strength(probe, &haz))
         {
             Ok(pos) | Err(pos) => {
-                self.n_active += haz.active as usize;
+                if haz.active {
+                    self.n_active_hazards += 1;
+                    self.n_active_edges += haz.n_edges();
+                }
                 self.hazards.insert(pos, haz);
             }
         }
@@ -54,7 +60,10 @@ impl QTHazardVec {
         match pos {
             Some(pos) => {
                 let haz = self.hazards.remove(pos);
-                self.n_active -= haz.active as usize;
+                if haz.active {
+                    self.n_active_hazards -= 1;
+                    self.n_active_edges -= haz.n_edges();
+                }
                 Some(haz)
             }
             None => None,
@@ -65,17 +74,8 @@ impl QTHazardVec {
     /// Returns the strongest hazard (if any), meaning the first active hazard with the highest [QTHazPresence] (`Entire` > `Partial` > `None`)
     /// Ignores any hazards that are deemed irrelevant by the filter.
     pub fn strongest(&self, filter: &impl HazardFilter) -> Option<&QTHazard> {
-        debug_assert!(
-            self.hazards.iter().filter(|hz| hz.active).count() == self.n_active,
-            "Active hazards count is not correct!"
-        );
-        debug_assert!(
-            self.hazards
-                .windows(2)
-                .all(|w| order_by_descending_strength(&w[0], &w[1]) != Ordering::Greater),
-            "Hazards are not sorted correctly!"
-        );
-        self.hazards[0..self.n_active]
+        debug_assert!(assert_caches_correct(self));
+        self.active_hazards()
             .iter()
             .find(|hz| !filter.is_irrelevant(&hz.entity))
     }
@@ -88,9 +88,8 @@ impl QTHazardVec {
     }
 
     pub fn activate_hazard(&mut self, entity: HazardEntity) -> bool {
-        match self.hazards.iter_mut().position(|hz| hz.entity == entity) {
-            Some(index) => {
-                let mut hazard = self.hazards.remove(index);
+        match self.remove(entity) {
+            Some(mut hazard) => {
                 debug_assert!(!hazard.active);
                 hazard.active = true;
                 self.add(hazard);
@@ -101,12 +100,10 @@ impl QTHazardVec {
     }
 
     pub fn deactivate_hazard(&mut self, entity: HazardEntity) -> bool {
-        match self.hazards.iter_mut().position(|hz| hz.entity == entity) {
-            Some(index) => {
-                let mut hazard = self.hazards.remove(index);
+        match self.remove(entity) {
+            Some(mut hazard) => {
                 debug_assert!(hazard.active);
                 hazard.active = false;
-                self.n_active -= 1;
                 self.add(hazard);
                 true
             }
@@ -115,7 +112,8 @@ impl QTHazardVec {
     }
 
     pub fn active_hazards(&self) -> &[QTHazard] {
-        &self.hazards[0..self.n_active]
+        debug_assert!(assert_caches_correct(self));
+        &self.hazards[0..self.n_active_hazards]
     }
 
     pub fn all_hazards(&self) -> &[QTHazard] {
@@ -135,6 +133,16 @@ impl QTHazardVec {
             .iter()
             .all(|hz| matches!(hz.presence, QTHazPresence::Entire))
     }
+
+    pub fn n_active_hazards(&self) -> usize {
+        debug_assert!(assert_caches_correct(self));
+        self.n_active_hazards
+    }
+
+    pub fn n_active_edges(&self) -> usize {
+        debug_assert!(assert_caches_correct(self));
+        self.n_active_edges
+    }
 }
 
 fn order_by_descending_strength(qth1: &QTHazard, qth2: &QTHazard) -> Ordering {
@@ -153,4 +161,30 @@ fn order_by_descending_strength(qth1: &QTHazard, qth2: &QTHazard) -> Ordering {
             sk1.cmp(&sk2)
         })
         .reverse()
+}
+
+fn assert_caches_correct(qthazard_vec: &QTHazardVec) -> bool {
+    assert_eq!(
+        qthazard_vec.hazards.iter().filter(|hz| hz.active).count(),
+        qthazard_vec.n_active_hazards,
+        "Active hazards count is not correct!"
+    );
+    assert!(
+        qthazard_vec
+            .hazards
+            .windows(2)
+            .all(|w| order_by_descending_strength(&w[0], &w[1]) != Ordering::Greater),
+        "Hazards are not sorted correctly!"
+    );
+    assert_eq!(
+        qthazard_vec
+            .hazards
+            .iter()
+            .filter(|hz| hz.active)
+            .map(|hz| hz.n_edges())
+            .sum::<usize>(),
+        qthazard_vec.n_active_edges,
+        "Active edges count is not correct!"
+    );
+    true
 }
