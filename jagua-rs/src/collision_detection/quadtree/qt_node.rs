@@ -141,7 +141,7 @@ impl QTNode {
                     QTHazPresence::Entire => Some(&strongest_hazard.entity),
                     QTHazPresence::Partial(_) => match &self.children {
                         Some(children) => {
-                            //Check if any of the children intersect with the entity
+                            //Check if any of the children collide with the entity
                             children
                                 .iter()
                                 .map(|child| child.collides(entity, filter))
@@ -181,7 +181,7 @@ impl QTNode {
     ) {
         //TODO: This seems to be the fastest version of this function
         //      Check if the other collision functions can also be improved.
-        if !(entity.collides_with(&self.bbox) && self.hazards.strongest(detector).is_some()) {
+        if !entity.collides_with(&self.bbox) || self.hazards.strongest(detector).is_none() {
             // Entity does not collide with the node or any hazards present are not relevant
             return;
         }

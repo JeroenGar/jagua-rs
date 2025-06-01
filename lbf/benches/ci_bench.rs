@@ -12,8 +12,8 @@ use rand::prelude::{IteratorRandom, SmallRng};
 criterion_main!(benches);
 criterion_group!(
     benches,
-    cde_update_bench,
-    cde_detect_bench,
+    //cde_update_bench,
+    //cde_detect_bench,
     cde_collect_bench
 );
 
@@ -25,7 +25,7 @@ const N_SAMPLES_PER_ITER: usize = 1000;
 /// Benchmark how many complete collision collection queries can be performed every second with different quadtree depths. (no early exit)
 /// The layout is dense.
 fn cde_collect_bench(c: &mut Criterion) {
-    let mut config = util::create_base_config();
+    let mut config = create_base_config();
 
     let mut group = c.benchmark_group("cde_collect_1k");
     for depth in QT_DEPTHS {

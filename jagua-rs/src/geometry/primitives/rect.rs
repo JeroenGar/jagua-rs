@@ -41,6 +41,8 @@ impl Rect {
     }
 
     /// Returns the geometric relation between `self` and another [`Rect`].
+    /// Optimized for `GeoRelation::Disjoint`
+    #[inline(always)]
     pub fn relation_to(&self, other: Rect) -> GeoRelation {
         if self.collides_with(&other) {
             if self.x_min <= other.x_min
@@ -65,6 +67,7 @@ impl Rect {
 
     /// Returns the [`GeoRelation`] between `self` and another [`Rect`], with a tolerance for floating point precision.
     /// In edge cases, this method will lean towards `Surrounding` and `Enclosed` instead of `Intersecting`.
+    #[inline(always)]
     pub fn almost_relation_to(&self, other: Rect) -> GeoRelation {
         if self.almost_collides_with(&other) {
             if FPA::from(self.x_min) <= FPA::from(other.x_min)
