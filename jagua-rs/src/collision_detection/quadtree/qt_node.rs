@@ -7,7 +7,6 @@ use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::Rect;
-use tribool::Tribool;
 
 /// Quadtree node
 #[derive(Clone, Debug)]
@@ -212,41 +211,6 @@ impl QTNode {
                     }
                 }
             }
-        }
-    }
-
-    /// Detect collisions with a single hazard in a broad fashion.
-    /// Returns either `Tribool::True`, `Tribool::False` when it is able to provide a definite answer,
-    /// otherwise returns `Tribool::Indeterminate`.
-    pub fn definitely_collides_with<T>(&self, entity: &T, hazard_entity: HazardEntity) -> Tribool
-    where
-        T: CollidesWith<Rect>,
-    {
-        match self.hazards.get(hazard_entity) {
-            None => Tribool::False, //Node does not contain entity
-            Some(hazard) => match entity.collides_with(&self.bbox) {
-                false => Tribool::False, //Hazard present, but the point is fully outside the node
-                true => match hazard.presence {
-                    QTHazPresence::None => Tribool::False, //The hazard is of type None, a collision is impossible
-                    QTHazPresence::Entire => Tribool::True, //The hazard is of type Entire, a collision is guaranteed
-                    QTHazPresence::Partial(_) => match &self.children {
-                        Some(children) => {
-                            //There is a partial hazard and the node has children, check all children
-                            let mut result = Tribool::False; //Assume no collision
-                            for i in 0..4 {
-                                let child = &children[i];
-                                match child.definitely_collides_with(entity, hazard_entity) {
-                                    Tribool::True => return Tribool::True, //If a child for sure collides, we can immediately return Yes
-                                    Tribool::Indeterminate => result = Tribool::Indeterminate, //If a child might collide, switch from to Maybe
-                                    Tribool::False => {} //If child does not collide, do nothing
-                                }
-                            }
-                            result
-                        }
-                        None => Tribool::Indeterminate, //There are no children, so we can't be sure
-                    },
-                },
-            },
         }
     }
 }
