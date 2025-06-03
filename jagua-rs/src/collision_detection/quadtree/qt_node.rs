@@ -60,9 +60,9 @@ impl QTNode {
         }
 
         //Check if we have to expand the node (generate children)
-        if let None = self.children
+        if self.children.is_none()
             && self.level > 0
-            && let QTHazPresence::Partial(_) = hazard.presence
+            && matches!(hazard.presence, QTHazPresence::Partial(_))
         {
             // Generate a child for every quadrant
             let children = self
@@ -84,16 +84,15 @@ impl QTNode {
     pub fn deregister_hazard(&mut self, hazard_entity: HazardEntity) {
         let modified = self.hazards.remove(hazard_entity).is_some();
 
-        if modified && self.hazards.no_partial_hazards() {
-            // Drop the children if there are no partially present hazards left
-            self.children = None;
-        }
-
-        if modified && let Some(children) = &mut self.children {
-            // Deregister the hazard from all children
-            children
-                .iter_mut()
-                .for_each(|child| child.deregister_hazard(hazard_entity));
+        if modified {
+            if self.hazards.no_partial_hazards() {
+                // Drop the children if there are no partially present hazards left
+                self.children = None;
+            } else if let Some(children) = self.children.as_mut() {
+                children
+                    .iter_mut()
+                    .for_each(|c| c.deregister_hazard(hazard_entity));
+            }
         }
     }
 
