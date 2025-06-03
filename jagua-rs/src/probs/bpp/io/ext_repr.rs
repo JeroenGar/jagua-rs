@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 /// Bin Packing Problem instance
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct ExtBPInstance {
     /// The name of the instance
     pub name: String,
@@ -14,6 +15,7 @@ pub struct ExtBPInstance {
 
 /// Item with a demand
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct ExtItem {
     #[serde(flatten)]
     /// External representation of the item in the base library
@@ -24,6 +26,7 @@ pub struct ExtItem {
 
 /// Bin with a stock quantity and cost
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct ExtBin {
     #[serde(flatten)]
     pub base: crate::io::ext_repr::ExtContainer,
@@ -35,6 +38,7 @@ pub struct ExtBin {
 
 /// Bin Packing Problem solution
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct ExtBPSolution {
     /// Total cost of all the bins used in the solution
     pub cost: u64,
