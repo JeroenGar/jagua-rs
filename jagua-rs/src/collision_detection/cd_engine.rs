@@ -27,7 +27,7 @@ pub struct CDEngine {
 
 impl CDEngine {
     pub fn new(bbox: Rect, static_hazards: Vec<Hazard>, config: CDEConfig) -> CDEngine {
-        let mut qt_root = QTNode::new(config.quadtree_depth, bbox);
+        let mut qt_root = QTNode::new(config.quadtree_depth, bbox, config.cd_threshold);
 
         for haz in static_hazards.iter() {
             let qt_haz = QTHazard::from_qt_root(qt_root.bbox, haz);
@@ -390,6 +390,8 @@ impl CDEngine {
 pub struct CDEConfig {
     ///Maximum depth of the quadtree
     pub quadtree_depth: u8,
+    /// Stop traversing the quadtree and perform collision collection immediately when the total number of edges in a node falls below this number
+    pub cd_threshold: u8,
     ///Configuration of the surrogate generation for items
     pub item_surrogate_config: SPSurrogateConfig,
 }

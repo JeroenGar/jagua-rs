@@ -19,15 +19,18 @@ pub struct QTNode {
     pub children: Option<Box<[QTNode; 4]>>,
     /// The hazards present in the node
     pub hazards: QTHazardVec,
+    /// Stop traversing the quadtree and perform collision detection immediately when the total number of edges in a node falls below this number
+    pub cd_threshold: u8,
 }
 
 impl QTNode {
-    pub fn new(level: u8, bbox: Rect) -> Self {
+    pub fn new(level: u8, bbox: Rect, cd_threshold: u8) -> Self {
         QTNode {
             level,
             bbox,
             children: None,
             hazards: QTHazardVec::new(),
+            cd_threshold,
         }
     }
 
@@ -39,7 +42,9 @@ impl QTNode {
 
                 if let Some(c_hazards) = c_hazards {
                     for (child, c_hazard) in children.iter_mut().zip(c_hazards) {
-                        child.register_hazard(c_hazard);
+                        if !matches!(c_hazard.presence, QTHazPresence::None) {
+                            child.register_hazard(c_hazard);
+                        }
                     }
                 }
             }
@@ -102,7 +107,7 @@ impl QTNode {
     fn generate_children(&mut self) {
         if self.level > 0 {
             let quadrants = self.bbox.quadrants();
-            let children = quadrants.map(|q| QTNode::new(self.level - 1, q));
+            let children = quadrants.map(|q| QTNode::new(self.level - 1, q, self.cd_threshold));
             self.children = Some(Box::new(children));
         }
     }
@@ -138,34 +143,39 @@ impl QTNode {
                 true => match strongest_hazard.presence {
                     QTHazPresence::None => None,
                     QTHazPresence::Entire => Some(&strongest_hazard.entity),
-                    QTHazPresence::Partial(_) => match &self.children {
-                        Some(children) => {
-                            //Check if any of the children collide with the entity
-                            children
-                                .iter()
-                                .map(|child| child.collides(entity, filter))
-                                .find(|x| x.is_some())
-                                .flatten()
-                        }
-                        None => {
-                            //Check if any of the partially present (and active) hazards collide with the entity
-                            let mut relevant_hazards = self
-                                .hazards
-                                .active_hazards()
-                                .iter()
-                                .filter(|hz| !filter.is_irrelevant(&hz.entity));
+                    QTHazPresence::Partial(_) => {
+                        // Condition to perform collision detection now or pass it to children:
+                        match &self.children {
+                            Some(children) => {
+                                //Check if any of the children collide with the entity
+                                children
+                                    .iter()
+                                    .map(|child| child.collides(entity, filter))
+                                    .find(|x| x.is_some())
+                                    .flatten()
+                            }
+                            None => {
+                                //Check if any of the partially present (and active) hazards collide with the entity
+                                let mut relevant_hazards = self
+                                    .hazards
+                                    .active_hazards()
+                                    .iter()
+                                    .filter(|hz| !filter.is_irrelevant(&hz.entity));
 
-                            relevant_hazards
-                                .find(|hz| match &hz.presence {
-                                    QTHazPresence::None => false,
-                                    QTHazPresence::Entire => {
-                                        unreachable!("should have been handled above")
-                                    }
-                                    QTHazPresence::Partial(p_haz) => p_haz.collides_with(entity),
-                                })
-                                .map(|hz| &hz.entity)
+                                relevant_hazards
+                                    .find(|hz| match &hz.presence {
+                                        QTHazPresence::None => false,
+                                        QTHazPresence::Entire => {
+                                            unreachable!("should have been handled above")
+                                        }
+                                        QTHazPresence::Partial(p_haz) => {
+                                            p_haz.collides_with(entity)
+                                        }
+                                    })
+                                    .map(|hz| &hz.entity)
+                            }
                         }
-                    },
+                    }
                 },
             },
         }
@@ -184,7 +194,7 @@ impl QTNode {
         }
 
         // Condition to perform collision detection now or pass it to children:
-        let perform_cd_now = self.hazards.n_active_edges() <= 16;
+        let perform_cd_now = self.hazards.n_active_edges() <= self.cd_threshold as usize;
 
         match (self.children.as_ref(), perform_cd_now) {
             (Some(children), false) => {
@@ -193,7 +203,7 @@ impl QTNode {
                     child.collect_collisions(entity, detector);
                 })
             }
-            (None, _) | (Some(_), true) => {
+            _ => {
                 //Check the hazards now
                 for hz in self.hazards.active_hazards().iter() {
                     match &hz.presence {

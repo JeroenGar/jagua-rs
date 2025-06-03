@@ -23,6 +23,7 @@ impl QTHazardVec {
     }
 
     pub fn add(&mut self, haz: QTHazard) {
+        debug_assert!(!matches!(haz.presence, QTHazPresence::None));
         debug_assert!(
             self.hazards
                 .iter()
