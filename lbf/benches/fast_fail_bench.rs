@@ -61,7 +61,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     let samples = ITEMS_ID_TO_TEST
         .iter()
         .map(|&item_id| {
-            let sampler = UniformRectSampler::new(layout.cde().bbox, instance.item(item_id));
+            let sampler = UniformRectSampler::new(layout.cde().bbox(), instance.item(item_id));
             (0..N_TOTAL_SAMPLES)
                 .map(|_| sampler.sample(&mut rng))
                 .collect_vec()
@@ -108,7 +108,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
                     let buffer_shape = &mut buffer_shapes[i];
                     for dtransf in samples_cyclers[i].next().unwrap() {
                         let transf = dtransf.compose();
-                        let collides = match layout.cde().detect_surr_collision(
+                        let collides = match layout.cde().detect_surrogate_collision(
                             surrogate,
                             &transf,
                             &NoHazardFilter,

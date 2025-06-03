@@ -6,7 +6,6 @@ use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 use crate::util::assertions;
-use std::array;
 use std::sync::Arc;
 
 /// Representation of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
@@ -49,7 +48,7 @@ impl QTHazard {
     /// Returns the resulting QTHazards after constricting to the provided quadrants.
     /// The quadrants should be ordered according to the [Cartesian system](https://en.wikipedia.org/wiki/Quadrant_(plane_geometry))
     /// and should all be inside the bounds from which `self` was created.
-    pub fn constrict(&self, quadrants: [Rect; 4]) -> Option<[Self; 4]> {
+    pub fn constrict(&self, quadrants: [Rect; 4]) -> [Self; 4] {
         debug_assert!(
             quadrants
                 .iter()
@@ -58,8 +57,8 @@ impl QTHazard {
         debug_assert!(assertions::quadrants_have_valid_layout(&quadrants));
 
         match &self.presence {
-            QTHazPresence::None => None,
-            QTHazPresence::Entire => Some(array::from_fn(|_| self.clone())),
+            QTHazPresence::None => unreachable!(),
+            QTHazPresence::Entire => [0, 1, 2, 3].map(|_| self.clone()),
             QTHazPresence::Partial(partial_haz) => {
                 //If the hazard is partially present, it may produce different hazards for each quadrant
 
@@ -75,7 +74,7 @@ impl QTHazard {
                 if let Some(quad_index) = enclosed_hazard_quadrant {
                     //The hazard is entirely enclosed within one quadrant,
                     //For this quadrant the QTHazard is equivalent to the original hazard, the rest are None
-                    let hazards = array::from_fn(|i| {
+                    [0, 1, 2, 3].map(|i| {
                         let presence = match i {
                             i if i == quad_index => QTHazPresence::Partial(partial_haz.clone()),
                             _ => QTHazPresence::None,
@@ -86,8 +85,7 @@ impl QTHazard {
                             presence,
                             active: self.active,
                         }
-                    });
-                    Some(hazards)
+                    })
                 } else {
                     //The hazard is partially active in multiple quadrants, find which ones
                     let arc_shape = &partial_haz.shape;
@@ -159,10 +157,8 @@ impl QTHazard {
                         }
                     }
 
-                    let constricted_hazards = constricted_hazards
-                        .map(|h| h.expect("all constricted hazards should be resolved"));
-
-                    Some(constricted_hazards)
+                    constricted_hazards
+                        .map(|h| h.expect("all constricted hazards should be resolved"))
                 }
             }
         }

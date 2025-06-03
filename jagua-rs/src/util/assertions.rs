@@ -78,9 +78,9 @@ pub fn qt_node_contains_no_deactivated_hazards<'a>(
 }
 
 pub fn qt_contains_no_dangling_hazards(cde: &CDEngine) -> bool {
-    if let Some(children) = &cde.quadtree().children {
+    if let Some(children) = &cde.quadtree.children {
         for child in children.as_ref() {
-            if !qt_node_contains_no_dangling_hazards(child, cde.quadtree()) {
+            if !qt_node_contains_no_dangling_hazards(child, &cde.quadtree) {
                 return false;
             }
         }
@@ -120,14 +120,14 @@ fn qt_node_contains_no_dangling_hazards(node: &QTNode, parent: &QTNode) -> bool 
 
 pub fn qt_hz_entity_activation_consistent(cde: &CDEngine) -> bool {
     for (active, hz_entity) in cde
-        .quadtree()
+        .quadtree
         .hazards
         .all_hazards()
         .iter()
         .map(|h| (h.active, &h.entity))
         .unique()
     {
-        if !hz_entity_same_everywhere(cde.quadtree(), hz_entity, active) {
+        if !hz_entity_same_everywhere(&cde.quadtree, hz_entity, active) {
             return false;
         }
     }
@@ -168,8 +168,8 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
         fresh_cde.register_hazard(hazard);
     }
 
-    qt_nodes_match(Some(layout.cde().quadtree()), Some(fresh_cde.quadtree()))
-        && hazards_match(layout.cde().dynamic_hazards(), fresh_cde.dynamic_hazards())
+    qt_nodes_match(Some(&layout.cde().quadtree), Some(&fresh_cde.quadtree))
+        && hazards_match(&layout.cde().dynamic_hazards, &fresh_cde.dynamic_hazards)
 }
 
 fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {

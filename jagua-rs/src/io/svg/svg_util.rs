@@ -212,17 +212,17 @@ fn qt_node_data(
 ) -> (Data, Data, Data) {
     //Only draw qt_nodes that do not have a child
 
-    match (qt_node.has_children(), qt_node.hazards.strongest(filter)) {
-        (true, Some(_)) => {
+    match (qt_node.children.as_ref(), qt_node.hazards.strongest(filter)) {
+        (Some(children), Some(_)) => {
             //not a leaf node, go to children
-            for child in qt_node.children.as_ref().unwrap().iter() {
+            for child in children.iter() {
                 let data = qt_node_data(child, data_eh, data_ph, data_nh, filter);
                 data_eh = data.0;
                 data_ph = data.1;
                 data_nh = data.2;
             }
         }
-        (true, None) | (false, _) => {
+        (Some(_), None) | (None, _) => {
             //leaf node, draw it
             let rect = &qt_node.bbox;
             let draw = |data: Data| -> Data {

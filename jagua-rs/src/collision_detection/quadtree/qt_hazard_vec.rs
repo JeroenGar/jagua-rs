@@ -3,6 +3,7 @@ use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::quadtree::QTHazPresence;
 use crate::collision_detection::quadtree::QTHazard;
 use std::cmp::Ordering;
+use std::ops::Not;
 
 /// Vector of `QTHazard`s, which always remains sorted by activeness then presence.
 /// <br>
@@ -129,10 +130,11 @@ impl QTHazardVec {
         self.hazards.len()
     }
 
-    pub fn has_only_entire_hazards(&self) -> bool {
+    pub fn no_partial_hazards(&self) -> bool {
         self.hazards
             .iter()
-            .all(|hz| matches!(hz.presence, QTHazPresence::Entire))
+            .any(|hz| matches!(hz.presence, QTHazPresence::Partial(_)))
+            .not()
     }
 
     pub fn n_active_hazards(&self) -> usize {
