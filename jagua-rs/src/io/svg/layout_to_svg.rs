@@ -278,7 +278,7 @@ pub fn layout_to_svg(
     let qt_group = match options.quadtree {
         false => None,
         true => {
-            let qt_data = svg_util::quad_tree_data(layout.cde().quadtree(), &NoHazardFilter);
+            let qt_data = svg_util::quad_tree_data(&layout.cde().quadtree, &NoHazardFilter);
             let qt_group = Group::new()
                 .set("id", "quadtree")
                 .add(svg_util::data_to_path(

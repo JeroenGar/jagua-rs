@@ -57,7 +57,11 @@ fn cde_collect_bench(c: &mut Criterion) {
                     let d_transf = sampler.sample(&mut rng);
                     let transf = d_transf.compose();
                     //detect collisions with the surrogate
-                    cde.collect_surr_collisions(item.shape_cd.surrogate(), &transf, &mut detector);
+                    cde.collect_surrogate_collisions(
+                        item.shape_cd.surrogate(),
+                        &transf,
+                        &mut detector,
+                    );
                     //detect collisions with the actual shape
                     buffer_shape.transform_from(&item.shape_cd, &transf);
                     cde.collect_poly_collisions(&buffer_shape, &mut detector);
@@ -104,7 +108,7 @@ fn cde_detect_bench(c: &mut Criterion) {
                     let d_transf = sampler.sample(&mut rng);
                     let transf = d_transf.compose();
                     //detect collisions with the surrogate
-                    if !cde.detect_surr_collision(
+                    if !cde.detect_surrogate_collision(
                         item.shape_cd.surrogate(),
                         &transf,
                         &NoHazardFilter,

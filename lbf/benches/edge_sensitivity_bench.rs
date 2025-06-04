@@ -95,7 +95,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                     let mut buffer_shape = item.shape_cd.as_ref().clone();
                     for dtransf in samples_cycler.next().unwrap() {
                         let transf = dtransf.compose();
-                        let collides = match layout.cde().detect_surr_collision(
+                        let collides = match layout.cde().detect_surrogate_collision(
                             item.shape_cd.surrogate(),
                             &transf,
                             &NoHazardFilter,

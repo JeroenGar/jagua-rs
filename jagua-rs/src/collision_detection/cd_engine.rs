@@ -17,17 +17,21 @@ use serde::{Deserialize, Serialize};
 /// [`Hazard`]s can be (de)registered and collision queries can be performed.
 #[derive(Clone, Debug)]
 pub struct CDEngine {
+    /// Root node of the quadtree
     pub quadtree: QTNode,
+    /// Static hazards that are registered at the start and do not change during the CDE's lifetime
     pub static_hazards: Vec<Hazard>,
+    /// Dynamic hazards that can be registered and deregistered during the CDE's lifetime
     pub dynamic_hazards: Vec<Hazard>,
+    /// Configuration of the CDE
     pub config: CDEConfig,
-    pub bbox: Rect,
+    /// Hazards which have been deregistered but not yet fully removed from the quadtree (just deactivated)
     pub uncommitted_deregisters: Vec<Hazard>,
 }
 
 impl CDEngine {
     pub fn new(bbox: Rect, static_hazards: Vec<Hazard>, config: CDEConfig) -> CDEngine {
-        let mut qt_root = QTNode::new(config.quadtree_depth, bbox);
+        let mut qt_root = QTNode::new(config.quadtree_depth, bbox, config.cd_threshold);
 
         for haz in static_hazards.iter() {
             let qt_haz = QTHazard::from_qt_root(qt_root.bbox, haz);
@@ -39,7 +43,6 @@ impl CDEngine {
             static_hazards,
             dynamic_hazards: vec![],
             config,
-            bbox,
             uncommitted_deregisters: vec![],
         }
     }
@@ -65,7 +68,7 @@ impl CDEngine {
                 unc_hazard
             }
             None => {
-                let qt_haz = QTHazard::from_qt_root(self.bbox, &hazard);
+                let qt_haz = QTHazard::from_qt_root(self.bbox(), &hazard);
                 self.quadtree.register_hazard(qt_haz);
                 hazard
             }
@@ -154,7 +157,7 @@ impl CDEngine {
         }
 
         for hazard in hazards_to_add {
-            let qt_haz = QTHazard::from_qt_root(self.bbox, &hazard);
+            let qt_haz = QTHazard::from_qt_root(self.bbox(), &hazard);
             self.quadtree.register_hazard(qt_haz);
             self.dynamic_hazards.push(hazard);
         }
@@ -169,34 +172,8 @@ impl CDEngine {
         }
     }
 
-    pub fn quadtree(&self) -> &QTNode {
-        &self.quadtree
-    }
-
-    pub fn number_of_nodes(&self) -> usize {
-        1 + self.quadtree.get_number_of_children()
-    }
-
-    pub fn bbox(&self) -> Rect {
-        self.bbox
-    }
-
-    pub fn config(&self) -> CDEConfig {
-        self.config
-    }
-
     pub fn has_uncommitted_deregisters(&self) -> bool {
         !self.uncommitted_deregisters.is_empty()
-    }
-
-    /// Returns all hazards in the CDE, which can change during the lifetime of the CDE.
-    pub fn dynamic_hazards(&self) -> &Vec<Hazard> {
-        &self.dynamic_hazards
-    }
-
-    /// Returns all hazards in the CDE, which cannot change during the lifetime of the CDE.
-    pub fn static_hazards(&self) -> &Vec<Hazard> {
-        &self.static_hazards
     }
 
     /// Returns all hazards in the CDE, both static and dynamic.
@@ -211,7 +188,7 @@ impl CDEngine {
     /// * `shape` - The shape (already transformed) to be checked for collisions
     /// * `filter` - Hazard filter to be applied
     pub fn detect_poly_collision(&self, shape: &SPolygon, filter: &impl HazardFilter) -> bool {
-        if self.bbox.relation_to(shape.bbox) != GeoRelation::Surrounding {
+        if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding {
             //The CDE does not capture the entire shape, so we can immediately return true
             true
         } else {
@@ -256,7 +233,7 @@ impl CDEngine {
     /// * `base_surrogate` - The (untransformed) surrogate to be checked for collisions
     /// * `transform` - The transformation to be applied to the surrogate (on the fly)
     /// * `filter` - Hazard filter to be applied
-    pub fn detect_surr_collision(
+    pub fn detect_surrogate_collision(
         &self,
         base_surrogate: &SPSurrogate,
         transform: &Transformation,
@@ -314,7 +291,7 @@ impl CDEngine {
     /// * `shape` - The shape to be checked for collisions
     /// * `detector` - The detector to which the hazards are reported
     pub fn collect_poly_collisions(&self, shape: &SPolygon, detector: &mut impl HazardDetector) {
-        if self.bbox.relation_to(shape.bbox) != GeoRelation::Surrounding {
+        if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding {
             detector.push(HazardEntity::Exterior)
         }
 
@@ -351,7 +328,7 @@ impl CDEngine {
     /// * `base_surrogate` - The (untransformed) surrogate to be checked for collisions
     /// * `transform` - The transformation to be applied to the surrogate (on the fly)
     /// * `detector` - The detector to which the hazards are reported
-    pub fn collect_surr_collisions(
+    pub fn collect_surrogate_collisions(
         &self,
         base_surrogate: &SPSurrogate,
         transform: &Transformation,
@@ -383,6 +360,10 @@ impl CDEngine {
         }
         v_root
     }
+
+    pub fn bbox(&self) -> Rect {
+        self.quadtree.bbox
+    }
 }
 
 ///Configuration of the [`CDEngine`]
@@ -390,6 +371,8 @@ impl CDEngine {
 pub struct CDEConfig {
     ///Maximum depth of the quadtree
     pub quadtree_depth: u8,
+    /// Stop traversing the quadtree and perform collision collection immediately when the total number of edges in a node falls below this number
+    pub cd_threshold: u8,
     ///Configuration of the surrogate generation for items
     pub item_surrogate_config: SPSurrogateConfig,
 }
