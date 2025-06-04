@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["convex_hull","fail_fast","geo_enums","geo_traits","primitives","shape_modification"],"struct":["DTransformation","OriginalShape","Transformation"]};

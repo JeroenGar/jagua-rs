@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EndType","JoinType","PolyFillType"],"trait":["Clipper","ClipperInt","ClipperOpen","ClipperOpenInt","ClosedPoly","OpenPath","ToOwnedPolygon","ToOwnedPolygonInt"]};

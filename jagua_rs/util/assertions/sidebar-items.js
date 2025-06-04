@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["collision_hazards_sorted_correctly","hz_entity_same_everywhere","layout_qt_matches_fresh_qt","layouts_match","print_layout","qt_contains_no_dangling_hazards","qt_hz_entity_activation_consistent","qt_node_contains_no_deactivated_hazards","quadrants_have_valid_layout"]};
