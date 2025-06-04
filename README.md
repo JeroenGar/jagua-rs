@@ -6,7 +6,8 @@ This library is designed to be used as a backend by optimization algorithms solv
 
 <img src="img/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
-### ‼️ See [`sparrow`](https://github.com/JeroenGar/sparrow) for a state-of-the-art optimization algorithm based on `jagua-rs` ‼️
+> [!IMPORTANT]
+> See [`sparrow`](https://github.com/JeroenGar/sparrow) for a state-of-the-art optimization algorithm based on `jagua-rs`
 
 ## Preamble & Motivation
 
@@ -73,8 +74,9 @@ most position.
 The code is thoroughly documented and should provide a good starting point for anyone interested in building their own optimization algorithm on top
 of `jagua-rs`.
 
-Please note that `lbf` should **not** be used as an optimization algorithm for any real-world use case.
-Read the [Important note](#important-note) section for more information.
+>[!WARNING]
+> `lbf` should **not** be used as an optimization algorithm for any real-world use case.
+>Read the [Important note](#important-note) section for more information.
 
 ### How to run LBF
 
@@ -136,8 +138,9 @@ Some examples of layout SVGs created by `lbf`:
   <img src="img/bp_example.svg" width="50%" alt="bin packing example">
 </p>
 
-*Note: Unfortunately, the SVG standard does not support strokes drawn purely inside (or outside) of polygons.
-Items might therefore sometimes falsely appear to be (very slightly) colliding in the SVG visualizations.*
+> [!NOTE]  
+> Unfortunately, the SVG standard does not support strokes drawn purely inside (or outside) of polygons.
+> Items might therefore sometimes falsely appear to be (very slightly) colliding in the SVG visualizations.
 
 ### Config JSON
 
