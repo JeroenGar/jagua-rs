@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Configuration for the LBF optimizer
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[serde(default)]
 pub struct LBFConfig {
     /// Configuration of the Collision Detection Engine
     pub cde_config: CDEConfig,
@@ -20,7 +21,6 @@ pub struct LBFConfig {
     /// Fraction of `n_samples_per_item` used for the local search sampler, the rest is sampled uniformly.
     pub ls_frac: f32,
     /// Optional SVG drawing options
-    #[serde(default)]
     pub svg_draw_options: SvgDrawOptions,
 }
 

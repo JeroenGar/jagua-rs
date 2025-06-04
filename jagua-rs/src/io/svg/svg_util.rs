@@ -10,23 +10,19 @@ use svg::node::element::path::Data;
 use svg::node::element::{Circle, Path};
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
+#[serde(default)]
 pub struct SvgDrawOptions {
     ///The theme to use for the svg
-    #[serde(default)]
     pub theme: SvgLayoutTheme,
     ///Draw the quadtree on top
-    #[serde(default)]
     pub quadtree: bool,
     ///Draw the fail fast surrogate on top of each item
-    #[serde(default)]
     pub surrogate: bool,
     ///Draw dashed lines between colliding items
-    #[serde(default)]
     pub highlight_collisions: bool,
     ///Draw the modified shapes used internally instead of the original ones
-    #[serde(default)]
     pub draw_cd_shapes: bool,
-    #[serde(default)]
+    ///Highlights the shapes used for collision detection with a dashed border
     pub highlight_cd_shapes: bool,
 }
 
@@ -35,7 +31,7 @@ impl Default for SvgDrawOptions {
         Self {
             theme: SvgLayoutTheme::default(),
             quadtree: false,
-            surrogate: true,
+            surrogate: false,
             highlight_collisions: true,
             draw_cd_shapes: false,
             highlight_cd_shapes: true,
