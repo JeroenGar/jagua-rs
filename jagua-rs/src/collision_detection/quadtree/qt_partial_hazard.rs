@@ -1,5 +1,4 @@
 use std::hash::Hash;
-use std::sync::Arc;
 
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
@@ -8,7 +7,7 @@ use crate::geometry::primitives::SPolygon;
 /// Defines a set of edges from a hazard that is partially active in the [`QTNode`](crate::collision_detection::quadtree::QTNode).
 #[derive(Clone, Debug)]
 pub struct QTHazPartial {
-    pub shape: Arc<SPolygon>,
+    pub shape: SPolygon,
     pub edges: RelevantEdges,
 }
 

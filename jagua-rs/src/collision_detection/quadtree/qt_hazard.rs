@@ -7,7 +7,6 @@ use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 use crate::util::assertions;
 use std::array;
-use std::sync::Arc;
 
 /// Representation of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
 #[derive(Clone, Debug)]
@@ -179,7 +178,7 @@ impl QTHazard {
 fn compute_edge_collisions_in_quadrant(
     quadrant: Rect,
     relevant_edges: &RelevantEdges,
-    shape: &Arc<SPolygon>,
+    shape: &SPolygon,
 ) -> Option<QTHazPartial> {
     let mut p_haz = None;
 

@@ -22,11 +22,11 @@ pub struct Layout {
 
 impl Layout {
     pub fn new(container: Container) -> Self {
-        let cde = container.base_cde.as_ref().clone();
+        let cde = container.base_cde.clone();
         Layout {
             container,
             placed_items: SlotMap::with_key(),
-            cde,
+            cde
         }
     }
 
@@ -40,7 +40,7 @@ impl Layout {
     pub fn swap_container(&mut self, container: Container) {
         self.container = container;
         // rebuild the CDE
-        self.cde = self.container.base_cde.as_ref().clone();
+        self.cde = self.container.base_cde.clone();
         for (pk, pi) in self.placed_items.iter() {
             let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
             self.cde.register_hazard(hazard);

@@ -25,7 +25,7 @@ pub fn search(
     let surrogate = item.shape_cd.surrogate();
     //create a clone of the shape which will we can use to apply the transformations
     let mut buffer = {
-        let mut buffer = (*item.shape_cd).clone();
+        let mut buffer = item.shape_cd.clone();
         buffer.surrogate = None; //remove the surrogate for faster transforms, we don't need it for the buffer shape
         buffer
     };

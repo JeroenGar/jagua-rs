@@ -10,16 +10,9 @@ use svg::Document;
 
 use anyhow::{Context, Result};
 use jagua_rs::probs::bpp::io::ext_repr::ExtBPInstance;
-use jagua_rs::probs::spp::io::ext_repr::ExtSPInstance;
 
 pub mod cli;
 pub mod output;
-
-pub fn read_spp_instance(path: &Path) -> Result<ExtSPInstance> {
-    let file = File::open(path).context("could not open instance file")?;
-    serde_json::from_reader(BufReader::new(file))
-        .context("not a valid strip packing instance (ExtSPInstance)")
-}
 
 pub fn read_bpp_instance(path: &Path) -> Result<ExtBPInstance> {
     let file = File::open(path).context("could not open instance file")?;

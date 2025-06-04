@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use itertools::Itertools;
 
 use crate::collision_detection::hazards::Hazard;
@@ -15,13 +13,13 @@ use anyhow::{Result, ensure};
 pub struct Container {
     pub id: usize,
     /// Original contour of the container as defined in the input
-    pub outer_orig: Arc<OriginalShape>,
+    pub outer_orig: OriginalShape,
     /// Contour of the container to be used for collision detection
-    pub outer_cd: Arc<SPolygon>,
+    pub outer_cd: SPolygon,
     /// Zones of different qualities in the container, stored per quality.
     pub quality_zones: [Option<InferiorQualityZone>; N_QUALITIES],
     /// The initial state of the `CDEngine` for this container. (equivalent to an empty layout using this container)
-    pub base_cde: Arc<CDEngine>,
+    pub base_cde: CDEngine,
 }
 
 impl Container {
@@ -31,8 +29,8 @@ impl Container {
         quality_zones: Vec<InferiorQualityZone>,
         cde_config: CDEConfig,
     ) -> Result<Self> {
-        let outer = Arc::new(original_outer.convert_to_internal()?);
-        let outer_orig = Arc::new(original_outer);
+        let outer = original_outer.convert_to_internal()?;
+        let outer_orig = original_outer;
         ensure!(
             quality_zones.len() == quality_zones.iter().map(|qz| qz.quality).unique().count(),
             "Quality zones must have unique qualities"
@@ -54,14 +52,14 @@ impl Container {
         };
 
         let base_cde = {
-            let mut hazards = vec![Hazard::new(HazardEntity::Exterior, outer.clone())];
+let mut hazards = vec![Hazard::new(HazardEntity::Exterior, outer.clone())];
             let qz_hazards = quality_zones
                 .iter()
                 .flatten()
                 .flat_map(|qz| qz.to_hazards());
             hazards.extend(qz_hazards);
             let base_cde = CDEngine::new(outer.bbox.inflate_to_square(), hazards, cde_config);
-            Arc::new(base_cde)
+            base_cde
         };
 
         Ok(Self {
@@ -88,9 +86,9 @@ pub struct InferiorQualityZone {
     /// Quality of this zone. Higher qualities are superior. A zone with quality 0 is treated as a hole.
     pub quality: usize,
     /// Contours of this quality-zone as defined in the input file
-    pub shapes_orig: Vec<Arc<OriginalShape>>,
+    pub shapes_orig: Vec<OriginalShape>,
     /// Contours of this quality-zone to be used for collision detection
-    pub shapes_cd: Vec<Arc<SPolygon>>,
+    pub shapes_cd: Vec<SPolygon>,
 }
 
 impl InferiorQualityZone {
@@ -99,12 +97,12 @@ impl InferiorQualityZone {
             quality < N_QUALITIES,
             "Quality must be in range of N_QUALITIES"
         );
-        let shapes: Result<Vec<Arc<SPolygon>>> = original_shapes
+        let shapes: Result<Vec<SPolygon>> = original_shapes
             .iter()
-            .map(|orig| orig.convert_to_internal().map(Arc::new))
+            .map(|orig| orig.convert_to_internal())
             .collect();
 
-        let original_shapes = original_shapes.into_iter().map(Arc::new).collect_vec();
+        let original_shapes = original_shapes.into_iter().collect_vec();
 
         Ok(Self {
             quality,

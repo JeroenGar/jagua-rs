@@ -324,7 +324,7 @@ pub fn layout_to_svg(
                     let mut detector = BasicHazardDetector::new();
                     layout
                         .cde()
-                        .collect_poly_collisions(pi.shape.as_ref(), &mut detector);
+                        .collect_poly_collisions(&pi.shape, &mut detector);
                     detector.remove(&HazardEntity::from((pk, pi)));
                     detector
                 };

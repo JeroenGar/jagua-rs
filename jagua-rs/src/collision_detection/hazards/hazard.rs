@@ -3,7 +3,6 @@ use crate::geometry::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::SPolygon;
 use std::borrow::Borrow;
-use std::sync::Arc;
 
 /// Any spatial constraint affecting the feasibility of a placement of an Item.
 /// See [`HazardEntity`] for the different entities that can induce a hazard.
@@ -12,13 +11,13 @@ pub struct Hazard {
     /// The entity inducing the hazard
     pub entity: HazardEntity,
     /// The shape of the hazard
-    pub shape: Arc<SPolygon>,
+    pub shape: SPolygon,
     /// Hazards can be either active or inactive, inactive hazards are not considered during collision detection
     pub active: bool,
 }
 
 impl Hazard {
-    pub fn new(entity: HazardEntity, shape: Arc<SPolygon>) -> Self {
+    pub fn new(entity: HazardEntity, shape: SPolygon) -> Self {
         Self {
             entity,
             shape,
