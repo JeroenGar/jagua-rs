@@ -29,7 +29,6 @@ pub fn layout_to_svg(
     options: SvgDrawOptions,
     title: &str,
 ) -> Document {
-    dbg!(options);
     let container = &layout.container;
 
     let vbox = container.outer_orig.bbox().scale(1.10);
