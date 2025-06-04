@@ -123,7 +123,7 @@ impl Importer {
                 let json_holes = &jp.inner;
                 json_holes
                     .iter()
-                    .map(|esp| import_simple_polygon(esp))
+                    .map(import_simple_polygon)
                     .collect::<Result<Vec<SPolygon>>>()?
             }
             ExtShape::MultiPolygon(_) => {
