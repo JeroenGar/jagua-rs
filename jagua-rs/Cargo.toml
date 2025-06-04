@@ -1,6 +1,6 @@
 [package]
 name = "jagua-rs"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/JeroenGar/jagua-rs"
@@ -16,7 +16,6 @@ rand_distr = {workspace = true}
 serde = {workspace = true}
 ordered-float = { workspace = true }
 log = {workspace = true}
-tribool = {workspace = true}
 slotmap = {workspace = true}
 float-cmp = {workspace = true}
 itertools = {workspace = true}

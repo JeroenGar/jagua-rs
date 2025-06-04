@@ -51,7 +51,7 @@ impl Importer {
                     let rect = Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)?;
                     SPolygon::from(rect)
                 }
-                ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp))?,
+                ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
                 ExtShape::Polygon(_) => {
                     bail!("No support for polygons with holes yet")
                 }
@@ -103,8 +103,8 @@ impl Importer {
                     width,
                     height,
                 } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)?.into(),
-                ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp))?,
-                ExtShape::Polygon(jp) => SPolygon::new(ext_spoly_to_points(&jp.outer))?,
+                ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
+                ExtShape::Polygon(ep) => import_simple_polygon(&ep.outer)?,
                 ExtShape::MultiPolygon(_) => {
                     bail!("No support for multipolygon shapes yet")
                 }
@@ -123,7 +123,7 @@ impl Importer {
                 let json_holes = &jp.inner;
                 json_holes
                     .iter()
-                    .map(|jsp| SPolygon::new(ext_spoly_to_points(jsp)))
+                    .map(|esp| import_simple_polygon(esp))
                     .collect::<Result<Vec<SPolygon>>>()?
             }
             ExtShape::MultiPolygon(_) => {
@@ -145,7 +145,7 @@ impl Importer {
                             height,
                         } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)
                             .map(|r| r.into()),
-                        ExtShape::SimplePolygon(jsp) => SPolygon::new(ext_spoly_to_points(jsp)),
+                        ExtShape::SimplePolygon(esp) => import_simple_polygon(esp),
                         ExtShape::Polygon(_) => {
                             unimplemented!("No support for polygon to simplepolygon conversion yet")
                         }
@@ -187,14 +187,19 @@ impl Importer {
     }
 }
 
-fn ext_spoly_to_points(sp: &ExtSPolygon) -> Vec<Point> {
+fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {
+    let mut points = sp.0.iter().map(|(x, y)| Point(*x, *y)).collect_vec();
     //Strip the last vertex if it is the same as the first one
-    let n_vertices = match sp.0[0] == sp.0[sp.0.len() - 1] {
-        true => sp.0.len() - 1,
-        false => sp.0.len(),
-    };
-
-    (0..n_vertices).map(|i| Point::from(sp.0[i])).collect_vec()
+    if points.len() > 1 && points[0] == points[points.len() - 1] {
+        points.pop();
+    }
+    //Remove duplicates that are consecutive (e.g. [1, 2, 2, 3] -> [1, 2, 3])
+    points.dedup();
+    //Bail if there are any non-consecutive duplicates.
+    if points.len() != points.iter().unique().count() {
+        bail!("Simple polygon has non-consecutive duplicate vertices");
+    }
+    SPolygon::new(points)
 }
 
 /// Returns a transformation that translates the shape's centroid to the origin.

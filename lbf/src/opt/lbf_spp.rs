@@ -3,6 +3,7 @@ use std::time::Instant;
 use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
+use crate::util::assertions::strip_width_is_in_check;
 use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use jagua_rs::entities::Instance;
 use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution};
@@ -85,6 +86,10 @@ impl LBFOptimizerSP {
                             "[LBF] no placement found, extended strip by 10% to {:.3}",
                             self.problem.strip.width
                         );
+                        assert!(
+                            strip_width_is_in_check(&self.problem),
+                            " strip width is running away, check if all items fit in the height of the strip"
+                        )
                     }
                 }
             }
