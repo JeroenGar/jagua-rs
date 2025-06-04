@@ -11,6 +11,7 @@ use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtContainer, ExtItem, ExtSPolygon, ExtShape};
 use anyhow::{Result, bail};
 use itertools::Itertools;
+use log::error;
 
 /// Converts external representations of items and containers into internal ones.
 #[derive(Clone, Debug, Copy)]
@@ -52,8 +53,9 @@ impl Importer {
                     SPolygon::from(rect)
                 }
                 ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
-                ExtShape::Polygon(_) => {
-                    bail!("No support for polygons with holes yet")
+                ExtShape::Polygon(ep) => {
+                    error!("No native support for polygons yet, ignoring the holes");
+                    import_simple_polygon(&ep.outer)?
                 }
                 ExtShape::MultiPolygon(_) => {
                     bail!("No support for multipolygons yet")

@@ -2,6 +2,8 @@ mod circle;
 mod edge;
 mod point;
 mod rect;
+mod polygon;
+
 mod simple_polygon;
 
 #[doc(inline)]
@@ -14,3 +16,5 @@ pub use point::Point;
 pub use rect::Rect;
 #[doc(inline)]
 pub use simple_polygon::SPolygon;
+#[doc(inline)]
+pub use polygon::Polygon;

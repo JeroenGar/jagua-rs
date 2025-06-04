@@ -127,9 +127,10 @@ pub fn simplify_shape(
 
     if simpl_shape.n_vertices() < shape.n_vertices() {
         info!(
-            "[PS] simplified from {} to {} edges with {:.3}% area difference",
+            "[SIMPL] Reduced number of edges in shape from {} to {} ({}%), with {:.3}% area difference",
             shape.n_vertices(),
             simpl_shape.n_vertices(),
+            (shape.n_vertices() - simpl_shape.n_vertices()) as f32 / shape.n_vertices() as f32 * 100.0,
             (simpl_shape.area - shape.area) / shape.area * 100.0
         );
     } else {
