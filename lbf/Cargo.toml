@@ -21,12 +21,19 @@ fern = { workspace = true }
 log = { workspace = true }
 svg = { workspace = true }
 jiff = { workspace = true }
-clap = { workspace = true }
 thousands = { workspace = true }
 itertools = { workspace = true }
 ordered-float = { workspace = true }
 test-case = { workspace = true }
 float-cmp = { workspace = true }
+wasm-bindgen = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+getrandom = { version = "0.3", default-features = false, features = ["wasm_js"] }
+console_error_panic_hook = { workspace = true }
+web-sys = { workspace = true }
+
+[lib]
+crate-type = ["cdylib"]
 
 [dev-dependencies]
 criterion = { workspace = true }
@@ -42,6 +49,9 @@ harness = false
 [[bench]]
 name = "ci_bench"
 harness = false
+
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg", 'getrandom_backend="wasm_js"']
 
 #[[bench]]
 #name = "edge_sensitivity_bench"

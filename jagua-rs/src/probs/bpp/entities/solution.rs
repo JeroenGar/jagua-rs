@@ -1,7 +1,6 @@
 use crate::entities::LayoutSnapshot;
 use crate::probs::bpp::entities::{BPInstance, LayKey};
 use slotmap::SecondaryMap;
-use std::time::Instant;
 
 /// Snapshot of [`BPProblem`](crate::probs::bpp::entities::BPProblem) at a specific moment.
 /// Can be used to restore to a previous state.
@@ -10,7 +9,7 @@ pub struct BPSolution {
     /// A map of the layout snapshots, identified by the same keys as in the problem
     pub layout_snapshots: SecondaryMap<LayKey, LayoutSnapshot>,
     /// Instant the solution was created
-    pub time_stamp: Instant,
+    pub time_stamp: f64,
 }
 
 impl BPSolution {

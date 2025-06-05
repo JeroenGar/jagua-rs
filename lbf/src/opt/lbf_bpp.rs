@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
@@ -12,6 +10,24 @@ use log::{debug, info};
 use rand::Rng;
 use rand::prelude::SmallRng;
 use thousands::Separable;
+
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
+use web_sys::js_sys;
+
+pub fn now_millis() -> f64 {
+    let global = js_sys::global();
+
+    let performance = js_sys::Reflect::get(&global, &JsValue::from_str("performance"))
+        .ok()
+        .and_then(|perf| perf.dyn_into::<web_sys::Performance>().ok());
+
+    if let Some(perf) = performance {
+        perf.now()
+    } else {
+        js_sys::Date::now()
+    }
+}
 
 /// Left-Bottom-Fill (LBF) optimizer for Bin Packing problems.
 pub struct LBFOptimizerBP {
@@ -37,7 +53,7 @@ impl LBFOptimizerBP {
     }
 
     pub fn solve(&mut self) -> BPSolution {
-        let start = Instant::now();
+        let start = now_millis();
 
         'outer: for item_id in item_placement_order(&self.instance) {
             let item = self.instance.item(item_id);
@@ -73,11 +89,13 @@ impl LBFOptimizerBP {
             }
         }
 
-        let solution = self.problem.save();
+        let now = now_millis();
+        let solution = self.problem.save(now);
 
+        let elapsed_ms = now_millis() - start;
         info!(
             "[LBF] optimization finished in {:.3}ms ({} samples)",
-            start.elapsed().as_secs_f64() * 1000.0,
+            elapsed_ms,
             self.sample_counter.separate_with_commas()
         );
 

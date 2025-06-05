@@ -1,0 +1,5 @@
+{
+  "inputStem": "input",
+  "instancePath": "./input/input.json",
+  "outputDir": "./output"
+}

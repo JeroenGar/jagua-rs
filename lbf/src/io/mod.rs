@@ -3,15 +3,13 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
-use crate::EPOCH;
-use log::{Level, LevelFilter, info, log};
+use log::info;
 use serde::Serialize;
 use svg::Document;
 
 use anyhow::{Context, Result};
 use jagua_rs::probs::bpp::io::ext_repr::ExtBPInstance;
 
-pub mod cli;
 pub mod output;
 
 pub fn read_bpp_instance(path: &Path) -> Result<ExtBPInstance> {
@@ -45,6 +43,7 @@ pub fn write_svg(document: &Document, path: &Path) -> Result<()> {
     Ok(())
 }
 
+/*
 pub fn init_logger(level_filter: LevelFilter) -> Result<()> {
     fern::Dispatch::new()
         // Perform allocation-free log formatting
@@ -75,3 +74,4 @@ pub fn init_logger(level_filter: LevelFilter) -> Result<()> {
     log!(Level::Info, "Epoch: {}", jiff::Timestamp::now());
     Ok(())
 }
+*/

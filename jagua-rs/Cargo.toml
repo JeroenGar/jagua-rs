@@ -28,9 +28,9 @@ geo-offset = { version = "0.4.0", optional = true }
 geo-types = { version = "0.7.16", optional = true }
 
 [features]
-default = ["separation-distance"]
+# default = ["separation-distance"]
 ## Enables support for defining a minimum separation distance between items and any hazard.
-separation-distance = ["dep:geo-offset", "dep:geo-types"]
+# separation-distance = ["dep:geo-offset", "dep:geo-types"]
 ## Enables support for the Strip Packing Problem
 spp = []
 ## Enables support for the Bin Packing Problem
