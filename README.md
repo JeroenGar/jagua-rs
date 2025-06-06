@@ -15,7 +15,7 @@ This particular fork of jagua-rs implements the algorithm for a WASM target for 
 3. **sed**, **bash** and other *NIX utils -- (for the automated building)
 4. **python** and networking utils -- (to run the server with COOP && COEP headers enabled)
 
-> [!NOTE]
+> [!IMPORTANT]
 > 
 > This project builds the project on the `nightly-x86_64-unknown-linux-gnu` build.
 > 

@@ -14,7 +14,7 @@ FAILURE="[!]"
 STEP="[>]"
 
 # Default target
-TARGET="nodejs"
+TARGET="web"
 
 # Post-build patch: fix import path in workerHelpers.js
 WORKER_FILE=$(find lbf/pkg/snippets/ -type f -name workerHelpers.js | head -n 1)
