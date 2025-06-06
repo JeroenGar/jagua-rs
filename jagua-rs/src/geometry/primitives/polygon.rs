@@ -1,8 +1,10 @@
+use crate::geometry::Transformation;
+use crate::geometry::geo_enums::GeoPosition;
+use crate::geometry::geo_traits::{
+    CollidesWith, DistanceTo, SeparationDistance, Transformable, TransformableFrom,
+};
 use crate::geometry::primitives::{Point, SPolygon};
 use anyhow::{Result, bail, ensure};
-use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::geo_traits::{CollidesWith, DistanceTo, SeparationDistance, Transformable, TransformableFrom};
-use crate::geometry::Transformation;
 
 /// Generalization of a [`SPolygon`] to a polygon that can contain one or multiple holes.
 ///  Defined by an outer contour and a vector of inner contours (holes).
@@ -50,7 +52,7 @@ impl DistanceTo<Point> for Polygon {
     fn distance_to(&self, point: &Point) -> f32 {
         todo!()
     }
-    
+
     fn sq_distance_to(&self, point: &Point) -> f32 {
         todo!()
     }
