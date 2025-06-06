@@ -13,6 +13,7 @@ homepage = "https://github.com/JeroenGar/jagua-rs"
 [dependencies]
 jagua-rs = { path = "../jagua-rs", features = ["bpp"] }
 rand = { workspace = true }
+getrandom = { workspace = true }
 rand_distr = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -27,8 +28,8 @@ ordered-float = { workspace = true }
 test-case = { workspace = true }
 float-cmp = { workspace = true }
 wasm-bindgen = { workspace = true }
+wasm-bindgen-rayon = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
-getrandom = { version = "0.3", default-features = false, features = ["wasm_js"] }
 console_error_panic_hook = { workspace = true }
 web-sys = { workspace = true }
 
@@ -50,8 +51,8 @@ harness = false
 name = "ci_bench"
 harness = false
 
-[target.wasm32-unknown-unknown]
-rustflags = ["--cfg", 'getrandom_backend="wasm_js"']
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
 
 #[[bench]]
 #name = "edge_sensitivity_bench"

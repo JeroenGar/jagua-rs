@@ -3,6 +3,7 @@ use crate::io::import::Importer;
 use crate::probs::bpp::entities::{BPInstance, Bin};
 use crate::probs::bpp::io::ext_repr::ExtBPInstance;
 use itertools::Itertools;
+use rayon::prelude::*;
 
 use anyhow::{Result, ensure};
 
@@ -11,7 +12,7 @@ pub fn import(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPIns
     let items = {
         let mut items = ext_instance
             .items
-            .iter()
+            .par_iter()
             .map(|ext_item| {
                 let item = importer.import_item(&ext_item.base)?;
                 let demand = ext_item.demand as usize;
@@ -31,7 +32,7 @@ pub fn import(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPIns
     let bins = {
         let mut bins: Vec<Bin> = ext_instance
             .bins
-            .iter()
+            .par_iter()
             .map(|ext_bin| {
                 let container = importer.import_container(&ext_bin.base)?;
                 Ok(Bin::new(container, ext_bin.stock, ext_bin.cost))

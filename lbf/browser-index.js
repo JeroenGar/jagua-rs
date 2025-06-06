@@ -40,6 +40,21 @@ function download(filename, content, type = 'application/json') {
 
 async function run() {
   await init(); // Ensure Wasm is initialized
+
+  log("[*] WASM initialized successfully!!");
+
+  const start_time = Date.now();
+
+  try {
+    await lbf.initThreadPool(8);
+    log("[*] Thread pool initialized successfully.");
+  } catch (e) {
+    log("[!] Failed to initialize thread pool. WebAssembly threading requires cross-origin isolation.");
+    log(`[!] Error: ${e}`);
+    return; // or continue with fallback
+  }
+  
+
   const fileInput = document.getElementById("jobFile");
   if (!fileInput.files.length) {
     alert("Please upload a job.json file.");
@@ -70,7 +85,15 @@ async function run() {
     const result = await lbf.run_bpp(extBPInstance, inputStem);
     const resultObj = JSON.parse(JSON.stringify(result));
 
-    log(`[*] Wasm returned result in (ms): ${resultObj.solve_time_ms}`);
+    const runtime_exec_duration = Date.now() - start_time;
+
+    // this is the time received from the rust logic (jagua-rs + lbf) implementation
+    log(`[*] JAGUA-RS returned result: ${resultObj.solve_time_ms} ms`);
+    // this includes the time for the thread pool initialization and other JS runtime execution times
+    //
+    // If you want to check how effective threading is, you can change the param of initThreadPool and compare 
+    // with this runtime execution time metric.
+    log(`[*] Total time in v8 runtime: ${runtime_exec_duration} ms`);
 
     const plainOutput = mapToObj(result);
     const jsonString = JSON.stringify(plainOutput, null, 2);
