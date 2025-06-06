@@ -45,6 +45,7 @@ async function downloadFile(outputDir, filename, content) {
 async function main() {
   try {
     const job = JSON.parse(await fs.readFile('./job/job.json', 'utf-8'));
+    const start = Date.now();
 
     const { inputStem, instancePath, outputDir } = job;
 
@@ -55,7 +56,8 @@ async function main() {
     const extBPInstance = JSON.parse(await fs.readFile(instancePath, 'utf-8'));
 
     const result = await lbf.run_bpp(extBPInstance, inputStem);
-    console.log("[*] Wasm returned in(ms): ", result.solve_time_ms);
+
+    console.log("[*] Wasm returned in(ms):", result.solve_time_ms);
 
     const plainOutput = mapToObj(result);
     const jsonString = JSON.stringify(plainOutput, null, 2);
@@ -68,6 +70,8 @@ async function main() {
     } else {
       console.log("[*] No SVGs found to save.");
     }
+    const end = Date.now();
+    console.log(`[+] Total Execution time (measured): ${end - start}ms`);
   } catch (e) {
     console.error("[!] Error:", e);
   }
