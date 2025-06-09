@@ -1,5 +1,4 @@
 #[cfg(feature = "separation-distance")]
-use geo_offset::Offset;
 use itertools::Itertools;
 use log::{debug, info};
 use ordered_float::NotNan;
@@ -330,29 +329,38 @@ impl CornerType {
 /// Relies on the [`geo_offset`](https://crates.io/crates/geo_offset) crate.
 #[cfg(feature = "separation-distance")]
 pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Result<SPolygon> {
-    let offset = match mode {
-        ShapeModifyMode::Deflate => -distance,
-        ShapeModifyMode::Inflate => distance,
+    use geo::{Polygon, LineString};
+    use geo_buffer::buffer_polygon;
+
+    let offset_distance = match mode {
+        ShapeModifyMode::Deflate => -(distance as f64),
+        ShapeModifyMode::Inflate => distance as f64,
     };
 
-    // Convert the SPolygon to a geo_types::Polygon
-    let geo_poly =
-        geo_types::Polygon::new(sp.vertices.iter().map(|p| (p.0, p.1)).collect(), vec![]);
+    // Convert your SPolygon vertices to geo LineString
+    let exterior_coords: Vec<_> = sp.vertices.iter()
+        .map(|&Point(x, y)| (x as f64, y as f64))
+        .collect();
 
-    // Create the offset geo_types::Polygon
-    let geo_poly_offset = geo_poly
-        .offset(offset)
-        .map_err(|e| anyhow::anyhow!("Error while offsetting polygon: {:?}", e))?
-        .0
-        .remove(0);
+    let line_string = LineString::from(exterior_coords);
 
-    let mut points_offset = geo_poly_offset
+    let geo_poly = Polygon::new(line_string, vec![]);
+
+    // Get the buffered polygon(s) as MultiPolygon
+    let buffered_multi = buffer_polygon(&geo_poly, offset_distance);
+
+    // Use the first polygon in the MultiPolygon result (if any)
+    let offset_poly = buffered_multi.0
+        .get(0)
+        .ok_or_else(|| anyhow::anyhow!("No polygon result from buffer_polygon"))?;
+
+    let mut points_offset = offset_poly
         .exterior()
         .points()
-        .map(|p| Point(p.x(), p.y()))
-        .collect_vec();
+        .map(|p| Point(p.x() as f32, p.y() as f32))
+        .collect::<Vec<_>>();
 
-    //pop the last point if it is the same as the first
+    // Remove duplicate last point if it matches the first
     if points_offset.first() == points_offset.last() {
         points_offset.pop();
     }

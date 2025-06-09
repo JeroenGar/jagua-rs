@@ -70,4 +70,4 @@ echo "${STEP} Patching $WORKER_FILE..."
 # Use sed to replace the import line
 sed -i "s|const pkg = await import('../../..');|const pkg = await import('../../../lbf.js');|" "$WORKER_FILE"
 
-echo -e "${GREEN}${SUCCESS}Patch applied.${RESET}"
+echo -e "${GREEN}${SUCCESS} Patch applied.${RESET}"
