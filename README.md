@@ -71,21 +71,9 @@ Now open `http://localhost:8080/index.html` and see it work.
 
 ## Changes
 
-Some changes were made to the core `jagua-rs` crate in this fork.
-
-These changes were mainly made to ensure that the WASM-Build is logically intact and shows *very similar* results.
-
-1. Changed all instances of `std::time::Instant` to `f64` for WASM friendly primitive that works with `performance()` (in browser and node)
-2. Added a parameter to BPProblem's `save` function called `time_stamp` of `f64` type 
-
-The API change would be:
-
-```rust 
-// prev
-self.problem.save()
-// now 
-let time = now_millis();
-self.problem.save(time);
-```
-
-3. Some extra logic when converting from `f64` to `u64` when exporting 
+> [!IMPORTANT]
+> 
+> Some changes were made to the core `jagua-rs` crate in this fork.
+> 
+> Check out [DEV.md](https://github.com/nots1dd/jagua-rs/tree/wasm-parallel/DEV.md) for more info.
+> 

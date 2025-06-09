@@ -126,7 +126,7 @@ The preferred solution is to switch to a **pure Rust** alternative for polygon o
 
 #### Suggested Alternative:
 
-* [`geo-booleanop`](https://crates.io/crates/geo-booleanop) – performs geometric boolean operations and is compatible with `wasm32-unknown-unknown`.
+* [`geo + geo-buffer`](https://crates.io/crates/geo) – performs geometric boolean operations and is compatible with `wasm32-unknown-unknown`.
 
 ## 7. Future Considerations
 
