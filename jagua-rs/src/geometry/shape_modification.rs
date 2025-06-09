@@ -350,8 +350,7 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
     let buffered_multi = buffer_polygon(&geo_poly, offset_distance);
 
     // Use the first polygon in the MultiPolygon result (if any)
-    let offset_poly = buffered_multi.0
-        .get(0)
+    let offset_poly = buffered_multi.0.first()
         .ok_or_else(|| anyhow::anyhow!("No polygon result from buffer_polygon"))?;
 
     let mut points_offset = offset_poly

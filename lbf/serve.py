@@ -11,11 +11,11 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 # Serve current directory
 with socketserver.TCPServer(("", PORT), CORSHTTPRequestHandler) as httpd:
-    print(f"Serving on http://localhost:{PORT}")
+    print(f"-- Serving on http://localhost:{PORT}")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\nCtrl+C detected, shutting down server.")
+        print("\n> Ctrl+C detected, shutting down server.")
         httpd.shutdown()
         httpd.server_close()
-        print("Server stopped cleanly.")
+        print("> Server stopped cleanly.")
