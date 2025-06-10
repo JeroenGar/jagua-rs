@@ -187,7 +187,7 @@ impl Importer {
     }
 }
 
-fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {
+pub fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {
     let mut points = sp.0.iter().map(|(x, y)| Point(*x, *y)).collect_vec();
     //Strip the last vertex if it is the same as the first one
     if points.len() > 1 && points[0] == points[points.len() - 1] {
