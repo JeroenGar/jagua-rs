@@ -56,10 +56,10 @@ impl QTHazard {
         debug_assert!(assertions::quadrants_have_valid_layout(&quadrants));
 
         match &self.presence {
-            QTHazPresence::None => unreachable!(),
-            QTHazPresence::Entire => [0, 1, 2, 3].map(|_| self.clone()),
+            QTHazPresence::None => unreachable!("Hazard presence cannot be None in a QTHazard"),
+            QTHazPresence::Entire => [0, 1, 2, 3].map(|_| self.clone()), // The hazard is entirely present in all quadrants
             QTHazPresence::Partial(partial_haz) => {
-                //If the hazard is partially present, it may produce different hazards for each quadrant
+                //If the hazard is partially present, we need to check which type of presence each quadrant has
 
                 //check the bbox of the hazard with the bboxes of the quadrants
                 let haz_bbox = partial_haz.shape.bbox;
@@ -89,8 +89,10 @@ impl QTHazard {
                     //The hazard is partially active in multiple quadrants, find which ones
                     let arc_shape = &partial_haz.shape;
 
-                    let mut constricted_hazards = quadrants.map(|q| {
-                        //For every quadrant, check which of the edges of the partial hazard are relevant
+                    // First lets find the quadrants where edges of the partial hazard are colliding with the quadrants.
+                    // These will also be partially present hazards.
+                    let mut constricted_qthazards = quadrants.map(|q| {
+                        //For every quadrant, collect the edges that are colliding with it
                         let mut relevant_edges = None;
                         for edge in partial_haz.edges.iter() {
                             if q.collides_with(edge) {
@@ -109,49 +111,53 @@ impl QTHazard {
                         })
                     });
 
-                    debug_assert!(constricted_hazards.iter().filter(|h| h.is_some()).count() > 0);
+                    debug_assert!(constricted_qthazards.iter().filter(|h| h.is_some()).count() > 0);
 
-                    //At this point, we know which quadrants have collisions with which edges.
+                    //At this point, we have resolved all quadrants that have edges colliding with them (i.e. Partial presence).
                     //What remain are the quadrants without any intersecting edges.
                     //These can either have the hazard entirely present or entirely absent.
                     for i in 0..4 {
                         let quadrant = quadrants[i];
-                        if constricted_hazards[i].is_none() {
-                            //Presence of Entire and None type are always separated by a node with Partial presence.
-                            //If a neighbor is already resolved to Entire or None, this quadrant will have the same presence.
-                            let [neighbor_0, neighbor_1] = Rect::QUADRANT_NEIGHBOR_LAYOUT[i];
-                            let presence_n0 = constricted_hazards[neighbor_0]
-                                .as_ref()
-                                .map(|h| &h.presence);
-                            let presence_n1 = constricted_hazards[neighbor_1]
-                                .as_ref()
-                                .map(|h| &h.presence);
+                        if constricted_qthazards[i].is_none() {
+                            //One important optimization is that `Entire` and `None` present hazards will always be separated by a node with `Partial` presence.
+                            //If a neighbor is already resolved to `Entire` or `None`, this quadrant will have the same presence.
+                            //This saves quite a bit of containment checks.
 
-                            let presence = match (presence_n0, &presence_n1) {
-                                (Some(QTHazPresence::None), Some(QTHazPresence::Entire))
-                                | (Some(QTHazPresence::Entire), Some(QTHazPresence::None)) => {
-                                    unreachable!(
-                                        "one of the neighbors is Entire, the other is None, this quadrant should be Partial"
-                                    )
-                                }
-                                (Some(QTHazPresence::Entire), _) => QTHazPresence::Entire,
-                                (_, Some(QTHazPresence::Entire)) => QTHazPresence::Entire,
-                                (Some(QTHazPresence::None), _) => QTHazPresence::None,
-                                (_, Some(QTHazPresence::None)) => QTHazPresence::None,
-                                _ => {
-                                    //Neither of its neighbors is resolved, check its position.
-                                    let haz_scope = self.entity.scope();
-                                    //Since partial presence is not possible, checking whether the center of the quadrant collides or not suffices
-                                    let colliding = arc_shape.collides_with(&quadrant.centroid());
-                                    match (haz_scope, colliding) {
-                                        (GeoPosition::Interior, true) => QTHazPresence::Entire,
-                                        (GeoPosition::Exterior, false) => QTHazPresence::Entire,
-                                        _ => QTHazPresence::None,
-                                    }
+                            let neighbor_idxs = Rect::QUADRANT_NEIGHBOR_LAYOUT[i];
+                            let neighbor_presences = neighbor_idxs.map(|idx| {
+                                constricted_qthazards[idx].as_ref().map(|h| &h.presence)
+                            });
+
+                            let none_neighbor = neighbor_presences
+                                .iter()
+                                .flatten()
+                                .any(|p| matches!(p, QTHazPresence::None));
+                            let entire_neighbor = neighbor_presences
+                                .iter()
+                                .flatten()
+                                .any(|p| matches!(p, QTHazPresence::Entire));
+
+                            debug_assert!(
+                                !(none_neighbor && entire_neighbor),
+                                "No unresolved quadrant should not have both None and Entire neighbors, this indicates a bug in the quadtree construction logic."
+                            );
+
+                            let presence = if none_neighbor {
+                                QTHazPresence::None
+                            } else if entire_neighbor {
+                                QTHazPresence::Entire
+                            } else {
+                                //Neither neighbor is resolved, check the position of the hazard in the quadrant
+                                //Since partial presence is not possible, checking whether the center of the quadrant collides or not suffices
+                                let colliding = arc_shape.collides_with(&quadrant.centroid());
+                                match self.entity.scope() {
+                                    GeoPosition::Interior if colliding => QTHazPresence::Entire,
+                                    GeoPosition::Exterior if !colliding => QTHazPresence::Entire,
+                                    _ => QTHazPresence::None,
                                 }
                             };
 
-                            constricted_hazards[i] = Some(QTHazard {
+                            constricted_qthazards[i] = Some(QTHazard {
                                 qt_bbox: quadrant,
                                 entity: self.entity,
                                 presence,
@@ -160,7 +166,7 @@ impl QTHazard {
                         }
                     }
 
-                    constricted_hazards
+                    constricted_qthazards
                         .map(|h| h.expect("all constricted hazards should be resolved"))
                 }
             }
