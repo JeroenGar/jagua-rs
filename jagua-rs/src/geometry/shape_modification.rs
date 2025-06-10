@@ -9,6 +9,8 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SPolygon;
 
+use crate::io::ext_repr::ExtSPolygon;
+use crate::io::import;
 use anyhow::{Result, bail};
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
@@ -355,17 +357,14 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
         }
     };
 
-    // Convert back to internal representation
-    let mut points_offset = geo_poly_offset
-        .exterior()
-        .points()
-        .map(|p| Point(p.x() as f32, p.y() as f32))
-        .collect_vec();
+    // Convert back to internal representation (by using the import function)
+    let ext_s_polygon = ExtSPolygon(
+        geo_poly_offset
+            .exterior()
+            .points()
+            .map(|p| (p.x() as f32, p.y() as f32))
+            .collect_vec(),
+    );
 
-    //pop the last point if it is the same as the first
-    if points_offset.first() == points_offset.last() {
-        points_offset.pop();
-    }
-
-    SPolygon::new(points_offset)
+    import::import_simple_polygon(&ext_s_polygon)
 }

@@ -25,7 +25,9 @@ impl OriginalShape {
 
         if let Some(offset) = self.modify_config.offset {
             // Offset the shape
-            internal = offset_shape(&internal, self.modify_mode, offset)?;
+            if offset != 0.0 {
+                internal = offset_shape(&internal, self.modify_mode, offset)?;
+            }
         }
         if let Some(tolerance) = self.modify_config.simplify_tolerance {
             // Simplify the shape
