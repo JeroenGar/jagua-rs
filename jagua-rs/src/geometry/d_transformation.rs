@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+use std::f32::consts::PI;
 use std::fmt::Display;
 
 use crate::geometry::Transformation;
@@ -64,5 +65,15 @@ impl Display for DTransformation {
             self.translation.0.into_inner(),
             self.translation.1.into_inner()
         )
+    }
+}
+
+/// Normalizes a rotation angle to the range [0, 2π).
+pub fn normalize_rotation(r: f32) -> f32 {
+    let normalized = r % (2.0 * PI);
+    if normalized < 0.0 {
+        normalized + 2.0 * PI
+    } else {
+        normalized
     }
 }
