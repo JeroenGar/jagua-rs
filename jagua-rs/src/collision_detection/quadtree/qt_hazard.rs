@@ -1,12 +1,11 @@
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::quadtree::qt_partial_hazard::{QTHazPartial, RelevantEdges};
+use crate::collision_detection::quadtree::qt_partial_hazard::QTHazPartial;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::Rect;
-use crate::geometry::primitives::SPolygon;
 use crate::util::assertions;
-use std::sync::Arc;
+use itertools::Itertools;
 
 /// Representation of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
 #[derive(Clone, Debug)]
@@ -37,10 +36,10 @@ impl QTHazard {
         Self {
             qt_bbox: qt_root_bbox,
             entity: haz.entity,
-            presence: QTHazPresence::Partial(QTHazPartial {
-                shape: haz.shape.clone(),
-                edges: RelevantEdges::All,
-            }),
+            presence: QTHazPresence::Partial(QTHazPartial::new(
+                haz.shape.clone(),
+                haz.shape.edge_iter().collect_vec(),
+            )),
             active: haz.active,
         }
     }
@@ -90,20 +89,26 @@ impl QTHazard {
                     //The hazard is partially active in multiple quadrants, find which ones
                     let arc_shape = &partial_haz.shape;
 
-                    //For every quadrant, check which of the edges of the hazard are relevant
                     let mut constricted_hazards = quadrants.map(|q| {
-                        compute_edge_collisions_in_quadrant(q, &partial_haz.edges, arc_shape).map(
-                            |p_haz| {
-                                //The quadrant has collisions with the hazard edges
-                                //For these quadrants we can be sure they will be of Partial presence
-                                QTHazard {
-                                    qt_bbox: q,
-                                    entity: self.entity,
-                                    presence: QTHazPresence::Partial(p_haz),
-                                    active: self.active,
-                                }
-                            },
-                        )
+                        //For every quadrant, check which of the edges of the partial hazard are relevant
+                        let mut relevant_edges = None;
+                        for edge in partial_haz.edges.iter() {
+                            if q.collides_with(edge) {
+                                relevant_edges
+                                    .get_or_insert_with(Vec::new)
+                                    .push(edge.clone());
+                            }
+                        }
+                        //If there are relevant edges, create a new QTHazard for this quadrant which is partially present
+                        relevant_edges.map(|edges| QTHazard {
+                            qt_bbox: q,
+                            entity: self.entity,
+                            presence: QTHazPresence::Partial(QTHazPartial::new(
+                                arc_shape.clone(),
+                                edges,
+                            )),
+                            active: self.active,
+                        })
                     });
 
                     debug_assert!(constricted_hazards.iter().filter(|h| h.is_some()).count() > 0);
@@ -170,39 +175,4 @@ impl QTHazard {
             QTHazPresence::Partial(partial_haz) => partial_haz.n_edges(),
         }
     }
-}
-
-fn compute_edge_collisions_in_quadrant(
-    quadrant: Rect,
-    relevant_edges: &RelevantEdges,
-    shape: &Arc<SPolygon>,
-) -> Option<QTHazPartial> {
-    let mut p_haz = None;
-
-    let mut check_edge = |idx| {
-        let edge = shape.edge(idx);
-        if quadrant.collides_with(&edge) {
-            p_haz
-                .get_or_insert(QTHazPartial {
-                    shape: shape.clone(),
-                    edges: RelevantEdges::Some(vec![]),
-                })
-                .register_edge(idx);
-        }
-    };
-
-    match relevant_edges {
-        RelevantEdges::All => {
-            for i in 0..shape.n_vertices() {
-                check_edge(i);
-            }
-        }
-        RelevantEdges::Some(indices) => {
-            for &i in indices {
-                check_edge(i);
-            }
-        }
-    }
-
-    p_haz
 }
