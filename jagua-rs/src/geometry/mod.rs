@@ -29,3 +29,6 @@ pub use transformation::Transformation;
 
 #[doc(inline)]
 pub use original_shape::OriginalShape;
+
+#[doc(inline)]
+pub use d_transformation::normalize_rotation;
