@@ -1,6 +1,7 @@
 mod piers;
 mod pole;
 mod sp_surrogate;
+mod p_surrogate;
 
 #[doc(inline)]
 pub use piers::generate_piers;

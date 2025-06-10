@@ -155,7 +155,7 @@ impl SPolygon {
         let dummy_sp = {
             let bbox = SPolygon::generate_bounding_box(points);
             let area = SPolygon::calculate_area(points);
-            let dummy_poi = Circle::try_new(Point(f32::MAX, f32::MAX), f32::MAX).unwrap();
+            let dummy_poi = Circle::try_new(Point(f32::MAX, f32::MAX), f32::MAX)?;
 
             SPolygon {
                 vertices: points.to_vec(),

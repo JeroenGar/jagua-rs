@@ -53,7 +53,7 @@ impl Importer {
                     SPolygon::from(rect)
                 }
                 ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
-                ExtShape::Polygon(ep) => {
+                ExtShape::NonSimplePolygon(ep) => {
                     error!("No native support for polygons yet, ignoring the holes");
                     import_simple_polygon(&ep.outer)?
                 }
@@ -106,7 +106,7 @@ impl Importer {
                     height,
                 } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)?.into(),
                 ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
-                ExtShape::Polygon(ep) => import_simple_polygon(&ep.outer)?,
+                ExtShape::NonSimplePolygon(ep) => import_simple_polygon(&ep.outer)?,
                 ExtShape::MultiPolygon(_) => {
                     bail!("No support for multipolygon shapes yet")
                 }
@@ -121,7 +121,7 @@ impl Importer {
 
         let holes = match &ext_cont.shape {
             ExtShape::SimplePolygon(_) | ExtShape::Rectangle { .. } => vec![],
-            ExtShape::Polygon(jp) => {
+            ExtShape::NonSimplePolygon(jp) => {
                 let json_holes = &jp.inner;
                 json_holes
                     .iter()
@@ -148,7 +148,7 @@ impl Importer {
                         } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)
                             .map(|r| r.into()),
                         ExtShape::SimplePolygon(esp) => import_simple_polygon(esp),
-                        ExtShape::Polygon(_) => {
+                        ExtShape::NonSimplePolygon(_) => {
                             unimplemented!("No support for polygon to simplepolygon conversion yet")
                         }
                         ExtShape::MultiPolygon(_) => {

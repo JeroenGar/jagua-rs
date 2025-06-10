@@ -1,6 +1,6 @@
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Transformable;
-use crate::geometry::primitives::{Point, Rect, SPolygon};
+use crate::geometry::primitives::{Point, Polygon, Rect, SPolygon};
 use crate::geometry::shape_modification::{
     ShapeModifyConfig, ShapeModifyMode, offset_shape, simplify_shape,
 };
@@ -12,14 +12,14 @@ use anyhow::Result;
 /// Also contains all required operation to convert it to a shape that can be used internally.
 /// Currently, these are centering and simplification operations, but could be extended in the future.
 pub struct OriginalShape {
-    pub shape: SPolygon,
+    pub shape: Polygon,
     pub pre_transform: DTransformation,
     pub modify_mode: ShapeModifyMode,
     pub modify_config: ShapeModifyConfig,
 }
 
 impl OriginalShape {
-    pub fn convert_to_internal(&self) -> Result<SPolygon> {
+    pub fn convert_to_internal(&self) -> Result<Polygon> {
         // Apply the transformation
         let mut internal = self.shape.transform_clone(&self.pre_transform.compose());
 

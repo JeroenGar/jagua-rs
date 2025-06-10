@@ -4,7 +4,7 @@ use crate::collision_detection::hazards::filter::QZHazardFilter;
 use crate::geometry::OriginalShape;
 use crate::geometry::fail_fast::SPSurrogateConfig;
 use crate::geometry::geo_enums::RotationRange;
-use crate::geometry::primitives::SPolygon;
+use crate::geometry::primitives::{Polygon, SPolygon};
 
 use anyhow::Result;
 
@@ -15,7 +15,7 @@ pub struct Item {
     /// Original contour of the item as defined in the input
     pub shape_orig: Arc<OriginalShape>,
     /// Contour of the item to be used for collision detection
-    pub shape_cd: Arc<SPolygon>,
+    pub shape_cd: Arc<Polygon>,
     /// Allowed rotations in which the item can be placed
     pub allowed_rotation: RotationRange,
     /// The minimum quality the item should be produced out of, if `None` the item requires full quality

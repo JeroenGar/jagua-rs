@@ -45,14 +45,14 @@ pub enum ExtShape {
     /// Polygon with a single outer boundary
     SimplePolygon(ExtSPolygon),
     /// Polygon with a single outer boundary and a set of holes
-    Polygon(ExtPolygon),
+    NonSimplePolygon(ExtNSPolygon),
     /// Multiple disjoint polygons
-    MultiPolygon(Vec<ExtPolygon>),
+    MultiPolygon(Vec<ExtNSPolygon>),
 }
 
 /// A polygon represented as an outer boundary and a list of holes
 #[derive(Serialize, Deserialize, Clone)]
-pub struct ExtPolygon {
+pub struct ExtNSPolygon {
     /// The outer boundary of the polygon
     pub outer: ExtSPolygon,
     /// A list of holes in the polygon

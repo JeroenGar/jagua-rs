@@ -1,17 +1,18 @@
 use itertools::Itertools;
 use log::{debug, info, warn};
-use ordered_float::NotNan;
+use ordered_float::{NotNan, OrderedFloat};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
 use crate::geometry::geo_traits::CollidesWith;
-use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::{Edge, Polygon};
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SPolygon;
 
 use crate::io::ext_repr::ExtSPolygon;
 use crate::io::import;
 use anyhow::{Result, bail};
+use geo_types::LineString;
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
 /// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::scope) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
@@ -329,7 +330,7 @@ impl CornerType {
 }
 
 /// Offsets a [`SPolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
-/// Relies on the [`geo_offset`](https://crates.io/crates/geo_offset) crate.
+/// Relies on the [`geo_buffer`](https://crates.io/crates/geo_offset) crate.
 pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Result<SPolygon> {
     let offset = match mode {
         ShapeModifyMode::Deflate => -distance,
@@ -348,25 +349,28 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
     // Create the offset polygon
     let geo_poly_offsets = geo_buffer::buffer_polygon_rounded(&geo_poly, offset as f64).0;
 
-    let geo_poly_offset = match geo_poly_offsets.len() {
+    match geo_poly_offsets.len() {
         0 => bail!("Offset resulted in an empty polygon"),
-        1 => &geo_poly_offsets[0],
-        _ => {
-            // If there are multiple polygons, we take the first one.
-            // This can happen if the offset creates multiple disconnected parts.
-            warn!("Offset resulted in multiple polygons, taking the first one.");
-            &geo_poly_offsets[0]
-        }
+        1 => (),
+        2.. => warn!("offset resulted in multiple polygons, taking the largest one. (multi polygons are currently not supported)")
     };
 
-    // Convert back to internal representation (by using the import function)
-    let ext_s_polygon = ExtSPolygon(
-        geo_poly_offset
-            .exterior()
-            .points()
-            .map(|p| (p.x() as f32, p.y() as f32))
-            .collect_vec(),
-    );
-
-    import::import_simple_polygon(&ext_s_polygon)
+    // Convert back to SPolygon using the import function.
+    // In case of multiple polygons we return the largest one.
+    geo_poly_offsets.iter()
+        .map(|geo_poly_offset| {
+            ExtSPolygon(
+                geo_poly_offset
+                    .exterior()
+                    .points()
+                    .map(|p| (p.x() as f32, p.y() as f32))
+                    .collect_vec()
+            )
+        })
+        .map(|ext_s_polygon| 
+            import::import_simple_polygon(&ext_s_polygon)
+        )
+        .flatten() 
+        .max_by_ley(|sp| OrderedFloat(sp.area))
+        .expect("offset_shape: no polygon returned from import")
 }
