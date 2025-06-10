@@ -1,7 +1,5 @@
-#[cfg(feature = "separation-distance")]
-use geo_offset::Offset;
 use itertools::Itertools;
-use log::{debug, info};
+use log::{debug, info, warn};
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -11,7 +9,9 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SPolygon;
 
-use anyhow::Result;
+use crate::io::ext_repr::ExtSPolygon;
+use crate::io::import;
+use anyhow::{Result, bail};
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
 /// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::scope) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
@@ -330,7 +330,6 @@ impl CornerType {
 
 /// Offsets a [`SPolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
 /// Relies on the [`geo_offset`](https://crates.io/crates/geo_offset) crate.
-#[cfg(feature = "separation-distance")]
 pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Result<SPolygon> {
     let offset = match mode {
         ShapeModifyMode::Deflate => -distance,
@@ -338,33 +337,36 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
     };
 
     // Convert the SPolygon to a geo_types::Polygon
-    let geo_poly =
-        geo_types::Polygon::new(sp.vertices.iter().map(|p| (p.0, p.1)).collect(), vec![]);
+    let geo_poly = geo_types::Polygon::new(
+        sp.vertices
+            .iter()
+            .map(|p| (p.0 as f64, p.1 as f64))
+            .collect(),
+        vec![],
+    );
 
-    // Create the offset geo_types::Polygon
-    let geo_poly_offset = geo_poly
-        .offset(offset)
-        .map_err(|e| anyhow::anyhow!("Error while offsetting polygon: {:?}", e))?
-        .0
-        .remove(0);
+    // Create the offset polygon
+    let geo_poly_offsets = geo_buffer::buffer_polygon_rounded(&geo_poly, offset as f64).0;
 
-    let mut points_offset = geo_poly_offset
-        .exterior()
-        .points()
-        .map(|p| Point(p.x(), p.y()))
-        .collect_vec();
+    let geo_poly_offset = match geo_poly_offsets.len() {
+        0 => bail!("Offset resulted in an empty polygon"),
+        1 => &geo_poly_offsets[0],
+        _ => {
+            // If there are multiple polygons, we take the first one.
+            // This can happen if the offset creates multiple disconnected parts.
+            warn!("Offset resulted in multiple polygons, taking the first one.");
+            &geo_poly_offsets[0]
+        }
+    };
 
-    //pop the last point if it is the same as the first
-    if points_offset.first() == points_offset.last() {
-        points_offset.pop();
-    }
+    // Convert back to internal representation (by using the import function)
+    let ext_s_polygon = ExtSPolygon(
+        geo_poly_offset
+            .exterior()
+            .points()
+            .map(|p| (p.x() as f32, p.y() as f32))
+            .collect_vec(),
+    );
 
-    SPolygon::new(points_offset)
-}
-
-#[cfg(not(feature = "separation-distance"))]
-pub fn offset_shape(_sp: &SPolygon, _mode: ShapeModifyMode, _distance: f32) -> Result<SPolygon> {
-    anyhow::bail!(
-        "cannot offset shape without geo_offset dependency, compile with --features separation to enable this"
-    )
+    import::import_simple_polygon(&ext_s_polygon)
 }
