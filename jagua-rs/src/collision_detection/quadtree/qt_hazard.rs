@@ -94,9 +94,7 @@ impl QTHazard {
                         let mut relevant_edges = None;
                         for edge in partial_haz.edges.iter() {
                             if q.collides_with(edge) {
-                                relevant_edges
-                                    .get_or_insert_with(Vec::new)
-                                    .push(edge.clone());
+                                relevant_edges.get_or_insert_with(Vec::new).push(*edge);
                             }
                         }
                         //If there are relevant edges, create a new QTHazard for this quadrant which is partially present
