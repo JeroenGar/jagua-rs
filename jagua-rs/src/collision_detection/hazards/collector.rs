@@ -9,7 +9,9 @@ pub trait HazardCollector: HazardFilter {
 
     fn insert(&mut self, hkey: HazKey, entity: HazardEntity);
 
-    fn remove(&mut self, hkey: HazKey);
+    fn remove_by_key(&mut self, hkey: HazKey);
+
+    fn remove_by_entity(&mut self, entity: &HazardEntity);
 
     fn is_empty(&self) -> bool {
         self.len() == 0
@@ -17,7 +19,11 @@ pub trait HazardCollector: HazardFilter {
 
     fn len(&self) -> usize;
 
-    fn iter(&self) -> impl Iterator<Item = HazKey>;
+    fn iter(&self) -> impl Iterator<Item = (HazKey, &HazardEntity)>;
+
+    fn keys(&self) -> impl Iterator<Item = HazKey> {
+        self.iter().map(|(k, _)| k)
+    }
 }
 
 /// Basic implementation of a [`HazardCollector`] using a `SecondaryMap` to store hazards by their `HazKey`.
@@ -30,15 +36,21 @@ impl HazardCollector for SecondaryMap<HazKey, HazardEntity> {
         self.insert(hkey, entity);
     }
 
-    fn remove(&mut self, hkey: HazKey) {
+    fn remove_by_key(&mut self, hkey: HazKey) {
         self.remove(hkey);
+    }
+
+    fn remove_by_entity(&mut self, entity: &HazardEntity) {
+        if let Some((hkey, _)) = self.iter().find(|(_, v)| *v == entity) {
+            self.remove(hkey);
+        }
     }
 
     fn len(&self) -> usize {
         self.len()
     }
 
-    fn iter(&self) -> impl Iterator<Item = HazKey> {
-        self.keys()
+    fn iter(&self) -> impl Iterator<Item = (HazKey, &HazardEntity)> {
+        self.iter()
     }
 }
