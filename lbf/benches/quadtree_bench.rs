@@ -1,15 +1,14 @@
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use rand::SeedableRng;
-use rand::prelude::SmallRng;
-use rand::seq::IteratorRandom;
-
-use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, HazardDetector};
-use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
+use jagua_rs::collision_detection::hazards::filter::NoFilter;
 use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::probs::spp::entities::SPPlacement;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
+use rand::SeedableRng;
+use rand::prelude::SmallRng;
+use rand::seq::IteratorRandom;
+use slotmap::SecondaryMap;
 
 use crate::util::{N_ITEMS_REMOVED, create_base_config};
 
@@ -108,9 +107,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape_cd, transf);
-                    let collides = layout
-                        .cde()
-                        .detect_poly_collision(&buffer_shape, &NoHazardFilter);
+                    let collides = layout.cde().detect_poly_collision(&buffer_shape, &NoFilter);
                     if collides {
                         n_invalid += 1;
                     } else {
@@ -171,9 +168,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape_cd, transf);
-                    let collides = layout
-                        .cde()
-                        .detect_poly_collision(&buffer_shape, &NoHazardFilter);
+                    let collides = layout.cde().detect_poly_collision(&buffer_shape, &NoFilter);
                     std::hint::black_box(collides); //prevent the compiler from optimizing the loop away
                 }
 
@@ -222,7 +217,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
                 let item = instance.item(item_id);
                 let layout = &problem.layout;
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
-                let mut detected = BasicHazardDetector::new();
+                let mut detected = SecondaryMap::with_capacity(layout.cde().hazards_map.len());
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape_cd, transf);
                     layout

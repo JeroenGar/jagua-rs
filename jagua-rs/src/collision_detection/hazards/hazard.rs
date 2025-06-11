@@ -2,8 +2,14 @@ use crate::entities::{PItemKey, PlacedItem};
 use crate::geometry::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::SPolygon;
+use slotmap::new_key_type;
 use std::borrow::Borrow;
 use std::sync::Arc;
+
+new_key_type! {
+    /// Key to identify hazards inside the CDE.
+    pub struct HazKey;
+}
 
 /// Any spatial constraint affecting the feasibility of a placement of an Item.
 /// See [`HazardEntity`] for the different entities that can induce a hazard.

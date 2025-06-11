@@ -26,7 +26,6 @@ pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool 
             return false;
         }
     }
-    //TODO: add dotgrid check, check if quadtree does not contain any more uncommitted removals
     true
 }
 

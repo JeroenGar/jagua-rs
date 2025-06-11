@@ -1,6 +1,7 @@
+use crate::collision_detection::hazards::HazKey;
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::hazards::detector::HazardDetector;
+use crate::collision_detection::hazards::collector::HazardCollector;
 use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::quadtree::{QTHazPresence, QTHazard, QTNode};
 use crate::geometry::Transformation;
@@ -12,12 +13,7 @@ use crate::geometry::primitives::SPolygon;
 use crate::util::assertions;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use slotmap::{SlotMap, new_key_type};
-
-new_key_type! {
-    /// Key to identify hazards inside the CDE.
-    pub struct HazKey;
-}
+use slotmap::SlotMap;
 
 /// The Collision Detection Engine (CDE).
 /// [`Hazard`]s can be (de)registered and collision queries can be performed.
@@ -29,6 +25,8 @@ pub struct CDEngine {
     pub hazards_map: SlotMap<HazKey, Hazard>,
     /// Configuration of the CDE
     pub config: CDEConfig,
+    /// The key of the hazard that represents the exterior of the container.
+    hkey_exterior: HazKey,
 }
 
 impl CDEngine {
@@ -42,10 +40,17 @@ impl CDEngine {
             quadtree.register_hazard(qt_haz, &hazards_map);
         }
 
+        let hkey_exterior = hazards_map
+            .iter()
+            .find(|(_, h)| matches!(h.entity, HazardEntity::Exterior))
+            .map(|(hkey, _)| hkey)
+            .expect("No exterior hazard registered in the CDE");
+
         CDEngine {
             quadtree,
             hazards_map,
             config,
+            hkey_exterior,
         }
     }
 
@@ -174,7 +179,7 @@ impl CDEngine {
                         "Entire hazards in the virtual root should have been caught by the edge intersection tests"
                     ),
                     QTHazPresence::Partial(_) => {
-                        if !filter.is_irrelevant(&qt_hazard.entity) {
+                        if !filter.is_irrelevant(qt_hazard.hkey) {
                             let haz_shape = &self.hazards_map[qt_hazard.hkey].shape;
                             if self.detect_containment_collision(shape, haz_shape, qt_hazard.entity)
                             {
@@ -252,9 +257,9 @@ impl CDEngine {
     /// # Arguments
     /// * `shape` - The shape to be checked for collisions
     /// * `detector` - The detector to which the hazards are reported
-    pub fn collect_poly_collisions(&self, shape: &SPolygon, detector: &mut impl HazardDetector) {
+    pub fn collect_poly_collisions(&self, shape: &SPolygon, detector: &mut impl HazardCollector) {
         if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding {
-            detector.push(HazardEntity::Exterior)
+            detector.insert(self.hkey_exterior, HazardEntity::Exterior);
         }
 
         //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
@@ -272,10 +277,10 @@ impl CDEngine {
                 // No need to check these, guaranteed to be detected by edge intersection
                 QTHazPresence::None | QTHazPresence::Entire => {}
                 QTHazPresence::Partial(_) => {
-                    if !detector.contains(&qt_haz.entity) {
+                    if !detector.contains(qt_haz.hkey) {
                         let h_shape = &self.hazards_map[qt_haz.hkey].shape;
                         if self.detect_containment_collision(shape, h_shape, qt_haz.entity) {
-                            detector.push(qt_haz.entity);
+                            detector.insert(qt_haz.hkey, qt_haz.entity);
                         }
                     }
                 }
@@ -292,7 +297,7 @@ impl CDEngine {
         &self,
         base_surrogate: &SPSurrogate,
         transform: &Transformation,
-        detector: &mut impl HazardDetector,
+        detector: &mut impl HazardCollector,
     ) {
         for pole in base_surrogate.ff_poles() {
             let t_pole = pole.transform_clone(transform);

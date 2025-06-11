@@ -1,4 +1,4 @@
-use crate::collision_detection::hazards::{Hazard, HazardEntity};
+use crate::collision_detection::hazards::{HazKey, Hazard, HazardEntity};
 use crate::collision_detection::{CDESnapshot, CDEngine};
 use crate::entities::Item;
 use crate::entities::{Container, Instance};
@@ -129,8 +129,9 @@ impl Layout {
     /// Returns true if all the items are placed without colliding
     pub fn is_feasible(&self) -> bool {
         self.placed_items.iter().all(|(pk, pi)| {
-            let filter = HazardEntity::from((pk, pi));
-            !self.cde.detect_poly_collision(&pi.shape, &filter)
+            let hkey = pitem_key_to_haz_key(pk, &self.cde.hazards_map)
+                .expect("all placed items should be registered in the CDE");
+            !self.cde.detect_poly_collision(&pi.shape, &hkey)
         })
     }
 }
@@ -161,4 +162,14 @@ impl LayoutSnapshot {
             .map(|item| item.area())
             .sum::<f32>()
     }
+}
+
+fn pitem_key_to_haz_key(pitem_key: PItemKey, haz_map: &SlotMap<HazKey, Hazard>) -> Option<HazKey> {
+    haz_map
+        .iter()
+        .find(|(_, hazard)| match hazard.entity {
+            HazardEntity::PlacedItem { pk, .. } => pitem_key == pk,
+            _ => false,
+        })
+        .map(|(key, _)| key)
 }

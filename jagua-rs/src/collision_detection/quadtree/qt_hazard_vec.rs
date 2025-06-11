@@ -1,14 +1,14 @@
-use crate::collision_detection::cd_engine::HazKey;
+use crate::collision_detection::hazards::HazKey;
 use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::quadtree::QTHazPresence;
 use crate::collision_detection::quadtree::QTHazard;
 use std::cmp::Ordering;
 use std::ops::Not;
 
-/// Vector of `QTHazard`s, which always remains sorted by activeness then presence.
+/// Vector of `QTHazard`s, which always remains sorted by presence.
 /// <br>
 /// This is a performance optimization to be able to quickly return the "strongest" hazard
-/// Strongest meaning the first active hazard with the highest [`QTHazPresence`] (`Entire` > `Partial` > `None`)
+/// Strongest meaning the highest [`QTHazPresence`] (`Entire` > `Partial` > `None`)
 #[derive(Clone, Debug, Default)]
 pub struct QTHazardVec {
     hazards: Vec<QTHazard>,
@@ -55,11 +55,11 @@ impl QTHazardVec {
     }
 
     #[inline(always)]
-    /// Returns the strongest hazard (if any), meaning the first active hazard with the highest [QTHazPresence] (`Entire` > `Partial` > `None`)
+    /// Returns the strongest hazard (if any) (`Entire` > `Partial` > `None`)
     /// Ignores any hazards that are deemed irrelevant by the filter.
     pub fn strongest(&self, filter: &impl HazardFilter) -> Option<&QTHazard> {
         debug_assert!(assert_caches_correct(self));
-        self.iter().find(|hz| !filter.is_irrelevant(&hz.entity))
+        self.iter().find(|hz| !filter.is_irrelevant(hz.hkey))
     }
 
     pub fn is_empty(&self) -> bool {

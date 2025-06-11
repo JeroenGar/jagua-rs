@@ -1,7 +1,6 @@
-use crate::collision_detection::cd_engine::HazKey;
-use crate::collision_detection::hazards::detector::HazardDetector;
+use crate::collision_detection::hazards::collector::HazardCollector;
 use crate::collision_detection::hazards::filter::HazardFilter;
-use crate::collision_detection::hazards::{Hazard, HazardEntity};
+use crate::collision_detection::hazards::{HazKey, Hazard, HazardEntity};
 use crate::collision_detection::quadtree::QTHazPresence;
 use crate::collision_detection::quadtree::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
@@ -125,7 +124,7 @@ impl QTNode {
                                 let mut relevant_hazards = self
                                     .hazards
                                     .iter()
-                                    .filter(|hz| !filter.is_irrelevant(&hz.entity));
+                                    .filter(|hz| !filter.is_irrelevant(hz.hkey));
 
                                 relevant_hazards
                                     .find(|hz| match &hz.presence {
@@ -151,7 +150,7 @@ impl QTNode {
     pub fn collect_collisions<T: QTQueryable>(
         &self,
         entity: &T,
-        detector: &mut impl HazardDetector,
+        collector: &mut impl HazardCollector,
     ) {
         if !entity.collides_with(&self.bbox) {
             // Entity does not collide with the node
@@ -165,22 +164,21 @@ impl QTNode {
             (Some(children), false) => {
                 //Do not perform any CD on this level, check the children
                 children.iter().for_each(|child| {
-                    child.collect_collisions(entity, detector);
+                    // Only collect collisions if there are relevant hazards in the child
+                    child.collect_collisions(entity, collector);
                 })
             }
             _ => {
                 //Check the hazards now
                 for hz in self.hazards.iter() {
-                    match &hz.presence {
-                        QTHazPresence::None => (),
-                        QTHazPresence::Entire => {
-                            if !detector.contains(&hz.entity) {
-                                detector.push(hz.entity)
-                            }
-                        }
-                        QTHazPresence::Partial(p_haz) => {
-                            if !detector.contains(&hz.entity) && p_haz.collides_with(entity) {
-                                detector.push(hz.entity);
+                    if !collector.contains(hz.hkey) {
+                        match &hz.presence {
+                            QTHazPresence::None => (),
+                            QTHazPresence::Entire => collector.insert(hz.hkey, hz.entity),
+                            QTHazPresence::Partial(p_haz) => {
+                                if p_haz.collides_with(entity) {
+                                    collector.insert(hz.hkey, hz.entity);
+                                }
                             }
                         }
                     }

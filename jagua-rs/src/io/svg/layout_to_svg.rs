@@ -1,6 +1,5 @@
 use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::hazards::detector::{BasicHazardDetector, HazardDetector};
-use crate::collision_detection::hazards::filter::NoHazardFilter;
+use crate::collision_detection::hazards::filter::NoFilter;
 use crate::entities::{Instance, Layout, LayoutSnapshot};
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::Edge;
@@ -9,6 +8,7 @@ use crate::io::export::int_to_ext_transformation;
 use crate::io::svg::svg_util;
 use crate::io::svg::svg_util::SvgDrawOptions;
 use log::warn;
+use slotmap::SecondaryMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use svg::Document;
 use svg::node::element::{Definitions, Group, Text, Title, Use};
@@ -274,7 +274,7 @@ pub fn layout_to_svg(
     let qt_group = match options.quadtree {
         false => None,
         true => {
-            let qt_data = svg_util::quad_tree_data(&layout.cde().quadtree, &NoHazardFilter);
+            let qt_data = svg_util::quad_tree_data(&layout.cde().quadtree, &NoFilter);
             let qt_group = Group::new()
                 .set("id", "quadtree")
                 .add(svg_util::data_to_path(
@@ -316,15 +316,25 @@ pub fn layout_to_svg(
         true => {
             let mut collision_group = Group::new().set("id", "collision_lines");
             for (pk, pi) in layout.placed_items.iter() {
-                let detector = {
-                    let mut detector = BasicHazardDetector::new();
+                let collector = {
+                    let mut collector = SecondaryMap::with_capacity(layout.cde().hazards_map.len());
                     layout
                         .cde()
-                        .collect_poly_collisions(pi.shape.as_ref(), &mut detector);
-                    detector.remove(&HazardEntity::from((pk, pi)));
-                    detector
+                        .collect_poly_collisions(pi.shape.as_ref(), &mut collector);
+                    collector.retain(|_, entity| {
+                        // filter out the item itself
+                        if let HazardEntity::PlacedItem {
+                            pk: colliding_pk, ..
+                        } = entity
+                        {
+                            *colliding_pk != pk
+                        } else {
+                            true
+                        }
+                    });
+                    collector
                 };
-                for haz_entity in detector.iter() {
+                for (_, haz_entity) in collector.iter() {
                     match haz_entity {
                         HazardEntity::PlacedItem {
                             pk: colliding_pk, ..

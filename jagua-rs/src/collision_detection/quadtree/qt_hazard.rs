@@ -1,6 +1,5 @@
-use crate::collision_detection::cd_engine::HazKey;
-use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::hazards::{HazKey, Hazard};
 use crate::collision_detection::quadtree::qt_partial_hazard::QTHazPartial;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::CollidesWith;
@@ -14,7 +13,7 @@ use std::array;
 pub struct QTHazard {
     /// The bounding box of the quadtree node
     pub qt_bbox: Rect,
-    /// TODO: document
+    /// The key of the hazard in the hazard map in [`CDEngine`](crate::collision_detection::cd_engine::CDEngine)
     pub hkey: HazKey,
     /// Entity inducing the hazard
     pub entity: HazardEntity,
@@ -60,8 +59,6 @@ impl QTHazard {
             QTHazPresence::Partial(partial_haz) => {
                 //If the hazard is partially present, we need to check which type of presence each quadrant has
 
-                //TODO: verify if this check improves performance (scrap otherwise)
-                //check the bbox of the hazard with the bboxes of the quadrants
                 let haz_shape = haz_map[self.hkey].shape.as_ref();
 
                 //Check if one of the quadrants entirely contains the hazard
@@ -83,7 +80,7 @@ impl QTHazard {
                             qt_bbox: quadrants[i],
                             presence,
                             hkey: self.hkey,
-                            entity: self.entity.clone(),
+                            entity: self.entity,
                         }
                     })
                 } else {
@@ -107,7 +104,7 @@ impl QTHazard {
                                 edges,
                             )),
                             hkey: self.hkey,
-                            entity: self.entity.clone(),
+                            entity: self.entity,
                         })
                     });
 
@@ -157,7 +154,7 @@ impl QTHazard {
                                 qt_bbox: quadrant,
                                 presence,
                                 hkey: self.hkey,
-                                entity: self.entity.clone(),
+                                entity: self.entity,
                             });
                         }
                     }
