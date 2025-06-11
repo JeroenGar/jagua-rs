@@ -66,8 +66,8 @@ impl SPProblem {
 
     /// Removes a placed item from the strip. Returns the placement of the item.
     /// Set `commit_instantly` to false if there's a high chance that this modification will be reverted.
-    pub fn remove_item(&mut self, pkey: PItemKey, commit_instant: bool) -> SPPlacement {
-        let pi = self.layout.remove_item(pkey, commit_instant);
+    pub fn remove_item(&mut self, pkey: PItemKey) -> SPPlacement {
+        let pi = self.layout.remove_item(pkey);
         self.deregister_included_item(pi.item_id);
 
         SPPlacement {

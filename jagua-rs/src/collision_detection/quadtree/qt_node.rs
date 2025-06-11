@@ -1,12 +1,14 @@
-use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::cd_engine::HazKey;
 use crate::collision_detection::hazards::detector::HazardDetector;
 use crate::collision_detection::hazards::filter::HazardFilter;
+use crate::collision_detection::hazards::{Hazard, HazardEntity};
 use crate::collision_detection::quadtree::QTHazPresence;
 use crate::collision_detection::quadtree::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::Rect;
+use slotmap::SlotMap;
 
 /// Quadtree node
 #[derive(Clone, Debug)]
@@ -34,15 +36,12 @@ impl QTNode {
         }
     }
 
-    pub fn register_hazard(&mut self, hazard: QTHazard) {
-        fn constrict_and_register_to_children(
-            children: &mut Option<Box<[QTNode; 4]>>,
-            hazard: &QTHazard,
-        ) {
-            if let Some(children) = children.as_mut() {
+    pub fn register_hazard(&mut self, new_qt_haz: QTHazard, haz_map: &SlotMap<HazKey, Hazard>) {
+        let constrict_and_register_to_children =
+            |qt_hazard: &QTHazard, children: &mut Box<[QTNode; 4]>| {
                 // Constrict the hazard to the bounding boxes of the children
                 let child_bboxes = children.each_ref().map(|c| c.bbox);
-                let child_hazards = hazard.constrict(child_bboxes);
+                let child_hazards = qt_hazard.constrict(child_bboxes, haz_map);
 
                 // Register the hazards to the children if present
                 child_hazards
@@ -52,17 +51,16 @@ impl QTNode {
                         match child_haz.presence {
                             QTHazPresence::None => (), // No need to register if the hazard is not present
                             QTHazPresence::Partial(_) | QTHazPresence::Entire => {
-                                children[i].register_hazard(child_haz);
+                                children[i].register_hazard(child_haz, haz_map);
                             }
                         }
                     });
-            }
-        }
+            };
 
         //Check if we have to expand the node (generate children)
         if self.children.is_none()
             && self.level > 0
-            && matches!(hazard.presence, QTHazPresence::Partial(_))
+            && matches!(new_qt_haz.presence, QTHazPresence::Partial(_))
         {
             // Generate a child for every quadrant
             let children = self
@@ -72,46 +70,26 @@ impl QTNode {
             self.children = Some(Box::new(children));
 
             // Register all previous hazards to them
-            for hazard in self.hazards.all_hazards() {
-                constrict_and_register_to_children(&mut self.children, hazard);
+            for qt_hazard in self.hazards.iter() {
+                constrict_and_register_to_children(qt_hazard, self.children.as_mut().unwrap());
             }
         }
-
-        constrict_and_register_to_children(&mut self.children, &hazard);
-        self.hazards.add(hazard);
+        if let Some(children) = self.children.as_mut() {
+            // If there are children, register the hazard to them
+            constrict_and_register_to_children(&new_qt_haz, children);
+        }
+        self.hazards.add(new_qt_haz);
     }
 
-    pub fn deregister_hazard(&mut self, hazard_entity: HazardEntity) {
-        let modified = self.hazards.remove(hazard_entity).is_some();
+    pub fn deregister_hazard(&mut self, hkey: HazKey) {
+        let modified = self.hazards.remove(hkey).is_some();
 
         if modified {
             if self.hazards.no_partial_hazards() {
                 // Drop the children if there are no partially present hazards left
                 self.children = None;
             } else if let Some(children) = self.children.as_mut() {
-                children
-                    .iter_mut()
-                    .for_each(|c| c.deregister_hazard(hazard_entity));
-            }
-        }
-    }
-
-    pub fn activate_hazard(&mut self, entity: HazardEntity) {
-        let modified = self.hazards.activate_hazard(entity);
-        if modified {
-            if let Some(children) = &mut self.children {
-                children.iter_mut().for_each(|c| c.activate_hazard(entity))
-            }
-        }
-    }
-
-    pub fn deactivate_hazard(&mut self, entity: HazardEntity) {
-        let modified = self.hazards.deactivate_hazard(entity);
-        if modified {
-            if let Some(children) = &mut self.children {
-                children
-                    .iter_mut()
-                    .for_each(|c| c.deactivate_hazard(entity))
+                children.iter_mut().for_each(|c| c.deregister_hazard(hkey));
             }
         }
     }
@@ -146,7 +124,6 @@ impl QTNode {
                                 //Check if any of the partially present (and active) hazards collide with the entity
                                 let mut relevant_hazards = self
                                     .hazards
-                                    .active_hazards()
                                     .iter()
                                     .filter(|hz| !filter.is_irrelevant(&hz.entity));
 
@@ -193,7 +170,7 @@ impl QTNode {
             }
             _ => {
                 //Check the hazards now
-                for hz in self.hazards.active_hazards().iter() {
+                for hz in self.hazards.iter() {
                     match &hz.presence {
                         QTHazPresence::None => (),
                         QTHazPresence::Entire => {

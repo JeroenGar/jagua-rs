@@ -61,7 +61,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
                 };
 
                 //println!("Removing item with id: {}\n", pi_uid.item_id);
-                problem.remove_item(pkey, true);
+                problem.remove_item(pkey);
 
                 problem.place_item(p_opt);
             })
@@ -163,7 +163,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                     d_transf: pi.d_transf,
                 };
 
-                problem.remove_item(pkey, true);
+                problem.remove_item(pkey);
 
                 let item_id = p_opt.item_id;
                 let item = instance.item(item_id);

@@ -156,7 +156,7 @@ fn cde_update_bench(c: &mut Criterion) {
                     };
 
                     //println!("Removing item with id: {}\n", pi_uid.item_id);
-                    problem.remove_item(pkey, true);
+                    problem.remove_item(pkey);
 
                     problem.place_item(p_opt);
                 }
