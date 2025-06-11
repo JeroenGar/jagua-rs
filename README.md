@@ -162,7 +162,7 @@ The configuration file has the following structure:
   },
   "poly_simpl_tolerance": 0.001, //Polygons will be simplified until at most a 0.1% deviation in area from the original
   "min_item_separation": 0.0, //Minimum distance between items and any hazard
-  "prng_seed": 0, //Seed for the pseudo-random number generator. If undefined the outcome will be non-deterministic
+  "prng_seed": 0, //Seed for the pseudo-random number generator. If `null` the outcome will be non-deterministic
   "n_samples": 5000, //5000 placement samples will be queried per item per layout
   "ls_frac": 0.2 //Of those 5000 samples, 80% will be sampled at uniformly at random, 20% will be local search samples
 }
