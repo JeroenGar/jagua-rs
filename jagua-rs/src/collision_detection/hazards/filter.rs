@@ -2,7 +2,7 @@ use crate::collision_detection::hazards::collector::HazardCollector;
 use crate::collision_detection::hazards::{HazKey, Hazard, HazardEntity};
 use slotmap::{SecondaryMap, SlotMap};
 
-/// Trait for filters to ignore all [`Hazard`](crate::collision_detection::hazards::Hazard)s induced by specific [`HazardEntity`]s.
+/// Trait for filters to ignore all [`Hazard`]s induced by specific [`HazardEntity`]s.
 /// Enables collision queries to ignore specific hazards during the check.
 pub trait HazardFilter {
     fn is_irrelevant(&self, haz_key: HazKey) -> bool;

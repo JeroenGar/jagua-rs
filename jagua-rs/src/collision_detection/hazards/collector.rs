@@ -2,8 +2,8 @@ use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::hazards::{HazKey, HazardEntity};
 use slotmap::SecondaryMap;
 
-/// Trait for structs that can track and store detected [`HazardEntity`]s.
-/// Used in 'collision collection' queries to avoid having to repeatedly check hazards induced by an already detected entity.
+/// Trait for structs that can track and store detected [`Hazard`](crate::collision_detection::hazards::Hazard)s.
+/// Used in 'collision collection' queries to avoid having to repeatedly check hazards induced by one that has already been detected.
 pub trait HazardCollector: HazardFilter {
     fn contains(&self, hkey: HazKey) -> bool;
 
