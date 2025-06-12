@@ -1,5 +1,7 @@
+use crate::util::{N_ITEMS_REMOVED, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
+use jagua_rs::collision_detection::hazards::collector::BasicHazardCollector;
 use jagua_rs::collision_detection::hazards::filter::NoFilter;
 use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
@@ -8,9 +10,6 @@ use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
 use rand::seq::IteratorRandom;
-use slotmap::SecondaryMap;
-
-use crate::util::{N_ITEMS_REMOVED, create_base_config};
 
 criterion_main!(benches);
 criterion_group!(
@@ -217,19 +216,20 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
                 let item = instance.item(item_id);
                 let layout = &problem.layout;
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
-                let mut detected = SecondaryMap::with_capacity(layout.cde().hazards_map.len());
+                let mut collector =
+                    BasicHazardCollector::with_capacity(layout.cde().hazards_map.len());
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(&item.shape_cd, transf);
                     layout
                         .cde()
-                        .collect_poly_collisions(&buffer_shape, &mut detected);
-                    if !detected.is_empty() {
+                        .collect_poly_collisions(&buffer_shape, &mut collector);
+                    if !collector.is_empty() {
                         n_invalid += 1;
                     } else {
                         n_valid += 1;
                     }
-                    n_detected += detected.len() as i64;
-                    detected.clear();
+                    n_detected += collector.len() as i64;
+                    collector.clear();
                 }
             })
         });

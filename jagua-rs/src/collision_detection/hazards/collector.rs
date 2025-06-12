@@ -26,6 +26,8 @@ pub trait HazardCollector: HazardFilter {
     }
 }
 
+pub type BasicHazardCollector = SecondaryMap<HazKey, HazardEntity>;
+
 /// Basic implementation of a [`HazardCollector`] using a `SecondaryMap` to store hazards by their `HazKey`.
 impl HazardCollector for SecondaryMap<HazKey, HazardEntity> {
     fn contains(&self, hkey: HazKey) -> bool {

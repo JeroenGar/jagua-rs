@@ -1,5 +1,6 @@
 use crate::util::{N_ITEMS_REMOVED, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use jagua_rs::collision_detection::hazards::collector::BasicHazardCollector;
 use jagua_rs::collision_detection::hazards::filter::NoFilter;
 use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
@@ -7,7 +8,6 @@ use jagua_rs::probs::spp::entities::SPPlacement;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;
 use rand::prelude::{IteratorRandom, SmallRng};
-use slotmap::SecondaryMap;
 
 criterion_main!(benches);
 criterion_group!(
@@ -51,7 +51,7 @@ fn cde_collect_bench(c: &mut Criterion) {
                 let item = instance.item(search_for.1.item_id);
                 let cde = &problem.layout.cde();
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
-                let mut detector = SecondaryMap::with_capacity(cde.hazards_map.len());
+                let mut collector = BasicHazardCollector::with_capacity(cde.hazards_map.len());
                 let sampler = UniformRectSampler::new(cde.bbox(), item);
                 for _ in 0..N_SAMPLES_PER_ITER {
                     let d_transf = sampler.sample(&mut rng);
@@ -60,13 +60,13 @@ fn cde_collect_bench(c: &mut Criterion) {
                     cde.collect_surrogate_collisions(
                         item.shape_cd.surrogate(),
                         &transf,
-                        &mut detector,
+                        &mut collector,
                     );
                     //detect collisions with the actual shape
                     buffer_shape.transform_from(&item.shape_cd, &transf);
-                    cde.collect_poly_collisions(&buffer_shape, &mut detector);
-                    n_detected += detector.len();
-                    detector.clear();
+                    cde.collect_poly_collisions(&buffer_shape, &mut collector);
+                    n_detected += collector.len();
+                    collector.clear();
                 }
             })
         });

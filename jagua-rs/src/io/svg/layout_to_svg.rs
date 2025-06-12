@@ -1,4 +1,5 @@
 use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::hazards::collector::BasicHazardCollector;
 use crate::collision_detection::hazards::filter::NoFilter;
 use crate::entities::{Instance, Layout, LayoutSnapshot};
 use crate::geometry::geo_traits::Transformable;
@@ -8,7 +9,6 @@ use crate::io::export::int_to_ext_transformation;
 use crate::io::svg::svg_util;
 use crate::io::svg::svg_util::SvgDrawOptions;
 use log::warn;
-use slotmap::SecondaryMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use svg::Document;
 use svg::node::element::{Definitions, Group, Text, Title, Use};
@@ -317,7 +317,8 @@ pub fn layout_to_svg(
             let mut collision_group = Group::new().set("id", "collision_lines");
             for (pk, pi) in layout.placed_items.iter() {
                 let collector = {
-                    let mut collector = SecondaryMap::with_capacity(layout.cde().hazards_map.len());
+                    let mut collector =
+                        BasicHazardCollector::with_capacity(layout.cde().hazards_map.len());
                     layout
                         .cde()
                         .collect_poly_collisions(pi.shape.as_ref(), &mut collector);
