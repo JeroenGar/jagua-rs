@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use crate::collision_detection::hazards::filter::QZHazardFilter;
 use crate::geometry::OriginalShape;
 use crate::geometry::fail_fast::SPSurrogateConfig;
 use crate::geometry::geo_enums::RotationRange;
@@ -20,8 +19,6 @@ pub struct Item {
     pub allowed_rotation: RotationRange,
     /// The minimum quality the item should be produced out of, if `None` the item requires full quality
     pub min_quality: Option<usize>,
-    /// Filter for hazards that the item is unaffected by
-    pub hazard_filter: Option<QZHazardFilter>,
     /// Configuration for the surrogate generation
     pub surrogate_config: SPSurrogateConfig,
 }
@@ -31,7 +28,7 @@ impl Item {
         id: usize,
         original_shape: OriginalShape,
         allowed_rotation: RotationRange,
-        base_quality: Option<usize>,
+        min_quality: Option<usize>,
         surrogate_config: SPSurrogateConfig,
     ) -> Result<Item> {
         let shape_orig = Arc::new(original_shape);
@@ -40,14 +37,12 @@ impl Item {
             shape_int.generate_surrogate(surrogate_config)?;
             Arc::new(shape_int)
         };
-        let hazard_filter = base_quality.map(QZHazardFilter);
         Ok(Item {
             id,
             shape_orig,
             shape_cd: shape_int,
             allowed_rotation,
-            min_quality: base_quality,
-            hazard_filter,
+            min_quality,
             surrogate_config,
         })
     }

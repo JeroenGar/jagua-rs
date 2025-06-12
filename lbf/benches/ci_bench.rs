@@ -1,13 +1,13 @@
 use crate::util::{N_ITEMS_REMOVED, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
-use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, HazardDetector};
-use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
+use jagua_rs::collision_detection::hazards::filter::NoFilter;
 use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::probs::spp::entities::SPPlacement;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;
 use rand::prelude::{IteratorRandom, SmallRng};
+use slotmap::SecondaryMap;
 
 criterion_main!(benches);
 criterion_group!(
@@ -51,7 +51,7 @@ fn cde_collect_bench(c: &mut Criterion) {
                 let item = instance.item(search_for.1.item_id);
                 let cde = &problem.layout.cde();
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
-                let mut detector = BasicHazardDetector::new();
+                let mut detector = SecondaryMap::with_capacity(cde.hazards_map.len());
                 let sampler = UniformRectSampler::new(cde.bbox(), item);
                 for _ in 0..N_SAMPLES_PER_ITER {
                     let d_transf = sampler.sample(&mut rng);
@@ -111,10 +111,10 @@ fn cde_detect_bench(c: &mut Criterion) {
                     if !cde.detect_surrogate_collision(
                         item.shape_cd.surrogate(),
                         &transf,
-                        &NoHazardFilter,
+                        &NoFilter,
                     ) {
                         buffer_shape.transform_from(&item.shape_cd, &transf);
-                        if !cde.detect_poly_collision(&buffer_shape, &NoHazardFilter) {
+                        if !cde.detect_poly_collision(&buffer_shape, &NoFilter) {
                             n_detected += 1;
                         }
                     }
@@ -156,7 +156,7 @@ fn cde_update_bench(c: &mut Criterion) {
                     };
 
                     //println!("Removing item with id: {}\n", pi_uid.item_id);
-                    problem.remove_item(pkey, true);
+                    problem.remove_item(pkey);
 
                     problem.place_item(p_opt);
                 }

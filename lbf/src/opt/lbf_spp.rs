@@ -4,7 +4,7 @@ use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use crate::util::assertions::strip_width_is_in_check;
-use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
+use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
 use jagua_rs::entities::Instance;
 use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution};
 use log::info;
@@ -41,23 +41,28 @@ impl LBFOptimizerSP {
             let item = self.instance.item(item_id);
             //place all items of this type
             while self.problem.item_demand_qtys[item_id] > 0 {
-                let placement = match &item.hazard_filter {
+                let cde = self.problem.layout.cde();
+                let placement = match &item.min_quality {
                     None => search(
-                        self.problem.layout.cde(),
+                        cde,
                         item,
                         &self.config,
                         &mut self.rng,
                         &mut self.sample_counter,
-                        &NoHazardFilter,
+                        &NoFilter,
                     ),
-                    Some(hf) => search(
-                        self.problem.layout.cde(),
-                        item,
-                        &self.config,
-                        &mut self.rng,
-                        &mut self.sample_counter,
-                        hf,
-                    ),
+                    Some(min_quality) => {
+                        let filter =
+                            HazKeyFilter::from_irrelevant_qzones(*min_quality, &cde.hazards_map);
+                        search(
+                            cde,
+                            item,
+                            &self.config,
+                            &mut self.rng,
+                            &mut self.sample_counter,
+                            &filter,
+                        )
+                    }
                 };
 
                 match placement {

@@ -3,7 +3,7 @@ use std::time::Instant;
 use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
-use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
+use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
 use jagua_rs::entities::{Instance, Item};
 use jagua_rs::probs::bpp::entities::{
     BPInstance, BPLayoutType, BPPlacement, BPProblem, BPSolution,
@@ -120,9 +120,12 @@ fn search_layouts(
             BPLayoutType::Closed { bin_id } => problem.instance.container(bin_id).base_cde.as_ref(),
         };
 
-        let placement = match &item.hazard_filter {
-            None => search(cde, item, config, rng, sample_counter, &NoHazardFilter),
-            Some(hf) => search(cde, item, config, rng, sample_counter, hf),
+        let placement = match &item.min_quality {
+            None => search(cde, item, config, rng, sample_counter, &NoFilter),
+            Some(min_quality) => {
+                let filter = HazKeyFilter::from_irrelevant_qzones(*min_quality, &cde.hazards_map);
+                search(cde, item, config, rng, sample_counter, &filter)
+            }
         };
 
         if let Some((d_transf, _)) = placement {

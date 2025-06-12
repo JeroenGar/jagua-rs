@@ -63,13 +63,8 @@ impl BPProblem {
 
     /// Removes an item from a layout. If the layout is empty, it will be closed.
     /// Set `commit_instantly` to false if there's a high chance that this modification will be reverted.
-    pub fn remove_item(
-        &mut self,
-        lkey: LayKey,
-        pik: PItemKey,
-        commit_instant: bool,
-    ) -> BPPlacement {
-        let pi = self.layouts[lkey].remove_item(pik, commit_instant);
+    pub fn remove_item(&mut self, lkey: LayKey, pik: PItemKey) -> BPPlacement {
+        let pi = self.layouts[lkey].remove_item(pik);
         self.deregister_included_item(pi.item_id);
         if self.layouts[lkey].is_empty() {
             //if layout is empty, close it

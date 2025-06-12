@@ -1,7 +1,7 @@
 use crate::util::{N_ITEMS_REMOVED, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
+use jagua_rs::collision_detection::hazards::filter::NoFilter;
 use jagua_rs::entities::Instance;
 use jagua_rs::geometry::convex_hull;
 use jagua_rs::geometry::fail_fast::{
@@ -108,17 +108,14 @@ fn fast_fail_query_bench(c: &mut Criterion) {
                     let buffer_shape = &mut buffer_shapes[i];
                     for dtransf in samples_cyclers[i].next().unwrap() {
                         let transf = dtransf.compose();
-                        let collides = match layout.cde().detect_surrogate_collision(
-                            surrogate,
-                            &transf,
-                            &NoHazardFilter,
-                        ) {
+                        let collides = match layout
+                            .cde()
+                            .detect_surrogate_collision(surrogate, &transf, &NoFilter)
+                        {
                             true => true,
                             false => {
                                 buffer_shape.transform_from(&item.shape_cd, &transf);
-                                layout
-                                    .cde()
-                                    .detect_poly_collision(buffer_shape, &NoHazardFilter)
+                                layout.cde().detect_poly_collision(buffer_shape, &NoFilter)
                             }
                         };
                         match collides {

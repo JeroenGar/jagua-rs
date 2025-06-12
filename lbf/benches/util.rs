@@ -57,7 +57,7 @@ pub fn create_lbf_problem(
 
     for pkey in placed_items_to_remove {
         let item_id = problem.layout.placed_items[pkey].item_id;
-        problem.remove_item(pkey, true);
+        problem.remove_item(pkey);
         info!(
             "Removed item: {} with {} edges",
             item_id,

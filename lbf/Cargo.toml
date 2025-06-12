@@ -27,6 +27,7 @@ itertools = { workspace = true }
 ordered-float = { workspace = true }
 test-case = { workspace = true }
 float-cmp = { workspace = true }
+slotmap = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
