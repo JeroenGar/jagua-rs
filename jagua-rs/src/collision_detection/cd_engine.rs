@@ -4,6 +4,7 @@ use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hazards::collector::HazardCollector;
 use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::quadtree::{QTHazPresence, QTHazard, QTNode};
+use crate::entities::PItemKey;
 use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
@@ -253,13 +254,13 @@ impl CDEngine {
         }
     }
 
-    /// Collects all hazards with which the polygon collides and reports them to the detector.
+    /// Collects all hazards with which the polygon collides and reports them to the collector.
     /// # Arguments
     /// * `shape` - The shape to be checked for collisions
-    /// * `detector` - The detector to which the hazards are reported
-    pub fn collect_poly_collisions(&self, shape: &SPolygon, detector: &mut impl HazardCollector) {
+    /// * `collector` - The collector to which the hazards are reported
+    pub fn collect_poly_collisions(&self, shape: &SPolygon, collector: &mut impl HazardCollector) {
         if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding {
-            detector.insert(self.hkey_exterior, HazardEntity::Exterior);
+            collector.insert(self.hkey_exterior, HazardEntity::Exterior);
         }
 
         //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
@@ -268,19 +269,18 @@ impl CDEngine {
         //Collect all colliding entities due to edge intersection
         shape
             .edge_iter()
-            .for_each(|e| v_quadtree.collect_collisions(&e, detector));
+            .for_each(|e| v_quadtree.collect_collisions(&e, collector));
 
         //Check if there are any other collisions due to containment
-
         for qt_haz in v_quadtree.hazards.iter() {
             match &qt_haz.presence {
                 // No need to check these, guaranteed to be detected by edge intersection
                 QTHazPresence::None | QTHazPresence::Entire => {}
                 QTHazPresence::Partial(_) => {
-                    if !detector.contains(qt_haz.hkey) {
+                    if !collector.contains_key(qt_haz.hkey) {
                         let h_shape = &self.hazards_map[qt_haz.hkey].shape;
                         if self.detect_containment_collision(shape, h_shape, qt_haz.entity) {
-                            detector.insert(qt_haz.hkey, qt_haz.entity);
+                            collector.insert(qt_haz.hkey, qt_haz.entity);
                         }
                     }
                 }
@@ -288,24 +288,24 @@ impl CDEngine {
         }
     }
 
-    /// Collects all hazards with which the surrogate collides and reports them to the detector.
+    /// Collects all hazards with which the surrogate collides and reports them to the collector.
     /// # Arguments
     /// * `base_surrogate` - The (untransformed) surrogate to be checked for collisions
     /// * `transform` - The transformation to be applied to the surrogate (on the fly)
-    /// * `detector` - The detector to which the hazards are reported
+    /// * `collector` - The collector to which the hazards are reported
     pub fn collect_surrogate_collisions(
         &self,
         base_surrogate: &SPSurrogate,
         transform: &Transformation,
-        detector: &mut impl HazardCollector,
+        collector: &mut impl HazardCollector,
     ) {
         for pole in base_surrogate.ff_poles() {
             let t_pole = pole.transform_clone(transform);
-            self.quadtree.collect_collisions(&t_pole, detector)
+            self.quadtree.collect_collisions(&t_pole, collector)
         }
         for pier in base_surrogate.ff_piers() {
             let t_pier = pier.transform_clone(transform);
-            self.quadtree.collect_collisions(&t_pier, detector);
+            self.quadtree.collect_collisions(&t_pier, collector);
         }
     }
 
@@ -328,6 +328,16 @@ impl CDEngine {
 
     pub fn bbox(&self) -> Rect {
         self.quadtree.bbox
+    }
+
+    pub fn haz_key_from_pi_key(&self, pik: PItemKey) -> Option<HazKey> {
+        self.hazards_map
+            .iter()
+            .find(|(_, hazard)| match hazard.entity {
+                HazardEntity::PlacedItem { pk, .. } => pik == pk,
+                _ => false,
+            })
+            .map(|(key, _)| key)
     }
 }
 

@@ -71,6 +71,6 @@ where
     T: HazardCollector,
 {
     fn is_irrelevant(&self, hkey: HazKey) -> bool {
-        self.contains(hkey)
+        self.contains_key(hkey)
     }
 }

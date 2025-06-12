@@ -145,8 +145,8 @@ impl QTNode {
         }
     }
 
-    /// Gathers all hazards that collide with the entity and reports them to the `detector`.
-    /// All hazards already present in the `detector` are ignored.
+    /// Gathers all hazards that collide with the entity and reports them to the `collector`.
+    /// All hazards already present in the `collector` are ignored.
     pub fn collect_collisions<T: QTQueryable>(
         &self,
         entity: &T,
@@ -171,7 +171,7 @@ impl QTNode {
             _ => {
                 //Check the hazards now
                 for hz in self.hazards.iter() {
-                    if !collector.contains(hz.hkey) {
+                    if !collector.contains_key(hz.hkey) {
                         match &hz.presence {
                             QTHazPresence::None => (),
                             QTHazPresence::Entire => collector.insert(hz.hkey, hz.entity),

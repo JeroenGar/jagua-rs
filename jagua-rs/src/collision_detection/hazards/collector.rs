@@ -5,13 +5,24 @@ use slotmap::SecondaryMap;
 /// Trait for structs that can track and store detected [`Hazard`](crate::collision_detection::hazards::Hazard)s.
 /// Used in 'collision collection' queries to avoid having to repeatedly check hazards induced by one that has already been detected.
 pub trait HazardCollector: HazardFilter {
-    fn contains(&self, hkey: HazKey) -> bool;
+    fn contains_key(&self, hkey: HazKey) -> bool;
+
+    fn contains_entity(&self, entity: &HazardEntity) -> bool {
+        self.iter().any(|(_, e)| e == entity)
+    }
 
     fn insert(&mut self, hkey: HazKey, entity: HazardEntity);
 
     fn remove_by_key(&mut self, hkey: HazKey);
 
-    fn remove_by_entity(&mut self, entity: &HazardEntity);
+    fn remove_by_entity(&mut self, entity: &HazardEntity) {
+        let hkey = self
+            .iter()
+            .find(|(_, v)| *v == entity)
+            .map(|(hkey, _)| hkey)
+            .expect("HazardEntity not found in collector");
+        self.remove_by_key(hkey);
+    }
 
     fn is_empty(&self) -> bool {
         self.len() == 0
@@ -24,13 +35,17 @@ pub trait HazardCollector: HazardFilter {
     fn keys(&self) -> impl Iterator<Item = HazKey> {
         self.iter().map(|(k, _)| k)
     }
+
+    fn entities(&self) -> impl Iterator<Item = &HazardEntity> {
+        self.iter().map(|(_, e)| e)
+    }
 }
 
+/// A basic implementation of a [`HazardCollector`] using a `SecondaryMap` to store hazards by their `HazKey`.
 pub type BasicHazardCollector = SecondaryMap<HazKey, HazardEntity>;
 
-/// Basic implementation of a [`HazardCollector`] using a `SecondaryMap` to store hazards by their `HazKey`.
-impl HazardCollector for SecondaryMap<HazKey, HazardEntity> {
-    fn contains(&self, hkey: HazKey) -> bool {
+impl HazardCollector for BasicHazardCollector {
+    fn contains_key(&self, hkey: HazKey) -> bool {
         self.contains_key(hkey)
     }
 
@@ -40,12 +55,6 @@ impl HazardCollector for SecondaryMap<HazKey, HazardEntity> {
 
     fn remove_by_key(&mut self, hkey: HazKey) {
         self.remove(hkey);
-    }
-
-    fn remove_by_entity(&mut self, entity: &HazardEntity) {
-        if let Some((hkey, _)) = self.iter().find(|(_, v)| *v == entity) {
-            self.remove(hkey);
-        }
     }
 
     fn len(&self) -> usize {
