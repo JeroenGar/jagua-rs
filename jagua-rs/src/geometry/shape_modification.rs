@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use log::{debug, info, warn};
-use ordered_float::NotNan;
+use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -97,8 +97,7 @@ pub fn simplify_shape(
         let best_candidate = candidates
             .iter()
             .sorted_by_cached_key(|c| {
-                calculate_area_delta(&ref_points, c)
-                    .unwrap_or_else(|_| NotNan::new(f32::INFINITY).expect("area delta is NaN"))
+                OrderedFloat(calculate_area_delta(&ref_points, c).unwrap_or(f32::INFINITY))
             })
             .find(|c| candidate_is_valid(&ref_points, c));
 
@@ -139,10 +138,7 @@ pub fn simplify_shape(
     simpl_shape
 }
 
-fn calculate_area_delta(
-    shape: &[Point],
-    candidate: &Candidate,
-) -> Result<NotNan<f32>, InvalidCandidate> {
+fn calculate_area_delta(shape: &[Point], candidate: &Candidate) -> Result<f32, InvalidCandidate> {
     //calculate the difference in area of the shape if the candidate were to be executed
     let area = match candidate {
         Candidate::Collinear(_) => 0.0,
@@ -169,7 +165,7 @@ fn calculate_area_delta(
             area.abs()
         }
     };
-    Ok(NotNan::new(area).expect("area is NaN"))
+    Ok(area)
 }
 
 fn candidate_is_valid(shape: &[Point], candidate: &Candidate) -> bool {

@@ -38,7 +38,7 @@ impl Default for LBFConfig {
             },
             poly_simpl_tolerance: Some(0.001),
             min_item_separation: None,
-            prng_seed: Some(0),
+            prng_seed: None,
             n_samples: 5000,
             ls_frac: 0.2,
             svg_draw_options: SvgDrawOptions::default(),

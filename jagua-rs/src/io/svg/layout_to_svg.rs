@@ -3,7 +3,7 @@ use crate::collision_detection::hazards::collector::BasicHazardCollector;
 use crate::collision_detection::hazards::filter::NoFilter;
 use crate::entities::{Instance, Layout, LayoutSnapshot};
 use crate::geometry::geo_traits::Transformable;
-use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::{Circle, Edge};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::export::int_to_ext_transformation;
 use crate::io::svg::svg_util;
@@ -224,12 +224,25 @@ pub fn layout_to_svg(
             if options.highlight_cd_shapes {
                 let t_shape_cd = item.shape_cd.transform_clone(&int_transf);
                 //draw the CD shape with a dotted line, and no fill
-                let svg_cd_shape = svg_util::data_to_path(
+                let mut group = Group::new().add(svg_util::data_to_path(
                     svg_util::simple_polygon_data(&t_shape_cd),
                     highlight_cd_shape_style,
-                )
-                .set("id", format!("cd_shape_{}", item.id));
-                item_defs = item_defs.add(svg_cd_shape);
+                ));
+                if options.draw_cd_shapes {
+                    //draw all the vertices as dots
+                    for p in t_shape_cd.vertices.iter() {
+                        let circle = Circle {
+                            center: *p,
+                            radius: 0.5 * stroke_width,
+                        };
+                        group = group.add(svg_util::circle(
+                            circle,
+                            &[("fill", "cyan"), ("fill-opacity", "0.8")],
+                        ));
+                    }
+                }
+                let group = group.set("id", format!("cd_shape_{}", item.id));
+                item_defs = item_defs.add(group);
             }
         }
         let mut items_group = Group::new().set("id", "items").add(item_defs);
