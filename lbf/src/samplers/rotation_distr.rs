@@ -6,7 +6,7 @@ use rand_distr::Uniform;
 use std::f32::consts::PI;
 
 use jagua_rs::entities::Item;
-use jagua_rs::geometry::geo_enums::RotationRange;
+use jagua_rs::geometry::geo_enums::AllowedRotation;
 
 /// Samples a rotation (radians).
 pub trait RotationSampler {
@@ -31,11 +31,11 @@ pub enum NormalRotDistr {
 impl UniformRotDistr {
     pub fn from_item(item: &Item) -> Self {
         match &item.allowed_rotation {
-            RotationRange::None => UniformRotDistr::None,
-            RotationRange::Continuous => {
+            AllowedRotation::None => UniformRotDistr::None,
+            AllowedRotation::Continuous => {
                 UniformRotDistr::Range(Uniform::new(0.0, 2.0 * PI).unwrap())
             }
-            RotationRange::Discrete(a_o) => UniformRotDistr::Discrete(a_o.clone()),
+            AllowedRotation::Discrete(a_o) => UniformRotDistr::Discrete(a_o.clone()),
         }
     }
 
@@ -51,9 +51,9 @@ impl UniformRotDistr {
 impl NormalRotDistr {
     pub fn from_item(item: &Item, r_ref: f32, stddev: f32) -> Self {
         match &item.allowed_rotation {
-            RotationRange::None => NormalRotDistr::None,
-            RotationRange::Continuous => NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap()),
-            RotationRange::Discrete(_) => NormalRotDistr::Discrete(r_ref),
+            AllowedRotation::None => NormalRotDistr::None,
+            AllowedRotation::Continuous => NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap()),
+            AllowedRotation::Discrete(_) => NormalRotDistr::Discrete(r_ref),
         }
     }
 

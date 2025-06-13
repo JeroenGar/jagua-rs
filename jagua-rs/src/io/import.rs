@@ -2,14 +2,14 @@ use crate::collision_detection::CDEConfig;
 use crate::entities::Item;
 use crate::entities::{Container, InferiorQualityZone, N_QUALITIES};
 use crate::geometry::OriginalShape;
-use crate::geometry::geo_enums::RotationRange;
+use crate::geometry::geo_enums::AllowedRotation;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 use crate::geometry::{DTransformation, Transformation};
-use crate::io::ext_repr::{ExtContainer, ExtItem, ExtSPolygon, ExtShape};
-use anyhow::{Result, bail};
+use crate::io::ext_repr::{ExtAllowedOrientation, ExtContainer, ExtItem, ExtSPolygon, ExtShape};
+use anyhow::{Result, bail, ensure};
 use itertools::Itertools;
 use log::warn;
 
@@ -71,16 +71,14 @@ impl Importer {
 
         let base_quality = ext_item.min_quality;
 
-        let allowed_orientations = match ext_item.allowed_orientations.as_ref() {
-            Some(a_o) => {
-                if a_o.is_empty() || (a_o.len() == 1 && a_o[0] == 0.0) {
-                    RotationRange::None
-                } else {
-                    RotationRange::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
-                }
-            }
-            None => RotationRange::Continuous,
-        };
+        let allowed_orientations = ext_item.allowed_orientations
+            .iter().map(|e_ao| match *e_ao {
+               ExtAllowedOrientation::Fixed(r) => Ok(AllowedRotation::Fixed(r)),
+               ExtAllowedOrientation::Range(r_s,r_e) => {
+                   ensure!(r_s < r_e, "Orientation range start must be less than range end: {} < {}", r_s, r_e);
+                   Ok(AllowedRotation::Range(r_s..=r_e))
+               },
+        }).try_collect()?;
 
         Item::new(
             ext_item.id as usize,

@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum GeoPosition {
     Exterior,
@@ -19,11 +21,9 @@ pub enum GeoRelation {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum RotationRange {
-    /// No rotation allowed
-    None,
-    /// Complete continuous rotation allowed
-    Continuous,
-    /// Discrete set of rotations allowed
-    Discrete(Vec<f32>),
+pub enum AllowedRotation {
+    /// A single allowed rotation angle (in radians)
+    Fixed(f32),
+    /// A range of allowed rotation angles (in radians)
+    Range(RangeInclusive<f32>),
 }

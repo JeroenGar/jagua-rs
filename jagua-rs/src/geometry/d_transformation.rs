@@ -77,3 +77,75 @@ pub fn normalize_rotation(r: f32) -> f32 {
         normalized
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use float_cmp::F32Margin;
+    use float_cmp::{FloatMargin, approx_eq};
+    use std::f32::consts::PI;
+    #[test]
+    fn test_decomp() {
+        for t1 in data() {
+            assert_match(t1, t1.compose().decompose());
+        }
+    }
+
+    #[test]
+    fn test_double_inverse() {
+        for t1 in data() {
+            assert_match(t1, t1.compose().inverse().inverse().decompose());
+        }
+    }
+
+    #[test]
+    fn test_inverse_transform() {
+        for dt1 in data() {
+            let t1 = dt1.compose();
+            let t1_inv = t1.clone().inverse();
+            //dbg!(dt1, t1_inv.decompose());
+            for dt2 in data() {
+                let dt2_transf = dt2.compose().transform(&t1);
+                let dt2_reverse = dt2_transf.clone().transform(&t1_inv);
+                assert_match(dt2, dt2_reverse.decompose());
+            }
+        }
+    }
+
+    fn assert_match(dt1: DTransformation, dt2: DTransformation) {
+        // Normalize angles modulo 2π for proper comparison
+        let diff = (dt1.rotation() - dt2.rotation()) % (2.0 * PI);
+        let angle_matches =
+            diff.abs() <= (2.0 * PI * 1e-4) || (2.0 * PI - diff.abs()) <= (2.0 * PI * 1e-4);
+        let x1 = dt1.translation().0;
+        let x2 = dt2.translation().0;
+        let y1 = dt1.translation().1;
+        let y2 = dt2.translation().1;
+        let x_matches = approx_eq!(f32, x1, x2, F32Margin::default().epsilon(1e-4).ulps(4));
+        let y_matches = approx_eq!(f32, y1, y2, F32Margin::default().epsilon(1e-4).ulps(4));
+
+        assert!(
+            angle_matches,
+            "Angles do not match: {} != {}",
+            dt1.rotation(),
+            dt2.rotation()
+        );
+        assert!(x_matches, "X translations do not match: {} != {}", x1, x2);
+        assert!(y_matches, "Y translations do not match: {} != {}", y1, y2);
+    }
+
+    fn data() -> [DTransformation; 10] {
+        [
+            DTransformation::new(0.0, (0.0, 0.0)),
+            DTransformation::new(1.0, (2.0, 3.0)),
+            DTransformation::new(-1.0, (-2.0, -3.0)),
+            DTransformation::new(3.14, (1.5, -1.5)),
+            DTransformation::new(-3.14, (-1.5, 1.5)),
+            DTransformation::new(0.0, (100.0, -100.0)),
+            DTransformation::new(0.0, (-50.0, 50.0)),
+            DTransformation::new(2.0, (1.0, 1.0)),
+            DTransformation::new(-2.0, (-1.0, -1.0)),
+            DTransformation::new(100.0, (0.0, 0.0)),
+        ]
+    }
+}

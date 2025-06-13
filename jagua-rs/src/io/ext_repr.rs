@@ -6,10 +6,9 @@ use serde::{Deserialize, Serialize};
 pub struct ExtItem {
     /// Unique identifier of the item
     pub id: u64,
-    /// List of allowed orientations angles (in degrees).
-    /// Continuous rotation if not specified
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub allowed_orientations: Option<Vec<f32>>,
+    /// List of allowed orientations, either fixed or a range of angles.
+    #[serde(default = "no_rotation")]
+    pub allowed_orientations: Vec<ExtAllowedOrientation>,
     /// Shape of the item
     pub shape: ExtShape,
     /// The minimum required quality of the item.
@@ -112,4 +111,18 @@ impl From<DTransformation> for ExtTransformation {
             translation: dt.translation(),
         }
     }
+}
+
+/// Represents a single or a range of allowed orientations for an item.
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(untagged)]
+pub enum ExtAllowedOrientation {
+    /// One specific angle (in degrees) is allowed
+    Fixed(f32),
+    /// Any angle (in degrees) withing a range is allowed
+    Range(f32, f32),
+}
+
+fn no_rotation() -> Vec<ExtAllowedOrientation> {
+    vec![ExtAllowedOrientation::Fixed(0.0)]
 }
