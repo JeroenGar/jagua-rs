@@ -334,7 +334,7 @@ pub fn layout_to_svg(
                         BasicHazardCollector::with_capacity(layout.cde().hazards_map.len());
                     layout
                         .cde()
-                        .collect_poly_collisions(pi.shape.as_ref(), &mut collector);
+                        .collect_poly_collisions(&pi.shape, &mut collector);
                     collector.retain(|_, entity| {
                         // filter out the item itself
                         if let HazardEntity::PlacedItem {

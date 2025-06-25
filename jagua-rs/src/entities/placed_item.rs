@@ -3,7 +3,6 @@ use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::SPolygon;
 use slotmap::new_key_type;
-use std::sync::Arc;
 
 #[cfg(doc)]
 use crate::entities::Layout;
@@ -21,13 +20,13 @@ pub struct PlacedItem {
     /// The transformation that was applied to the `Item` before it was placed
     pub d_transf: DTransformation,
     /// The shape of the `Item` after it has been transformed and placed in a `Layout`
-    pub shape: Arc<SPolygon>,
+    pub shape: SPolygon,
 }
 
 impl PlacedItem {
     pub fn new(item: &Item, d_transf: DTransformation) -> Self {
         let transf = d_transf.compose();
-        let shape = Arc::new(item.shape_cd.transform_clone(&transf));
+        let shape = item.shape_cd.transform_clone(&transf);
 
         PlacedItem {
             item_id: item.id,
