@@ -4,7 +4,6 @@ use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::SPolygon;
 use slotmap::new_key_type;
 use std::borrow::Borrow;
-use std::sync::Arc;
 
 new_key_type! {
     /// Key to identify hazards inside the CDE.
@@ -18,13 +17,13 @@ pub struct Hazard {
     /// The entity inducing the hazard
     pub entity: HazardEntity,
     /// The shape of the hazard
-    pub shape: Arc<SPolygon>,
+    pub shape: SPolygon,
     /// Whether the hazard is dynamic, meaning it can change over time (e.g., moving items)
     pub dynamic: bool,
 }
 
 impl Hazard {
-    pub fn new(entity: HazardEntity, shape: Arc<SPolygon>, dynamic: bool) -> Self {
+    pub fn new(entity: HazardEntity, shape: SPolygon, dynamic: bool) -> Self {
         Self {
             entity,
             shape,
