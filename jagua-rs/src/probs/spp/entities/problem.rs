@@ -77,7 +77,7 @@ impl SPProblem {
     }
 
     /// Creates a snapshot of the current state of the problem as a [`SPSolution`].
-    pub fn save(&mut self) -> SPSolution {
+    pub fn save(&self) -> SPSolution {
         let solution = SPSolution {
             layout_snapshot: self.layout.save(),
             strip: self.strip,

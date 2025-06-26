@@ -77,10 +77,10 @@ impl BPProblem {
     }
 
     /// Creates a snapshot of the current state of the problem as a [`BPSolution`].
-    pub fn save(&mut self) -> BPSolution {
+    pub fn save(&self) -> BPSolution {
         let layout_snapshots = self
             .layouts
-            .iter_mut()
+            .iter()
             .map(|(lkey, l)| (lkey, l.save()))
             .collect();
 
