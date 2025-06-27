@@ -95,7 +95,7 @@ impl CDEngine {
         hazard
     }
 
-    pub fn save(&mut self) -> CDESnapshot {
+    pub fn save(&self) -> CDESnapshot {
         let dynamic_hazards = self
             .hazards_map
             .values()

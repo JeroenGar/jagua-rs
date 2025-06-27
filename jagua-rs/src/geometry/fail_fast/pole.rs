@@ -24,10 +24,10 @@ pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Result<Circle> {
         }
 
         //see if worth it to split
-        if node.distance_upperbound() > distance(&best) {
-            if let Some(children) = node.split(shape, poles) {
-                queue.extend(children);
-            }
+        if node.distance_upperbound() > distance(&best)
+            && let Some(children) = node.split(shape, poles)
+        {
+            queue.extend(children);
         }
     }
     best.ok_or(anyhow!(
@@ -62,11 +62,11 @@ pub fn generate_surrogate_poles(
             .min_by_key(|(n_poles, _)| *n_poles)
             .map(|(n_poles, _)| n_poles);
 
-        if let Some(active_pole_limit) = active_pole_limit {
-            if all_poles.len() >= *active_pole_limit {
-                //stop generating if we are above the limit
-                break;
-            }
+        if let Some(active_pole_limit) = active_pole_limit
+            && all_poles.len() >= *active_pole_limit
+        {
+            //stop generating if we are above the limit
+            break;
         }
         assert!(
             all_poles.len() < 1000,
