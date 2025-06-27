@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1750885951429,
+  "lastUpdate": 1750999931945,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -2205,6 +2205,84 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k/5",
             "value": 226593,
             "range": "± 3107",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "34694161+JeroenGar@users.noreply.github.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "306dbc1544bf8fc39122f3524f360cc5f09ec115",
+          "message": "Merge pull request #44 from JeroenGar/clippy_rust_1.88\n\nEnsuring CI clippy is happy with Rust 1.88",
+          "timestamp": "2025-06-27T06:48:54+02:00",
+          "tree_id": "6696713835a6f5905728d456741a28ede48b0af4",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/306dbc1544bf8fc39122f3524f360cc5f09ec115"
+        },
+        "date": 1750999917548,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 2526271,
+            "range": "± 128512",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 2954635,
+            "range": "± 199025",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 2966364,
+            "range": "± 198709",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 2342193,
+            "range": "± 11722",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 4197222,
+            "range": "± 35778",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 8252885,
+            "range": "± 65593",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 267752,
+            "range": "± 7090",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 235932,
+            "range": "± 4683",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 226543,
+            "range": "± 2957",
             "unit": "ns/iter"
           }
         ]
