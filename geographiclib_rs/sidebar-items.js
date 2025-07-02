@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Winding"],"mod":["geodesic_capability"],"struct":["Geodesic","GeodesicLine","PolygonArea"],"trait":["DirectGeodesic","InverseGeodesic"]};
