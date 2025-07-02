@@ -43,7 +43,7 @@ pub fn layout_to_svg(
         let bbox = container.outer_orig.bbox();
 
         let label_content = format!(
-            "height: {:.3} | width: {:.3} | density: {:.3}% | {}",
+            "h: {:.3} | w: {:.3} | d: {:.3}% | {}",
             bbox.height(),
             bbox.width(),
             layout.density(instance) * 100.0,
