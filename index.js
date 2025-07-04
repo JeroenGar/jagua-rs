@@ -1,4 +1,4 @@
-import init, { run_bpp, init_logger_wasm /* run_spp */ } from "./lbf/pkg/lbf.js"; // Replace with actual wasm module name
+import init, { initThreadPool, run_bpp, init_logger_wasm /* run_spp */ } from "./lbf/pkg/lbf.js"; // Replace with actual wasm module name
 
 async function loadJsonFromFileInput(fileInput) {
   return new Promise((resolve, reject) => {
@@ -22,6 +22,9 @@ async function loadJsonFromFileInput(fileInput) {
 
 async function run() {
   await init();
+  const threads = navigator.hardwareConcurrency || 4;
+  await initThreadPool(threads);
+  console.log(`>> Thread Pool initialized with ${threads} threads.`);
   init_logger_wasm();
 
   const resultBox = document.getElementById("result");
