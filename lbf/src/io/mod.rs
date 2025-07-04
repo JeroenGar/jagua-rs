@@ -3,14 +3,23 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
-use log::info;
+use log::{Level, LevelFilter, info, log};
 use serde::Serialize;
 use svg::Document;
+use crate::time::EPOCH;
 
 use anyhow::{Context, Result};
 use jagua_rs::probs::bpp::io::ext_repr::ExtBPInstance;
+use jagua_rs::probs::spp::io::ext_repr::ExtSPInstance;
 
+pub mod cli;
 pub mod output;
+
+pub fn read_spp_instance(path: &Path) -> Result<ExtSPInstance> {
+    let file = File::open(path).context("could not open instance file")?;
+    serde_json::from_reader(BufReader::new(file))
+        .context("not a valid strip packing instance (ExtSPInstance)")
+}
 
 pub fn read_bpp_instance(path: &Path) -> Result<ExtBPInstance> {
     let file = File::open(path).context("could not open instance file")?;
@@ -43,7 +52,6 @@ pub fn write_svg(document: &Document, path: &Path) -> Result<()> {
     Ok(())
 }
 
-/*
 pub fn init_logger(level_filter: LevelFilter) -> Result<()> {
     fern::Dispatch::new()
         // Perform allocation-free log formatting
@@ -51,10 +59,22 @@ pub fn init_logger(level_filter: LevelFilter) -> Result<()> {
             let handle = std::thread::current();
             let thread_name = handle.name().unwrap_or("-");
 
+            #[cfg(not(target_arch = "wasm32"))]
             let duration = EPOCH.elapsed();
+            #[cfg(not(target_arch = "wasm32"))]
             let sec = duration.as_secs() % 60;
+            #[cfg(not(target_arch = "wasm32"))]
             let min = (duration.as_secs() / 60) % 60;
+            #[cfg(not(target_arch = "wasm32"))]
             let hours = (duration.as_secs() / 60) / 60;
+            #[cfg(target_arch = "wasm32")]
+            let duration = EPOCH.elapsed_ms();
+            #[cfg(target_arch = "wasm32")]
+            let sec = duration % 60.0;
+            #[cfg(target_arch = "wasm32")]
+            let min = (duration / 60.0) % 60.0;
+            #[cfg(target_arch = "wasm32")]
+            let hours = (duration / 60.0) / 60.0;
 
             let prefix = format!(
                 "[{}] [{:0>2}:{:0>2}:{:0>2}] <{}>",
@@ -74,4 +94,3 @@ pub fn init_logger(level_filter: LevelFilter) -> Result<()> {
     log!(Level::Info, "Epoch: {}", jiff::Timestamp::now());
     Ok(())
 }
-*/

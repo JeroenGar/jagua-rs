@@ -1,7 +1,7 @@
 use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
-use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
+use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
 use jagua_rs::entities::{Instance, Item};
 use jagua_rs::probs::bpp::entities::{
     BPInstance, BPLayoutType, BPPlacement, BPProblem, BPSolution,
@@ -10,24 +10,7 @@ use log::{debug, info};
 use rand::Rng;
 use rand::prelude::SmallRng;
 use thousands::Separable;
-
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use web_sys::js_sys;
-
-pub fn now_millis() -> f64 {
-    let global = js_sys::global();
-
-    let performance = js_sys::Reflect::get(&global, &JsValue::from_str("performance"))
-        .ok()
-        .and_then(|perf| perf.dyn_into::<web_sys::Performance>().ok());
-
-    if let Some(perf) = performance {
-        perf.now()
-    } else {
-        js_sys::Date::now()
-    }
-}
+use crate::time::TimeStamp;
 
 /// Left-Bottom-Fill (LBF) optimizer for Bin Packing problems.
 pub struct LBFOptimizerBP {
@@ -53,7 +36,7 @@ impl LBFOptimizerBP {
     }
 
     pub fn solve(&mut self) -> BPSolution {
-        let start = now_millis();
+        let start = TimeStamp::now();
 
         'outer: for item_id in item_placement_order(&self.instance) {
             let item = self.instance.item(item_id);
@@ -89,13 +72,23 @@ impl LBFOptimizerBP {
             }
         }
 
-        let now = now_millis();
-        let solution = self.problem.save(now);
+        #[cfg(target_arch = "wasm32")]
+        let now = TimeStamp::now();
+        #[cfg(target_arch = "wasm32")]
+        let solution = self.problem.save(now.elapsed_ms());
 
-        let elapsed_ms = now_millis() - start;
+        #[cfg(not(target_arch = "wasm32"))]
+        let solution = self.problem.save();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let elapsed_time = start.elapsed().as_secs_f64() * 1000.0; 
+
+        #[cfg(target_arch = "wasm32")]
+        let elapsed_time = start.elapsed_ms() * 1000.0;
+
         info!(
             "[LBF] optimization finished in {:.3}ms ({} samples)",
-            elapsed_ms,
+            elapsed_time,
             self.sample_counter.separate_with_commas()
         );
 
@@ -135,12 +128,15 @@ fn search_layouts(
         debug!("searching in layout {layout_id:?}");
         let cde = match layout_id {
             BPLayoutType::Open(lkey) => problem.layouts[lkey].cde(),
-            BPLayoutType::Closed { bin_id } => &problem.instance.container(bin_id).base_cde,
+            BPLayoutType::Closed { bin_id } => problem.instance.container(bin_id).base_cde.as_ref(),
         };
 
-        let placement = match &item.hazard_filter {
-            None => search(cde, item, config, rng, sample_counter, &NoHazardFilter),
-            Some(hf) => search(cde, item, config, rng, sample_counter, hf),
+        let placement = match &item.min_quality {
+            None => search(cde, item, config, rng, sample_counter, &NoFilter),
+            Some(min_quality) => {
+                let filter = HazKeyFilter::from_irrelevant_qzones(*min_quality, &cde.hazards_map);
+                search(cde, item, config, rng, sample_counter, &filter)
+            }
         };
 
         if let Some((d_transf, _)) = placement {

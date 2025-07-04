@@ -1,4 +1,4 @@
-use crate::collision_detection::hazards::{Hazard, HazardEntity};
+use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::{CDESnapshot, CDEngine};
 use crate::entities::Item;
 use crate::entities::{Container, Instance};
@@ -22,11 +22,11 @@ pub struct Layout {
 
 impl Layout {
     pub fn new(container: Container) -> Self {
-        let cde = container.base_cde.clone();
+        let cde = container.base_cde.as_ref().clone();
         Layout {
             container,
             placed_items: SlotMap::with_key(),
-            cde
+            cde,
         }
     }
 
@@ -38,21 +38,22 @@ impl Layout {
 
     /// Replaces the current container with a new one, rebuilding the collision detection engine accordingly.
     pub fn swap_container(&mut self, container: Container) {
-        self.container = container;
+        let cde_snapshot = self.cde.save();
         // rebuild the CDE
-        self.cde = self.container.base_cde.clone();
-        for (pk, pi) in self.placed_items.iter() {
-            let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
+        self.container = container;
+        self.cde = self.container.base_cde.as_ref().clone();
+        for hazard in cde_snapshot.dynamic_hazards {
+            // re-register all dynamic hazards from the previous CDE snapshot
             self.cde.register_hazard(hazard);
         }
     }
 
     /// Saves the current state of the layout to be potentially restored to later.
-    pub fn save(&mut self) -> LayoutSnapshot {
+    pub fn save(&self) -> LayoutSnapshot {
         LayoutSnapshot {
             container: self.container.clone(),
             placed_items: self.placed_items.clone(),
-            cde_snapshot: self.cde.create_snapshot(),
+            cde_snapshot: self.cde.save(),
         }
     }
 
@@ -73,7 +74,7 @@ impl Layout {
             .placed_items
             .insert(PlacedItem::new(item, d_transformation));
         let pi = &self.placed_items[pk];
-        let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
+        let hazard = Hazard::new((pk, pi).into(), pi.shape.clone(), true);
 
         self.cde.register_hazard(hazard);
 
@@ -86,14 +87,14 @@ impl Layout {
     /// If `commit_instant` is true, the removal is immediately fully executed to the collision detection engine.
     /// If false, the item is disabled in the collision detection engine, but not yet fully removed.
     /// Useful for scenarios with high probability of reverting the removal.
-    pub fn remove_item(&mut self, pk: PItemKey, commit_instant: bool) -> PlacedItem {
+    pub fn remove_item(&mut self, pk: PItemKey) -> PlacedItem {
         let pi = self
             .placed_items
             .remove(pk)
             .expect("key is not valid anymore");
 
         // update the collision detection engine
-        self.cde.deregister_hazard((pk, &pi).into(), commit_instant);
+        self.cde.deregister_hazard_by_entity((pk, &pi).into());
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
 
@@ -128,8 +129,11 @@ impl Layout {
     /// Returns true if all the items are placed without colliding
     pub fn is_feasible(&self) -> bool {
         self.placed_items.iter().all(|(pk, pi)| {
-            let filter = HazardEntity::from((pk, pi));
-            !self.cde.detect_poly_collision(&pi.shape, &filter)
+            let hkey = self
+                .cde
+                .haz_key_from_pi_key(pk)
+                .expect("all placed items should be registered in the CDE");
+            !self.cde.detect_poly_collision(&pi.shape, &hkey)
         })
     }
 }

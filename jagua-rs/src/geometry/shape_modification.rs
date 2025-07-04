@@ -1,7 +1,6 @@
-#[cfg(feature = "separation-distance")]
 use itertools::Itertools;
-use log::{debug, info};
-use ordered_float::NotNan;
+use log::{debug, info, warn};
+use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -10,7 +9,9 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SPolygon;
 
-use anyhow::Result;
+use crate::io::ext_repr::ExtSPolygon;
+use crate::io::import;
+use anyhow::{Result, bail};
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
 /// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::scope) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
@@ -96,8 +97,7 @@ pub fn simplify_shape(
         let best_candidate = candidates
             .iter()
             .sorted_by_cached_key(|c| {
-                calculate_area_delta(&ref_points, c)
-                    .unwrap_or_else(|_| NotNan::new(f32::INFINITY).expect("area delta is NaN"))
+                OrderedFloat(calculate_area_delta(&ref_points, c).unwrap_or(f32::INFINITY))
             })
             .find(|c| candidate_is_valid(&ref_points, c));
 
@@ -138,10 +138,7 @@ pub fn simplify_shape(
     simpl_shape
 }
 
-fn calculate_area_delta(
-    shape: &[Point],
-    candidate: &Candidate,
-) -> Result<NotNan<f32>, InvalidCandidate> {
+fn calculate_area_delta(shape: &[Point], candidate: &Candidate) -> Result<f32, InvalidCandidate> {
     //calculate the difference in area of the shape if the candidate were to be executed
     let area = match candidate {
         Candidate::Collinear(_) => 0.0,
@@ -168,7 +165,7 @@ fn calculate_area_delta(
             area.abs()
         }
     };
-    Ok(NotNan::new(area).expect("area is NaN"))
+    Ok(area)
 }
 
 fn candidate_is_valid(shape: &[Point], candidate: &Candidate) -> bool {
@@ -327,49 +324,43 @@ impl CornerType {
 
 /// Offsets a [`SPolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
 /// Relies on the [`geo_offset`](https://crates.io/crates/geo_offset) crate.
-#[cfg(feature = "separation-distance")]
 pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Result<SPolygon> {
-    use geo::{Polygon, LineString};
-    use geo_buffer::buffer_polygon;
-
-    let offset_distance = match mode {
-        ShapeModifyMode::Deflate => -(distance as f64),
-        ShapeModifyMode::Inflate => distance as f64,
+    let offset = match mode {
+        ShapeModifyMode::Deflate => -distance,
+        ShapeModifyMode::Inflate => distance,
     };
 
-    // Convert your SPolygon vertices to geo LineString
-    let exterior_coords: Vec<_> = sp.vertices.iter()
-        .map(|&Point(x, y)| (x as f64, y as f64))
-        .collect();
+    // Convert the SPolygon to a geo_types::Polygon
+    let geo_poly = geo_types::Polygon::new(
+        sp.vertices
+            .iter()
+            .map(|p| (p.0 as f64, p.1 as f64))
+            .collect(),
+        vec![],
+    );
 
-    let line_string = LineString::from(exterior_coords);
+    // Create the offset polygon
+    let geo_poly_offsets = geo_buffer::buffer_polygon_rounded(&geo_poly, offset as f64).0;
 
-    let geo_poly = Polygon::new(line_string, vec![]);
+    let geo_poly_offset = match geo_poly_offsets.len() {
+        0 => bail!("Offset resulted in an empty polygon"),
+        1 => &geo_poly_offsets[0],
+        _ => {
+            // If there are multiple polygons, we take the first one.
+            // This can happen if the offset creates multiple disconnected parts.
+            warn!("Offset resulted in multiple polygons, taking the first one.");
+            &geo_poly_offsets[0]
+        }
+    };
 
-    // Get the buffered polygon(s) as MultiPolygon
-    let buffered_multi = buffer_polygon(&geo_poly, offset_distance);
+    // Convert back to internal representation (by using the import function)
+    let ext_s_polygon = ExtSPolygon(
+        geo_poly_offset
+            .exterior()
+            .points()
+            .map(|p| (p.x() as f32, p.y() as f32))
+            .collect_vec(),
+    );
 
-    // Use the first polygon in the MultiPolygon result (if any)
-    let offset_poly = buffered_multi.0.first()
-        .ok_or_else(|| anyhow::anyhow!("No polygon result from buffer_polygon"))?;
-
-    let mut points_offset = offset_poly
-        .exterior()
-        .points()
-        .map(|p| Point(p.x() as f32, p.y() as f32))
-        .collect::<Vec<_>>();
-
-    // Remove duplicate last point if it matches the first
-    if points_offset.first() == points_offset.last() {
-        points_offset.pop();
-    }
-
-    SPolygon::new(points_offset)
-}
-
-#[cfg(not(feature = "separation-distance"))]
-pub fn offset_shape(_sp: &SPolygon, _mode: ShapeModifyMode, _distance: f32) -> Result<SPolygon> {
-    anyhow::bail!(
-        "cannot offset shape without geo_offset dependency, compile with --features separation to enable this"
-    )
+    import::import_simple_polygon(&ext_s_polygon)
 }

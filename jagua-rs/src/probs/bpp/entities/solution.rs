@@ -1,7 +1,21 @@
 use crate::entities::LayoutSnapshot;
 use crate::probs::bpp::entities::{BPInstance, LayKey};
 use slotmap::SecondaryMap;
+#[cfg(not(target_arch = "wasm32"))]
+use std::time::Instant;
 
+#[cfg(not(target_arch = "wasm32"))]
+/// Snapshot of [`BPProblem`](crate::probs::bpp::entities::BPProblem) at a specific moment.
+/// Can be used to restore to a previous state.
+#[derive(Debug, Clone)]
+pub struct BPSolution {
+    /// A map of the layout snapshots, identified by the same keys as in the problem
+    pub layout_snapshots: SecondaryMap<LayKey, LayoutSnapshot>,
+    /// Instant the solution was created
+    pub time_stamp: Instant,
+}
+
+#[cfg(target_arch = "wasm32")]
 /// Snapshot of [`BPProblem`](crate::probs::bpp::entities::BPProblem) at a specific moment.
 /// Can be used to restore to a previous state.
 #[derive(Debug, Clone)]

@@ -1,7 +1,7 @@
 import http.server
 import socketserver
 
-PORT = 8080
+PORT = 8081
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -12,6 +12,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 # Serve current directory
 with socketserver.TCPServer(("", PORT), CORSHTTPRequestHandler) as httpd:
     print(f"-- Serving on http://localhost:{PORT}")
+    print(f"Open 'http://localhost:{PORT}/index.html' !!")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

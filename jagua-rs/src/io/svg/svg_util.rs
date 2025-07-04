@@ -10,23 +10,19 @@ use svg::node::element::path::Data;
 use svg::node::element::{Circle, Path};
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
+#[serde(default)]
 pub struct SvgDrawOptions {
     ///The theme to use for the svg
-    #[serde(default)]
     pub theme: SvgLayoutTheme,
     ///Draw the quadtree on top
-    #[serde(default)]
     pub quadtree: bool,
     ///Draw the fail fast surrogate on top of each item
-    #[serde(default)]
     pub surrogate: bool,
     ///Draw dashed lines between colliding items
-    #[serde(default)]
     pub highlight_collisions: bool,
     ///Draw the modified shapes used internally instead of the original ones
-    #[serde(default)]
     pub draw_cd_shapes: bool,
-    #[serde(default)]
+    ///Highlights the shapes used for collision detection with a dashed border
     pub highlight_cd_shapes: bool,
 }
 
@@ -35,7 +31,7 @@ impl Default for SvgDrawOptions {
         Self {
             theme: SvgLayoutTheme::default(),
             quadtree: false,
-            surrogate: true,
+            surrogate: false,
             highlight_collisions: true,
             draw_cd_shapes: false,
             highlight_cd_shapes: true,
@@ -212,17 +208,17 @@ fn qt_node_data(
 ) -> (Data, Data, Data) {
     //Only draw qt_nodes that do not have a child
 
-    match (qt_node.has_children(), qt_node.hazards.strongest(filter)) {
-        (true, Some(_)) => {
+    match (qt_node.children.as_ref(), qt_node.hazards.strongest(filter)) {
+        (Some(children), Some(_)) => {
             //not a leaf node, go to children
-            for child in qt_node.children.as_ref().unwrap().iter() {
+            for child in children.iter() {
                 let data = qt_node_data(child, data_eh, data_ph, data_nh, filter);
                 data_eh = data.0;
                 data_ph = data.1;
                 data_nh = data.2;
             }
         }
-        (true, None) | (false, _) => {
+        (Some(_), None) | (None, _) => {
             //leaf node, draw it
             let rect = &qt_node.bbox;
             let draw = |data: Data| -> Data {

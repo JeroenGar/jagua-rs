@@ -2,7 +2,7 @@ use crate::util::N_ITEMS_REMOVED;
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
-use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
+use jagua_rs::collision_detection::hazards::filter::NoFilter;
 use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::geometry::primitives::Point;
@@ -95,17 +95,15 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
                     let mut buffer_shape = item.shape_cd.as_ref().clone();
                     for dtransf in samples_cycler.next().unwrap() {
                         let transf = dtransf.compose();
-                        let collides = match layout.cde().detect_surr_collision(
+                        let collides = match layout.cde().detect_surrogate_collision(
                             item.shape_cd.surrogate(),
                             &transf,
-                            &NoHazardFilter,
+                            &NoFilter,
                         ) {
                             true => true,
                             false => {
                                 buffer_shape.transform_from(&item.shape_cd, &transf);
-                                layout
-                                    .cde()
-                                    .detect_poly_collision(&buffer_shape, &NoHazardFilter)
+                                layout.cde().detect_poly_collision(&buffer_shape, &NoFilter)
                             }
                         };
                         match collides {

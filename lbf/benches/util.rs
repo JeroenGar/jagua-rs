@@ -57,7 +57,7 @@ pub fn create_lbf_problem(
 
     for pkey in placed_items_to_remove {
         let item_id = problem.layout.placed_items[pkey].item_id;
-        problem.remove_item(pkey, true);
+        problem.remove_item(pkey);
         info!(
             "Removed item: {} with {} edges",
             item_id,
@@ -72,7 +72,7 @@ pub fn create_lbf_problem(
         //     ..SvgDrawOptions::default()
         // };
         // let svg = layout_to_svg(&problem.layout, &instance, draw_options ,"");
-        //io::write_svg(&svg, Path::new("bench_layout.svg"));
+        // io::write_svg(&svg, Path::new("bench_layout.svg")).expect("Failed to save svg");
     }
 
     (problem, p_opts)

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Configuration for the LBF optimizer
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[serde(default)]
 pub struct LBFConfig {
     /// Configuration of the Collision Detection Engine
     pub cde_config: CDEConfig,
@@ -20,7 +21,6 @@ pub struct LBFConfig {
     /// Fraction of `n_samples_per_item` used for the local search sampler, the rest is sampled uniformly.
     pub ls_frac: f32,
     /// Optional SVG drawing options
-    #[serde(default)]
     pub svg_draw_options: SvgDrawOptions,
 }
 
@@ -29,6 +29,7 @@ impl Default for LBFConfig {
         Self {
             cde_config: CDEConfig {
                 quadtree_depth: 5,
+                cd_threshold: 16,
                 item_surrogate_config: SPSurrogateConfig {
                     n_pole_limits: [(100, 0.0), (20, 0.75), (10, 0.90)],
                     n_ff_poles: 2,
@@ -37,7 +38,7 @@ impl Default for LBFConfig {
             },
             poly_simpl_tolerance: Some(0.001),
             min_item_separation: None,
-            prng_seed: Some(0),
+            prng_seed: None,
             n_samples: 5000,
             ls_frac: 0.2,
             svg_draw_options: SvgDrawOptions::default(),

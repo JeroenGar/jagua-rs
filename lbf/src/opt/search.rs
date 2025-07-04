@@ -25,7 +25,7 @@ pub fn search(
     let surrogate = item.shape_cd.surrogate();
     //create a clone of the shape which will we can use to apply the transformations
     let mut buffer = {
-        let mut buffer = item.shape_cd.clone();
+        let mut buffer = (*item.shape_cd).clone();
         buffer.surrogate = None; //remove the surrogate for faster transforms, we don't need it for the buffer shape
         buffer
     };
@@ -41,7 +41,7 @@ pub fn search(
     for i in 0..uni_sample_budget {
         let d_transf = bin_sampler.sample(rng);
         let transf = d_transf.compose();
-        if !cde.detect_surr_collision(surrogate, &transf, filter) {
+        if !cde.detect_surrogate_collision(surrogate, &transf, filter) {
             //if no collision is detected on the surrogate, apply the transformation
             buffer.transform_from(&item.shape_cd, &transf);
             let cost = LBFLoss::from_shape(&buffer);
@@ -82,7 +82,7 @@ pub fn search(
     for i in 0..ls_sample_budget {
         let d_transf = ls_sampler.sample(rng);
         let transf = d_transf.compose();
-        if !cde.detect_surr_collision(surrogate, &transf, filter) {
+        if !cde.detect_surrogate_collision(surrogate, &transf, filter) {
             buffer.transform_from(&item.shape_cd, &transf);
             let cost = LBFLoss::from_shape(&buffer);
 

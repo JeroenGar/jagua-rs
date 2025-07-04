@@ -1,6 +1,6 @@
 [package]
 name = "jagua-rs"
-version = "0.5.2"
+version = "0.6.3"
 edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/JeroenGar/jagua-rs"
@@ -13,10 +13,10 @@ homepage = "https://github.com/JeroenGar/jagua-rs"
 [dependencies]
 ndarray = {workspace = true}
 rand_distr = {workspace = true}
+getrandom = { workspace = true }
 serde = {workspace = true}
 ordered-float = { workspace = true }
 log = {workspace = true}
-tribool = {workspace = true}
 slotmap = {workspace = true}
 float-cmp = {workspace = true}
 itertools = {workspace = true}
@@ -24,14 +24,10 @@ svg = {workspace = true}
 anyhow = {workspace = true}
 document-features = {workspace = true}
 rayon = { workspace = true }
-geo = { version = "0.27", optional = true}
-geo-buffer = { version = "0.2", optional = true }
-geo-types = { version = "0.7.16", optional = true }
+geo-types = { workspace = true }
+geo-buffer = { workspace = true }
 
 [features]
-default = ["separation-distance"]
-## Enables support for defining a minimum separation distance between items and any hazard.
-separation-distance = ["dep:geo", "dep:geo-buffer", "dep:geo-types"]
 ## Enables support for the Strip Packing Problem
 spp = []
 ## Enables support for the Bin Packing Problem

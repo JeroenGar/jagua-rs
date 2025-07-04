@@ -1,9 +1,9 @@
 use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::hazards::detector::{BasicHazardDetector, HazardDetector};
-use crate::collision_detection::hazards::filter::NoHazardFilter;
+use crate::collision_detection::hazards::collector::BasicHazardCollector;
+use crate::collision_detection::hazards::filter::NoFilter;
 use crate::entities::{Instance, Layout, LayoutSnapshot};
 use crate::geometry::geo_traits::Transformable;
-use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::{Circle, Edge};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::export::int_to_ext_transformation;
 use crate::io::svg::svg_util;
@@ -43,7 +43,7 @@ pub fn layout_to_svg(
         let bbox = container.outer_orig.bbox();
 
         let label_content = format!(
-            "height: {:.3} | width: {:.3} | density: {:.3}% | {}",
+            "h: {:.3} | w: {:.3} | d: {:.3}% | {}",
             bbox.height(),
             bbox.width(),
             layout.density(instance) * 100.0,
@@ -96,10 +96,6 @@ pub fn layout_to_svg(
                     ("stroke-width", &*format!("{}", 2.0 * stroke_width)),
                 ],
             ))
-            .add(svg_util::data_to_path(
-                svg_util::simple_polygon_data(&container.outer_cd),
-                highlight_cd_shape_style,
-            ))
             .add(title)
     };
 
@@ -137,7 +133,7 @@ pub fn layout_to_svg(
     };
 
     //draw items
-    let (items_group, surrogate_group, highlight_cd_shape_group) = {
+    let (items_group, surrogate_group, mut highlight_cd_shape_group) = {
         //define all the items and their surrogates (if enabled)
         let mut item_defs = Definitions::new();
         let mut surrogate_defs = Definitions::new();
@@ -228,12 +224,25 @@ pub fn layout_to_svg(
             if options.highlight_cd_shapes {
                 let t_shape_cd = item.shape_cd.transform_clone(&int_transf);
                 //draw the CD shape with a dotted line, and no fill
-                let svg_cd_shape = svg_util::data_to_path(
+                let mut group = Group::new().add(svg_util::data_to_path(
                     svg_util::simple_polygon_data(&t_shape_cd),
                     highlight_cd_shape_style,
-                )
-                .set("id", format!("cd_shape_{}", item.id));
-                item_defs = item_defs.add(svg_cd_shape);
+                ));
+                if options.draw_cd_shapes {
+                    //draw all the vertices as dots
+                    for p in t_shape_cd.vertices.iter() {
+                        let circle = Circle {
+                            center: *p,
+                            radius: 0.5 * stroke_width,
+                        };
+                        group = group.add(svg_util::circle(
+                            circle,
+                            &[("fill", "cyan"), ("fill-opacity", "0.8")],
+                        ));
+                    }
+                }
+                let group = group.set("id", format!("cd_shape_{}", item.id));
+                item_defs = item_defs.add(group);
             }
         }
         let mut items_group = Group::new().set("id", "items").add(item_defs);
@@ -251,7 +260,7 @@ pub fn layout_to_svg(
             let title = Title::new(format!("item, id: {}, transf: [{}]", pi.item_id, dtransf));
             let pi_ref = Use::new()
                 .set("transform", transform_to_svg(dtransf))
-                .set("xlink:href", format!("#item_{}", pi.item_id))
+                .set("href", format!("#item_{}", pi.item_id))
                 .add(title);
 
             items_group = items_group.add(pi_ref);
@@ -259,14 +268,14 @@ pub fn layout_to_svg(
             if options.surrogate {
                 let pi_surr_ref = Use::new()
                     .set("transform", transform_to_svg(dtransf))
-                    .set("xlink:href", format!("#surrogate_{}", pi.item_id));
+                    .set("href", format!("#surrogate_{}", pi.item_id));
 
                 surrogate_group = surrogate_group.add(pi_surr_ref);
             }
             if options.highlight_cd_shapes {
                 let pi_cd_ref = Use::new()
                     .set("transform", transform_to_svg(dtransf))
-                    .set("xlink:href", format!("#cd_shape_{}", pi.item_id));
+                    .set("href", format!("#cd_shape_{}", pi.item_id));
                 highlight_cd_shapes_group = highlight_cd_shapes_group.add(pi_cd_ref);
             }
         }
@@ -278,7 +287,7 @@ pub fn layout_to_svg(
     let qt_group = match options.quadtree {
         false => None,
         true => {
-            let qt_data = svg_util::quad_tree_data(layout.cde().quadtree(), &NoHazardFilter);
+            let qt_data = svg_util::quad_tree_data(&layout.cde().quadtree, &NoFilter);
             let qt_group = Group::new()
                 .set("id", "quadtree")
                 .add(svg_util::data_to_path(
@@ -320,15 +329,26 @@ pub fn layout_to_svg(
         true => {
             let mut collision_group = Group::new().set("id", "collision_lines");
             for (pk, pi) in layout.placed_items.iter() {
-                let detector = {
-                    let mut detector = BasicHazardDetector::new();
+                let collector = {
+                    let mut collector =
+                        BasicHazardCollector::with_capacity(layout.cde().hazards_map.len());
                     layout
                         .cde()
-                        .collect_poly_collisions(&pi.shape, &mut detector);
-                    detector.remove(&HazardEntity::from((pk, pi)));
-                    detector
+                        .collect_poly_collisions(&pi.shape, &mut collector);
+                    collector.retain(|_, entity| {
+                        // filter out the item itself
+                        if let HazardEntity::PlacedItem {
+                            pk: colliding_pk, ..
+                        } = entity
+                        {
+                            *colliding_pk != pk
+                        } else {
+                            true
+                        }
+                    });
+                    collector
                 };
-                for haz_entity in detector.iter() {
+                for (_, haz_entity) in collector.iter() {
                     match haz_entity {
                         HazardEntity::PlacedItem {
                             pk: colliding_pk, ..
@@ -390,6 +410,13 @@ pub fn layout_to_svg(
 
     let vbox_svg = (vbox.x_min, vbox.y_min, vbox.width(), vbox.height());
 
+    if options.highlight_cd_shapes {
+        highlight_cd_shape_group = highlight_cd_shape_group.add(svg_util::data_to_path(
+            svg_util::simple_polygon_data(&container.outer_cd),
+            highlight_cd_shape_style,
+        ));
+    }
+
     let optionals = [
         Some(highlight_cd_shape_group),
         Some(surrogate_group),
@@ -402,7 +429,6 @@ pub fn layout_to_svg(
 
     Document::new()
         .set("viewBox", vbox_svg)
-        .set("xmlns:xlink", "http://www.w3.org/1999/xlink")
         .add(container_group)
         .add(items_group)
         .add(qz_group)

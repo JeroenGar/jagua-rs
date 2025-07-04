@@ -1,11 +1,11 @@
-use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::quadtree::qt_partial_hazard::{QTHazPartial, RelevantEdges};
+use crate::collision_detection::hazards::{HazKey, Hazard};
+use crate::collision_detection::quadtree::qt_partial_hazard::QTHazPartial;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::CollidesWith;
 use crate::geometry::primitives::Rect;
-use crate::geometry::primitives::SPolygon;
 use crate::util::assertions;
+use slotmap::SlotMap;
 use std::array;
 
 /// Representation of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
@@ -13,12 +13,12 @@ use std::array;
 pub struct QTHazard {
     /// The bounding box of the quadtree node
     pub qt_bbox: Rect,
+    /// The key of the hazard in the hazard map in [`CDEngine`](crate::collision_detection::cd_engine::CDEngine)
+    pub hkey: HazKey,
     /// Entity inducing the hazard
     pub entity: HazardEntity,
     /// How the hazard is present in the node
     pub presence: QTHazPresence,
-    /// Whether the hazard is active or not
-    pub active: bool,
 }
 
 /// Presence of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
@@ -33,22 +33,19 @@ pub enum QTHazPresence {
 }
 impl QTHazard {
     /// Converts a [`Hazard`] into a [`QTHazard`], assuming it is for the root of the quadtree.
-    pub fn from_qt_root(qt_root_bbox: Rect, haz: &Hazard) -> Self {
+    pub fn from_root(qt_root_bbox: Rect, haz: &Hazard, hkey: HazKey) -> Self {
         Self {
             qt_bbox: qt_root_bbox,
+            hkey,
             entity: haz.entity,
-            presence: QTHazPresence::Partial(QTHazPartial {
-                shape: haz.shape.clone(),
-                edges: RelevantEdges::All,
-            }),
-            active: haz.active,
+            presence: QTHazPresence::Partial(QTHazPartial::from_entire_shape(&haz.shape)),
         }
     }
 
     /// Returns the resulting QTHazards after constricting to the provided quadrants.
     /// The quadrants should be ordered according to the [Cartesian system](https://en.wikipedia.org/wiki/Quadrant_(plane_geometry))
     /// and should all be inside the bounds from which `self` was created.
-    pub fn constrict(&self, quadrants: [Rect; 4]) -> Option<[Self; 4]> {
+    pub fn constrict(&self, quadrants: [Rect; 4], haz_map: &SlotMap<HazKey, Hazard>) -> [Self; 4] {
         debug_assert!(
             quadrants
                 .iter()
@@ -57,93 +54,97 @@ impl QTHazard {
         debug_assert!(assertions::quadrants_have_valid_layout(&quadrants));
 
         match &self.presence {
-            QTHazPresence::None => None,
-            QTHazPresence::Entire => Some(array::from_fn(|_| self.clone())),
+            QTHazPresence::None => unreachable!("Hazard presence cannot be None in a QTHazard"),
+            QTHazPresence::Entire => array::from_fn(|_| self.clone()), // The hazard is entirely present in all quadrants
             QTHazPresence::Partial(partial_haz) => {
-                //If the hazard is partially present, it may produce different hazards for each quadrant
+                //If the hazard is partially present, we need to check which type of presence each quadrant has
 
-                //check the bbox of the hazard with the bboxes of the quadrants
-                let haz_bbox = partial_haz.shape.bbox;
+                let haz_shape = &haz_map[self.hkey].shape;
 
                 //Check if one of the quadrants entirely contains the hazard
                 let enclosed_hazard_quadrant = quadrants
                     .iter()
-                    .map(|q| haz_bbox.relation_to(*q))
+                    .map(|q| haz_shape.bbox.relation_to(*q))
                     .position(|r| r == GeoRelation::Enclosed);
 
                 if let Some(quad_index) = enclosed_hazard_quadrant {
                     //The hazard is entirely enclosed within one quadrant,
                     //For this quadrant the QTHazard is equivalent to the original hazard, the rest are None
-                    let hazards = array::from_fn(|i| {
-                        let presence = match i {
-                            i if i == quad_index => QTHazPresence::Partial(partial_haz.clone()),
-                            _ => QTHazPresence::None,
+                    array::from_fn(|i| {
+                        let presence = if i == quad_index {
+                            self.presence.clone()
+                        } else {
+                            QTHazPresence::None
                         };
                         Self {
                             qt_bbox: quadrants[i],
-                            entity: self.entity,
                             presence,
-                            active: self.active,
+                            hkey: self.hkey,
+                            entity: self.entity,
                         }
-                    });
-                    Some(hazards)
+                    })
                 } else {
-                    //The hazard is partially active in multiple quadrants, find which ones
-                    let arc_shape = &partial_haz.shape;
+                    //The hazard is active in multiple quadrants
 
-                    //For every quadrant, check which of the edges of the hazard are relevant
+                    // First lets find the quadrants where edges of the partial hazard are colliding with the quadrants.
+                    // These will also be partially present hazards.
                     let mut constricted_hazards = quadrants.map(|q| {
-                        compute_edge_collisions_in_quadrant(q, &partial_haz.edges, arc_shape).map(
-                            |p_haz| {
-                                //The quadrant has collisions with the hazard edges
-                                //For these quadrants we can be sure they will be of Partial presence
-                                QTHazard {
-                                    qt_bbox: q,
-                                    entity: self.entity,
-                                    presence: QTHazPresence::Partial(p_haz),
-                                    active: self.active,
-                                }
-                            },
-                        )
+                        //For every quadrant, collect the edges that are colliding with it
+                        let mut colliding_edges = None;
+                        for edge in partial_haz.edges.iter() {
+                            if q.collides_with(edge) {
+                                colliding_edges.get_or_insert_with(Vec::new).push(*edge);
+                            }
+                        }
+                        //If there are relevant edges, create a new QTHazard for this quadrant which is partially present
+                        colliding_edges.map(|edges| QTHazard {
+                            qt_bbox: q,
+                            presence: QTHazPresence::Partial(QTHazPartial::from_parent(
+                                partial_haz,
+                                edges,
+                            )),
+                            hkey: self.hkey,
+                            entity: self.entity,
+                        })
                     });
 
                     debug_assert!(constricted_hazards.iter().filter(|h| h.is_some()).count() > 0);
 
-                    //At this point, we know which quadrants have collisions with which edges.
+                    //At this point, we have resolved all quadrants that have edges colliding with them (i.e. `Partial` presence).
                     //What remain are the quadrants without any intersecting edges.
-                    //These can either have the hazard entirely present or entirely absent.
+                    //These can either have the hazard `Entire` or `None` presence
                     for i in 0..4 {
                         let quadrant = quadrants[i];
                         if constricted_hazards[i].is_none() {
-                            //Presence of Entire and None type are always separated by a node with Partial presence.
-                            //If a neighbor is already resolved to Entire or None, this quadrant will have the same presence.
-                            let [neighbor_0, neighbor_1] = Rect::QUADRANT_NEIGHBOR_LAYOUT[i];
-                            let presence_n0 = constricted_hazards[neighbor_0]
-                                .as_ref()
-                                .map(|h| &h.presence);
-                            let presence_n1 = constricted_hazards[neighbor_1]
-                                .as_ref()
-                                .map(|h| &h.presence);
+                            //One important observation is that `Entire` and `None` present hazards will always be separated by a node with `Partial` presence.
+                            //If a neighbor is already resolved to `Entire` or `None`, this quadrant will have the same presence.
+                            //This saves quite a bit of containment checks.
 
-                            let presence = match (presence_n0, &presence_n1) {
-                                (Some(QTHazPresence::None), Some(QTHazPresence::Entire))
-                                | (Some(QTHazPresence::Entire), Some(QTHazPresence::None)) => {
-                                    unreachable!(
-                                        "one of the neighbors is Entire, the other is None, this quadrant should be Partial"
-                                    )
-                                }
-                                (Some(QTHazPresence::Entire), _) => QTHazPresence::Entire,
-                                (_, Some(QTHazPresence::Entire)) => QTHazPresence::Entire,
-                                (Some(QTHazPresence::None), _) => QTHazPresence::None,
-                                (_, Some(QTHazPresence::None)) => QTHazPresence::None,
-                                _ => {
-                                    //Neither of its neighbors is resolved, check its position.
-                                    let haz_scope = self.entity.scope();
-                                    //Since partial presence is not possible, checking whether the center of the quadrant collides or not suffices
-                                    let colliding = arc_shape.collides_with(&quadrant.centroid());
-                                    match (haz_scope, colliding) {
-                                        (GeoPosition::Interior, true) => QTHazPresence::Entire,
-                                        (GeoPosition::Exterior, false) => QTHazPresence::Entire,
+                            let neighbor_presences = Rect::QUADRANT_NEIGHBOR_LAYOUT[i]
+                                .map(|idx| constricted_hazards[idx].as_ref().map(|h| &h.presence));
+
+                            let none_neighbor = neighbor_presences
+                                .iter()
+                                .flatten()
+                                .any(|p| matches!(p, QTHazPresence::None));
+                            let entire_neighbor = neighbor_presences
+                                .iter()
+                                .flatten()
+                                .any(|p| matches!(p, QTHazPresence::Entire));
+
+                            let presence = match (none_neighbor, entire_neighbor) {
+                                (true, true) => unreachable!(
+                                    "No unresolved quadrant should not have both None and Entire neighbors, this indicates a bug in the quadtree construction logic."
+                                ),
+                                (true, false) => QTHazPresence::None,
+                                (false, true) => QTHazPresence::Entire,
+                                (false, false) => {
+                                    let colliding = haz_shape.collides_with(&quadrant.centroid());
+                                    match self.entity.scope() {
+                                        GeoPosition::Interior if colliding => QTHazPresence::Entire,
+                                        GeoPosition::Exterior if !colliding => {
+                                            QTHazPresence::Entire
+                                        }
                                         _ => QTHazPresence::None,
                                     }
                                 }
@@ -151,17 +152,15 @@ impl QTHazard {
 
                             constricted_hazards[i] = Some(QTHazard {
                                 qt_bbox: quadrant,
-                                entity: self.entity,
                                 presence,
-                                active: self.active,
+                                hkey: self.hkey,
+                                entity: self.entity,
                             });
                         }
                     }
 
-                    let constricted_hazards = constricted_hazards
-                        .map(|h| h.expect("all constricted hazards should be resolved"));
-
-                    Some(constricted_hazards)
+                    constricted_hazards
+                        .map(|h| h.expect("all constricted hazards should be resolved"))
                 }
             }
         }
@@ -173,39 +172,4 @@ impl QTHazard {
             QTHazPresence::Partial(partial_haz) => partial_haz.n_edges(),
         }
     }
-}
-
-fn compute_edge_collisions_in_quadrant(
-    quadrant: Rect,
-    relevant_edges: &RelevantEdges,
-    shape: &SPolygon,
-) -> Option<QTHazPartial> {
-    let mut p_haz = None;
-
-    let mut check_edge = |idx| {
-        let edge = shape.edge(idx);
-        if quadrant.collides_with(&edge) {
-            p_haz
-                .get_or_insert(QTHazPartial {
-                    shape: shape.clone(),
-                    edges: RelevantEdges::Some(vec![]),
-                })
-                .register_edge(idx);
-        }
-    };
-
-    match relevant_edges {
-        RelevantEdges::All => {
-            for i in 0..shape.n_vertices() {
-                check_edge(i);
-            }
-        }
-        RelevantEdges::Some(indices) => {
-            for &i in indices {
-                check_edge(i);
-            }
-        }
-    }
-
-    p_haz
 }

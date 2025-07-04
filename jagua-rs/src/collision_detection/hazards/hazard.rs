@@ -2,7 +2,13 @@ use crate::entities::{PItemKey, PlacedItem};
 use crate::geometry::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::SPolygon;
+use slotmap::new_key_type;
 use std::borrow::Borrow;
+
+new_key_type! {
+    /// Key to identify hazards inside the CDE.
+    pub struct HazKey;
+}
 
 /// Any spatial constraint affecting the feasibility of a placement of an Item.
 /// See [`HazardEntity`] for the different entities that can induce a hazard.
@@ -12,16 +18,16 @@ pub struct Hazard {
     pub entity: HazardEntity,
     /// The shape of the hazard
     pub shape: SPolygon,
-    /// Hazards can be either active or inactive, inactive hazards are not considered during collision detection
-    pub active: bool,
+    /// Whether the hazard is dynamic, meaning it can change over time (e.g., moving items)
+    pub dynamic: bool,
 }
 
 impl Hazard {
-    pub fn new(entity: HazardEntity, shape: SPolygon) -> Self {
+    pub fn new(entity: HazardEntity, shape: SPolygon, dynamic: bool) -> Self {
         Self {
             entity,
             shape,
-            active: true,
+            dynamic,
         }
     }
 }

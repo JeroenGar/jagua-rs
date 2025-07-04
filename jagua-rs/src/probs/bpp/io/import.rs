@@ -7,7 +7,7 @@ use rayon::prelude::*;
 
 use anyhow::{Result, ensure};
 
-/// Imports an instance into the library (sequential version)
+/// Imports an instance into the library
 pub fn import(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPInstance> {
     let items = {
         let mut items = ext_instance

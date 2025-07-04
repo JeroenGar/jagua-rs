@@ -1,7 +1,7 @@
 use crate::util::{N_ITEMS_REMOVED, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
-use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, HazardDetector};
-use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
+use jagua_rs::collision_detection::hazards::collector::BasicHazardCollector;
+use jagua_rs::collision_detection::hazards::filter::NoFilter;
 use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::probs::spp::entities::SPPlacement;
@@ -51,18 +51,22 @@ fn cde_collect_bench(c: &mut Criterion) {
                 let item = instance.item(search_for.1.item_id);
                 let cde = &problem.layout.cde();
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
-                let mut detector = BasicHazardDetector::new();
+                let mut collector = BasicHazardCollector::with_capacity(cde.hazards_map.len());
                 let sampler = UniformRectSampler::new(cde.bbox(), item);
                 for _ in 0..N_SAMPLES_PER_ITER {
                     let d_transf = sampler.sample(&mut rng);
                     let transf = d_transf.compose();
                     //detect collisions with the surrogate
-                    cde.collect_surr_collisions(item.shape_cd.surrogate(), &transf, &mut detector);
+                    cde.collect_surrogate_collisions(
+                        item.shape_cd.surrogate(),
+                        &transf,
+                        &mut collector,
+                    );
                     //detect collisions with the actual shape
                     buffer_shape.transform_from(&item.shape_cd, &transf);
-                    cde.collect_poly_collisions(&buffer_shape, &mut detector);
-                    n_detected += detector.len();
-                    detector.clear();
+                    cde.collect_poly_collisions(&buffer_shape, &mut collector);
+                    n_detected += collector.len();
+                    collector.clear();
                 }
             })
         });
@@ -104,13 +108,13 @@ fn cde_detect_bench(c: &mut Criterion) {
                     let d_transf = sampler.sample(&mut rng);
                     let transf = d_transf.compose();
                     //detect collisions with the surrogate
-                    if !cde.detect_surr_collision(
+                    if !cde.detect_surrogate_collision(
                         item.shape_cd.surrogate(),
                         &transf,
-                        &NoHazardFilter,
+                        &NoFilter,
                     ) {
                         buffer_shape.transform_from(&item.shape_cd, &transf);
-                        if !cde.detect_poly_collision(&buffer_shape, &NoHazardFilter) {
+                        if !cde.detect_poly_collision(&buffer_shape, &NoFilter) {
                             n_detected += 1;
                         }
                     }
@@ -152,7 +156,7 @@ fn cde_update_bench(c: &mut Criterion) {
                     };
 
                     //println!("Removing item with id: {}\n", pi_uid.item_id);
-                    problem.remove_item(pkey, true);
+                    problem.remove_item(pkey);
 
                     problem.place_item(p_opt);
                 }
