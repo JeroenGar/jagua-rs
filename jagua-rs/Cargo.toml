@@ -31,7 +31,16 @@ geo-buffer = { workspace = true }
 spp = []
 ## Enables support for the Bin Packing Problem
 bpp = []
+simd = []
+
+[dev-dependencies]
+criterion = { workspace = true, features = ["html_reports"] }
+iai-callgrind = "0.15.2"
 
 [package.metadata.docs.rs]
 all-features = true
 # rustdoc-args = ["--cfg", "docsrs"]
+
+[[bench]]
+name = "collision_benchmark"
+harness = false

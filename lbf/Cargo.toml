@@ -48,3 +48,7 @@ harness = false
 #name = "edge_sensitivity_bench"
 #harness = false
 
+
+[features]
+default = ["simd"]
+simd = ["jagua-rs/simd"]
