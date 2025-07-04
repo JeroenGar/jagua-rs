@@ -152,21 +152,19 @@ impl QTNode {
         entity: &T,
         collector: &mut impl HazardCollector,
     ) {
-        if !entity.collides_with(&self.bbox) {
-            // Entity does not collide with the node
-            return;
-        }
-
         // Condition to perform collision detection now or pass it to children:
         let perform_cd_now = self.hazards.n_active_edges() <= self.cd_threshold as usize;
 
         match (self.children.as_ref(), perform_cd_now) {
             (Some(children), false) => {
-                //Do not perform any CD on this level, check the children
-                children.iter().for_each(|child| {
-                    // Only collect collisions if there are relevant hazards in the child
-                    child.collect_collisions(entity, collector);
-                })
+                // Collect collisions from all children that collide with the entity
+                [0,1,2,3]
+                    .map(|idx| (idx, entity.collides_with(&children[idx].bbox)))
+                    .iter()
+                    .filter(|(_, child_collides)| *child_collides)
+                    .for_each(|(i, _)| {
+                        children[*i].collect_collisions(entity, collector);
+                    });
             }
             _ => {
                 //Check the hazards now
