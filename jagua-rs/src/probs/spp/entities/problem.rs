@@ -4,6 +4,7 @@ use crate::probs::spp::entities::strip::Strip;
 use crate::probs::spp::entities::{SPInstance, SPSolution};
 use crate::probs::spp::util::assertions::problem_matches_solution;
 use itertools::Itertools;
+#[cfg(not(target_arch = "wasm32"))]
 use std::time::Instant;
 
 /// Modifiable counterpart of [`SPInstance`]: items can be placed and removed, strip can be extended or fitted.
@@ -76,12 +77,26 @@ impl SPProblem {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     /// Creates a snapshot of the current state of the problem as a [`SPSolution`].
     pub fn save(&self) -> SPSolution {
         let solution = SPSolution {
             layout_snapshot: self.layout.save(),
             strip: self.strip,
             time_stamp: Instant::now(),
+        };
+
+        debug_assert!(problem_matches_solution(self, &solution));
+
+        solution
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn save(&self, time_stamp: f64) -> SPSolution {
+        let solution = SPSolution {
+            layout_snapshot: self.layout.save(),
+            strip: self.strip,
+            time_stamp,
         };
 
         debug_assert!(problem_matches_solution(self, &solution));

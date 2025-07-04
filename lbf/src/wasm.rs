@@ -10,18 +10,29 @@ use serde::Serialize;
 use console_error_panic_hook;
 use jagua_rs::io::import::Importer;
 use jagua_rs::probs::bpp::io::ext_repr::ExtBPInstance;
+use jagua_rs::probs::spp::io::ext_repr::ExtSPInstance;
 use jagua_rs::probs::bpp;
+use jagua_rs::probs::spp;
 use crate::config::LBFConfig;
 use crate::opt::lbf_bpp::LBFOptimizerBP;
+use crate::opt::lbf_spp::LBFOptimizerSP;
 use crate::io::output::BPOutput;
+use crate::io::output::SPOutput;
 use crate::time::TimeStamp;
 use crate::time::now_millis;
 use crate::init_logger;
 use log::{warn, info};
 
 #[derive(Serialize)]
-struct WasmResult {
+struct BPPWasmResult {
     output: BPOutput,
+    svgs: Vec<(String, String)>,
+    solve_time_ms: f64
+}
+
+#[derive(Serialize)]
+struct SPPWasmResult {
+    output: SPOutput,
     svgs: Vec<(String, String)>,
     solve_time_ms: f64
 }
@@ -33,12 +44,15 @@ pub fn init_logger_wasm() {
 }
 
 #[wasm_bindgen]
-pub fn run_bpp(
+pub fn run_lbf_bpp_wasm(
     ext_bp_instance_json: JsValue,
     config_json: JsValue,
 ) -> Result<JsValue, JsValue> {
     // Deserialize input
     console_error_panic_hook::set_once();
+
+    warn!("BPP Problem selected!!");
+
     let ext_instance: ExtBPInstance = from_value(ext_bp_instance_json)
         .map_err(|e| JsValue::from_str(&format!("ExtBPInstance decode error: {}", e)))?;
 
@@ -84,7 +98,65 @@ pub fn run_bpp(
 
 
     // Wrap in serializable struct
-    let result = WasmResult { output, svgs, solve_time_ms: total_time_taken };
+    let result = BPPWasmResult { output, svgs, solve_time_ms: total_time_taken };
+
+    // Serialize and return
+    to_value(&result).map_err(|e| JsValue::from_str(&format!("Result encode error: {}", e)))
+}
+
+#[wasm_bindgen]
+pub fn run_lbf_spp_wasm(
+    ext_sp_instance_json: JsValue,
+    config_json: JsValue,
+) -> Result<JsValue, JsValue> {
+    // Deserialize input
+    console_error_panic_hook::set_once();
+
+    warn!("SPP Problem selected!!");
+
+    let ext_instance: ExtSPInstance = from_value(ext_sp_instance_json)
+        .map_err(|e| JsValue::from_str(&format!("ExtSPInstance decode error: {}", e)))?;
+
+    let config: LBFConfig = from_value(config_json).unwrap_or_else(|e| {
+        warn!("Invalid config, using default. Reason: {}", e);
+        LBFConfig::default()
+    });
+
+    let importer = Importer::new(
+        config.cde_config,
+        config.poly_simpl_tolerance,
+        config.min_item_separation,
+    );
+
+    let rng = match config.prng_seed {
+        Some(seed) => SmallRng::seed_from_u64(seed),
+        None => SmallRng::seed_from_u64(0x12345678),
+    };
+
+    // Import instance
+    let instance = spp::io::import(&importer, &ext_instance)
+        .map_err(|e| JsValue::from_str(&format!("Importer error: {}", e)))?;
+
+    // Solve
+    let start_time = TimeStamp::now();
+    let sol = LBFOptimizerSP::new(instance.clone(), config, rng).solve();
+    let total_time_taken = start_time.elapsed_ms();
+
+    // Export solution
+    let output = SPOutput {
+        instance: ext_instance.clone(),
+        solution: spp::io::export(&instance, &sol, now_millis()),
+        config,
+    };
+
+    let mut svgs = vec![];
+    let svg = jagua_rs::io::svg::s_layout_to_svg(&sol.layout_snapshot, &instance, config.svg_draw_options, "");
+    let svg_string = svg.to_string();
+    svgs.push((format!("sol_input_spp.svg"), svg_string));
+
+
+    // Wrap in serializable struct
+    let result = SPPWasmResult { output, svgs, solve_time_ms: total_time_taken };
 
     // Serialize and return
     to_value(&result).map_err(|e| JsValue::from_str(&format!("Result encode error: {}", e)))

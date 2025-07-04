@@ -105,12 +105,12 @@ impl LBFOptimizerSP {
             self.problem.strip.width
         );
 
-        // #[cfg(target_arch = "wasm32")]
-        // let now = TimeStamp::now();
-        // #[cfg(target_arch = "wasm32")]
-        // let solution = self.problem.save(now.elapsed_ms());
-        //
-        // #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(target_arch = "wasm32")]
+        let now = TimeStamp::now();
+        #[cfg(target_arch = "wasm32")]
+        let solution = self.problem.save(now.elapsed_ms());
+
+        #[cfg(not(target_arch = "wasm32"))]
         let solution = self.problem.save();
 
         #[cfg(not(target_arch = "wasm32"))]

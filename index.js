@@ -1,4 +1,4 @@
-import init, { initThreadPool, run_bpp, init_logger_wasm /* run_spp */ } from "./lbf/pkg/lbf.js"; // Replace with actual wasm module name
+import init, { initThreadPool, run_lbf_bpp_wasm, run_lbf_spp_wasm, init_logger_wasm /* run_spp */ } from "./lbf/pkg/lbf.js"; // Replace with actual wasm module name
 
 async function loadJsonFromFileInput(fileInput) {
   return new Promise((resolve, reject) => {
@@ -41,10 +41,9 @@ async function run() {
 
       let result;
       if (problemType === "bpp") {
-        result = await run_bpp(instance, config);
+        result = await run_lbf_bpp_wasm(instance, config);
       } else if (problemType === "spp") {
-        throw new Error("SPP support not implemented yet.");
-        // result = await run_spp(instance, config);
+        result = await run_lbf_spp_wasm(instance, config);
       } else {
         throw new Error("Unknown problem type.");
       }

@@ -52,7 +52,7 @@ else
 fi
 
 WASM_PATH="pkg/${BUILD_TARGET_UNDERSCORE}_bg.wasm"
-OPTIMIZED="ok.wasm"
+OPTIMIZED="optimized.wasm"
 
 echo -e "${YELLOW}${STEP} Running wasm-opt on ${WASM_PATH}...${RESET}"
 wasm-opt -O4 --dce --enable-simd --enable-bulk-memory --enable-threads -ifwl -ffm --memory-packing --enable-gc -o "$OPTIMIZED" "$WASM_PATH"
