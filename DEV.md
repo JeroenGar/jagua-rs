@@ -16,7 +16,7 @@ This document outlines the caveats, challenges, and implementation-specific deci
 3. [WASM-Specific Compatibility Changes](#wasm-specific-compatibility-changes)
 
    * 3.1 [Replacing `std::time::Instant`](#replacing-stdtimeinstant)
-   * 3.2 [BPProblem API Changes](#bpproblem-api-changes)
+   * 3.2 [BPProblem and SPProblem API Changes](#bpproblem-api-changes)
    * 3.3 [Other Changes](#other-changes)
 4. [The `separation-distance` Feature](#the-separation-distance-feature)
 
@@ -58,9 +58,9 @@ This avoids runtime errors with crates like `rand` that rely on `getrandom` unde
 
 Because `std::time::Instant` is not portable to WASM (especially in browser environments), it was replaced throughout the codebase with a millisecond-resolution `f64` timestamp, derived from `performance.now()` via `web-sys`.
 
-### 3.2 BPProblem API Changes
+### 3.2 BPProblem and SPProblem API Changes
 
-A small but essential change was made to the `BPProblem::save()` API:
+A small but essential change was made to the `BPProblem::save()` and `SPProblem::save()` API:
 
 ```rust
 // Previous:
@@ -82,6 +82,7 @@ This preserves time metadata without relying on non-WASM-compatible structures.
 
 * Logic was added to safely convert `f64` timestamps to `u64` when needed.
 * Minor adjustments made to ensure deterministic behavior across environments.
+* `BPSolution` and `SPSolution` have Wasm32 specific structs now for the `time_stamp` param.
 
 > [!WARNING]
 > 
