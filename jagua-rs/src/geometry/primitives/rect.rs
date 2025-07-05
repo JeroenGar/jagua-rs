@@ -298,25 +298,36 @@ impl CollidesWith<Edge> for Rect {
         }
 
         //Determine which side of the edge each corner of the rectangle is on
-        let corner_sides = self.corners().map(|corner| {
-            let Point(p_x, p_y) = corner;
-            let Point(s_x, s_y) = edge.start;
-            let Point(e_x, e_y) = edge.end;
-            // if 0.0, the corner is on the edge
-            // if > 0.0, the corner is "above" of the edge
-            // if < 0.0, the corner is "below" the edge
-            (p_x - s_x) * (e_y - s_y) - (p_y - s_y) * (e_x - s_x)
-        });
+        let Point(s_x, s_y) = edge.start;
+        let Point(e_x, e_y) = edge.end;
+        let edge_dx = e_x - s_x;
+        let edge_dy = e_y - s_y;
 
-        //No collision if all corners are on the same side of the edge
-        if corner_sides.iter().all(|v| *v > 0.0) || corner_sides.iter().all(|v| *v < 0.0) {
-            return false;
+        // Function to determine which side of the edge a point is on.
+        // This is the 2D cross-product.
+        let side = |p_x, p_y| (p_x - s_x) * edge_dy - (p_y - s_y) * edge_dx;
+
+        let corners = self.corners();
+        let mut last_side = side(corners[3].x(), corners[3].y());
+
+        for i in 0..4 {
+            let current_side = side(corners[i].x(), corners[i].y());
+            // If signs differ, the edge may cross the rectangle side
+            if current_side * last_side <= 0.0 {
+                // The edge connects the previous corner (i-1, wrapping around) and the current corner i.
+                let prev_corner_idx = if i == 0 { 3 } else { i - 1 };
+                let rect_edge = Edge {
+                    start: corners[prev_corner_idx],
+                    end: corners[i],
+                };
+                if edge.collides_with(&rect_edge) {
+                    return true;
+                }
+            }
+            last_side = current_side;
         }
 
-        //The only possible that remains is that the edge collides with one of the edges of the rectangle
-        self.edges()
-            .iter()
-            .any(|rect_edge| edge.collides_with(rect_edge))
+        false
     }
 }
 
