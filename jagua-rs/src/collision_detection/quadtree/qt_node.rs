@@ -158,7 +158,7 @@ impl QTNode {
         match (self.children.as_ref(), perform_cd_now) {
             (Some(children), false) => {
                 // Collect collisions from all children that collide with the entity
-                [0,1,2,3]
+                [0, 1, 2, 3]
                     .map(|idx| (idx, entity.collides_with(&children[idx].bbox)))
                     .iter()
                     .filter(|(_, child_collides)| *child_collides)
