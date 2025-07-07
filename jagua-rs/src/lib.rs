@@ -2,7 +2,7 @@
 //! A fast and fearless Collision Detection Engine for 2D irregular cutting and packing problems.
 //!
 //! This library is designed to be used as a backend by optimization algorithms.
-
+#![feature(portable_simd)]
 #![doc = document_features::document_features!()]
 
 /// Everything related to the Collision Detection Engine

@@ -329,6 +329,11 @@ impl CollidesWith<Edge> for Rect {
                 return false;
             }
 
+            //If either end point of the line is inside the rectangle
+            if self.collides_with(&edge.start) || self.collides_with(&edge.end) {
+                return true;
+            }
+
             // SIMD: Check if all corners are on same side
             if simd_all_corners_same_side(self, edge) {
                 return false;
