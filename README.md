@@ -26,7 +26,17 @@ jagua-rs but with support for Wasm! (with parallelization support through `wasm-
 
 ## Building
 
-An example:
+### Native build 
+
+You can build natively as you normally would do in `jagua-rs` using `cargo`:
+
+An example here:
+
+```bash 
+cargo run --release --bin lbf -- -c assets/config_lbf.json -i assets/baldacci1.json -p bpp -s output
+```
+
+### Wasm Build
 
 ```bash 
 ./build-wasm.sh --target web
