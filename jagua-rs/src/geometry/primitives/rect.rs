@@ -329,11 +329,6 @@ impl CollidesWith<Edge> for Rect {
                 return false;
             }
 
-            // SIMD: Check if endpoints are inside rectangle
-            if simd_endpoints_inside(self, edge) {
-                return true;
-            }
-
             // SIMD: Check if all corners are on same side
             if simd_all_corners_same_side(self, edge) {
                 return false;
@@ -349,108 +344,70 @@ impl CollidesWith<Edge> for Rect {
 #[cfg(feature = "simd")]
 mod simd_impl {
     use super::*;
+    use std::simd::prelude::*;
 
     pub fn simd_bbox_no_overlap(rect: &Rect, edge: &Edge) -> bool {
-        use std::arch::x86_64::*;
+        // Pack the values for efficient SIMD comparison
+        // We want to check: edge_x_max < rect_x_min, rect_x_max < edge_x_min, edge_y_max < rect_y_min, rect_y_max < edge_y_min
+        let a = f32x4::from_array([
+            edge.x_max(), // 0: edge_x_max < rect_x_min
+            rect.x_max,   // 1: rect_x_max < edge_x_min
+            edge.y_max(), // 2: edge_y_max < rect_y_min
+            rect.y_max,   // 3: rect_y_max < edge_y_min
+        ]);
+        let b = f32x4::from_array([
+            rect.x_min,   // 0: edge_x_max < rect_x_min
+            edge.x_min(), // 1: rect_x_max < edge_x_min
+            rect.y_min,   // 2: edge_y_max < rect_y_min
+            edge.y_min(), // 3: rect_y_max < edge_y_min
+        ]);
 
-        unsafe {
-            let rect_x_min = _mm_set1_ps(rect.x_min);
-            let rect_x_max = _mm_set1_ps(rect.x_max);
-            let rect_y_min = _mm_set1_ps(rect.y_min);
-            let rect_y_max = _mm_set1_ps(rect.y_max);
+        // Check all four conditions in parallel
+        let mask = a.simd_lt(b);
 
-            let edge_x_min = _mm_set1_ps(edge.x_min());
-            let edge_x_max = _mm_set1_ps(edge.x_max());
-            let edge_y_min = _mm_set1_ps(edge.y_min());
-            let edge_y_max = _mm_set1_ps(edge.y_max());
+        // Extract the results for each axis
+        let mask_array = mask.to_array();
+        let x_no_overlap = mask_array[0] || mask_array[1];
+        let y_no_overlap = mask_array[2] || mask_array[3];
 
-            // Check for NO overlap (same as scalar logic)
-            let x_no_overlap = _mm_cmpgt_ps(
-                _mm_max_ps(edge_x_min, rect_x_min),
-                _mm_min_ps(edge_x_max, rect_x_max),
-            );
-            let y_no_overlap = _mm_cmpgt_ps(
-                _mm_max_ps(edge_y_min, rect_y_min),
-                _mm_min_ps(edge_y_max, rect_y_max),
-            );
-
-            // Return true if there's NO overlap (same as scalar)
-            // Use OR instead of AND, and check if any bit is set
-            _mm_movemask_ps(_mm_or_ps(x_no_overlap, y_no_overlap)) != 0
-        }
-    }
-
-    pub fn simd_endpoints_inside(rect: &Rect, edge: &Edge) -> bool {
-        use std::arch::x86_64::*;
-
-        unsafe {
-            let start_x = _mm_set1_ps(edge.start.0);
-            let start_y = _mm_set1_ps(edge.start.1);
-            let end_x = _mm_set1_ps(edge.end.0);
-            let end_y = _mm_set1_ps(edge.end.1);
-            let rect_x_min = _mm_set1_ps(rect.x_min);
-            let rect_x_max = _mm_set1_ps(rect.x_max);
-            let rect_y_min = _mm_set1_ps(rect.y_min);
-            let rect_y_max = _mm_set1_ps(rect.y_max);
-
-            // Check if start point is inside (x >= min && x <= max && y >= min && y <= max)
-            let start_inside = _mm_and_ps(
-                _mm_and_ps(
-                    _mm_cmpge_ps(start_x, rect_x_min),
-                    _mm_cmple_ps(start_x, rect_x_max),
-                ),
-                _mm_and_ps(
-                    _mm_cmpge_ps(start_y, rect_y_min),
-                    _mm_cmple_ps(start_y, rect_y_max),
-                ),
-            );
-
-            let end_inside = _mm_and_ps(
-                _mm_and_ps(
-                    _mm_cmpge_ps(end_x, rect_x_min),
-                    _mm_cmple_ps(end_x, rect_x_max),
-                ),
-                _mm_and_ps(
-                    _mm_cmpge_ps(end_y, rect_y_min),
-                    _mm_cmple_ps(end_y, rect_y_max),
-                ),
-            );
-
-            // Return true if either point is inside (any bit set)
-            _mm_movemask_ps(start_inside) != 0 || _mm_movemask_ps(end_inside) != 0
-        }
+        // Return true if there's NO overlap on either axis
+        x_no_overlap || y_no_overlap
     }
 
     pub fn simd_all_corners_same_side(rect: &Rect, edge: &Edge) -> bool {
-        use std::arch::x86_64::*;
+        let corners = rect.corners();
 
-        unsafe {
-            let corners = rect.corners();
-            // Match WASM order: corners[0], corners[1], corners[2], corners[3]
-            let corner_x = _mm_set_ps(corners[0].0, corners[1].0, corners[2].0, corners[3].0);
-            let corner_y = _mm_set_ps(corners[0].1, corners[1].1, corners[2].1, corners[3].1);
+        // Create SIMD vectors for all corner coordinates
+        let corner_x = f32x4::from_array([corners[0].0, corners[1].0, corners[2].0, corners[3].0]);
+        let corner_y = f32x4::from_array([corners[0].1, corners[1].1, corners[2].1, corners[3].1]);
 
-            let start_x = _mm_set1_ps(edge.start.0);
-            let start_y = _mm_set1_ps(edge.start.1);
-            let end_x = _mm_set1_ps(edge.end.0);
-            let end_y = _mm_set1_ps(edge.end.1);
+        // Create SIMD vectors for edge start and end points
+        let start_x = f32x4::splat(edge.start.0);
+        let start_y = f32x4::splat(edge.start.1);
+        let end_x = f32x4::splat(edge.end.0);
+        let end_y = f32x4::splat(edge.end.1);
 
-            let dx = _mm_sub_ps(corner_x, start_x);
-            let dy = _mm_sub_ps(corner_y, start_y);
-            let edge_dx = _mm_sub_ps(end_x, start_x);
-            let edge_dy = _mm_sub_ps(end_y, start_y);
+        // Compute vectors from start to corners: (corner_x - start_x, corner_y - start_y)
+        let dx = corner_x - start_x;
+        let dy = corner_y - start_y;
 
-            let term1 = _mm_mul_ps(dx, edge_dy);
-            let term2 = _mm_mul_ps(dy, edge_dx);
-            let corner_sides = _mm_sub_ps(term1, term2);
+        // Compute edge vector: (end_x - start_x, end_y - start_y)
+        let edge_dx = end_x - start_x;
+        let edge_dy = end_y - start_y;
 
-            let zero = _mm_set1_ps(0.0);
-            let all_positive = _mm_cmpgt_ps(corner_sides, zero);
-            let all_negative = _mm_cmplt_ps(corner_sides, zero);
+        // Compute cross product: dx * edge_dy - dy * edge_dx
+        // This determines which side of the edge each corner is on
+        let term1 = dx * edge_dy;
+        let term2 = dy * edge_dx;
+        let corner_sides = term1 - term2;
 
-            // Check if all corners are on the same side
-            _mm_movemask_ps(all_positive) == 0b1111 || _mm_movemask_ps(all_negative) == 0b1111
-        }
+        // Check if all corners are on the same side (all positive or all negative)
+        let zero = f32x4::splat(0.0);
+        let all_positive = corner_sides.simd_gt(zero);
+        let all_negative = corner_sides.simd_lt(zero);
+
+        // Return true if all corners are on the same side
+        all_positive.all() || all_negative.all()
     }
 
     pub fn simd_rect_edges_intersect(rect: &Rect, edge: &Edge) -> bool {
