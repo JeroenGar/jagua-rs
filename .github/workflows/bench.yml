@@ -1,7 +1,8 @@
 name: Perf Tracker
 
 on:
-  pull_request:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
     branches: [ "main" ]
     paths:
       - '**.rs'
@@ -28,7 +29,7 @@ jobs:
           fetch-depth: 0 # Fetch full history for commit comparisons
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@nightly
 
       - uses: Swatinem/rust-cache@v2
 
@@ -37,7 +38,7 @@ jobs:
           RUSTFLAGS: '-C target-cpu=native -Awarnings'
         run: |
           export RUSTFLAGS=$RUSTFLAGS
-          cargo bench --bench ci_bench -- --output-format bencher | tee output.txt
+          cargo bench --bench ci_bench --all-features -- --output-format bencher | tee output.txt
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
