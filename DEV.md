@@ -170,7 +170,7 @@ SmallRng::seed_from_u64(0x12345678); // Wasm friendly solution
 
 > [!WARNING]
 > 
-> The 3rd point is deprecated and this crate is no longer used in the 
+> The 4th point is deprecated and this crate is no longer used in the 
 > latest commit of jagua-rs, but I have still kept this to showcase the workaround 
 > I came up at the time.
 > 
