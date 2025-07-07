@@ -22,6 +22,7 @@ WASM_OPT_LEVEL="-O4"
 WASM_PATH=""
 OUT_FILE="optimized.wasm"
 BINARYEN_GH_URL="https://github.com/WebAssembly/binaryen"
+SKIP_PATCH=true
 
 print_help() {
   echo -e "${YELLOW}Usage: $0 [options]${RESET}"
@@ -31,12 +32,13 @@ print_help() {
   echo -e "  ${GREEN}jagua-rs${RESET} project using ${GREEN}wasm-pack${RESET} and ${GREEN}wasm-opt${RESET}."
   echo
   echo -e "  -> It supports optional ${GREEN}optimization${RESET}, ${GREEN}rayon multithreading${RESET}" 
-  echo -e "  -> ${RED}Supports only web due to SAB!${RED}"
+  echo -e "  -> ${RED}Supports only web due to SharedArrayBuffer!${RED}"
   echo
   echo -e "${BLUE}Options:${RESET}"
-  echo "  --target <wasm-target>         wasm-pack target (default: web)"
-  echo "  --opt <opt-level>              wasm-opt optimization level (default: -O4)"
-  echo "  --no-opt                       skip wasm-opt optimization step entirely"
+  echo -e "  --target <wasm-target>         ${GREEN}wasm-pack${RESET} target (default: web)"
+  echo -e "  --opt <opt-level>              set ${GREEN}wasm-opt${RESET} optimization level (default: -O4)"
+  echo -e "  --no-opt                       skip ${GREEN}wasm-opt${RESET} optimization step entirely"
+  echo -e "  --patch-rayon                  patches the ${GREEN}wasm-bindgen-rayon${RESET} worker JS helper"
   echo "  --wasm-path <path>             override .wasm input path"
   echo "  -h, --help                     display this help message"
   echo
@@ -62,6 +64,10 @@ while [[ "$#" -gt 0 ]]; do
     --no-opt)
       USE_WASM_OPT=false
       shift
+      ;;
+    --patch-rayon)
+      SKIP_PATCH=false
+      shift 
       ;;
     --wasm-path)
       WASM_PATH="$2"
@@ -140,22 +146,33 @@ fi
 
 echo -e "${BLUE}${STEP} Present directory: $(pwd)${RESET}"
 
-#################################################
+######################################################
 #
 # This patch is needed to ensure that during 
 # browser run time, pkg is resolved to an 
 # actual file '$BUILD_TARGET.js'
 #
-#################################################
+# !! WARNING !!
+#
+# This patch is only useful if you are not using 
+# the "no-bundler" feature of `wasm-bindgen-rayon`!
+#
+######################################################
 
-WORKER_FILE=$(find pkg/snippets/ -type f -name workerHelpers.js | head -n 1)
+if [ "$SKIP_PATCH" = false ]; then
+  echo -e "${YELLOW}${STEP} Looking for workerHelpers.js to patch import path...${RESET}"
+  WORKER_FILE=$(find pkg/snippets/ -type f -name workerHelpers.js | head -n 1)
 
-if [ -z "$WORKER_FILE" ]; then
-  echo -e "${RED}${FAILURE} workerHelpers.js not found!${RESET}"
-  exit 1
+  if [ -z "$WORKER_FILE" ]; then
+    echo -e "${RED}${FAILURE} workerHelpers.js not found!${RESET}"
+    exit 1
+  fi
+
+  echo -e "${YELLOW}${STEP} Patching import in ${WORKER_FILE}...${RESET}"
+  sed -i "s|const pkg = await import('../../..');|const pkg = await import('../../../${BUILD_TARGET_UNDERSCORE}.js');|" "$WORKER_FILE"
+  echo -e "${GREEN}${SUCCESS} Patch applied.${RESET}"
+else
+  echo -e "${YELLOW}${INFO} Skipping wasm-bindgen-rayon JS worker patch: --patch-rayon not invoked.${RESET}"
 fi
 
-echo -e "${YELLOW}${STEP} Patching import in ${WORKER_FILE}...${RESET}"
-sed -i "s|const pkg = await import('../../..');|const pkg = await import('../../../${BUILD_TARGET_UNDERSCORE}.js');|" "$WORKER_FILE"
-
-echo -e "${GREEN}${SUCCESS} Patch applied.${RESET}"
+echo -e "${GREEN}${SUCCESS} All jobs done. Run \"python serve.py\" to start the server!"

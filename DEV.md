@@ -34,6 +34,8 @@ The goal of this work was to enable `jagua-rs` to run in the browser with multit
 
 The following dependencies were added to support the WASM runtime and multithreaded execution:
 
+In the root `Cargo.toml`:
+
 ```toml
 wasm-bindgen = { version = "0.2", features = ["serde"] }
 web-sys = { version = "0.3", features = ["Window", "Performance"] }
@@ -48,31 +50,104 @@ Additionally, the `getrandom` crate was added explicitly with WASM support enabl
 getrandom = { version = "0.3", default-features = false, features = ["wasm_js"] }
 ```
 
+We should also ensure that both `jagua-rs` and `lbf`'s `Cargo.toml` files have this:
+
+```toml 
+getrandom = { workspace = true }
+
+# Only compile these when targeting wasm32
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { workspace = true }
+wasm-bindgen-rayon = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+console_error_panic_hook = { workspace = true }
+console_log = { version = "1.0", features = ["color"] }
+web-sys = { workspace = true }
+```
+
 This avoids runtime errors with crates like `rand` that rely on `getrandom` under the hood.
 
 > See: [getrandom WebAssembly support](https://docs.rs/getrandom/0.3.3/#webassembly-support)
 
+Finally, we need to create a `.cargo/config.toml` in the `lbf` directory:
+
+```toml 
+[target.wasm32-unknown-unknown]
+rustflags = [
+  "--cfg", "getrandom_backend=\"wasm_js\"",
+  "-C", "target-feature=+atomics,+bulk-memory,+simd128",
+]
+
+[unstable]
+build-std = ["panic_abort", "std"]
+```
+
+This config lets cargo know the following:
+
+a. Set the `getrandom` backend for support for `wasm_js` when compiling to `wasm32-unknown-unknown` target 
+b. Set target features of atomics + bulk-memory + simd128 on when compiling to `wasm32-unknown-unknown` target (needed for multithreading)
+c. To rebuild the standard library for point b (for threading in Wasm)
+
 ## 3. WASM-Specific Compatibility Changes
 
-### 3.1 Replacing `std::time::Instant`
+#### 3.1 Accounting for `std::time::Instant`
 
-Because `std::time::Instant` is not portable to WASM (especially in browser environments), it was replaced throughout the codebase with a millisecond-resolution `f64` timestamp, derived from `performance.now()` via `web-sys`.
+Because `std::time::Instant` is not portable to WASM (especially in browser environments), we needed a simple modular way to handle timestamps for both native and Wasm counterparts.
+
+This is why I added a extra file [time.rs](https://github.com/nots1dd/jagua-rs/blob/wasm-parallel/lbf/src/time.rs) in `lbf/src`
+
+This Rust file defines a cross-platform time abstraction called TimeStamp, designed to work both in:
+
+- Native environments (like Linux/macOS/Windows)
+- Wasm environments (e.g., in the browser via wasm32)
+
+You can check out the implementation for it, it is quite simple; it provides a `TimeStamp` enum with a lot of methods that have internal logic depending on the `target_arch`. Here is a small snippet:
+
+```rust 
+/// Get a new timestamp for "now"
+pub fn now() -> Self {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        /// This is std::time::Instant --> NOT Wasm COMPATIBLE!!
+        TimeStamp::Instant(Instant::now())
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        /// Custom function that uses web_sys's performace() --> Wasm COMPATIBLE!!
+        TimeStamp::Millis(now_millis())
+    }
+}
+```
+
+Now, we replace all instances of using `std::time::Instant` with: 
+
+```rust 
+Instant::now(); // OLD
+
+/// This internally deals with whether the target_arch is wasm or not!
+TimeStamp::now() // NEW
+```
 
 ### 3.2 BPProblem and SPProblem API Changes
 
-A small but essential change was made to the `BPProblem::save()` and `SPProblem::save()` API:
+A small but essential change was made to the `BPProblem::save()` and `SPProblem::save()` API (for Wasm only):
 
 ```rust
 // Previous:
-self.problem.save()
+self.problem.save() // only works in native
 
 // New:
 let time = now_millis(); // platform-specific time in f64
-self.problem.save(time);
+#[cfg(target_arch = "wasm32")]
+self.problem.save(time); // Wasm friendly save function
+#[cfg(not(target_arch = "wasm32"))]
+self.problem.save() // native save function
 
 // Can also use:
 
 let time = TimeStamp::now();
+#[cfg(target_arch = "wasm32")]
 self.problem.save(time.elapsed_ms());
 ```
 
@@ -81,12 +156,21 @@ This preserves time metadata without relying on non-WASM-compatible structures.
 ### 3.3 Other Changes
 
 * Logic was added to safely convert `f64` timestamps to `u64` when needed.
-* Minor adjustments made to ensure deterministic behavior across environments.
 * `BPSolution` and `SPSolution` have Wasm32 specific structs now for the `time_stamp` param.
+* Added a logger for Wasm + native in [lib.rs](https://github.com/nots1dd/jagua-rs/blob/wasm-parallel/lbf/src/lib.rs)
+* Modified the current [init_logger](https://github.com/nots1dd/jagua-rs/blob/wasm-parallel/lbf/src/io/mod.rs)
+* Rng fallback was modified (in config's prng_seed) for Wasm:
+
+```rust 
+SmallRng::from_os_rng(); // Native solution: not Wasm compatible
+
+// A more determisnistic fallback for rng seed (only invoked if config does not have prng_seed
+SmallRng::seed_from_u64(0x12345678); // Wasm friendly solution
+```
 
 > [!WARNING]
 > 
-> The 4th point is deprecated and this crate is no longer used in the 
+> The 3rd point is deprecated and this crate is no longer used in the 
 > latest commit of jagua-rs, but I have still kept this to showcase the workaround 
 > I came up at the time.
 > 
@@ -135,3 +219,5 @@ The preferred solution is to switch to a **pure Rust** alternative for polygon o
 #### Suggested Alternative:
 
 * [`geo + geo-buffer`](https://crates.io/crates/geo) – performs geometric boolean operations and is compatible with `wasm32-unknown-unknown`.
+
+This issue has since been resolved by jagua-rs maintainer in this [commit](https://github.com/JeroenGar/jagua-rs/pull/38). I have put this here regardless to showcase how I approached the problem and the modifications I had to make at the time (you *may* come across issues like this too)

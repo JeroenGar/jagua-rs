@@ -12,7 +12,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 # Serve current directory
 with socketserver.TCPServer(("", PORT), CORSHTTPRequestHandler) as httpd:
     print(f"-- Serving on http://localhost:{PORT}")
-    print(f"Open 'http://localhost:{PORT}/index.html' !!")
+    print(f"Open 'http://localhost:{PORT}/index.html' in your browser!!")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

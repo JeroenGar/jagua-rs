@@ -60,21 +60,14 @@ pub fn init_logger(level_filter: LevelFilter) -> Result<()> {
             let thread_name = handle.name().unwrap_or("-");
 
             #[cfg(not(target_arch = "wasm32"))]
-            let duration = EPOCH.elapsed();
-            #[cfg(not(target_arch = "wasm32"))]
-            let sec = duration.as_secs() % 60;
-            #[cfg(not(target_arch = "wasm32"))]
-            let min = (duration.as_secs() / 60) % 60;
-            #[cfg(not(target_arch = "wasm32"))]
-            let hours = (duration.as_secs() / 60) / 60;
+            let duration_secs = EPOCH.elapsed().as_secs_f64();
+
             #[cfg(target_arch = "wasm32")]
-            let duration = EPOCH.elapsed_ms();
-            #[cfg(target_arch = "wasm32")]
-            let sec = duration % 60.0;
-            #[cfg(target_arch = "wasm32")]
-            let min = (duration / 60.0) % 60.0;
-            #[cfg(target_arch = "wasm32")]
-            let hours = (duration / 60.0) / 60.0;
+            let duration_secs = EPOCH.elapsed_ms() / 1000.0;
+
+            let sec = duration_secs % 60.0;
+            let min = (duration_secs / 60.0) % 60.0;
+            let hours = duration_secs / 3600.0;
 
             let prefix = format!(
                 "[{}] [{:0>2}:{:0>2}:{:0>2}] <{}>",
