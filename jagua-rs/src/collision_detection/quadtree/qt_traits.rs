@@ -168,27 +168,7 @@ fn edge_intersection_custom(e1: &Edge, e2: &Edge) -> Option<(f32, f32)> {
     let Point(x3, y3) = e2.start;
     let Point(x4, y4) = e2.end;
 
-    // Early exit if bounding boxes do not overlap
-    // {
-    //     let x_min_e1 = x1.min(x2);
-    //     let x_max_e1 = x1.max(x2);
-    //     let y_min_e1 = y1.min(y2);
-    //     let y_max_e1 = y1.max(y2);
-    //
-    //     let x_min_e2 = x3.min(x4);
-    //     let x_max_e2 = x3.max(x4);
-    //     let y_min_e2 = y3.min(y4);
-    //     let y_max_e2 = y3.max(y4);
-    //
-    //     let x_axis_no_overlap = x_min_e1.max(x_min_e2) > x_max_e1.min(x_max_e2);
-    //     let y_axis_no_overlap = y_min_e1.max(y_min_e2) > y_max_e1.min(y_max_e2);
-    //
-    //     if x_axis_no_overlap || y_axis_no_overlap {
-    //         return None;
-    //     }
-    // }
-
-    if !edge_intersect_fast_fail(e1, e2) {
+    if end_points_on_same_side(e1, e2) {
         return None; //fast fail
     }
 
@@ -216,7 +196,7 @@ fn edge_intersection_custom(e1: &Edge, e2: &Edge) -> Option<(f32, f32)> {
     None
 }
 
-fn edge_intersect_fast_fail(e1: &Edge, e2: &Edge) -> bool {
+fn end_points_on_same_side(e1: &Edge, e2: &Edge) -> bool {
     let Point(x1, y1) = e1.start;
     let Point(x2, y2) = e1.end;
     let Point(x3, y3) = e2.start;
@@ -228,7 +208,7 @@ fn edge_intersect_fast_fail(e1: &Edge, e2: &Edge) -> bool {
 
     if side1 * side2 > 1e-4 * f32::max(side1.abs(), side2.abs()) {
         //debug_assert!(matches!(edge_intersection_old(e1, e2, false),Intersection::No), "{side1}, {side2}");
-        return false; // Both endpoints of e2 are on the same side of e1
+        return true; // Both endpoints of e2 are on the same side of e1
     }
 
     // Check if endpoints of e1 are on the same side of e2
@@ -237,8 +217,8 @@ fn edge_intersect_fast_fail(e1: &Edge, e2: &Edge) -> bool {
 
     if side3 * side4 > 1e-4 * f32::max(side3.abs(), side4.abs()) {
         //debug_assert!(matches!(edge_intersection_old(e1, e2, false),Intersection::No), "{side3}, {side4}");
-        return false; // Both endpoints of e1 are on the same side of e2
+        return true; // Both endpoints of e1 are on the same side of e2
     }
 
-    true // Segments could intersect
+    false // Segments could intersect
 }
