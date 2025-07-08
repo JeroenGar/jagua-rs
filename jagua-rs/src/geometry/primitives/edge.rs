@@ -4,6 +4,7 @@ use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use anyhow::Result;
 use anyhow::ensure;
+use crate::util::FPA;
 
 /// Line segment between two [`Point`]s
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -185,6 +186,92 @@ fn edge_intersection(e1: &Edge, e2: &Edge, calc_loc: bool) -> Intersection {
 
     // Early exit if bounding boxes do not overlap
     {
+        // let x_min_e1 = x1.min(x2);
+        // let x_max_e1 = x1.max(x2);
+        // let y_min_e1 = y1.min(y2);
+        // let y_max_e1 = y1.max(y2);
+        //
+        // let x_min_e2 = x3.min(x4);
+        // let x_max_e2 = x3.max(x4);
+        // let y_min_e2 = y3.min(y4);
+        // let y_max_e2 = y3.max(y4);
+        //
+        // let x_axis_no_overlap = x_min_e1.max(x_min_e2) > x_max_e1.min(x_max_e2);
+        // let y_axis_no_overlap = y_min_e1.max(y_min_e2) > y_max_e1.min(y_max_e2);
+        //
+        // if x_axis_no_overlap || y_axis_no_overlap {
+        //     return Intersection::No;
+        // }
+        if !edge_intersect_fast_fail(e1, e2) {
+            return Intersection::No; //fast fail
+        }
+    }
+
+    //based on: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line_segment
+    let t_nom = (x2 - x4) * (y4 - y3) - (y2 - y4) * (x4 - x3);
+    let t_denom = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
+    let u_nom = (x2 - x4) * (y2 - y1) - (y2 - y4) * (x2 - x1);
+    let u_denom = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
+
+    if t_denom == 0.0 || u_denom == 0.0 {
+        //parallel edges
+        return Intersection::No;
+    }
+
+    let t = t_nom / t_denom;
+    let u = u_nom / u_denom;
+    if (0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u) {
+        //intersection point is within the bounds of both edges
+        let loc = match calc_loc {
+            false => None,
+            true => Some(Point(x2 + t * (x1 - x2), y2 + t * (y1 - y2))),
+        };
+        return Intersection::Yes(loc);
+    }
+    Intersection::No
+}
+
+enum Intersection {
+    Yes(Option<Point>),
+    No,
+}
+
+fn edge_intersect_fast_fail(e1: &Edge, e2: &Edge) -> bool {
+    let Point(x1, y1) = e1.start;
+    let Point(x2, y2) = e1.end;
+    let Point(x3, y3) = e2.start;
+    let Point(x4, y4) = e2.end;
+
+    // Check if endpoints of e2 are on the same side of e1
+    let side1 = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+    let side2 = (x2 - x1) * (y4 - y1) - (y2 - y1) * (x4 - x1);
+
+    if side1 * side2 > 1e-4 * f32::max(side1.abs(), side2.abs()) {
+        debug_assert!(matches!(edge_intersection_old(e1, e2, false),Intersection::No), "{side1}, {side2}");
+        return false; // Both endpoints of e2 are on the same side of e1
+    }
+
+    // Check if endpoints of e1 are on the same side of e2
+    let side3 = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+    let side4 = (x4 - x3) * (y2 - y3) - (y4 - y3) * (x2 - x3);
+
+    if side3 * side4 > 1e-4 * f32::max(side3.abs(), side4.abs()) {
+        debug_assert!(matches!(edge_intersection_old(e1, e2, false),Intersection::No), "{side3}, {side4}");
+        return false; // Both endpoints of e1 are on the same side of e2
+    }
+
+    true // Segments could intersect
+}
+
+#[inline(always)]
+fn edge_intersection_old(e1: &Edge, e2: &Edge, calc_loc: bool) -> Intersection {
+    let Point(x1, y1) = e1.start;
+    let Point(x2, y2) = e1.end;
+    let Point(x3, y3) = e2.start;
+    let Point(x4, y4) = e2.end;
+
+    // Early exit if bounding boxes do not overlap
+    {
         let x_min_e1 = x1.min(x2);
         let x_max_e1 = x1.max(x2);
         let y_min_e1 = y1.min(y2);
@@ -225,9 +312,4 @@ fn edge_intersection(e1: &Edge, e2: &Edge, calc_loc: bool) -> Intersection {
         return Intersection::Yes(loc);
     }
     Intersection::No
-}
-
-enum Intersection {
-    Yes(Option<Point>),
-    No,
 }

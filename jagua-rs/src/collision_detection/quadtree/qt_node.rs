@@ -158,12 +158,16 @@ impl QTNode {
         match (self.children.as_ref(), perform_cd_now) {
             (Some(children), false) => {
                 // Collect collisions from all children that collide with the entity
-                [0, 1, 2, 3]
-                    .map(|idx| (idx, entity.collides_with(&children[idx].bbox)))
-                    .iter()
-                    .filter(|(_, child_collides)| *child_collides)
-                    .for_each(|(i, _)| {
-                        children[*i].collect_collisions(entity, collector);
+                let quadrants = [0,1,2,3].map(|idx| &children[idx].bbox);
+                let colliding_quadrants = entity.collides_with_quadrants(&self.bbox, quadrants);
+
+
+                colliding_quadrants.iter()
+                    .enumerate()
+                    .filter(|(_, collides)| **collides)
+                    .map(|(i, _)| &children[i])
+                    .for_each(|child| {
+                        child.collect_collisions(entity, collector);
                     });
             }
             _ => {
