@@ -112,6 +112,15 @@ impl Edge {
             (self.start.1 + self.end.1) / 2.0,
         )
     }
+
+    pub fn bbox(&self) -> Rect {
+        Rect {
+            x_min: self.x_min(),
+            y_min: self.y_min(),
+            x_max: self.x_max(),
+            y_max: self.y_max(),
+        }
+    }
 }
 
 impl Transformable for Edge {
