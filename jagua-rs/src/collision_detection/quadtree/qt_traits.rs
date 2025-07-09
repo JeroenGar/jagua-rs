@@ -66,24 +66,24 @@ impl QTQueryable for Edge {
         //  1    0
         //  2    3
 
-        half_intersect(&self, &left, [&mut c_q1], [&mut c_q2]);
-        half_intersect(&self, &right, [&mut c_q3], [&mut c_q0]);
-        half_intersect(&self, &top, [&mut c_q0], [&mut c_q1]);
-        half_intersect(&self, &bottom, [&mut c_q2], [&mut c_q3]);
+        half_intersect(self, &left, [&mut c_q1], [&mut c_q2]);
+        half_intersect(self, &right, [&mut c_q3], [&mut c_q0]);
+        half_intersect(self, &top, [&mut c_q0], [&mut c_q1]);
+        half_intersect(self, &bottom, [&mut c_q2], [&mut c_q3]);
         half_intersect(
-            &self,
+            self,
             &h_bisect,
             [&mut c_q1, &mut c_q2],
             [&mut c_q0, &mut c_q3],
         );
         half_intersect(
-            &self,
+            self,
             &v_bisect,
             [&mut c_q2, &mut c_q3],
             [&mut c_q0, &mut c_q1],
         );
 
-        let [c_q0, c_q1, c_q2, c_q3] = [c_q0, c_q1, c_q2, c_q3].map(|c| c.unwrap_or_else(|| false));
+        let [c_q0, c_q1, c_q2, c_q3] = [c_q0, c_q1, c_q2, c_q3].map(|c| c.unwrap_or(false));
         debug_assert!(
             {
                 // make sure all quadrants which are colliding according to the individual collision check are at least
@@ -113,26 +113,26 @@ fn half_intersect<const N: usize>(
     fst_qs: [&mut Option<bool>; N],
     sec_qs: [&mut Option<bool>; N],
 ) {
-    if fst_qs.iter().chain(sec_qs.iter()).any(|t| t.is_none()) {
-        if let Some((_, e2_col_loc)) = edge_intersection_half(e1, e2) {
-            match e2_col_loc {
-                CollisionHalf::FirstHalf => {
-                    for c in fst_qs {
-                        *c = Some(true);
-                    }
+    if fst_qs.iter().chain(sec_qs.iter()).any(|t| t.is_none())
+        && let Some((_, e2_col_loc)) = edge_intersection_half(e1, e2)
+    {
+        match e2_col_loc {
+            CollisionHalf::FirstHalf => {
+                for c in fst_qs {
+                    *c = Some(true);
                 }
-                CollisionHalf::Halfway => {
-                    for c in fst_qs {
-                        *c = Some(true);
-                    }
-                    for c in sec_qs {
-                        *c = Some(true);
-                    }
+            }
+            CollisionHalf::Halfway => {
+                for c in fst_qs {
+                    *c = Some(true);
                 }
-                CollisionHalf::SecondHalf => {
-                    for c in sec_qs {
-                        *c = Some(true);
-                    }
+                for c in sec_qs {
+                    *c = Some(true);
+                }
+            }
+            CollisionHalf::SecondHalf => {
+                for c in sec_qs {
+                    *c = Some(true);
                 }
             }
         }
