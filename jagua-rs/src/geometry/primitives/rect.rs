@@ -160,6 +160,29 @@ impl Rect {
         ]
     }
 
+    /// Returns the four sides that make up `self`, in the same order as [Rect::quadrants].
+    pub fn sides(&self) -> [Edge; 4] {
+        let c = self.corners();
+        [
+            Edge {
+                start: c[0],
+                end: c[1],
+            },
+            Edge {
+                start: c[1],
+                end: c[2],
+            },
+            Edge {
+                start: c[2],
+                end: c[3],
+            },
+            Edge {
+                start: c[3],
+                end: c[0],
+            },
+        ]
+    }
+
     /// Returns the four edges that make up `self`, in the same order as [Rect::quadrants].
     pub fn edges(&self) -> [Edge; 4] {
         let c = self.corners();
