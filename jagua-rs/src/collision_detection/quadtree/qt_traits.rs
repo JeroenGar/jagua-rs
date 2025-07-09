@@ -91,7 +91,7 @@ impl QTQueryable for Edge {
                 qs.map(|q| self.collides_with(q))
                     .iter()
                     .zip([c_q0, c_q1, c_q2, c_q3].iter())
-                    .all(|(&i_c, &q_c)| !i_c || (i_c && q_c))
+                    .all(|(&i_c, &q_c)| !i_c || q_c)
             },
             "{:?}, {:?}, {:?}, {:?}, {:?}",
             self,
