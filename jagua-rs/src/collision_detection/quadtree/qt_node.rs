@@ -103,44 +103,45 @@ impl QTNode {
     ) -> Option<&HazardEntity> {
         match self.hazards.strongest(filter) {
             None => None,
-            Some(strongest_hazard) => match entity.collides_with(&self.bbox) {
-                false => None,
-                true => match strongest_hazard.presence {
-                    QTHazPresence::None => None,
-                    QTHazPresence::Entire => Some(&strongest_hazard.entity),
-                    QTHazPresence::Partial(_) => {
-                        // Condition to perform collision detection now or pass it to children:
-                        match &self.children {
-                            Some(children) => {
-                                //Check if any of the children collide with the entity
-                                children
-                                    .iter()
-                                    .map(|child| child.collides(entity, filter))
-                                    .find(|x| x.is_some())
-                                    .flatten()
-                            }
-                            None => {
-                                //Check if any of the partially present (and active) hazards collide with the entity
-                                let mut relevant_hazards = self
-                                    .hazards
-                                    .iter()
-                                    .filter(|hz| !filter.is_irrelevant(hz.hkey));
+            Some(strongest_hazard) => match strongest_hazard.presence {
+                QTHazPresence::None => None,
+                QTHazPresence::Entire => Some(&strongest_hazard.entity),
+                QTHazPresence::Partial(_) => {
+                    // Condition to perform collision detection now or pass it to children:
+                    match &self.children {
+                        Some(children) => {
+                            //Check if any of the children collide with the entity
+                            let quadrants = [0, 1, 2, 3].map(|idx| &children[idx].bbox);
+                            let colliding_quadrants =
+                                entity.collides_with_quadrants(&self.bbox, quadrants);
 
-                                relevant_hazards
-                                    .find(|hz| match &hz.presence {
-                                        QTHazPresence::None => false,
-                                        QTHazPresence::Entire => {
-                                            unreachable!("should have been handled above")
-                                        }
-                                        QTHazPresence::Partial(p_haz) => {
-                                            p_haz.collides_with(entity)
-                                        }
-                                    })
-                                    .map(|hz| &hz.entity)
-                            }
+                            colliding_quadrants
+                                .iter()
+                                .enumerate()
+                                .filter(|(_, collides)| **collides)
+                                .map(|idx| children[idx.0].collides(entity, filter))
+                                .find(|x| x.is_some())
+                                .flatten()
+                        }
+                        None => {
+                            //Check if any of the partially present (and active) hazards collide with the entity
+                            let mut relevant_hazards = self
+                                .hazards
+                                .iter()
+                                .filter(|hz| !filter.is_irrelevant(hz.hkey));
+
+                            relevant_hazards
+                                .find(|hz| match &hz.presence {
+                                    QTHazPresence::None => false,
+                                    QTHazPresence::Entire => {
+                                        unreachable!("should have been handled above")
+                                    }
+                                    QTHazPresence::Partial(p_haz) => p_haz.collides_with(entity),
+                                })
+                                .map(|hz| &hz.entity)
                         }
                     }
-                },
+                }
             },
         }
     }
