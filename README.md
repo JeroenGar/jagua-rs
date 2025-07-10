@@ -211,8 +211,9 @@ Alternatively, you can build the docs locally: `cargo doc --open`.
 ## Development
 
 Contributions to `jagua-rs` are more than welcome!
-Especially performance enhancements of the most critical operations: collision detection and collection queries and updating the state.
-Performance deltas of these operations can be measures using `cargo bench --bench ci_bench`, and are tracked in the [Performance Tracker](https://jeroengar.github.io/jagua-rs/benchmarks/).
+
+We especially encourage enhancements to the performance of the most critical operations: collision detection queries, collision collection queries, and state updates.
+Performance improvements in these areas can be measured using `cargo bench --bench ci_bench` and are tracked in the [Performance Tracker](https://jeroengar.github.io/jagua-rs/benchmarks/).
 
 To submit code contributions: [fork](https://help.github.com/articles/fork-a-repo/) the repository,
 commit your changes, and [submit a pull request](https://help.github.com/articles/creating-a-pull-request-from-a-fork/).
