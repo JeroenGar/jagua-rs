@@ -6,7 +6,8 @@ This library is designed to be used as a backend by optimization algorithms solv
 
 <img src="img/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
-### ‼️ See [`sparrow`](https://github.com/JeroenGar/sparrow) for a state-of-the-art optimization algorithm based on `jagua-rs` ‼️
+> [!IMPORTANT]
+> See [`sparrow`](https://github.com/JeroenGar/sparrow) for a state-of-the-art optimization algorithm based on `jagua-rs`
 
 ## Preamble & Motivation
 
@@ -73,8 +74,9 @@ most position.
 The code is thoroughly documented and should provide a good starting point for anyone interested in building their own optimization algorithm on top
 of `jagua-rs`.
 
-Please note that `lbf` should **not** be used as an optimization algorithm for any real-world use case.
-Read the [Important note](#important-note) section for more information.
+>[!WARNING]
+> `lbf` should **not** be used as an optimization algorithm for any real-world use case.
+>Read the [Important note](#important-note) section for more information.
 
 ### How to run LBF
 
@@ -136,8 +138,9 @@ Some examples of layout SVGs created by `lbf`:
   <img src="img/bp_example.svg" width="50%" alt="bin packing example">
 </p>
 
-*Note: Unfortunately, the SVG standard does not support strokes drawn purely inside (or outside) of polygons.
-Items might therefore sometimes falsely appear to be (very slightly) colliding in the SVG visualizations.*
+> [!NOTE]  
+> Unfortunately, the SVG standard does not support strokes drawn purely inside (or outside) of polygons.
+> Items might therefore sometimes falsely appear to be (very slightly) colliding in the SVG visualizations.
 
 ### Config JSON
 
@@ -150,6 +153,7 @@ The configuration file has the following structure:
 {
   "cde_config": { //Configuration of the collision detection engine
     "quadtree_depth": 5, //Maximum depth of the quadtree is 5
+    "cd_threshold": 16, // Perform collision collection immediately if the #edges in a node <= 16
     "item_surrogate_config": {
       "n_pole_limits": [[100, 0.0], [20, 0.75], [10, 0.90]], //See docs for details 
       "n_ff_poles": 2, //Two poles will be used for fail-fast collision detection
@@ -158,13 +162,13 @@ The configuration file has the following structure:
   },
   "poly_simpl_tolerance": 0.001, //Polygons will be simplified until at most a 0.1% deviation in area from the original
   "min_item_separation": 0.0, //Minimum distance between items and any hazard
-  "prng_seed": 0, //Seed for the pseudo-random number generator. If undefined the outcome will be non-deterministic
+  "prng_seed": 0, //Seed for the pseudo-random number generator. If `null` the outcome will be non-deterministic
   "n_samples": 5000, //5000 placement samples will be queried per item per layout
   "ls_frac": 0.2 //Of those 5000 samples, 80% will be sampled at uniformly at random, 20% will be local search samples
 }
 ```
-
-See [docs](https://jeroengar.github.io/jagua-rs/lbf/config/struct.LBFConfig.html) for a detailed description of all available configuration options.
+>[!TIP]
+> See [docs](https://jeroengar.github.io/jagua-rs/lbf/config/struct.LBFConfig.html) for a detailed description of all available configuration options.
 
 ### Important note
 
@@ -207,6 +211,10 @@ Alternatively, you can build the docs locally: `cargo doc --open`.
 ## Development
 
 Contributions to `jagua-rs` are more than welcome!
+
+We especially encourage enhancements to the performance of the most critical operations: collision detection queries, collision collection queries, and state updates.
+Performance improvements in these areas can be measured using `cargo bench --bench ci_bench` and are tracked in the [Performance Tracker](https://jeroengar.github.io/jagua-rs/benchmarks/).
+
 To submit code contributions: [fork](https://help.github.com/articles/fork-a-repo/) the repository,
 commit your changes, and [submit a pull request](https://help.github.com/articles/creating-a-pull-request-from-a-fork/).
 
