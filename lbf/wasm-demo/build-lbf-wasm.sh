@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
 # ANSI color codes
 GREEN="\033[1;32m"
 RED="\033[1;31m"
@@ -15,12 +18,12 @@ STEP="[>]"
 
 # Default values
 TARGET="web"
-BUILD_TARGET="lbf"
+BUILD_TARGET=".."
 BUILD_TARGET_UNDERSCORE="lbf"
 USE_WASM_OPT=true
 WASM_OPT_LEVEL="-O4"
-WASM_PATH=""
-OUT_FILE="optimized.wasm"
+WASM_PATH="$SCRIPT_DIR/pkg/${BUILD_TARGET_UNDERSCORE}_bg.wasm"
+OUT_FILE="$SCRIPT_DIR/pkg/${BUILD_TARGET_UNDERSCORE}_bg_opt.wasm"
 BINARYEN_GH_URL="https://github.com/WebAssembly/binaryen"
 SKIP_PATCH=true
 
@@ -46,7 +49,7 @@ print_help() {
   echo "  ./build.sh --target web --opt -O3"
   echo
   echo -e "${YELLOW}Output:${RESET}"
-  echo "  - Compiled and optimized .wasm"
+  echo "  - Compiled and optimized .wasm (in script directory's pkg folder)"
   echo "  - Patched rayon helper JS (for thread pool support)"
 }
 
@@ -110,10 +113,10 @@ echo -e "${BLUE}${INFO} Entering project directory '${BUILD_TARGET}'...${RESET}"
 cd "$BUILD_TARGET" || { echo -e "${RED}${FAILURE} Failed to enter ${BUILD_TARGET} directory!${RESET}"; exit 1; }
 
 echo -e "${YELLOW}${STEP} Compiling using wasm-pack with target '${TARGET}'...${RESET}"
-"$WASM_PACK" build --target "$TARGET" --release
+"$WASM_PACK" build --target "$TARGET" --release --out-dir "$SCRIPT_DIR/pkg"
 
 if [ $? -eq 0 ]; then
-  echo -e "\n${GREEN}${SUCCESS} Build successful for target '${RED}${TARGET}${GREEN}'!${RESET} ${BLUE}Check the '$BUILD_TARGET/pkg' directory for output.${RESET}"
+  echo -e "\n${GREEN}${SUCCESS} Build successful for target '${RED}${TARGET}${GREEN}'!${RESET} ${BLUE}Check the '$SCRIPT_DIR/pkg' directory for output.${RESET}"
 else
   echo -e "\n${RED}${FAILURE} Build failed!${RESET}"
   exit 1
@@ -121,17 +124,17 @@ fi
 
 # Default wasm path
 if [ -z "$WASM_PATH" ]; then
-  WASM_PATH="pkg/${BUILD_TARGET_UNDERSCORE}_bg.wasm"
+  WASM_PATH="$SCRIPT_DIR/pkg/${BUILD_TARGET_UNDERSCORE}_bg.wasm"
 fi
 
 if [ "$USE_WASM_OPT" = true ]; then
   # Show full wasm-opt args
   WASM_OPT_ARGS="$WASM_OPT_LEVEL --dce --enable-simd --enable-bulk-memory --enable-threads -ifwl -ffm --memory-packing --enable-gc"
   echo -e "${YELLOW}${STEP} Running wasm-opt with the following arguments:${RESET}"
-  echo -e "${BLUE}wasm-opt $WASM_OPT_ARGS -o \"$OUT_FILE\" \"$WASM_PATH\"${RESET}"
+  echo -e "${BLUE}wasm-opt $WASM_OPT_ARGS \"$WASM_PATH\" -o \"$OUT_FILE\"${RESET}"
 
   # Run wasm-opt
-  wasm-opt $WASM_OPT_ARGS -o "$OUT_FILE" "$WASM_PATH"
+  wasm-opt $WASM_OPT_ARGS $WASM_PATH -o $OUT_FILE
 
   if [ $? -eq 0 ]; then
     mv -v "$OUT_FILE" "$WASM_PATH"
@@ -145,6 +148,8 @@ else
 fi
 
 echo -e "${BLUE}${STEP} Present directory: $(pwd)${RESET}"
+
+
 
 ######################################################
 #
@@ -161,7 +166,7 @@ echo -e "${BLUE}${STEP} Present directory: $(pwd)${RESET}"
 
 if [ "$SKIP_PATCH" = false ]; then
   echo -e "${YELLOW}${STEP} Looking for workerHelpers.js to patch import path...${RESET}"
-  WORKER_FILE=$(find pkg/snippets/ -type f -name workerHelpers.js | head -n 1)
+  WORKER_FILE=$(find "$SCRIPT_DIR/pkg/snippets/" -type f -name workerHelpers.js | head -n 1)
 
   if [ -z "$WORKER_FILE" ]; then
     echo -e "${RED}${FAILURE} workerHelpers.js not found!${RESET}"
