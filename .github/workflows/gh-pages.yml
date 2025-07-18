@@ -7,18 +7,19 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: "-C target-feature=+atomics,+bulk-memory,+simd128 --cfg getrandom_backend=\"wasm_js\""
-      CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS: "-C target-feature=+atomics,+bulk-memory,+simd128 --cfg getrandom_backend=\"wasm_js\""
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Rust & wasm-pack
+      - name: Set up Rust (nightly + components)
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
+          toolchain: nightly
           override: true
+          components: rust-src, rustfmt, clippy
+          target: wasm32-unknown-unknown
+
+      - name: Use rust-toolchain.toml if present
+        run: rustup show  # confirms the toolchain in use
 
       - run: cargo install wasm-pack
 
