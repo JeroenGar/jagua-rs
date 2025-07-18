@@ -25,7 +25,7 @@ jobs:
           sudo apt-get install -y binaryen
 
       - name: Run build script
-        run: ./scripts/build-for-gh-pages.sh
+        run: ./scripts/build-gh-pages.sh
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
