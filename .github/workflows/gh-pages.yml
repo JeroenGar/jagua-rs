@@ -2,7 +2,7 @@ name: Build and Deploy WASM
 
 on:
   push:
-    branches: [main]
+    branches: [wasm-parallel]
 
 jobs:
   deploy:
