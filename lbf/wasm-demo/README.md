@@ -40,17 +40,17 @@ cargo run --release --bin lbf -- -c assets/config_lbf.json -i assets/baldacci1.j
 
 > [!NOTE]
 > 
-> Run the script from the root of the project!
+> Run the script from the `lbf/wasm-demo` directory!
 > 
 
 ```bash 
-./lbf/wasm/build-wasm.sh --target web
+./build-lbf-wasm.sh --target web
 ```
 
 If you want more information on how the build script works and what it can offer:
 
 ```bash 
-./lbf/wasm/build-wasm.sh -h
+./build-lbf-wasm.sh -h
 ```
 
 > [!NOTE]
@@ -64,8 +64,9 @@ If you want more information on how the build script works and what it can offer
 
 ## Running
 
+While in `lbf/wasm-demo` directory itself run:
+
 ```bash 
-cd lbf/wasm
 python serve.py
 ```
 
