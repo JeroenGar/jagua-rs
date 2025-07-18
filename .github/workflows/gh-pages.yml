@@ -8,8 +8,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      RUSTFLAGS: "-C target-feature=+atomics,+bulk-memory,+simd128"
-      CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS: "-C target-feature=+atomics,+bulk-memory,+simd128"
+      RUSTFLAGS: "-C target-feature=+atomics,+bulk-memory,+simd128 --cfg getrandom_backend=\"wasm_js\""
+      CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS: "-C target-feature=+atomics,+bulk-memory,+simd128 --cfg getrandom_backend=\"wasm_js\""
     steps:
       - uses: actions/checkout@v3
 
