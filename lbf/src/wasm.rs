@@ -1,39 +1,39 @@
 #![cfg(target_arch = "wasm32")]
 
+use rand::SeedableRng;
 use wasm_bindgen::prelude::*;
 pub use wasm_bindgen_rayon::init_thread_pool;
-use rand::SeedableRng;
 
-use serde_wasm_bindgen::{from_value, to_value};
-use rand::prelude::SmallRng;
-use serde::Serialize;
-use console_error_panic_hook;
-use jagua_rs::io::import::Importer;
-use jagua_rs::probs::bpp::io::ext_repr::ExtBPInstance;
-use jagua_rs::probs::spp::io::ext_repr::ExtSPInstance;
-use jagua_rs::probs::bpp;
-use jagua_rs::probs::spp;
 use crate::config::LBFConfig;
-use crate::opt::lbf_bpp::LBFOptimizerBP;
-use crate::opt::lbf_spp::LBFOptimizerSP;
 use crate::io::output::BPOutput;
 use crate::io::output::SPOutput;
+use crate::opt::lbf_bpp::LBFOptimizerBP;
+use crate::opt::lbf_spp::LBFOptimizerSP;
+use crate::{EPOCH, init_logger};
+use console_error_panic_hook;
 use jagua_rs::Instant;
-use crate::{init_logger, EPOCH};
-use log::{warn, info};
+use jagua_rs::io::import::Importer;
+use jagua_rs::probs::bpp;
+use jagua_rs::probs::bpp::io::ext_repr::ExtBPInstance;
+use jagua_rs::probs::spp;
+use jagua_rs::probs::spp::io::ext_repr::ExtSPInstance;
+use log::{info, warn};
+use rand::prelude::SmallRng;
+use serde::Serialize;
+use serde_wasm_bindgen::{from_value, to_value};
 
 #[derive(Serialize)]
 struct BPPWasmResult {
     output: BPOutput,
     svgs: Vec<(String, String)>,
-    solve_time_ms: u128
+    solve_time_ms: u128,
 }
 
 #[derive(Serialize)]
 struct SPPWasmResult {
     output: SPOutput,
     svgs: Vec<(String, String)>,
-    solve_time_ms: u128
+    solve_time_ms: u128,
 }
 
 #[wasm_bindgen]
@@ -90,14 +90,18 @@ pub fn run_lbf_bpp_wasm(
     // Convert snapshots to SVG strings
     let mut svgs = vec![];
     for (i, s_layout) in sol.layout_snapshots.values().enumerate() {
-        let svg = jagua_rs::io::svg::s_layout_to_svg(s_layout, &instance, config.svg_draw_options, "");
+        let svg =
+            jagua_rs::io::svg::s_layout_to_svg(s_layout, &instance, config.svg_draw_options, "");
         let svg_string = svg.to_string();
         svgs.push((format!("sol_input_{}.svg", i), svg_string));
     }
 
-
     // Wrap in serializable struct
-    let result = BPPWasmResult { output, svgs, solve_time_ms};
+    let result = BPPWasmResult {
+        output,
+        svgs,
+        solve_time_ms,
+    };
 
     // Serialize and return
     to_value(&result).map_err(|e| JsValue::from_str(&format!("Result encode error: {}", e)))
@@ -149,13 +153,21 @@ pub fn run_lbf_spp_wasm(
     };
 
     let mut svgs = vec![];
-    let svg = jagua_rs::io::svg::s_layout_to_svg(&sol.layout_snapshot, &instance, config.svg_draw_options, "");
+    let svg = jagua_rs::io::svg::s_layout_to_svg(
+        &sol.layout_snapshot,
+        &instance,
+        config.svg_draw_options,
+        "",
+    );
     let svg_string = svg.to_string();
     svgs.push((format!("sol_input_spp.svg"), svg_string));
 
-
     // Wrap in serializable struct
-    let result = SPPWasmResult { output, svgs, solve_time_ms };
+    let result = SPPWasmResult {
+        output,
+        svgs,
+        solve_time_ms,
+    };
 
     // Serialize and return
     to_value(&result).map_err(|e| JsValue::from_str(&format!("Result encode error: {}", e)))

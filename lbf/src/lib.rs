@@ -1,5 +1,5 @@
-use std::sync::LazyLock;
 use jagua_rs::Instant;
+use std::sync::LazyLock;
 
 pub mod config;
 pub mod io;
