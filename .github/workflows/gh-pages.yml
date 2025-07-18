@@ -7,6 +7,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-C target-feature=+atomics,+bulk-memory,+simd128"
+      CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS: "-C target-feature=+atomics,+bulk-memory,+simd128"
     steps:
       - uses: actions/checkout@v3
 
