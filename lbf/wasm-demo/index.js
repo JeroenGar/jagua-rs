@@ -1,4 +1,4 @@
-import init, { initThreadPool, run_lbf_bpp_wasm, run_lbf_spp_wasm, init_logger_wasm} from "../pkg/lbf.js"; // Replace with actual wasm module name
+import init, { initThreadPool, run_lbf_bpp_wasm, run_lbf_spp_wasm, init_logger_wasm} from "/pkg/lbf.js"; // Replace with actual wasm module name
 
 async function loadJsonFromFileInput(fileInput) {
   return new Promise((resolve, reject) => {
@@ -49,7 +49,7 @@ async function run() {
       }
 
       resultBox.textContent =
-        `Solve time: ${result.solve_time_ms.toFixed(2)} ms\n\n` +
+        `Solve time: ${result.solve_time_ms} ms\n\n` +
         JSON.stringify(result.output, null, 2);
 
       for (const [filename, svg] of result.svgs) {

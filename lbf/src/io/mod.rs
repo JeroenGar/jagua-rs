@@ -3,10 +3,10 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
+use crate::EPOCH;
 use log::{Level, LevelFilter, info, log};
 use serde::Serialize;
 use svg::Document;
-use crate::time::EPOCH;
 
 use anyhow::{Context, Result};
 use jagua_rs::probs::bpp::io::ext_repr::ExtBPInstance;
@@ -59,15 +59,10 @@ pub fn init_logger(level_filter: LevelFilter) -> Result<()> {
             let handle = std::thread::current();
             let thread_name = handle.name().unwrap_or("-");
 
-            #[cfg(not(target_arch = "wasm32"))]
-            let duration_secs = EPOCH.elapsed().as_secs_f64();
-
-            #[cfg(target_arch = "wasm32")]
-            let duration_secs = EPOCH.elapsed_ms() / 1000.0;
-
-            let sec = duration_secs % 60.0;
-            let min = (duration_secs / 60.0) % 60.0;
-            let hours = duration_secs / 3600.0;
+            let duration = EPOCH.elapsed();
+            let sec = duration.as_secs() % 60;
+            let min = (duration.as_secs() / 60) % 60;
+            let hours = (duration.as_secs() / 60) / 60;
 
             let prefix = format!(
                 "[{}] [{:0>2}:{:0>2}:{:0>2}] <{}>",

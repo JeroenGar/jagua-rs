@@ -7,8 +7,7 @@ use crate::probs::bpp::entities::BPSolution;
 use crate::probs::bpp::util::assertions::problem_matches_solution;
 use itertools::Itertools;
 use slotmap::{SlotMap, new_key_type};
-#[cfg(not(target_arch = "wasm32"))]
-use std::time::Instant;
+use crate::Instant;
 
 new_key_type! {
     /// Unique key for each [`Layout`] in a [`BPProblem`] and [`BPSolution`]
@@ -77,7 +76,6 @@ impl BPProblem {
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     /// Creates a snapshot of the current state of the problem as a [`BPSolution`].
     pub fn save(&self) -> BPSolution {
         let layout_snapshots = self
@@ -89,24 +87,6 @@ impl BPProblem {
         let solution = BPSolution {
             layout_snapshots,
             time_stamp: Instant::now(),
-        };
-
-        debug_assert!(problem_matches_solution(self, &solution));
-
-        solution
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    pub fn save(&self, time_stamp: f64) -> BPSolution {
-        let layout_snapshots = self
-            .layouts
-            .iter()
-            .map(|(lkey, l)| (lkey, l.save()))
-            .collect();
-
-        let solution = BPSolution {
-            layout_snapshots,
-            time_stamp,
         };
 
         debug_assert!(problem_matches_solution(self, &solution));

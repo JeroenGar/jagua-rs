@@ -1,3 +1,5 @@
+use jagua_rs::Instant;
+
 use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
@@ -8,7 +10,6 @@ use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolut
 use log::info;
 use rand::prelude::SmallRng;
 use thousands::Separable;
-use crate::time::TimeStamp;
 
 /// Left-Bottom-Fill (LBF) optimizer for Strip Packing problems.
 pub struct LBFOptimizerSP {
@@ -34,7 +35,7 @@ impl LBFOptimizerSP {
     }
 
     pub fn solve(&mut self) -> SPSolution {
-        let start = TimeStamp::now();
+        let start = Instant::now();
 
         'outer: for item_id in item_placement_order(&self.instance) {
             let item = self.instance.item(item_id);
@@ -105,23 +106,11 @@ impl LBFOptimizerSP {
             self.problem.strip.width
         );
 
-        #[cfg(target_arch = "wasm32")]
-        let now = TimeStamp::now();
-        #[cfg(target_arch = "wasm32")]
-        let solution = self.problem.save(now.elapsed_ms());
-
-        #[cfg(not(target_arch = "wasm32"))]
         let solution = self.problem.save();
-
-        #[cfg(not(target_arch = "wasm32"))]
-        let elapsed_time = start.elapsed().as_secs_f64() * 1000.0; 
-
-        #[cfg(target_arch = "wasm32")]
-        let elapsed_time = start.elapsed_ms() * 1000.0;
 
         info!(
             "[LBF] optimization finished in {:.3}ms ({} samples)",
-            elapsed_time,
+            start.elapsed().as_secs_f64() * 1000.0,
             self.sample_counter.separate_with_commas()
         );
 

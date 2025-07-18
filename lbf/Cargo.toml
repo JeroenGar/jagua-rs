@@ -29,7 +29,8 @@ ordered-float = { workspace = true }
 test-case = { workspace = true }
 float-cmp = { workspace = true }
 slotmap = { workspace = true }
-env_logger = "0.11.8"  # For native (non-wasm) logging
+env_logger = { workspace = true }
+web-time = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]

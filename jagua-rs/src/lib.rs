@@ -22,3 +22,6 @@ pub mod util;
 
 /// Enabled variants of the 2D irregular Cutting and Packing Problem.
 pub mod probs;
+
+/// Export the `web_time` crate's `Instant` type for compatibility with web environments.
+pub type Instant = web_time::Instant;

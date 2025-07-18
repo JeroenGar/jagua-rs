@@ -18,23 +18,22 @@ use crate::opt::lbf_bpp::LBFOptimizerBP;
 use crate::opt::lbf_spp::LBFOptimizerSP;
 use crate::io::output::BPOutput;
 use crate::io::output::SPOutput;
-use crate::time::TimeStamp;
-use crate::time::now_millis;
-use crate::init_logger;
+use jagua_rs::Instant;
+use crate::{init_logger, EPOCH};
 use log::{warn, info};
 
 #[derive(Serialize)]
 struct BPPWasmResult {
     output: BPOutput,
     svgs: Vec<(String, String)>,
-    solve_time_ms: f64
+    solve_time_ms: u128
 }
 
 #[derive(Serialize)]
 struct SPPWasmResult {
     output: SPOutput,
     svgs: Vec<(String, String)>,
-    solve_time_ms: f64
+    solve_time_ms: u128
 }
 
 #[wasm_bindgen]
@@ -77,14 +76,14 @@ pub fn run_lbf_bpp_wasm(
         .map_err(|e| JsValue::from_str(&format!("Importer error: {}", e)))?;
 
     // Solve
-    let start_time = TimeStamp::now();
+    let start_time = Instant::now();
     let sol = LBFOptimizerBP::new(instance.clone(), config, rng).solve();
-    let total_time_taken = start_time.elapsed_ms();
+    let solve_time_ms = start_time.elapsed().as_millis();
 
     // Export solution
     let output = BPOutput {
         instance: ext_instance.clone(),
-        solution: bpp::io::export(&instance, &sol, now_millis()),
+        solution: bpp::io::export(&instance, &sol, *EPOCH),
         config,
     };
 
@@ -98,7 +97,7 @@ pub fn run_lbf_bpp_wasm(
 
 
     // Wrap in serializable struct
-    let result = BPPWasmResult { output, svgs, solve_time_ms: total_time_taken };
+    let result = BPPWasmResult { output, svgs, solve_time_ms};
 
     // Serialize and return
     to_value(&result).map_err(|e| JsValue::from_str(&format!("Result encode error: {}", e)))
@@ -138,14 +137,14 @@ pub fn run_lbf_spp_wasm(
         .map_err(|e| JsValue::from_str(&format!("Importer error: {}", e)))?;
 
     // Solve
-    let start_time = TimeStamp::now();
+    let start_time = Instant::now();
     let sol = LBFOptimizerSP::new(instance.clone(), config, rng).solve();
-    let total_time_taken = start_time.elapsed_ms();
+    let solve_time_ms = start_time.elapsed().as_millis();
 
     // Export solution
     let output = SPOutput {
         instance: ext_instance.clone(),
-        solution: spp::io::export(&instance, &sol, now_millis()),
+        solution: spp::io::export(&instance, &sol, *EPOCH),
         config,
     };
 
@@ -156,7 +155,7 @@ pub fn run_lbf_spp_wasm(
 
 
     // Wrap in serializable struct
-    let result = SPPWasmResult { output, svgs, solve_time_ms: total_time_taken };
+    let result = SPPWasmResult { output, svgs, solve_time_ms };
 
     // Serialize and return
     to_value(&result).map_err(|e| JsValue::from_str(&format!("Result encode error: {}", e)))

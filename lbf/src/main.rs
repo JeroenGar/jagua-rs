@@ -16,11 +16,10 @@ use lbf::io::output::{BPOutput, SPOutput};
 use lbf::io::{read_bpp_instance, read_spp_instance};
 use lbf::opt::lbf_bpp::LBFOptimizerBP;
 use lbf::opt::lbf_spp::LBFOptimizerSP;
-use lbf::io;
+use lbf::{EPOCH, io};
 use log::{info, warn};
 use rand::SeedableRng;
 use rand::prelude::SmallRng;
-use lbf::time::EPOCH;
 
 //more efficient allocator
 fn main() -> Result<()> {
@@ -95,7 +94,7 @@ fn main_spp(
     {
         let output = SPOutput {
             instance: ext_instance,
-            solution: spp::io::export(&instance, &sol, EPOCH.as_instant()),
+            solution: spp::io::export(&instance, &sol, *EPOCH),
             config,
         };
 
@@ -135,7 +134,7 @@ fn main_bpp(
     {
         let output = BPOutput {
             instance: ext_instance,
-            solution: bpp::io::export(&instance, &sol, EPOCH.as_instant()),
+            solution: bpp::io::export(&instance, &sol, *EPOCH),
             config,
         };
 

@@ -26,6 +26,7 @@ document-features = {workspace = true}
 rayon = { workspace = true }
 geo-types = { workspace = true }
 geo-buffer = { workspace = true }
+web-time = { workspace = true }
 
 [features]
 ## Enables support for the Strip Packing Problem
