@@ -4,7 +4,7 @@ async function loadJsonFromFileInput(fileInput) {
   return new Promise((resolve, reject) => {
     const file = fileInput.files[0];
     if (!file) {
-      return reject("No file selected.");
+      return reject("No file selected!");
     }
     const reader = new FileReader();
     reader.onload = () => {
@@ -30,14 +30,44 @@ async function run() {
   const resultBox = document.getElementById("result");
   const svgBox = document.getElementById("svgs");
 
+  document.getElementById("reset-instance").onclick = () => {
+    document.getElementById("instance-file").value = null;
+    resultBox.textContent = "Instance input cleared.";
+  };
+
+  document.getElementById("reset-config").onclick = () => {
+    document.getElementById("config-file").value = null;
+    resultBox.textContent = "Config input cleared.";
+  };
+
   document.getElementById("solve-btn").onclick = async () => {
     resultBox.textContent = "Running solver...";
     svgBox.innerHTML = "";
 
     const problemType = document.getElementById("problem-type").value;
+    const instanceFileInput = document.getElementById("instance-file");
+    const configFileInput = document.getElementById("config-file");
+
+    let instance = null;
+    let config = null;
+
     try {
-      const instance = await loadJsonFromFileInput(document.getElementById("instance-file"));
-      const config = await loadJsonFromFileInput(document.getElementById("config-file"));
+      if (instanceFileInput.files.length > 0) {
+        instance = await loadJsonFromFileInput(instanceFileInput);
+      }
+
+      if (configFileInput.files.length > 0) {
+        config = await loadJsonFromFileInput(configFileInput);
+      }
+
+      // Build log BEFORE calling wasm
+      const nullLog = `
+  <b>Input Check:</b><br>
+  Instance: ${instance ? "✅ Loaded" : "❌ Null"}<br>
+  Config: ${config ? "✅ Loaded" : "❌ Null"}<br>
+  Calling: <code>${
+        problemType === "bpp" ? "run_lbf_bpp_wasm" : "run_lbf_spp_wasm"
+      }</code><br><br>`;
 
       let result;
       if (problemType === "bpp") {
@@ -48,9 +78,13 @@ async function run() {
         throw new Error("Unknown problem type.");
       }
 
-      resultBox.textContent =
-        `Solve time: ${result.solve_time_ms} ms\n\n` +
-        JSON.stringify(result.output, null, 2);
+      resultBox.innerHTML =
+        nullLog +
+        `<b>Solve time:</b> ${result.solve_time_ms} ms<br><pre>${JSON.stringify(
+          result.output,
+          null,
+          2
+        )}</pre>`;
 
       for (const [filename, svg] of result.svgs) {
         const div = document.createElement("div");
@@ -59,7 +93,15 @@ async function run() {
       }
 
     } catch (err) {
-      resultBox.textContent = `Error: ${err}`;
+      // Still show nullLog on error
+      const nullLog = `
+  <b>Input Check:</b><br>
+  Instance: ${instance ? "✅ Loaded" : "❌ Null"}<br>
+  Config: ${config ? "✅ Loaded" : "❌ Null"}<br>
+  Calling: <code>${
+        problemType === "bpp" ? "run_lbf_bpp_wasm" : "run_lbf_spp_wasm"
+      }</code><br><br>`;
+      resultBox.innerHTML = nullLog + `<b style="color:red;">Error:</b> ${err}`;
       console.error(err);
     }
   };

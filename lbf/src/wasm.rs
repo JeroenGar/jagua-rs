@@ -52,8 +52,21 @@ pub fn run_lbf_bpp_wasm(
 
     warn!("BPP Problem selected!!");
 
-    let ext_instance: ExtBPInstance = from_value(ext_bp_instance_json)
-        .map_err(|e| JsValue::from_str(&format!("ExtBPInstance decode error: {}", e)))?;
+    let ext_instance: ExtBPInstance = if ext_bp_instance_json.is_null() {
+        web_sys::console::warn_1(&"ExtBPInstance is null, using fallback 'baldacci1.json'!".into());
+        let fallback_str = include_str!("../../assets/baldacci1.json");
+        serde_json::from_str(fallback_str).expect("Fallback baldacci1.json is invalid!")
+    } else {
+        match from_value(ext_bp_instance_json.clone()) {
+            Ok(decoded) => decoded,
+            Err(e) => {
+                web_sys::console::warn_1(
+                    &format!("ExtBPInstance decode error: {}, not using fallback!!", e).into(),
+                );
+                panic!("ExtBPInstance decode failed and fallback not used");
+            }
+        }
+    };
 
     let config: LBFConfig = from_value(config_json).unwrap_or_else(|e| {
         warn!("Invalid config, using default. Reason: {}", e);
@@ -117,8 +130,21 @@ pub fn run_lbf_spp_wasm(
 
     warn!("SPP Problem selected!!");
 
-    let ext_instance: ExtSPInstance = from_value(ext_sp_instance_json)
-        .map_err(|e| JsValue::from_str(&format!("ExtSPInstance decode error: {}", e)))?;
+    let ext_instance: ExtSPInstance = if ext_sp_instance_json.is_null() {
+        web_sys::console::warn_1(&"ExtSPInstance is null, using fallback 'swim.json'!".into());
+        let fallback_str = include_str!("../../assets/swim.json");
+        serde_json::from_str(fallback_str).expect("Fallback swim.json is invalid")
+    } else {
+        match from_value(ext_sp_instance_json.clone()) {
+            Ok(decoded) => decoded,
+            Err(e) => {
+                web_sys::console::warn_1(
+                    &format!("ExtSPInstance decode error: {}, not using fallback!!", e).into(),
+                );
+                panic!("ExtSPInstance decode failed and fallback not used");
+            }
+        }
+    };
 
     let config: LBFConfig = from_value(config_json).unwrap_or_else(|e| {
         warn!("Invalid config, using default. Reason: {}", e);
