@@ -61,7 +61,7 @@ while [[ "$#" -gt 0 ]]; do
       shift 2
       ;;
     --opt)
-      WASM_OPT_LEVEL="$2"
+      WASM_OPT_LEVEL="-$2"
       shift 2
       ;;
     --no-opt)
