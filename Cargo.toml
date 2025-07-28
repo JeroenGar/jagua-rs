@@ -21,7 +21,7 @@ fern = "0.7"
 test-case = "3.3"
 thousands = "0.2.0"
 jiff = "0.2"
-criterion = "0.6"
+criterion = { version = "0.7", default-features = false }
 clap = { version = "4.5", features = ["derive"] }
 wasm-bindgen = { version = "0.2", features = ["serde"] }
 web-sys = { version = "0.3", features = ["Window", "Performance"] }
