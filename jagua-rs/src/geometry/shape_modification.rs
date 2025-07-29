@@ -108,7 +108,7 @@ pub fn simplify_shape(
             let area_delta = (new_shape_area - original_area).abs() / original_area;
             if area_delta <= max_area_change_ratio {
                 debug!(
-                    "Simplified {:?} causing {:.2}% area change",
+                    "[PS] executed {:?} simplification causing {:.2}% area change",
                     best_candidate,
                     area_delta * 100.0
                 );
@@ -363,4 +363,157 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
     );
 
     import::import_simple_polygon(&ext_s_polygon)
+}
+
+pub fn close_narrow_concavities(
+    orig_shape: &SPolygon,
+    mode: ShapeModifyMode,
+    max_distance_ratio: f32,
+) -> SPolygon {
+    let mut n_concav_closed = 0;
+    let mut shape = orig_shape.clone();
+
+    for _ in 0..shape.n_vertices() {
+        let n_points = shape.n_vertices();
+
+        let calc_vert_elim = |i, j| {
+            if j > i {
+                j - i - 1
+            } else {
+                n_points - i + j - 1
+            }
+        };
+
+        let mut best_candidate = None;
+        for i in 0..n_points {
+            for j in 0..n_points {
+                if i == j || (i + 1) % n_points == j || (j + 1) % n_points == i {
+                    continue; //skip adjacent points
+                }
+                //Simulate the replacing edge
+                let c_edge = Edge::try_new(shape.vertex(i), shape.vertex(j))
+                    .expect("invalid edge in string candidate")
+                    .scale(0.9999); //slightly shrink the edge to avoid self-intersections
+
+                if c_edge.length() > max_distance_ratio * shape.diameter {
+                    //If the edge is too long, skip it
+                    continue;
+                }
+
+                if mode == ShapeModifyMode::Inflate
+                    && (shape.collides_with(&c_edge.start) || shape.collides_with(&c_edge.end))
+                {
+                    //If we are only allowed to inflate the shape and any end point is inside the shape, skip it
+                    continue;
+                } else if mode == ShapeModifyMode::Deflate
+                    && !(shape.collides_with(&c_edge.start) && shape.collides_with(&c_edge.end))
+                {
+                    //If we are only allowed to deflate the shape and both end points are not inside the shape, skip it
+                    continue;
+                }
+
+                if shape.edge_iter().any(|e| e.collides_with(&c_edge)) {
+                    //If the edge collides with any edge of the shape, reject always
+                    continue;
+                }
+                //the eliminated vertices should form a negative area (in inflation mode) or positive area (in deflation mode)
+                let sub_shape_area = {
+                    let sub_shape_points = if j > i {
+                        shape.vertices[i..j].to_vec()
+                    } else {
+                        [&shape.vertices[i..], &shape.vertices[..j]].concat()
+                    };
+                    SPolygon::calculate_area(&sub_shape_points)
+                };
+                match mode {
+                    ShapeModifyMode::Inflate => {
+                        if sub_shape_area >= 0.0 {
+                            //if the area is not negative, skip it
+                            continue;
+                        }
+                    }
+                    ShapeModifyMode::Deflate => {
+                        if sub_shape_area <= 0.0 {
+                            //if the area is not positive, skip it
+                            continue;
+                        }
+                    }
+                }
+
+                //Valid candidate found...
+                match best_candidate {
+                    None => {
+                        //first candidate found
+                        best_candidate = Some((i, j));
+                    }
+                    Some((best_i, best_j)) => {
+                        //check the number of points that would be removed
+                        if calc_vert_elim(i, j) > calc_vert_elim(best_i, best_j) {
+                            best_candidate = Some((i, j));
+                        }
+                    }
+                }
+            }
+        }
+        if let Some((i, j)) = best_candidate {
+            let mut ref_points = shape.vertices.clone();
+            let start = i as isize + 1;
+            let end = j as isize - 1;
+            debug!(
+                "[PS] closing concavity between points (idx: {}, {:?}) and (idx: {}, {:?}) with edge length {:.3} ({} vertices eliminated)",
+                i,
+                shape.vertex(i),
+                j,
+                shape.vertex(j),
+                Edge::try_new(shape.vertex(i), shape.vertex(j))
+                    .expect("invalid edge in string candidate")
+                    .length(),
+                calc_vert_elim(i, j)
+            );
+            if start <= end {
+                // if j does not wrap around the shape
+                ref_points.drain((start as usize)..=(end as usize));
+            } else {
+                // if j wraps around the shape
+                if (start as usize) < n_points {
+                    //remove from `start` to back
+                    ref_points.drain(start as usize..);
+                }
+                if end >= 0 {
+                    //remove from front to `end`
+                    ref_points.drain(0..=(end as usize));
+                }
+            }
+            shape = SPolygon::new(ref_points).expect("invalid shape after closing concavity");
+            n_concav_closed += 1;
+        } else {
+            //no more candidates found, break the loop
+            break;
+        }
+    }
+    info!(
+        "[PS] [EXPERIMENTAL] closed {} concavities closer than {:.3}% of diameter, reducing vertices from {} to {}",
+        n_concav_closed,
+        max_distance_ratio * 100.0,
+        shape.n_vertices(),
+        orig_shape.n_vertices()
+    );
+
+    debug_assert!(
+        //make sure each point of the original shape is either in the new shape or included (in case of inflation)/excluded (in case of deflation) in the new shape
+        (mode == ShapeModifyMode::Inflate
+            && orig_shape
+                .vertices
+                .iter()
+                .filter(|p| !shape.vertices.contains(p))
+                .all(|p| shape.collides_with(p)))
+            || (mode == ShapeModifyMode::Deflate
+                && orig_shape
+                    .vertices
+                    .iter()
+                    .filter(|p| !shape.vertices.contains(p))
+                    .all(|p| !shape.collides_with(p)))
+    );
+
+    shape
 }

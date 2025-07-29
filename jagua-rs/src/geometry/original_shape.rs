@@ -2,7 +2,7 @@ use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::{Point, Rect, SPolygon};
 use crate::geometry::shape_modification::{
-    ShapeModifyConfig, ShapeModifyMode, offset_shape, simplify_shape,
+    ShapeModifyConfig, ShapeModifyMode, close_narrow_concavities, offset_shape, simplify_shape,
 };
 use anyhow::Result;
 
@@ -18,6 +18,8 @@ pub struct OriginalShape {
     pub modify_config: ShapeModifyConfig,
 }
 
+const CLOSE_NARROW_CONCAVITIES: Option<f32> = Some(0.01);
+
 impl OriginalShape {
     pub fn convert_to_internal(&self) -> Result<SPolygon> {
         // Apply the transformation
@@ -32,7 +34,13 @@ impl OriginalShape {
         if let Some(tolerance) = self.modify_config.simplify_tolerance {
             // Simplify the shape
             internal = simplify_shape(&internal, self.modify_mode, tolerance);
-        };
+            if let Some(max_rel_distance) = CLOSE_NARROW_CONCAVITIES {
+                // Close narrow concavities
+                internal = close_narrow_concavities(&internal, self.modify_mode, max_rel_distance);
+                internal = simplify_shape(&internal, self.modify_mode, tolerance / 2.0);
+            }
+        }
+
         Ok(internal)
     }
 
