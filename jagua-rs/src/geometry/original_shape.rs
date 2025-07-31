@@ -18,7 +18,7 @@ pub struct OriginalShape {
     pub modify_config: ShapeModifyConfig,
 }
 
-const CLOSE_NARROW_CONCAVITIES: Option<f32> = Some(0.01);
+const CLOSE_NARROW_CONCAVITIES: Option<f32> = Some(0.02);
 
 impl OriginalShape {
     pub fn convert_to_internal(&self) -> Result<SPolygon> {
@@ -37,9 +37,11 @@ impl OriginalShape {
             if let Some(max_rel_distance) = CLOSE_NARROW_CONCAVITIES {
                 // Close narrow concavities
                 internal = close_narrow_concavities(&internal, self.modify_mode, max_rel_distance);
-                internal = simplify_shape(&internal, self.modify_mode, tolerance / 2.0);
+                internal = simplify_shape(&internal, self.modify_mode, tolerance / 10.0);
             }
         }
+
+        //TODO: write assertions here
 
         Ok(internal)
     }

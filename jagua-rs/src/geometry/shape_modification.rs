@@ -495,8 +495,8 @@ pub fn close_narrow_concavities(
         "[PS] [EXPERIMENTAL] closed {} concavities closer than {:.3}% of diameter, reducing vertices from {} to {}",
         n_concav_closed,
         max_distance_ratio * 100.0,
-        shape.n_vertices(),
-        orig_shape.n_vertices()
+        orig_shape.n_vertices(),
+        shape.n_vertices()
     );
 
     debug_assert!(
