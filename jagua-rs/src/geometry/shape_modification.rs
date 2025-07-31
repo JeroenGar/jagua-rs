@@ -11,7 +11,7 @@ use crate::geometry::primitives::SPolygon;
 
 use crate::io::ext_repr::ExtSPolygon;
 use crate::io::import;
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
 /// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::scope) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
@@ -425,19 +425,9 @@ pub fn close_narrow_concavities(
                     };
                     SPolygon::calculate_area(&sub_shape_points)
                 };
-                match mode {
-                    ShapeModifyMode::Inflate => {
-                        if sub_shape_area >= 0.0 {
-                            //if the area is not negative, skip it
-                            continue;
-                        }
-                    }
-                    ShapeModifyMode::Deflate => {
-                        if sub_shape_area <= 0.0 {
-                            //if the area is not positive, skip it
-                            continue;
-                        }
-                    }
+                if sub_shape_area >= 0.0 {
+                    //if the area is not negative, skip it
+                    continue;
                 }
 
                 //Valid candidate found...
@@ -491,13 +481,16 @@ pub fn close_narrow_concavities(
             break;
         }
     }
-    info!(
-        "[PS] [EXPERIMENTAL] closed {} concavities closer than {:.3}% of diameter, reducing vertices from {} to {}",
-        n_concav_closed,
-        max_distance_ratio * 100.0,
-        orig_shape.n_vertices(),
-        shape.n_vertices()
-    );
+
+    if n_concav_closed > 0 {
+        info!(
+            "[PS] [EXPERIMENTAL] closed {} concavities closer than {:.3}% of diameter, reducing vertices from {} to {}",
+            n_concav_closed,
+            max_distance_ratio * 100.0,
+            orig_shape.n_vertices(),
+            shape.n_vertices()
+        );
+    }
 
     debug_assert!(
         //make sure each point of the original shape is either in the new shape or included (in case of inflation)/excluded (in case of deflation) in the new shape
