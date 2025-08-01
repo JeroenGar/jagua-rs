@@ -303,6 +303,7 @@ impl CollidesWith<Edge> for Rect {
     fn collides_with(&self, edge: &Edge) -> bool {
         //inspired by: https://stackoverflow.com/questions/99353/how-to-test-if-a-line-segment-intersects-an-axis-aligned-rectange-in-2d
 
+        //First check if the bounding boxes of the rectangle and edge overlap
         let e_x_min = edge.x_min();
         let e_x_max = edge.x_max();
         let e_y_min = edge.y_min();
@@ -312,44 +313,26 @@ impl CollidesWith<Edge> for Rect {
         let y_no_overlap = e_y_min.max(self.y_min) > e_y_max.min(self.y_max);
 
         if x_no_overlap || y_no_overlap {
-            return false; // Bounding boxes do not overlap
+            // Edge is completely outside the x- or y-range of the rectangle
+            return false;
         }
 
-        //If either end point of the line is inside the rectangle
-        if self.collides_with(&edge.start) || self.collides_with(&edge.end) {
-            return true;
-        }
-
-        //Determine which side of the edge each corner of the rectangle is on
         let Point(s_x, s_y) = edge.start;
         let Point(e_x, e_y) = edge.end;
         let edge_dx = e_x - s_x;
         let edge_dy = e_y - s_y;
 
-        // Function to determine which side of the edge a point is on.
-        // This is the 2D cross-product.
-        let side = |p_x, p_y| (p_x - s_x) * edge_dy - (p_y - s_y) * edge_dx;
+        let c = self.corners();
 
-        let corners = self.corners();
-        let mut last_side = side(corners[3].x(), corners[3].y());
-
-        for i in 0..4 {
-            let current_side = side(corners[i].x(), corners[i].y());
-            // If signs differ, the edge may cross the rectangle side
-            if current_side * last_side <= 0.0 {
-                // The edge connects the previous corner (i-1, wrapping around) and the current corner i.
-                let prev_corner_idx = if i == 0 { 3 } else { i - 1 };
-                let rect_edge = Edge {
-                    start: corners[prev_corner_idx],
-                    end: corners[i],
-                };
-                if edge.collides_with(&rect_edge) {
-                    return true;
-                }
+        //All corners need to be on the same side of the edge for there to be no intersection.
+        //Meaning the 2D cross-products should either all positive or all negative
+        let first_side = (c[0].0 - s_x) * edge_dy - (c[0].1 - s_y) * edge_dx;
+        for c in [c[2], c[1], c[3]] {
+            let side = (c.0 - s_x) * edge_dy - (c.1 - s_y) * edge_dx;
+            if first_side * side <= 0.0 {
+                return true;
             }
-            last_side = current_side;
         }
-
         false
     }
 }
