@@ -317,6 +317,11 @@ impl CollidesWith<Edge> for Rect {
             return false;
         }
 
+        if self.collides_with(&edge.start) || self.collides_with(&edge.end) {
+            // Edge has at least one end point in the rectangle
+            return true;
+        }
+
         let Point(s_x, s_y) = edge.start;
         let Point(e_x, e_y) = edge.end;
         let edge_dx = e_x - s_x;
@@ -326,14 +331,16 @@ impl CollidesWith<Edge> for Rect {
 
         //All corners need to be on the same side of the edge for there to be no intersection.
         //Meaning the 2D cross-products should either all positive or all negative
-        let first_side = (c[0].0 - s_x) * edge_dy - (c[0].1 - s_y) * edge_dx;
-        for c in [c[2], c[1], c[3]] {
-            let side = (c.0 - s_x) * edge_dy - (c.1 - s_y) * edge_dx;
-            if first_side * side <= 0.0 {
-                return true;
-            }
-        }
-        false
+        let sides = [
+            (c[0].0 - s_x) * edge_dy - (c[0].1 - s_y) * edge_dx,
+            (c[1].0 - s_x) * edge_dy - (c[1].1 - s_y) * edge_dx,
+            (c[2].0 - s_x) * edge_dy - (c[2].1 - s_y) * edge_dx,
+            (c[3].0 - s_x) * edge_dy - (c[3].1 - s_y) * edge_dx,
+        ];
+
+        let all_positive = sides.iter().all(|&s| s > 0.0);
+        let all_negative = sides.iter().all(|&s| s < 0.0);
+        !(all_positive || all_negative)
     }
 }
 
