@@ -324,7 +324,7 @@ impl CollidesWith<Edge> for Rect {
 
         let c = self.corners();
 
-        //All corners need to be on the same side of the edge for there to be no intersection. 
+        //All corners need to be on the same side of the edge for there to be no intersection.
         //Meaning the 2D cross-products should either all positive or all negative
         let first_side = (c[0].0 - s_x) * edge_dy - (c[0].1 - s_y) * edge_dx;
         for c in [c[2], c[1], c[3]] {
