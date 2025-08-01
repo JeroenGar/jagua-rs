@@ -1,7 +1,7 @@
+use crate::Instant;
 use crate::entities::LayoutSnapshot;
 use crate::probs::bpp::entities::{BPInstance, LayKey};
 use slotmap::SecondaryMap;
-use std::time::Instant;
 
 /// Snapshot of [`BPProblem`](crate::probs::bpp::entities::BPProblem) at a specific moment.
 /// Can be used to restore to a previous state.
