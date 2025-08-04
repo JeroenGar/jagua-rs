@@ -528,5 +528,5 @@ pub fn shape_modification_valid(orig: &SPolygon, simpl: &SPolygon, mode: ShapeMo
             return false; //point is not in the new shape and does not collide with it
         }
     }
-    return true;
+    true
 }
