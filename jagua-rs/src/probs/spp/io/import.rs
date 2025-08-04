@@ -45,6 +45,7 @@ pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPIns
         shape_modify_config: ShapeModifyConfig {
             offset: importer.shape_modify_config.offset,
             simplify_tolerance: None,
+            narrow_concavity_cutoff_ratio: None,
         },
         width,
     };
