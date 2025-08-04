@@ -2,7 +2,8 @@ use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::{Point, Rect, SPolygon};
 use crate::geometry::shape_modification::{
-    ShapeModifyConfig, ShapeModifyMode, close_narrow_concavities, offset_shape, simplify_shape,
+    ShapeModifyConfig, ShapeModifyMode, close_narrow_concavities, offset_shape,
+    shape_modification_valid, simplify_shape,
 };
 use anyhow::Result;
 
@@ -18,8 +19,6 @@ pub struct OriginalShape {
     pub modify_config: ShapeModifyConfig,
 }
 
-const CLOSE_NARROW_CONCAVITIES: Option<f32> = Some(0.02);
-
 impl OriginalShape {
     pub fn convert_to_internal(&self) -> Result<SPolygon> {
         // Apply the transformation
@@ -32,16 +31,21 @@ impl OriginalShape {
             }
         }
         if let Some(tolerance) = self.modify_config.simplify_tolerance {
+            let pre_simplified = internal.clone();
             // Simplify the shape
             internal = simplify_shape(&internal, self.modify_mode, tolerance);
-            if let Some(max_rel_distance) = CLOSE_NARROW_CONCAVITIES {
+            if let Some(max_concav_dist) = self.modify_config.narrow_concavity_cutoff_ratio {
                 // Close narrow concavities
-                internal = close_narrow_concavities(&internal, self.modify_mode, max_rel_distance);
+                internal = close_narrow_concavities(&internal, self.modify_mode, max_concav_dist);
+                // Do another simplification after closing concavities
                 internal = simplify_shape(&internal, self.modify_mode, tolerance / 10.0);
             }
+            debug_assert!(shape_modification_valid(
+                &pre_simplified,
+                &internal,
+                self.modify_mode
+            ));
         }
-
-        //TODO: write assertions here
 
         Ok(internal)
     }

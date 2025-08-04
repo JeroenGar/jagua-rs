@@ -1,17 +1,17 @@
 use itertools::Itertools;
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-use crate::geometry::geo_traits::CollidesWith;
+use crate::geometry::geo_traits::{CollidesWith, DistanceTo};
 use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::SPolygon;
 
 use crate::io::ext_repr::ExtSPolygon;
 use crate::io::import;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
 /// Depends on the [`position`](crate::collision_detection::hazards::HazardEntity::scope) of the [`HazardEntity`](crate::collision_detection::hazards::HazardEntity) that the shape represents.
@@ -33,6 +33,11 @@ pub struct ShapeModifyConfig {
     /// If undefined, no offset is applied.
     /// See [`offset_shape`]
     pub offset: Option<f32>,
+    /// Maximum distance between two vertices for which a concavity is considered narrow and can be closed.
+    /// Defined as a fraction of the item's diameter.
+    /// If undefined, no concavity closing is performed.
+    /// See [`close_narrow_concavities`]
+    pub narrow_concavity_cutoff_ratio: Option<f32>,
 }
 
 /// Simplifies a [`SPolygon`] by reducing the number of edges.
@@ -365,6 +370,7 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
     import::import_simple_polygon(&ext_s_polygon)
 }
 
+/// Closes narrow concavities in a [`SPolygon`] by replacing them with a straight edge, eliminating the vertices in between.
 pub fn close_narrow_concavities(
     orig_shape: &SPolygon,
     mode: ShapeModifyMode,
@@ -492,21 +498,35 @@ pub fn close_narrow_concavities(
         );
     }
 
-    debug_assert!(
-        //make sure each point of the original shape is either in the new shape or included (in case of inflation)/excluded (in case of deflation) in the new shape
-        (mode == ShapeModifyMode::Inflate
-            && orig_shape
-                .vertices
-                .iter()
-                .filter(|p| !shape.vertices.contains(p))
-                .all(|p| shape.collides_with(p)))
-            || (mode == ShapeModifyMode::Deflate
-                && orig_shape
-                    .vertices
-                    .iter()
-                    .filter(|p| !shape.vertices.contains(p))
-                    .all(|p| !shape.collides_with(p)))
-    );
-
     shape
+}
+
+pub fn shape_modification_valid(orig: &SPolygon, simpl: &SPolygon, mode: ShapeModifyMode) -> bool {
+    //make sure each point of the original shape is either in the new shape or included (in case of inflation)/excluded (in case of deflation) in the new shape
+    let on_edge = |p: &Point| {
+        simpl
+            .edge_iter()
+            .any(|e| e.distance_to(p) < simpl.diameter * 1e-6)
+    };
+
+    for p in orig.vertices.iter().filter(|p| !simpl.vertices.contains(p)) {
+        let vertex_on_edge = on_edge(p);
+        let vertex_in_simpl = simpl.collides_with(p);
+
+        let error = match mode {
+            ShapeModifyMode::Inflate => !vertex_in_simpl && !vertex_on_edge,
+            ShapeModifyMode::Deflate => vertex_in_simpl && !vertex_on_edge,
+        };
+
+        if error {
+            error!(
+                "[PS] point {:?} from original shape is incorrect in simplified shape (original vertices: {:?}, simplified vertices: {:?})",
+                p,
+                orig.vertices.iter().map(|p| (p.0, p.1)).collect_vec(),
+                simpl.vertices.iter().map(|p| (p.0, p.1)).collect_vec()
+            );
+            return false; //point is not in the new shape and does not collide with it
+        }
+    }
+    return true;
 }
