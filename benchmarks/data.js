@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1754049804490,
+  "lastUpdate": 1754308473014,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -2751,6 +2751,84 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k/5",
             "value": 220553,
             "range": "± 6519",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "34694161+JeroenGar@users.noreply.github.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a7bd8e9a85ceca57dbc61e4188a06f7e1facb461",
+          "message": "Merge pull request #50 from JeroenGar/feat/concav_elim\n\n[feature] Elimination of narrow concavities in shapes by preprocessor",
+          "timestamp": "2025-08-04T13:51:27+02:00",
+          "tree_id": "84c41688726beb6980f54348d9a9d6c6e33a84ee",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/a7bd8e9a85ceca57dbc61e4188a06f7e1facb461"
+        },
+        "date": 1754308458283,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 2247758,
+            "range": "± 107152",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 2585282,
+            "range": "± 135085",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 2579099,
+            "range": "± 137870",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 2241985,
+            "range": "± 7297",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 4044796,
+            "range": "± 55177",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 7727266,
+            "range": "± 40282",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 245368,
+            "range": "± 6021",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 221894,
+            "range": "± 5809",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 220045,
+            "range": "± 2740",
             "unit": "ns/iter"
           }
         ]
