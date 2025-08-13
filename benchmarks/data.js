@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1754308473014,
+  "lastUpdate": 1755093657875,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -2829,6 +2829,84 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k/5",
             "value": 220045,
             "range": "± 2740",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "34694161+JeroenGar@users.noreply.github.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3bc0be37537d7ae59446f75f4e188a61a392e58d",
+          "message": "Merge pull request #47 from nots1dd/wasm-parallel\n\nAdd support for WASM target",
+          "timestamp": "2025-08-13T15:57:17+02:00",
+          "tree_id": "58c28ac26ecb92028e130684025023f103230199",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/3bc0be37537d7ae59446f75f4e188a61a392e58d"
+        },
+        "date": 1755093647535,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 2293979,
+            "range": "± 112268",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 2649171,
+            "range": "± 146221",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 2654232,
+            "range": "± 159271",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 2420212,
+            "range": "± 9987",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 4234252,
+            "range": "± 17549",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 8210816,
+            "range": "± 134960",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 242098,
+            "range": "± 6300",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 218912,
+            "range": "± 4192",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 214903,
+            "range": "± 3148",
             "unit": "ns/iter"
           }
         ]
