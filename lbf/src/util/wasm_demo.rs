@@ -4,12 +4,12 @@ use rand::SeedableRng;
 use wasm_bindgen::prelude::*;
 pub use wasm_bindgen_rayon::init_thread_pool;
 
+use crate::EPOCH;
 use crate::config::LBFConfig;
 use crate::io::output::BPOutput;
 use crate::io::output::SPOutput;
 use crate::opt::lbf_bpp::LBFOptimizerBP;
 use crate::opt::lbf_spp::LBFOptimizerSP;
-use crate::{EPOCH};
 use console_error_panic_hook;
 use jagua_rs::Instant;
 use jagua_rs::io::import::Importer;
@@ -77,7 +77,7 @@ pub fn run_lbf_bpp_wasm(
         config.cde_config,
         config.poly_simpl_tolerance,
         config.min_item_separation,
-        config.narrow_concavity_cutoff_ratio
+        config.narrow_concavity_cutoff_ratio,
     );
 
     let rng = match config.prng_seed {
@@ -156,7 +156,7 @@ pub fn run_lbf_spp_wasm(
         config.cde_config,
         config.poly_simpl_tolerance,
         config.min_item_separation,
-        config.narrow_concavity_cutoff_ratio
+        config.narrow_concavity_cutoff_ratio,
     );
 
     let rng = match config.prng_seed {
@@ -211,4 +211,3 @@ pub fn init_logger() {
         env_logger::init();
     }
 }
-
