@@ -3,6 +3,7 @@ message: "If you use this software, please cite it as below."
 authors:
 - family-names: "Gardeyn"
   given-names: "Jeroen"
+  affiliation: KU Leuven
 title: "jagua-rs: A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems"
 url: "https://github.com/JeroenGar/jagua-rs"
 preferred-citation:
