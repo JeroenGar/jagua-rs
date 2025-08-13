@@ -9,7 +9,7 @@ use crate::io::output::BPOutput;
 use crate::io::output::SPOutput;
 use crate::opt::lbf_bpp::LBFOptimizerBP;
 use crate::opt::lbf_spp::LBFOptimizerSP;
-use crate::{EPOCH, init_logger};
+use crate::{EPOCH};
 use console_error_panic_hook;
 use jagua_rs::Instant;
 use jagua_rs::io::import::Importer;
@@ -54,7 +54,7 @@ pub fn run_lbf_bpp_wasm(
 
     let ext_instance: ExtBPInstance = if ext_bp_instance_json.is_null() {
         web_sys::console::warn_1(&"ExtBPInstance is null, using fallback 'baldacci1.json'!".into());
-        let fallback_str = include_str!("../../assets/baldacci1.json");
+        let fallback_str = include_str!("../../../assets/baldacci1.json");
         serde_json::from_str(fallback_str).expect("Fallback baldacci1.json is invalid!")
     } else {
         match from_value(ext_bp_instance_json.clone()) {
@@ -77,6 +77,7 @@ pub fn run_lbf_bpp_wasm(
         config.cde_config,
         config.poly_simpl_tolerance,
         config.min_item_separation,
+        config.narrow_concavity_cutoff_ratio
     );
 
     let rng = match config.prng_seed {
@@ -132,7 +133,7 @@ pub fn run_lbf_spp_wasm(
 
     let ext_instance: ExtSPInstance = if ext_sp_instance_json.is_null() {
         web_sys::console::warn_1(&"ExtSPInstance is null, using fallback 'swim.json'!".into());
-        let fallback_str = include_str!("../../assets/swim.json");
+        let fallback_str = include_str!("../../../assets/swim.json");
         serde_json::from_str(fallback_str).expect("Fallback swim.json is invalid")
     } else {
         match from_value(ext_sp_instance_json.clone()) {
@@ -155,6 +156,7 @@ pub fn run_lbf_spp_wasm(
         config.cde_config,
         config.poly_simpl_tolerance,
         config.min_item_separation,
+        config.narrow_concavity_cutoff_ratio
     );
 
     let rng = match config.prng_seed {
@@ -198,3 +200,15 @@ pub fn run_lbf_spp_wasm(
     // Serialize and return
     to_value(&result).map_err(|e| JsValue::from_str(&format!("Result encode error: {}", e)))
 }
+
+pub fn init_logger() {
+    #[cfg(target_arch = "wasm32")]
+    {
+        console_log::init_with_level(log::Level::Info).expect("Failed to initialize logger");
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        env_logger::init();
+    }
+}
+
