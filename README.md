@@ -1,8 +1,12 @@
-# jagua-rs [![Rust CI](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml) [![Docs](https://github.com/JeroenGar/jagua-rs/actions/workflows/doc.yml/badge.svg)](https://jeroengar.github.io/jagua-rs/jagua_rs/) [![Perf](https://github.com/JeroenGar/jagua-rs/actions/workflows/bench.yml/badge.svg)](https://jeroengar.github.io/jagua-rs/benchmarks/) [![Crates.io Version](https://img.shields.io/crates/v/jagua-rs)](https://crates.io/crates/jagua-rs) ![License](https://img.shields.io/crates/l/jagua-rs)
+# jagua-rs 
+[![DOI](https://zenodo.org/badge/DOI/10.48550/arXiv.2508.08341.svg)](https://doi.org/10.48550/arXiv.2508.08341) ![License](https://img.shields.io/crates/l/jagua-rs) [![Crates.io Version](https://img.shields.io/crates/v/jagua-rs)](https://crates.io/crates/jagua-rs)
+[![Rust CI](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml) [![Docs](https://github.com/JeroenGar/jagua-rs/actions/workflows/doc.yml/badge.svg)](https://jeroengar.github.io/jagua-rs/jagua_rs/) [![Perf](https://github.com/JeroenGar/jagua-rs/actions/workflows/bench.yml/badge.svg)](https://jeroengar.github.io/jagua-rs/benchmarks/)
 
 ### A fast and fearless collision detection engine for 2D irregular cutting and packing problems.
 
-This library is designed to be used as a backend by optimization algorithms solving 2D irregular cutting and packing problems.
+`jagua-rs` is designed to be used as a backend by optimization algorithms solving 2D irregular cutting and packing problems.
+
+This library is the implementation of the paper: ["_Decoupling Geometry from Optimization in 2D Irregular Cutting and Packing Problems: an Open-Source Collision Detection Engine_"](https://arxiv.org/abs/2508.08341).
 
 <img src="img/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
