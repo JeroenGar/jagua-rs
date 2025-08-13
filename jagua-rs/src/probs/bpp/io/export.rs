@@ -1,7 +1,7 @@
+use crate::Instant;
 use crate::io::export::export_layout_snapshot;
 use crate::probs::bpp::entities::{BPInstance, BPSolution};
 use crate::probs::bpp::io::ext_repr::ExtBPSolution;
-use std::time::Instant;
 
 /// Exports a solution out of the library
 pub fn export(instance: &BPInstance, solution: &BPSolution, epoch: Instant) -> ExtBPSolution {

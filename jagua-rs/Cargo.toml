@@ -13,6 +13,7 @@ homepage = "https://github.com/JeroenGar/jagua-rs"
 [dependencies]
 ndarray = {workspace = true}
 rand_distr = {workspace = true}
+getrandom = { workspace = true }
 serde = {workspace = true}
 ordered-float = { workspace = true }
 log = {workspace = true}
@@ -25,6 +26,7 @@ document-features = {workspace = true}
 rayon = { workspace = true }
 geo-types = { workspace = true }
 geo-buffer = { workspace = true }
+web-time = { workspace = true }
 
 [features]
 ## Enables support for the Strip Packing Problem

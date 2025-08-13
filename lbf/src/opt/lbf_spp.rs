@@ -1,4 +1,4 @@
-use std::time::Instant;
+use jagua_rs::Instant;
 
 use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;

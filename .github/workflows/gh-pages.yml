@@ -1,0 +1,38 @@
+name: Build and Deploy WASM
+
+on:
+  push:
+    branches: [wasm-parallel]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Rust (nightly + components)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          components: rust-src, rustfmt, clippy
+          target: wasm32-unknown-unknown
+
+      - name: Use rust-toolchain.toml if present
+        run: rustup show  # confirms the toolchain in use
+
+      - run: cargo install wasm-pack
+
+      - name: Install Binaryen (wasm-opt)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binaryen
+
+      - name: Run build script
+        run: ./scripts/build-gh-pages.sh
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs

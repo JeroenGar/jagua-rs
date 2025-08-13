@@ -1,10 +1,10 @@
+use crate::Instant;
 use crate::entities::{Instance, Layout, PItemKey};
 use crate::geometry::DTransformation;
 use crate::probs::spp::entities::strip::Strip;
 use crate::probs::spp::entities::{SPInstance, SPSolution};
 use crate::probs::spp::util::assertions::problem_matches_solution;
 use itertools::Itertools;
-use std::time::Instant;
 
 /// Modifiable counterpart of [`SPInstance`]: items can be placed and removed, strip can be extended or fitted.
 #[derive(Clone)]

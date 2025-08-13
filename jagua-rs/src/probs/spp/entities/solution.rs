@@ -1,7 +1,7 @@
+use crate::Instant;
 use crate::entities::LayoutSnapshot;
 use crate::probs::spp::entities::SPInstance;
 use crate::probs::spp::entities::strip::Strip;
-use std::time::Instant;
 
 /// Snapshot of [`SPProblem`](crate::probs::spp::entities::SPProblem) at a specific moment. Can be used to restore to a previous state.
 #[derive(Debug, Clone)]
