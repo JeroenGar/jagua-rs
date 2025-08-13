@@ -63,7 +63,7 @@ irregular C&P problems and boasts a **powerful Collision Detection Engine (CDE)*
   - [x] Continuous rotation & translation
   - [x] Holes and inferior quality zones in containers
   - [x] Minimum separation distance between an item and any hazard
-  - [x] WebAssembly support
+  - [x] WebAssembly target for browser-based applications
   - [x] Modelled problem variants:
     - [x] Bin Packing Problem (with feature `bpp`)
     - [x] Strip Packing Problem (with feature `spp`)

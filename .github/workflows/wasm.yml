@@ -2,7 +2,13 @@ name: Build and Deploy WASM
 
 on:
   push:
-    branches: [wasm-parallel]
+    branches: [ "main" ]
+    paths:
+      - '**.rs'
+      - '**.toml'
+      - '**.yml'
+      - 'lbf/wasm-demo/**'
+  workflow_dispatch: # Added for manual triggering if needed
 
 jobs:
   deploy:
