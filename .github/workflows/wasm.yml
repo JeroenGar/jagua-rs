@@ -31,9 +31,9 @@ jobs:
       - name: Copy built files to deployment directory
         run: |
           mkdir -p deploy
-          cp lbf/wasm-demo/index.html deploy/
-          cp lbf/wasm-demo/index.js deploy/
-          cp -r lbf/wasm-demo/pkg deploy/pkg
+          mv lbf/wasm-demo/index.html deploy/index.html
+          mv lbf/wasm-demo/index.js deploy/index.js
+          mv lbf/wasm-demo/pkg deploy/pkg
           ls deploy
       - name: Deploy LBF.wasm demo
         uses: JamesIves/github-pages-deploy-action@v4
