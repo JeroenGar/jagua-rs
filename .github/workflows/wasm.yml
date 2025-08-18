@@ -12,7 +12,7 @@ on:
 
 jobs:
   wasm_build_deploy:
-    name: Build and Deploy WASM demo
+    name: Build and Deploy LBF.wasm
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -24,23 +24,23 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install wasm-pack
         run: cargo install wasm-pack
-      - name: Build WASM lbf demo
+      - name: Build LBF.wasm demo
         run: |
-          cd lbf/wasm-demo
-          wasm-pack build --target web --release
+          cd lbf
+          wasm-pack build --target web --release --out-dir wasm-demo/pkg
       - name: Copy built files to deployment directory
         run: |
           mkdir -p deploy
           cp lbf/wasm-demo/index.html deploy/
           cp lbf/wasm-demo/index.js deploy/
           cp -r lbf/wasm-demo/pkg deploy/
-      - name: Deploy WASM demo
+      - name: Deploy LBF.wasm demo
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
           folder: deploy
-          target-folder: lbf-demo-wasm
+          target-folder: lbf-wasm-demo
           clean: false 
           commit-message: "auto deploy wasm demo"
           single-commit: true
