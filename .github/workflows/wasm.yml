@@ -22,6 +22,8 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
       - name: Build WASM lbf demo
         run: |
           cd lbf/wasm-demo
