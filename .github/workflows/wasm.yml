@@ -33,7 +33,8 @@ jobs:
           mkdir -p deploy
           cp lbf/wasm-demo/index.html deploy/
           cp lbf/wasm-demo/index.js deploy/
-          cp -r lbf/wasm-demo/pkg deploy/
+          cp -r lbf/wasm-demo/pkg deploy/pkg
+          ls deploy
       - name: Deploy LBF.wasm demo
         uses: JamesIves/github-pages-deploy-action@v4
         with:
