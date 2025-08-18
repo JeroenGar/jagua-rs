@@ -36,7 +36,7 @@ jobs:
           mv lbf/wasm-demo/pkg deploy/pkg
           ls -R deploy
       - name: Deploy LBF.wasm demo
-        uses: JamesIves/github-pages-deploy-action@v4
+        uses: JamesIves/github-pages-deploy-action@v4.7.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
