@@ -11,34 +11,34 @@ on:
   workflow_dispatch: # Added for manual triggering if needed
 
 jobs:
-  deploy:
+  wasm_build_deploy:
+    name: Build and Deploy WASM demo
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Rust (nightly + components)
-        uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
-          override: true
-          components: rust-src, rustfmt, clippy
-          target: wasm32-unknown-unknown
-
-      - name: Use rust-toolchain.toml if present
-        run: rustup show  # confirms the toolchain in use
-
-      - run: cargo install wasm-pack
-
-      - name: Install Binaryen (wasm-opt)
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Build WASM lbf demo
         run: |
-          sudo apt-get update
-          sudo apt-get install -y binaryen
-
-      - name: Run build script
-        run: ./scripts/build-gh-pages.sh
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+          cd lbf/wasm-demo
+          wasm-pack build --target web --release
+      - name: Copy built files to deployment directory
+        run: |
+          mkdir -p deploy
+          cp lbf/wasm-demo/index.html deploy/
+          cp lbf/wasm-demo/index.js deploy/
+          cp -r lbf/wasm-demo/pkg deploy/
+      - name: Deploy WASM demo
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          folder: deploy
+          target-folder: lbf-demo-wasm
+          clean: false 
+          commit-message: "auto deploy wasm demo"
+          single-commit: true
