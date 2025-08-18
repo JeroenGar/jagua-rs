@@ -34,7 +34,7 @@ jobs:
           mv lbf/wasm-demo/index.html deploy/index.html
           mv lbf/wasm-demo/index.js deploy/index.js
           mv lbf/wasm-demo/pkg deploy/pkg
-          ls deploy
+          ls -R deploy
       - name: Deploy LBF.wasm demo
         uses: JamesIves/github-pages-deploy-action@v4
         with:
