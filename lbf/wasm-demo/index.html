@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>WASM Solver (BPP/SPP)</title>
+  <title>LBF.wasm</title>
   <style>
     body { font-family: sans-serif; padding: 1rem; max-width: 900px; margin: auto; }
     input[type="file"] { margin-bottom: 0.5rem; }
@@ -12,7 +12,14 @@
   </style>
 </head>
 <body>
-  <h1>Bin / Strip Packing Problem WASM Solver</h1>
+  <h1>LBF.wasm</h1>
+  <p>
+    This simple demo shows jagua-rs running in the browser using WebAssembly (WASM).
+    <br>
+    Choose a problem type, upload your instance and let LBF algorithm solve it!
+    <br>
+    Logs are output to the javascript console.
+  </p>
 
   <label for="problem-type">Choose Problem Type:</label>
   <select id="problem-type">

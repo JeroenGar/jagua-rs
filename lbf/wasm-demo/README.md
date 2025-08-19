@@ -1,22 +1,16 @@
 # WASM Demo for `jagua-rs`
 
-🚧 Under construction 🚧
+Visit [https://jeroengar.github.io/jagua-rs/lbf-wasm-demo/](https://jeroengar.github.io/jagua-rs/lbf-wasm-demo/)
 
-## Prerequisites
+### Build and serve locally
 
-Install `wasm-pack` if you haven't already:
+From the root of the repository:
 
 ```bash
 cargo install wasm-pack
-```
-
-### Build
-
-```bash
+cd lbf
 wasm-pack build --target web --release --out-dir wasm-demo/pkg
-```
-
-### Serve
-```bash
 python serve.py
 ```
+
+Or check [wasm.yml](../../.github/workflows/wasm.yml) for the CI workflow that builds and deploys this demo.
