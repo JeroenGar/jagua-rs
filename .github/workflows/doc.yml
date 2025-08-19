@@ -32,5 +32,6 @@ jobs:
           clean: true # Automatically remove deleted files from the deploy branch
           clean-exclude: | # Exclude benchmark data from being cleaned
             benchmarks
+            lbf-wasm-demo
           commit-message: "auto deploy docs"
           single-commit: true
