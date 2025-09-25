@@ -4,10 +4,6 @@
 version: 2
 updates:
   - package-ecosystem: "cargo"
-    directory: "/jagua-rs"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "cargo"
-    directory: "/lbf"
+    directory: "/" # root of the workspace
     schedule:
       interval: "weekly"
