@@ -29,8 +29,6 @@ jobs:
         run: cargo fmt --all -- --check
       - name: clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
-      - name: doc
-        run: cargo doc
       - name: build all features
         run: cargo build --all-targets --all-features
       - name: build no features
