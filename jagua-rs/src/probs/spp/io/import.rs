@@ -21,11 +21,18 @@ pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPIns
             .collect::<Result<Vec<(Item, usize)>>>()?;
 
         items.sort_by_key(|(item, _)| item.id);
+        items.retain(|(_, demand)| *demand > 0);
+
         ensure!(
             items.iter().enumerate().all(|(i, (item, _))| item.id == i),
             "All items should have consecutive IDs starting from 0. IDs: {:?}",
             items.iter().map(|(item, _)| item.id).sorted().collect_vec()
         );
+        ensure!(
+            !items.is_empty(),
+            "ExtSPInstance must have at least one item with positive demand"
+        );
+
         items
     };
 
@@ -39,16 +46,16 @@ pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPIns
     // Initialize the base width for 100% density
     let width = total_item_area / fixed_height;
 
-    let base_strip = Strip {
+    let base_strip = Strip::new(
         fixed_height,
-        cde_config: importer.cde_config,
-        shape_modify_config: ShapeModifyConfig {
+        importer.cde_config,
+        ShapeModifyConfig {
             offset: importer.shape_modify_config.offset,
             simplify_tolerance: None,
             narrow_concavity_cutoff_ratio: None,
         },
         width,
-    };
+    )?;
 
     Ok(SPInstance::new(items, base_strip))
 }

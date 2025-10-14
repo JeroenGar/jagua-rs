@@ -21,11 +21,18 @@ pub fn import(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPIns
             .collect::<Result<Vec<(Item, usize)>>>()?;
 
         items.sort_by_key(|(item, _)| item.id);
+        items.retain(|(_, demand)| *demand > 0);
+
         ensure!(
             items.iter().enumerate().all(|(i, (item, _))| item.id == i),
             "All items should have consecutive IDs starting from 0. IDs: {:?}",
             items.iter().map(|(item, _)| item.id).sorted().collect_vec()
         );
+        ensure!(
+            !items.is_empty(),
+            "ExtBPInstance must have at least one item with positive demand"
+        );
+
         items
     };
 
@@ -40,11 +47,17 @@ pub fn import(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPIns
             .collect::<Result<Vec<Bin>>>()?;
 
         bins.sort_by_key(|bin| bin.id);
+        bins.retain(|bin| bin.stock > 0);
         ensure!(
             bins.iter().enumerate().all(|(i, bin)| bin.id == i),
             "All bins should have consecutive IDs starting from 0. IDs: {:?}",
             bins.iter().map(|bin| bin.id).sorted().collect_vec()
         );
+        ensure!(
+            !bins.is_empty(),
+            "ExtBPInstance must have at least one bin with positive stock"
+        );
+
         bins
     };
 
