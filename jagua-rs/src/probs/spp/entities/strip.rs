@@ -19,17 +19,20 @@ impl Strip {
         fixed_height: f32,
         cde_config: CDEConfig,
         shape_modify_config: ShapeModifyConfig,
+        width: f32,
     ) -> Result<Self> {
         ensure!(fixed_height > 0.0, "strip height must be positive");
+        ensure!(width > 0.0, "strip width must be positive");
         Ok(Strip {
             fixed_height,
             cde_config,
             shape_modify_config,
-            width: 0.0,
+            width,
         })
     }
 
     pub fn set_width(&mut self, width: f32) {
+        assert!(width > 0.0, "strip width must be positive");
         self.width = width;
     }
 }
