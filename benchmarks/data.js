@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760453802629,
+  "lastUpdate": 1762210661090,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -3609,6 +3609,84 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k/5",
             "value": 216237,
             "range": "± 2992",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3aca0d263b0ae55f390096feeaa7bb0518cb03e1",
+          "message": "Update ndarray requirement from 0.16 to 0.17 (#56)\n\nUpdates the requirements on [ndarray](https://github.com/rust-ndarray/ndarray) to permit the latest version.\n- [Release notes](https://github.com/rust-ndarray/ndarray/releases)\n- [Changelog](https://github.com/rust-ndarray/ndarray/blob/master/RELEASES.md)\n- [Commits](https://github.com/rust-ndarray/ndarray/compare/0.16.0...0.17.1)\n\n---\nupdated-dependencies:\n- dependency-name: ndarray\n  dependency-version: 0.17.1\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2025-11-03T23:53:54+01:00",
+          "tree_id": "fceb7ed51c5bbd18e327cc3df68d8a9bf5440dee",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/3aca0d263b0ae55f390096feeaa7bb0518cb03e1"
+        },
+        "date": 1762210640806,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 2265608,
+            "range": "± 112225",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 2614178,
+            "range": "± 141247",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 2602350,
+            "range": "± 134064",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 2331509,
+            "range": "± 11370",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 4029611,
+            "range": "± 26515",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 7801074,
+            "range": "± 84962",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 243087,
+            "range": "± 6554",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 219549,
+            "range": "± 4359",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 215863,
+            "range": "± 2765",
             "unit": "ns/iter"
           }
         ]
