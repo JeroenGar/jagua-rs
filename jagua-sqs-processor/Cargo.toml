@@ -1,0 +1,30 @@
+[package]
+name = "jagua-sqs-processor"
+version = "0.1.0"
+edition = "2021"
+license = "MPL-2.0"
+description = "SQS queue processor for jagua-rs SVG nesting service"
+authors = ["Jeroen Gardeyn"]
+repository = "https://github.com/JeroenGar/jagua-rs"
+homepage = "https://github.com/JeroenGar/jagua-rs"
+
+[[bin]]
+name = "jagua-sqs-processor"
+path = "src/main.rs"
+
+[dependencies]
+jagua-utils = { path = "../jagua-utils" }
+aws-sdk-sqs = "1.0"
+aws-config = "1.0"
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { version = "1.0", features = ["full"] }
+anyhow = { workspace = true }
+log = { workspace = true }
+base64 = "0.21"
+env_logger = "0.11"
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.12"
+

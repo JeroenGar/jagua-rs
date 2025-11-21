@@ -1,0 +1,21 @@
+[package]
+name = "jagua-utils"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+description = "Utility functions for jagua-rs, including SVG nesting utilities"
+authors = ["Jeroen Gardeyn"]
+repository = "https://github.com/JeroenGar/jagua-rs"
+homepage = "https://github.com/JeroenGar/jagua-rs"
+
+[dependencies]
+jagua-rs = { path = "../jagua-rs", features = ["bpp"] }
+lbf = { path = "../lbf" }
+rand = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+regex = "1"
+
+[dev-dependencies]
+env_logger = { workspace = true }
+

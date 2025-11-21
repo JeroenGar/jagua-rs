@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["jagua-rs", "lbf"]
+members = ["jagua-rs", "lbf", "jagua-utils", "jagua-sqs-processor"]
 
 [workspace.dependencies]
 ndarray = "0.17"

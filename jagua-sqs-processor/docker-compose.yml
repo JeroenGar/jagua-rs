@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  jagua-sqs-processor:
+    build:
+      context: ..
+      dockerfile: jagua-sqs-processor/Dockerfile
+    image: jagua-sqs-processor:latest
+    environment:
+      - INPUT_QUEUE_URL=${INPUT_QUEUE_URL}
+      - OUTPUT_QUEUE_URL=${OUTPUT_QUEUE_URL}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - RUST_LOG=${RUST_LOG:-info}
+      - RUST_BACKTRACE=${RUST_BACKTRACE:-1}
+    restart: unless-stopped
+
+

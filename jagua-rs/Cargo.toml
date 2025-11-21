@@ -34,6 +34,11 @@ spp = []
 ## Enables support for the Bin Packing Problem
 bpp = []
 
+[dev-dependencies]
+lbf = { path = "../lbf" }
+rand = { workspace = true }
+env_logger = { workspace = true }
+
 [package.metadata.docs.rs]
 all-features = true
 # rustdoc-args = ["--cfg", "docsrs"]

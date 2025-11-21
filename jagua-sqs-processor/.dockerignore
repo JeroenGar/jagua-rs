@@ -1,0 +1,15 @@
+target/
+.git/
+.gitignore
+*.md
+tests/
+.env
+.env.local
+*.log
+.DS_Store
+.vscode/
+.idea/
+
+
+
+
