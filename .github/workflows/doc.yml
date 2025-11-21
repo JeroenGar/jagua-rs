@@ -19,10 +19,10 @@ jobs:
       contents: write # Required to push to gh-pages branch
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.90.0
       - uses: Swatinem/rust-cache@v2
       - name: Build jagua-rs docs
-        run: RUSTDOCFLAGS="-D warnings" cargo +stable doc --all # Build all docs, including lbf
+        run: RUSTDOCFLAGS="-D warnings" cargo doc --all # Build all docs, including lbf
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@v4
         with:

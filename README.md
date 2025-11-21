@@ -1,12 +1,13 @@
 # jagua-rs 
-[![DOI](https://zenodo.org/badge/DOI/10.48550/arXiv.2508.08341.svg)](https://doi.org/10.48550/arXiv.2508.08341) ![License](https://img.shields.io/crates/l/jagua-rs) [![Crates.io Version](https://img.shields.io/crates/v/jagua-rs)](https://crates.io/crates/jagua-rs)
+[![DOI](https://zenodo.org/badge/DOI/10.1287/ijoc.2024.1025.svg)](https://doi.org/10.1287/ijoc.2024.1025) ![License](https://img.shields.io/crates/l/jagua-rs) [![Crates.io Version](https://img.shields.io/crates/v/jagua-rs)](https://crates.io/crates/jagua-rs)
 [![Rust CI](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JeroenGar/jagua-rs/actions/workflows/rust.yml) [![Docs](https://github.com/JeroenGar/jagua-rs/actions/workflows/doc.yml/badge.svg)](https://jeroengar.github.io/jagua-rs/jagua_rs/) [![Perf](https://github.com/JeroenGar/jagua-rs/actions/workflows/bench.yml/badge.svg)](https://jeroengar.github.io/jagua-rs/benchmarks/)
 
 ### A fast and fearless collision detection engine for 2D nesting problems.
 
 `jagua-rs` is designed to be used as a backend by optimization algorithms solving 2D nesting problems.
 
-This library is the implementation of the paper: ["_Decoupling Geometry from Optimization in 2D Irregular Cutting and Packing Problems: an Open-Source Collision Detection Engine_"](https://arxiv.org/abs/2508.08341).
+This library is the implementation of the paper: ["_Decoupling Geometry from Optimization in 2D Irregular Cutting and Packing Problems: an Open-Source Collision Detection Engine_"](https://doi.org/10.1287/ijoc.2024.1025) published in _INFORMS Journal on Computing_.
+The author accepted manuscript of this paper is [freely available on arXiv](https://arxiv.org/abs/2508.08341).
 
 <img src="img/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
