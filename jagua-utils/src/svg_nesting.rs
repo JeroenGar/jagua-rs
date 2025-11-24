@@ -711,7 +711,7 @@ where
         // Check consecutive no improvement limit
         if consecutive_no_improvement >= config.consecutive_no_improvement_limit {
             log::debug!(
-                "Consecutive no improvement limit reached ({} attempts)",
+                "Consecutive no improvement limit reached ({} attempts, 0 remaining)",
                 config.consecutive_no_improvement_limit
             );
             break;
@@ -761,15 +761,17 @@ where
                     best_items_placed = total_items_placed;
                     best_solution = Some(test_solution.clone());
                     consecutive_no_improvement = 0; // Reset counter on improvement
+                    let remaining_attempts = config.consecutive_no_improvement_limit - consecutive_no_improvement;
 
                     log::debug!(
-                        "Improved to {} parts (samples: {}, loops: {}, placements: {}, ls_frac: {:.2}, attempt: {})",
+                        "Improved to {} parts (samples: {}, loops: {}, placements: {}, ls_frac: {:.2}, attempt: {}, remaining attempts: {})",
                         total_items_placed,
                         current_samples,
                         current_loops,
                         current_placements,
                         current_ls_frac,
-                        overall_attempts
+                        overall_attempts,
+                        remaining_attempts
                     );
 
                     let svg_options = SvgDrawOptions::default();
@@ -822,6 +824,7 @@ where
                 } else {
                     // No improvement in this attempt
                     consecutive_no_improvement += 1;
+                    let remaining_attempts = config.consecutive_no_improvement_limit.saturating_sub(consecutive_no_improvement);
 
                     // Increase parameters if no improvement for increase_after_no_improvement attempts
                     if consecutive_no_improvement >= config.increase_after_no_improvement {
@@ -841,12 +844,13 @@ where
                         }
 
                         log::debug!(
-                            "No improvement for {} attempts, increasing parameters (samples: {}, loops: {}, placements: {}, ls_frac: {:.2})",
+                            "No improvement for {} attempts, increasing parameters (samples: {}, loops: {}, placements: {}, ls_frac: {:.2}, remaining attempts: {})",
                             consecutive_no_improvement,
                             current_samples,
                             current_loops,
                             current_placements,
-                            current_ls_frac
+                            current_ls_frac,
+                            remaining_attempts
                         );
 
                         // Reset counter after increasing parameters
@@ -856,11 +860,13 @@ where
             }
         }
 
-        log::debug!(
-            "Attempt {}: best={}, consecutive_no_improvement={}, params: samples={}, loops={}, placements={}, ls_frac={:.2}",
+        let remaining_attempts = config.consecutive_no_improvement_limit.saturating_sub(consecutive_no_improvement);
+        log::info!(
+            "Attempt {}: best={}, consecutive_no_improvement={}, remaining attempts={}, params: samples={}, loops={}, placements={}, ls_frac={:.2}",
             overall_attempts,
             best_items_placed,
             consecutive_no_improvement,
+            remaining_attempts,
             current_samples,
             current_loops,
             current_placements,

@@ -4,26 +4,34 @@ use base64::{engine::general_purpose, Engine as _};
 use jagua_utils::svg_nesting::{nest_svg_parts_adaptive, AdaptiveConfig};
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::mpsc;
 
 /// Request message structure for SQS queue
+/// For cancellation requests, only `correlation_id` and `cancelled: true` are required.
+/// All other fields are required only when `cancelled` is false or not present.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SqsNestingRequest {
     /// Unique identifier for tracking the request
     pub correlation_id: String,
-    /// Base64-encoded SVG payload
-    pub svg_base64: String,
-    /// Bin width for nesting
-    pub bin_width: f32,
-    /// Bin height for nesting
-    pub bin_height: f32,
-    /// Spacing between parts
-    pub spacing: f32,
-    /// Number of parts to nest
-    pub amount_of_parts: usize,
+    /// Base64-encoded SVG payload (required if not cancelled)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub svg_base64: Option<String>,
+    /// Bin width for nesting (required if not cancelled)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bin_width: Option<f32>,
+    /// Bin height for nesting (required if not cancelled)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bin_height: Option<f32>,
+    /// Spacing between parts (required if not cancelled)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spacing: Option<f32>,
+    /// Number of parts to nest (required if not cancelled)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub amount_of_parts: Option<usize>,
     /// Number of rotations to try (default: 8)
     #[serde(default = "default_rotations")]
     pub amount_of_rotations: usize,
@@ -31,7 +39,11 @@ pub struct SqsNestingRequest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub config: Option<String>,
     /// Output queue URL for results (falls back to default if omitted)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub output_queue_url: Option<String>,
+    /// Whether this is a cancellation request
+    #[serde(default)]
+    pub cancelled: bool,
 }
 
 fn encode_svg(bytes: &[u8]) -> String {
@@ -98,6 +110,7 @@ pub struct SqsProcessor {
     sqs_client: SqsClient,
     input_queue_url: String,
     output_queue_url: String,
+    cancellation_registry: Arc<Mutex<HashMap<String, bool>>>,
 }
 
 impl SqsProcessor {
@@ -107,6 +120,7 @@ impl SqsProcessor {
             sqs_client,
             input_queue_url,
             output_queue_url,
+            cancellation_registry: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -141,23 +155,44 @@ impl SqsProcessor {
     }
 
     /// Create callback handler for nest_svg_parts_adaptive
+    /// Returns the callback and a shared state tracking the best result sent
     fn create_callback_handler(
         &self,
         correlation_id: String,
         sender: mpsc::UnboundedSender<ImprovementMessage>,
-    ) -> impl Fn(&[u8], usize) -> bool {
+        cancellation_registry: Arc<Mutex<HashMap<String, bool>>>,
+    ) -> (impl Fn(&[u8], usize) -> bool, Arc<Mutex<usize>>) {
         let state = Arc::new(Mutex::new(CallbackState {
             best_parts_placed: 0,
             best_svg_bytes: Vec::new(),
         }));
+        let best_sent = Arc::new(Mutex::new(0usize));
 
-        move |svg_bytes: &[u8], parts_placed: usize| {
+        let best_sent_clone = best_sent.clone();
+        let callback = move |svg_bytes: &[u8], parts_placed: usize| {
+            // Check if cancellation was requested
+            let cancelled = {
+                let registry = cancellation_registry.lock().unwrap();
+                registry.get(&correlation_id).copied().unwrap_or(false)
+            };
+
+            if cancelled {
+                info!("Cancellation requested for correlation_id={}, stopping optimization", correlation_id);
+                return true; // Cancel the optimization
+            }
+
             let mut state = state.lock().unwrap();
 
             // Only process if this is an improvement
             if parts_placed > state.best_parts_placed {
                 state.best_parts_placed = parts_placed;
                 state.best_svg_bytes = svg_bytes.to_vec();
+
+                // Update best result sent
+                {
+                    let mut best_sent = best_sent_clone.lock().unwrap();
+                    *best_sent = parts_placed;
+                }
 
                 // Send to channel for async processing
                 let msg = ImprovementMessage {
@@ -172,7 +207,9 @@ impl SqsProcessor {
             }
 
             false // Don't cancel
-        }
+        };
+
+        (callback, best_sent)
     }
 
     /// Process improvement messages from callback
@@ -258,6 +295,34 @@ impl SqsProcessor {
             request.correlation_id
         );
 
+        // Handle cancellation requests
+        if request.cancelled {
+            info!(
+                "Cancellation request received for correlation_id={}",
+                request.correlation_id
+            );
+            let mut registry = self.cancellation_registry.lock().unwrap();
+            registry.insert(request.correlation_id.clone(), true);
+            return Ok(());
+        }
+
+        // Validate required fields for non-cancellation requests
+        if request.svg_base64.is_none() {
+            return Err(anyhow!("Missing required field: svg_base64"));
+        }
+        if request.bin_width.is_none() {
+            return Err(anyhow!("Missing required field: bin_width"));
+        }
+        if request.bin_height.is_none() {
+            return Err(anyhow!("Missing required field: bin_height"));
+        }
+        if request.spacing.is_none() {
+            return Err(anyhow!("Missing required field: spacing"));
+        }
+        if request.amount_of_parts.is_none() {
+            return Err(anyhow!("Missing required field: amount_of_parts"));
+        }
+
         // Determine output queue (use request override if provided)
         let output_queue_url = request
             .output_queue_url
@@ -300,86 +365,129 @@ impl SqsProcessor {
         request: &SqsNestingRequest,
         output_queue_url: &str,
     ) -> Result<()> {
-        // Decode SVG payload
-        let svg_bytes = decode_svg(&request.svg_base64)?;
-        info!("Decoded SVG payload: {} bytes", svg_bytes.len());
+        // Track start time for execution duration
+        let start_time = Instant::now();
 
-        // Get configuration - for now, just use defaults
-        let config = AdaptiveConfig::default();
+        // Register correlation_id in cancellation registry
+        {
+            let mut registry = self.cancellation_registry.lock().unwrap();
+            registry.insert(request.correlation_id.clone(), false);
+        }
 
-        // Create channel for improvement messages
-        let (tx, rx) = mpsc::unbounded_channel();
+        // Ensure cleanup happens even on error
+        let result = {
+            // Unwrap required fields (validation already done in process_message)
+            let svg_base64 = request.svg_base64.as_ref().unwrap();
+            let bin_width = request.bin_width.unwrap();
+            let bin_height = request.bin_height.unwrap();
+            let spacing = request.spacing.unwrap();
+            let amount_of_parts = request.amount_of_parts.unwrap();
 
-        // Spawn task to process improvements
-        let processor_clone = self.clone();
-        let output_queue_url_clone = output_queue_url.to_string();
-        let improvement_task = tokio::spawn(async move {
-            processor_clone
-                .process_improvements(rx, output_queue_url_clone)
-                .await;
-        });
+            // Decode SVG payload
+            let svg_bytes = decode_svg(svg_base64)?;
+            info!("Decoded SVG payload: {} bytes", svg_bytes.len());
 
-        // Create callback handler (tx will be moved into the closure)
-        let callback = self.create_callback_handler(request.correlation_id.clone(), tx);
+            // Get configuration - for now, just use defaults
+            let config = AdaptiveConfig::default();
 
-        // Process nesting
-        let nesting_result = nest_svg_parts_adaptive(
-            request.bin_width,
-            request.bin_height,
-            request.spacing,
-            &svg_bytes,
-            request.amount_of_parts,
-            request.amount_of_rotations,
-            config,
-            Some(callback),
-        )
-        .with_context(|| format!("Failed to process SVG nesting for correlation_id={}", request.correlation_id))?;
+            // Create channel for improvement messages
+            let (tx, rx) = mpsc::unbounded_channel();
 
-        // Wait a bit for any remaining improvement messages to be processed
-        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-        improvement_task.abort();
+            // Spawn task to process improvements
+            let processor_clone = self.clone();
+            let output_queue_url_clone = output_queue_url.to_string();
+            let improvement_task = tokio::spawn(async move {
+                processor_clone
+                    .process_improvements(rx, output_queue_url_clone)
+                    .await;
+            });
 
-        info!(
-            "Nesting complete: {} parts placed",
-            nesting_result.parts_placed
-        );
+            // Create callback handler (tx will be moved into the closure)
+            let (callback, best_sent) = self.create_callback_handler(
+                request.correlation_id.clone(),
+                tx,
+                self.cancellation_registry.clone(),
+            );
 
-        // Prepare final response images
-        let first_page_svg_base64 = nesting_result
-            .page_svgs
-            .first()
-            .map(|page| encode_svg(page))
-            .unwrap_or_else(|| encode_svg(&nesting_result.combined_svg));
+            // Process nesting
+            let nesting_result = nest_svg_parts_adaptive(
+                bin_width,
+                bin_height,
+                spacing,
+                &svg_bytes,
+                amount_of_parts,
+                request.amount_of_rotations,
+                config,
+                Some(callback),
+            )
+            .with_context(|| format!("Failed to process SVG nesting for correlation_id={}", request.correlation_id))?;
 
-        // Only set last_page if there are multiple pages (more than 1 page)
-        let last_page_svg_base64 = if nesting_result.parts_placed > 0 && nesting_result.page_svgs.len() > 1 {
-            nesting_result
-                .page_svgs
-                .last()
-                .map(|page| encode_svg(page))
-        } else {
-            None
+            // Wait a bit for any remaining improvement messages to be processed
+            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+            improvement_task.abort();
+
+            let execution_time = start_time.elapsed();
+            info!(
+                "Nesting complete: {} parts placed in {:.3}s",
+                nesting_result.parts_placed,
+                execution_time.as_secs_f64()
+            );
+
+            // Only send final result if it's better than what was already sent
+            let best_sent_value = *best_sent.lock().unwrap();
+            if nesting_result.parts_placed > best_sent_value {
+                // Prepare final response images
+                let first_page_svg_base64 = nesting_result
+                    .page_svgs
+                    .first()
+                    .map(|page| encode_svg(page))
+                    .unwrap_or_else(|| encode_svg(&nesting_result.combined_svg));
+
+                // Only set last_page if there are multiple pages (more than 1 page)
+                let last_page_svg_base64 = if nesting_result.parts_placed > 0 && nesting_result.page_svgs.len() > 1 {
+                    nesting_result
+                        .page_svgs
+                        .last()
+                        .map(|page| encode_svg(page))
+                } else {
+                    None
+                };
+
+                // Send final result to queue
+                let response = SqsNestingResponse {
+                    correlation_id: request.correlation_id.clone(),
+                    first_page_svg_base64,
+                    last_page_svg_base64,
+                    parts_placed: nesting_result.parts_placed,
+                    is_improvement: false,
+                    is_final: true,
+                    timestamp: current_timestamp(),
+                    error_message: None,
+                };
+
+                self.send_to_output_queue(output_queue_url, &response)
+                    .await
+                    .context("Failed to send final result to queue")?;
+
+                info!("Sent final result to queue");
+            } else {
+                info!(
+                    "Final result ({} parts) not better than best sent ({} parts), skipping final response",
+                    nesting_result.parts_placed,
+                    best_sent_value
+                );
+            }
+
+            Ok(())
         };
 
-        // Send final result to queue
-        let response = SqsNestingResponse {
-            correlation_id: request.correlation_id.clone(),
-            first_page_svg_base64,
-            last_page_svg_base64,
-            parts_placed: nesting_result.parts_placed,
-            is_improvement: false,
-            is_final: true,
-            timestamp: current_timestamp(),
-            error_message: None,
-        };
+        // Cleanup: remove correlation_id from cancellation registry (always happens)
+        {
+            let mut registry = self.cancellation_registry.lock().unwrap();
+            registry.remove(&request.correlation_id);
+        }
 
-        self.send_to_output_queue(output_queue_url, &response)
-            .await
-            .context("Failed to send final result to queue")?;
-
-        info!("Sent final result to queue");
-
-        Ok(())
+        result
     }
 
     /// Listen and process messages from the queue
@@ -458,5 +566,181 @@ impl SqsProcessor {
 
         info!("Shutdown complete, exiting gracefully");
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+    use std::sync::{Arc, Mutex};
+    use tokio::sync::mpsc;
+
+    #[test]
+    fn test_cancellation_registry_insert_and_get() {
+        let registry: Arc<Mutex<HashMap<String, bool>>> = Arc::new(Mutex::new(HashMap::new()));
+        
+        // Insert a cancellation flag
+        {
+            let mut reg = registry.lock().unwrap();
+            reg.insert("test-id-1".to_string(), true);
+        }
+
+        // Check that it's set
+        {
+            let reg = registry.lock().unwrap();
+            assert_eq!(reg.get("test-id-1"), Some(&true));
+            assert_eq!(reg.get("test-id-2"), None);
+        }
+    }
+
+    #[test]
+    fn test_cancellation_registry_remove() {
+        let registry: Arc<Mutex<HashMap<String, bool>>> = Arc::new(Mutex::new(HashMap::new()));
+        
+        // Insert and then remove
+        {
+            let mut reg = registry.lock().unwrap();
+            reg.insert("test-id-1".to_string(), false);
+        }
+
+        {
+            let mut reg = registry.lock().unwrap();
+            reg.remove("test-id-1");
+        }
+
+        // Verify it's gone
+        {
+            let reg = registry.lock().unwrap();
+            assert_eq!(reg.get("test-id-1"), None);
+        }
+    }
+
+    #[test]
+    fn test_callback_returns_false_when_not_cancelled() {
+        let registry: Arc<Mutex<HashMap<String, bool>>> = Arc::new(Mutex::new(HashMap::new()));
+        let correlation_id = "test-correlation-1".to_string();
+        let (tx, _rx) = mpsc::unbounded_channel();
+
+        // Create a mock processor just for the callback
+        let processor = SqsProcessor::new(
+            aws_sdk_sqs::Client::from_conf(
+                aws_sdk_sqs::Config::builder()
+                    .region(aws_config::Region::new("us-east-1"))
+                    .behavior_version(aws_config::BehaviorVersion::latest())
+                    .build(),
+            ),
+            "test-input".to_string(),
+            "test-output".to_string(),
+        );
+
+        let (callback, _best_sent) = processor.create_callback_handler(correlation_id.clone(), tx, registry.clone());
+
+        // Registry doesn't have cancellation flag, so should return false
+        let result = callback(&[], 0);
+        assert_eq!(result, false, "Callback should return false when not cancelled");
+    }
+
+    #[test]
+    fn test_callback_returns_true_when_cancelled() {
+        let registry: Arc<Mutex<HashMap<String, bool>>> = Arc::new(Mutex::new(HashMap::new()));
+        let correlation_id = "test-correlation-2".to_string();
+        let (tx, _rx) = mpsc::unbounded_channel();
+
+        // Set cancellation flag
+        {
+            let mut reg = registry.lock().unwrap();
+            reg.insert(correlation_id.clone(), true);
+        }
+
+        // Create a mock processor just for the callback
+        let processor = SqsProcessor::new(
+            aws_sdk_sqs::Client::from_conf(
+                aws_sdk_sqs::Config::builder()
+                    .region(aws_config::Region::new("us-east-1"))
+                    .behavior_version(aws_config::BehaviorVersion::latest())
+                    .build(),
+            ),
+            "test-input".to_string(),
+            "test-output".to_string(),
+        );
+
+        let (callback, _best_sent) = processor.create_callback_handler(correlation_id.clone(), tx, registry.clone());
+
+        // Registry has cancellation flag, so should return true
+        let result = callback(&[], 0);
+        assert_eq!(result, true, "Callback should return true when cancelled");
+    }
+
+    #[test]
+    fn test_cancellation_registry_multiple_correlation_ids() {
+        let registry: Arc<Mutex<HashMap<String, bool>>> = Arc::new(Mutex::new(HashMap::new()));
+        
+        // Insert multiple correlation IDs
+        {
+            let mut reg = registry.lock().unwrap();
+            reg.insert("id-1".to_string(), false);
+            reg.insert("id-2".to_string(), true);
+            reg.insert("id-3".to_string(), false);
+        }
+
+        // Verify all are present
+        {
+            let reg = registry.lock().unwrap();
+            assert_eq!(reg.get("id-1"), Some(&false));
+            assert_eq!(reg.get("id-2"), Some(&true));
+            assert_eq!(reg.get("id-3"), Some(&false));
+        }
+
+        // Cancel id-2 (already cancelled, but update it)
+        {
+            let mut reg = registry.lock().unwrap();
+            reg.insert("id-2".to_string(), true);
+        }
+
+        // Remove id-1
+        {
+            let mut reg = registry.lock().unwrap();
+            reg.remove("id-1");
+        }
+
+        // Verify final state
+        {
+            let reg = registry.lock().unwrap();
+            assert_eq!(reg.get("id-1"), None);
+            assert_eq!(reg.get("id-2"), Some(&true));
+            assert_eq!(reg.get("id-3"), Some(&false));
+        }
+    }
+
+    #[test]
+    fn test_sqs_nesting_request_cancelled_field_default() {
+        let request_json = r#"{
+            "correlationId": "test-123",
+            "svgBase64": "dGVzdA==",
+            "binWidth": 100.0,
+            "binHeight": 100.0,
+            "spacing": 10.0,
+            "amountOfParts": 1
+        }"#;
+
+        let request: SqsNestingRequest = serde_json::from_str(request_json).unwrap();
+        assert_eq!(request.cancelled, false, "cancelled should default to false");
+    }
+
+    #[test]
+    fn test_sqs_nesting_request_cancelled_field_explicit() {
+        let request_json = r#"{
+            "correlationId": "test-123",
+            "svgBase64": "dGVzdA==",
+            "binWidth": 100.0,
+            "binHeight": 100.0,
+            "spacing": 10.0,
+            "amountOfParts": 1,
+            "cancelled": true
+        }"#;
+
+        let request: SqsNestingRequest = serde_json::from_str(request_json).unwrap();
+        assert_eq!(request.cancelled, true, "cancelled should be true when set");
     }
 }

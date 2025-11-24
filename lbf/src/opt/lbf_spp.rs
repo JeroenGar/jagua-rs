@@ -7,7 +7,7 @@ use crate::util::assertions::strip_width_is_in_check;
 use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
 use jagua_rs::entities::Instance;
 use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution};
-use log::info;
+use log::{debug, info};
 use rand::prelude::SmallRng;
 use thousands::Separable;
 
@@ -71,7 +71,7 @@ impl LBFOptimizerSP {
                             item_id: item.id,
                             d_transf,
                         });
-                        info!(
+                        debug!(
                             "[LBF] placing item {}/{} with id {} at [{}]",
                             self.problem.layout.placed_items.len(),
                             self.instance.total_item_qty(),

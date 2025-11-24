@@ -55,7 +55,7 @@ impl LBFOptimizerBP {
                 match placement {
                     Some(i_opt) => {
                         let l_index = self.problem.place_item(i_opt);
-                        info!(
+                        debug!(
                             "[LBF] placing item {}/{} with id {} at [{}] in Layout {:?}",
                             self.problem.item_placed_qtys().sum::<usize>(),
                             self.instance.total_item_qty(),
