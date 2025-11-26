@@ -3,7 +3,7 @@ mod processor;
 use anyhow::{Context, Result};
 use aws_config::BehaviorVersion;
 use aws_sdk_sqs::Client as SqsClient;
-use log::{info, warn};
+use log::info;
 use processor::SqsProcessor;
 use std::env;
 use tokio::signal;
@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
 
     // Initialize AWS clients
     let mut config_loader = aws_config::defaults(BehaviorVersion::latest());
-    
+
     // Configure LocalStack endpoint if provided
     if let Ok(endpoint_url) = env::var("AWS_ENDPOINT_URL") {
         config_loader = config_loader.endpoint_url(&endpoint_url);
@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
         config_loader = config_loader.endpoint_url(&endpoint_url);
         info!("Using SQS endpoint: {}", endpoint_url);
     }
-    
+
     let config = config_loader.load().await;
     let sqs_client = SqsClient::new(&config);
 
@@ -68,14 +68,14 @@ async fn main() -> Result<()> {
         }
     });
 
-    // Start listening and processing
-    let result = processor.listen_and_process(shutdown_rx).await;
+    // Start listening and processing (single-threaded)
+    let result = processor.listen_and_process(1, shutdown_rx).await;
 
     // Give a moment for any final cleanup
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
     if let Err(e) = &result {
-        warn!("Processor exited with error: {}", e);
+        log::warn!("Processor exited with error: {}", e);
     }
 
     result

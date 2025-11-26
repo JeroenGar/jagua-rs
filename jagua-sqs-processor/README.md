@@ -153,8 +153,9 @@ The service sends JSON messages in the following format:
 ```
 
 * `first_page_svg_base64` - SVG for the first page/bin
-* `last_page_svg_base64` - SVG for the last page/bin (omitted when no parts are placed)
-* Intermediate responses (`is_improvement = true`) only include `first_page_svg_base64`
+* `last_page_svg_base64` - SVG for the last page/bin. It is always populated for successful responses (equal to the first page when everything fits on one page).
+* `is_improvement` - `true` only when the newly computed solution beats the best result previously emitted for the same `correlation_id`
+* The processor runs a single optimization pass per request and emits exactly one response per message; `is_improvement` indicates whether it beat the previously recorded best for that correlation.
 ```
 
 

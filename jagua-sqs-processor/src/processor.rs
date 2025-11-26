@@ -1,13 +1,13 @@
 use anyhow::{anyhow, Context, Result};
 use aws_sdk_sqs::Client as SqsClient;
 use base64::{engine::general_purpose, Engine as _};
-use jagua_utils::svg_nesting::{nest_svg_parts_adaptive, AdaptiveConfig};
+use jagua_utils::svg_nesting::{NestingStrategy, SimpleNestingStrategy};
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
-use tokio::sync::mpsc;
+use std::time::{SystemTime, UNIX_EPOCH};
+use tokio::sync::broadcast;
 
 /// Request message structure for SQS queue
 /// For cancellation requests, only `correlation_id` and `cancelled: true` are required.
@@ -35,9 +35,6 @@ pub struct SqsNestingRequest {
     /// Number of rotations to try (default: 8)
     #[serde(default = "default_rotations")]
     pub amount_of_rotations: usize,
-    /// Adaptive configuration as JSON string (uses defaults if not provided)
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub config: Option<String>,
     /// Output queue URL for results (falls back to default if omitted)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub output_queue_url: Option<String>,
@@ -48,6 +45,17 @@ pub struct SqsNestingRequest {
 
 fn encode_svg(bytes: &[u8]) -> String {
     general_purpose::STANDARD.encode(bytes)
+}
+
+fn sanitize_svg_fields(response: &SqsNestingResponse) -> SqsNestingResponse {
+    let mut sanitized = response.clone();
+    sanitized.first_page_svg_base64 =
+        format!("<{} bytes stripped>", response.first_page_svg_base64.len());
+    sanitized.last_page_svg_base64 = response
+        .last_page_svg_base64
+        .as_ref()
+        .map(|svg| format!("<{} bytes stripped>", svg.len()));
+    sanitized
 }
 
 fn decode_svg(encoded: &str) -> Result<Vec<u8>> {
@@ -75,33 +83,22 @@ pub struct SqsNestingResponse {
     pub correlation_id: String,
     /// Base64-encoded SVG for the first page
     pub first_page_svg_base64: String,
-    /// Optional base64-encoded SVG for the last page
+    /// Base64-encoded SVG for the last page (same as first when single page)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_page_svg_base64: Option<String>,
     /// Number of parts placed
     pub parts_placed: usize,
-    /// Whether this is an intermediate improvement
+    /// Whether this is an intermediate improvement (always false for simple strategy)
+    #[serde(rename = "improvement")]
     pub is_improvement: bool,
-    /// Whether this is the final result
+    /// Whether this is the final result (always true for simple strategy)
+    #[serde(rename = "final")]
     pub is_final: bool,
     /// Timestamp in seconds since epoch
     pub timestamp: u64,
     /// Error message if processing failed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_message: Option<String>,
-}
-
-/// Shared state for callback handler
-struct CallbackState {
-    best_parts_placed: usize,
-    best_svg_bytes: Vec<u8>,
-}
-
-/// Message for async processing from callback
-struct ImprovementMessage {
-    correlation_id: String,
-    svg_bytes: Vec<u8>,
-    parts_placed: usize,
 }
 
 /// SQS Processor for handling SVG nesting requests
@@ -114,6 +111,11 @@ pub struct SqsProcessor {
 }
 
 impl SqsProcessor {
+    fn mark_cancelled(&self, correlation_id: &str) -> bool {
+        let mut registry = self.cancellation_registry.lock().unwrap();
+        registry.insert(correlation_id.to_string(), true).is_some()
+    }
+
     /// Create a new SQS processor
     pub fn new(sqs_client: SqsClient, input_queue_url: String, output_queue_url: String) -> Self {
         Self {
@@ -138,6 +140,10 @@ impl SqsProcessor {
             response.correlation_id, response.is_final
         );
 
+        let sanitized_response = sanitize_svg_fields(response);
+        let sanitized_body = serde_json::to_string(&sanitized_response)
+            .unwrap_or_else(|_| "<failed to serialize sanitized response>".to_string());
+
         self.sqs_client
             .send_message()
             .queue_url(queue_url)
@@ -147,107 +153,11 @@ impl SqsProcessor {
             .context("Failed to send message to output queue")?;
 
         info!(
-            "Emitted response to {}: correlation_id={}, is_final={}",
-            queue_url, response.correlation_id, response.is_final
+            "Emitted response to {} with stripped payload: {}",
+            queue_url, sanitized_body
         );
 
         Ok(())
-    }
-
-    /// Create callback handler for nest_svg_parts_adaptive
-    /// Returns the callback and a shared state tracking the best result sent
-    fn create_callback_handler(
-        &self,
-        correlation_id: String,
-        sender: mpsc::UnboundedSender<ImprovementMessage>,
-        cancellation_registry: Arc<Mutex<HashMap<String, bool>>>,
-    ) -> (impl Fn(&[u8], usize) -> bool, Arc<Mutex<usize>>) {
-        let state = Arc::new(Mutex::new(CallbackState {
-            best_parts_placed: 0,
-            best_svg_bytes: Vec::new(),
-        }));
-        let best_sent = Arc::new(Mutex::new(0usize));
-
-        let best_sent_clone = best_sent.clone();
-        let callback = move |svg_bytes: &[u8], parts_placed: usize| {
-            // Check if cancellation was requested
-            let cancelled = {
-                let registry = cancellation_registry.lock().unwrap();
-                registry.get(&correlation_id).copied().unwrap_or(false)
-            };
-
-            if cancelled {
-                info!("Cancellation requested for correlation_id={}, stopping optimization", correlation_id);
-                return true; // Cancel the optimization
-            }
-
-            let mut state = state.lock().unwrap();
-
-            // Only process if this is an improvement
-            if parts_placed > state.best_parts_placed {
-                state.best_parts_placed = parts_placed;
-                state.best_svg_bytes = svg_bytes.to_vec();
-
-                // Update best result sent
-                {
-                    let mut best_sent = best_sent_clone.lock().unwrap();
-                    *best_sent = parts_placed;
-                }
-
-                // Send to channel for async processing
-                let msg = ImprovementMessage {
-                    correlation_id: correlation_id.clone(),
-                    svg_bytes: svg_bytes.to_vec(),
-                    parts_placed,
-                };
-
-                if let Err(e) = sender.send(msg) {
-                    error!("Failed to send improvement message to channel: {}", e);
-                }
-            }
-
-            false // Don't cancel
-        };
-
-        (callback, best_sent)
-    }
-
-    /// Process improvement messages from callback
-    async fn process_improvements(
-        &self,
-        mut receiver: mpsc::UnboundedReceiver<ImprovementMessage>,
-        output_queue_url: String,
-    ) {
-        while let Some(msg) = receiver.recv().await {
-            let response = SqsNestingResponse {
-                correlation_id: msg.correlation_id.clone(),
-                first_page_svg_base64: encode_svg(&msg.svg_bytes),
-                last_page_svg_base64: None,
-                parts_placed: msg.parts_placed,
-                is_improvement: true,
-                is_final: false,
-                timestamp: current_timestamp(),
-                error_message: None,
-            };
-
-            if let Err(e) = self
-                .sqs_client
-                .send_message()
-                .queue_url(&output_queue_url)
-                .message_body(
-                    &serde_json::to_string(&response).expect("SqsNestingResponse should serialize"),
-                )
-                .send()
-                .await
-            {
-                error!("Failed to send improvement message to queue: {}", e);
-            } else {
-                info!(
-                    "Sent improvement message: {} parts placed",
-                    msg.parts_placed
-                );
-            }
-        }
     }
 
     /// Process a single message from the queue
@@ -258,8 +168,11 @@ impl SqsProcessor {
         let request: SqsNestingRequest = match serde_json::from_str(body) {
             Ok(req) => req,
             Err(e) => {
-                let error_msg = format!("Failed to parse request message: {}. Body (first 200 chars): {}", 
-                    e, body.chars().take(200).collect::<String>());
+                let error_msg = format!(
+                    "Failed to parse request message: {}. Body (first 200 chars): {}",
+                    e,
+                    body.chars().take(200).collect::<String>()
+                );
                 error!("{}", error_msg);
                 // Try to extract correlation_id from body if possible
                 if let Ok(partial) = serde_json::from_str::<serde_json::Value>(body) {
@@ -269,7 +182,7 @@ impl SqsProcessor {
                             .and_then(|v| v.as_str())
                             .map(|s| s.to_string())
                             .unwrap_or_else(|| self.output_queue_url.clone());
-                        
+
                         let error_response = SqsNestingResponse {
                             correlation_id: corr_id.to_string(),
                             first_page_svg_base64: String::new(),
@@ -280,8 +193,11 @@ impl SqsProcessor {
                             timestamp: current_timestamp(),
                             error_message: Some(error_msg.clone()),
                         };
-                        
-                        if let Err(send_err) = self.send_to_output_queue(&output_queue_url, &error_response).await {
+
+                        if let Err(send_err) = self
+                            .send_to_output_queue(&output_queue_url, &error_response)
+                            .await
+                        {
                             error!("Failed to send error response: {}", send_err);
                         }
                     }
@@ -297,12 +213,18 @@ impl SqsProcessor {
 
         // Handle cancellation requests
         if request.cancelled {
-            info!(
-                "Cancellation request received for correlation_id={}",
-                request.correlation_id
-            );
-            let mut registry = self.cancellation_registry.lock().unwrap();
-            registry.insert(request.correlation_id.clone(), true);
+            let was_running = self.mark_cancelled(&request.correlation_id);
+            if was_running {
+                info!(
+                    "Cancellation request received and forwarded to running optimizer: correlation_id={}",
+                    request.correlation_id
+                );
+            } else {
+                info!(
+                    "Cancellation request received for idle correlation_id={}, future runs will be skipped",
+                    request.correlation_id
+                );
+            }
             return Ok(());
         }
 
@@ -330,12 +252,14 @@ impl SqsProcessor {
             .unwrap_or_else(|| self.output_queue_url.clone());
 
         // Process the request and handle errors by sending error response
-        let result = self.process_nesting_request(&request, &output_queue_url).await;
-        
+        let result = self
+            .process_nesting_request(&request, &output_queue_url)
+            .await;
+
         if let Err(e) = &result {
             let error_msg = format!("{}", e);
             error!("Failed to process message: {}", error_msg);
-            
+
             // Send error response
             let error_response = SqsNestingResponse {
                 correlation_id: request.correlation_id.clone(),
@@ -347,14 +271,20 @@ impl SqsProcessor {
                 timestamp: current_timestamp(),
                 error_message: Some(error_msg),
             };
-            
-            if let Err(send_err) = self.send_to_output_queue(&output_queue_url, &error_response).await {
+
+            if let Err(send_err) = self
+                .send_to_output_queue(&output_queue_url, &error_response)
+                .await
+            {
                 error!("Failed to send error response: {}", send_err);
             } else {
-                info!("Sent error response to queue for correlation_id={}", request.correlation_id);
+                info!(
+                    "Sent error response to queue for correlation_id={}",
+                    request.correlation_id
+                );
             }
         }
-        
+
         // Always return Ok so message gets acknowledged
         Ok(())
     }
@@ -365,9 +295,6 @@ impl SqsProcessor {
         request: &SqsNestingRequest,
         output_queue_url: &str,
     ) -> Result<()> {
-        // Track start time for execution duration
-        let start_time = Instant::now();
-
         // Register correlation_id in cancellation registry
         {
             let mut registry = self.cancellation_registry.lock().unwrap();
@@ -387,96 +314,67 @@ impl SqsProcessor {
             let svg_bytes = decode_svg(svg_base64)?;
             info!("Decoded SVG payload: {} bytes", svg_bytes.len());
 
-            // Get configuration - for now, just use defaults
-            let config = AdaptiveConfig::default();
+            // Use simple nesting strategy
+            let strategy = SimpleNestingStrategy::new();
+            let nesting_result = strategy
+                .nest(
+                    bin_width,
+                    bin_height,
+                    spacing,
+                    &svg_bytes,
+                    amount_of_parts,
+                    request.amount_of_rotations,
+                )
+                .with_context(|| {
+                    format!(
+                        "Failed to process SVG nesting for correlation_id={}",
+                        request.correlation_id
+                    )
+                })?;
 
-            // Create channel for improvement messages
-            let (tx, rx) = mpsc::unbounded_channel();
-
-            // Spawn task to process improvements
-            let processor_clone = self.clone();
-            let output_queue_url_clone = output_queue_url.to_string();
-            let improvement_task = tokio::spawn(async move {
-                processor_clone
-                    .process_improvements(rx, output_queue_url_clone)
-                    .await;
-            });
-
-            // Create callback handler (tx will be moved into the closure)
-            let (callback, best_sent) = self.create_callback_handler(
-                request.correlation_id.clone(),
-                tx,
-                self.cancellation_registry.clone(),
-            );
-
-            // Process nesting
-            let nesting_result = nest_svg_parts_adaptive(
-                bin_width,
-                bin_height,
-                spacing,
-                &svg_bytes,
-                amount_of_parts,
-                request.amount_of_rotations,
-                config,
-                Some(callback),
-            )
-            .with_context(|| format!("Failed to process SVG nesting for correlation_id={}", request.correlation_id))?;
-
-            // Wait a bit for any remaining improvement messages to be processed
-            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-            improvement_task.abort();
-
-            let execution_time = start_time.elapsed();
             info!(
-                "Nesting complete: {} parts placed in {:.3}s",
+                "Nesting complete: {} parts placed out of {} requested ({} page SVGs generated)",
                 nesting_result.parts_placed,
-                execution_time.as_secs_f64()
+                nesting_result.total_parts_requested,
+                nesting_result.page_svgs.len()
             );
 
-            // Only send final result if it's better than what was already sent
-            let best_sent_value = *best_sent.lock().unwrap();
-            if nesting_result.parts_placed > best_sent_value {
-                // Prepare final response images
-                let first_page_svg_base64 = nesting_result
-                    .page_svgs
-                    .first()
-                    .map(|page| encode_svg(page))
-                    .unwrap_or_else(|| encode_svg(&nesting_result.combined_svg));
+            // Prepare final response images
+            // Use first page SVG for first sheet (same logic as last sheet)
+            let first_page_bytes = nesting_result.page_svgs.first()
+                .unwrap_or_else(|| &nesting_result.combined_svg);
+            
+            // Use unplaced parts SVG for last page if available, otherwise use last filled page
+            let last_page_bytes = nesting_result
+                .unplaced_parts_svg
+                .as_ref()
+                .unwrap_or_else(|| nesting_result.page_svgs.last().unwrap_or(first_page_bytes));
+            
+            let first_page_svg_base64 = encode_svg(first_page_bytes);
+            let last_page_svg_base64 = encode_svg(last_page_bytes);
 
-                // Only set last_page if there are multiple pages (more than 1 page)
-                let last_page_svg_base64 = if nesting_result.parts_placed > 0 && nesting_result.page_svgs.len() > 1 {
-                    nesting_result
-                        .page_svgs
-                        .last()
-                        .map(|page| encode_svg(page))
-                } else {
-                    None
-                };
+            // Send final result to queue
+            let response = SqsNestingResponse {
+                correlation_id: request.correlation_id.clone(),
+                first_page_svg_base64,
+                last_page_svg_base64: Some(last_page_svg_base64),
+                parts_placed: nesting_result.parts_placed,
+                is_improvement: false,
+                is_final: true,
+                timestamp: current_timestamp(),
+                error_message: None,
+            };
 
-                // Send final result to queue
-                let response = SqsNestingResponse {
-                    correlation_id: request.correlation_id.clone(),
-                    first_page_svg_base64,
-                    last_page_svg_base64,
-                    parts_placed: nesting_result.parts_placed,
-                    is_improvement: false,
-                    is_final: true,
-                    timestamp: current_timestamp(),
-                    error_message: None,
-                };
+            info!(
+                "Sending response with parts_placed: {} (from nesting_result.parts_placed: {})",
+                response.parts_placed, nesting_result.parts_placed
+            );
 
-                self.send_to_output_queue(output_queue_url, &response)
-                    .await
-                    .context("Failed to send final result to queue")?;
+            self.send_to_output_queue(output_queue_url, &response)
+                .await
+                .context("Failed to send final result to queue")?;
 
-                info!("Sent final result to queue");
-            } else {
-                info!(
-                    "Final result ({} parts) not better than best sent ({} parts), skipping final response",
-                    nesting_result.parts_placed,
-                    best_sent_value
-                );
-            }
+            info!("Sent final result to queue");
 
             Ok(())
         };
@@ -490,18 +388,18 @@ impl SqsProcessor {
         result
     }
 
-    /// Listen and process messages from the queue
+    /// Listen and process messages from the queue (single-threaded)
     pub async fn listen_and_process(
         &self,
-        mut shutdown_rx: tokio::sync::broadcast::Receiver<()>,
+        _worker_count: usize, // Ignored, kept for compatibility
+        mut shutdown_rx: broadcast::Receiver<()>,
     ) -> Result<()> {
-        info!("Starting to listen on queue: {}", self.input_queue_url);
+        info!("Starting single worker on queue: {}", self.input_queue_url);
 
         loop {
-            // Check for shutdown signal
             tokio::select! {
                 _ = shutdown_rx.recv() => {
-                    info!("Shutdown signal received, finishing current operations...");
+                    info!("Received shutdown signal");
                     break;
                 }
                 result = self.sqs_client
@@ -514,39 +412,36 @@ impl SqsProcessor {
 
                     if let Some(messages) = response.messages {
                         for message in messages {
-                            // Check for shutdown before processing each message
+                            // Check for shutdown before processing
                             if shutdown_rx.try_recv().is_ok() {
-                                info!("Shutdown signal received, stopping message processing");
-                                // Return the message to the queue by not deleting it
+                                info!("Stopping before processing message due to shutdown");
                                 break;
                             }
 
-                            let receipt_handle = message.receipt_handle()
+                            let receipt_handle = message
+                                .receipt_handle()
                                 .ok_or_else(|| anyhow::anyhow!("Message missing receipt handle"))?;
-                            let body = message.body()
+                            let body = message
+                                .body()
                                 .ok_or_else(|| anyhow::anyhow!("Message missing body"))?;
 
                             if let Some(message_id) = message.message_id() {
-                                info!("Received message from queue: {}", message_id);
+                                info!("Received message {}", message_id);
                             } else {
-                                info!("Received message from queue (no message_id present)");
+                                info!("Received message without message_id");
                             }
 
-                            // Process message (always sends response, success or error)
                             let process_result = self.process_message(receipt_handle, body).await;
-                            
                             if let Err(e) = &process_result {
                                 error!("Error during message processing: {}", e);
                             }
-                            
-                            // Check for shutdown before deleting message
+
+                            // Check for shutdown before deleting
                             if shutdown_rx.try_recv().is_ok() {
-                                info!("Shutdown signal received, message will be reprocessed");
+                                info!("Stopping before deleting message due to shutdown");
                                 break;
                             }
 
-                            // Always delete message after processing (success or error)
-                            // Error responses have already been sent to output queue
                             if let Err(e) = self.sqs_client
                                 .delete_message()
                                 .queue_url(&self.input_queue_url)
@@ -556,7 +451,7 @@ impl SqsProcessor {
                             {
                                 error!("Failed to delete message: {}", e);
                             } else {
-                                info!("Acknowledged message from queue");
+                                info!("Acknowledged message");
                             }
                         }
                     }
@@ -564,22 +459,32 @@ impl SqsProcessor {
             }
         }
 
-        info!("Shutdown complete, exiting gracefully");
+        info!("Worker exiting gracefully");
         Ok(())
+    }
+}
+
+#[cfg(test)]
+impl SqsProcessor {
+    pub(crate) fn cancellation_registry_handle(&self) -> Arc<Mutex<HashMap<String, bool>>> {
+        self.cancellation_registry.clone()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use aws_config::BehaviorVersion;
+    use aws_sdk_sqs::Client as SqsClient;
     use std::collections::HashMap;
     use std::sync::{Arc, Mutex};
-    use tokio::sync::mpsc;
+    use tokio::sync::broadcast;
+    use tokio::time::{Duration, Instant};
 
     #[test]
     fn test_cancellation_registry_insert_and_get() {
         let registry: Arc<Mutex<HashMap<String, bool>>> = Arc::new(Mutex::new(HashMap::new()));
-        
+
         // Insert a cancellation flag
         {
             let mut reg = registry.lock().unwrap();
@@ -597,7 +502,7 @@ mod tests {
     #[test]
     fn test_cancellation_registry_remove() {
         let registry: Arc<Mutex<HashMap<String, bool>>> = Arc::new(Mutex::new(HashMap::new()));
-        
+
         // Insert and then remove
         {
             let mut reg = registry.lock().unwrap();
@@ -617,103 +522,6 @@ mod tests {
     }
 
     #[test]
-    fn test_callback_returns_false_when_not_cancelled() {
-        let registry: Arc<Mutex<HashMap<String, bool>>> = Arc::new(Mutex::new(HashMap::new()));
-        let correlation_id = "test-correlation-1".to_string();
-        let (tx, _rx) = mpsc::unbounded_channel();
-
-        // Create a mock processor just for the callback
-        let processor = SqsProcessor::new(
-            aws_sdk_sqs::Client::from_conf(
-                aws_sdk_sqs::Config::builder()
-                    .region(aws_config::Region::new("us-east-1"))
-                    .behavior_version(aws_config::BehaviorVersion::latest())
-                    .build(),
-            ),
-            "test-input".to_string(),
-            "test-output".to_string(),
-        );
-
-        let (callback, _best_sent) = processor.create_callback_handler(correlation_id.clone(), tx, registry.clone());
-
-        // Registry doesn't have cancellation flag, so should return false
-        let result = callback(&[], 0);
-        assert_eq!(result, false, "Callback should return false when not cancelled");
-    }
-
-    #[test]
-    fn test_callback_returns_true_when_cancelled() {
-        let registry: Arc<Mutex<HashMap<String, bool>>> = Arc::new(Mutex::new(HashMap::new()));
-        let correlation_id = "test-correlation-2".to_string();
-        let (tx, _rx) = mpsc::unbounded_channel();
-
-        // Set cancellation flag
-        {
-            let mut reg = registry.lock().unwrap();
-            reg.insert(correlation_id.clone(), true);
-        }
-
-        // Create a mock processor just for the callback
-        let processor = SqsProcessor::new(
-            aws_sdk_sqs::Client::from_conf(
-                aws_sdk_sqs::Config::builder()
-                    .region(aws_config::Region::new("us-east-1"))
-                    .behavior_version(aws_config::BehaviorVersion::latest())
-                    .build(),
-            ),
-            "test-input".to_string(),
-            "test-output".to_string(),
-        );
-
-        let (callback, _best_sent) = processor.create_callback_handler(correlation_id.clone(), tx, registry.clone());
-
-        // Registry has cancellation flag, so should return true
-        let result = callback(&[], 0);
-        assert_eq!(result, true, "Callback should return true when cancelled");
-    }
-
-    #[test]
-    fn test_cancellation_registry_multiple_correlation_ids() {
-        let registry: Arc<Mutex<HashMap<String, bool>>> = Arc::new(Mutex::new(HashMap::new()));
-        
-        // Insert multiple correlation IDs
-        {
-            let mut reg = registry.lock().unwrap();
-            reg.insert("id-1".to_string(), false);
-            reg.insert("id-2".to_string(), true);
-            reg.insert("id-3".to_string(), false);
-        }
-
-        // Verify all are present
-        {
-            let reg = registry.lock().unwrap();
-            assert_eq!(reg.get("id-1"), Some(&false));
-            assert_eq!(reg.get("id-2"), Some(&true));
-            assert_eq!(reg.get("id-3"), Some(&false));
-        }
-
-        // Cancel id-2 (already cancelled, but update it)
-        {
-            let mut reg = registry.lock().unwrap();
-            reg.insert("id-2".to_string(), true);
-        }
-
-        // Remove id-1
-        {
-            let mut reg = registry.lock().unwrap();
-            reg.remove("id-1");
-        }
-
-        // Verify final state
-        {
-            let reg = registry.lock().unwrap();
-            assert_eq!(reg.get("id-1"), None);
-            assert_eq!(reg.get("id-2"), Some(&true));
-            assert_eq!(reg.get("id-3"), Some(&false));
-        }
-    }
-
-    #[test]
     fn test_sqs_nesting_request_cancelled_field_default() {
         let request_json = r#"{
             "correlationId": "test-123",
@@ -725,7 +533,10 @@ mod tests {
         }"#;
 
         let request: SqsNestingRequest = serde_json::from_str(request_json).unwrap();
-        assert_eq!(request.cancelled, false, "cancelled should default to false");
+        assert_eq!(
+            request.cancelled, false,
+            "cancelled should default to false"
+        );
     }
 
     #[test]
@@ -742,5 +553,76 @@ mod tests {
 
         let request: SqsNestingRequest = serde_json::from_str(request_json).unwrap();
         assert_eq!(request.cancelled, true, "cancelled should be true when set");
+    }
+
+    #[tokio::test]
+    async fn test_parallel_cancellation_flag_shared_between_workers() {
+        let config = aws_config::defaults(BehaviorVersion::latest()).load().await;
+        let sqs_client = SqsClient::new(&config);
+        let processor = SqsProcessor::new(
+            sqs_client,
+            "test-input-queue".to_string(),
+            "test-output-queue".to_string(),
+        );
+
+        let correlation_id = "parallel-cancelled".to_string();
+        let registry = processor.cancellation_registry_handle();
+        {
+            let mut reg = registry.lock().unwrap();
+            reg.insert(correlation_id.clone(), false);
+        }
+
+        let cancel_processor = processor.clone();
+        let cancellation_request = SqsNestingRequest {
+            correlation_id: correlation_id.clone(),
+            svg_base64: None,
+            bin_width: None,
+            bin_height: None,
+            spacing: None,
+            amount_of_parts: None,
+            amount_of_rotations: 8,
+            output_queue_url: None,
+            cancelled: true,
+        };
+        let cancellation_body =
+            serde_json::to_string(&cancellation_request).expect("serialize cancellation");
+
+        let registry_clone = registry.clone();
+        let correlation_id_clone = correlation_id.clone();
+        let watcher = tokio::spawn(async move {
+            let timeout = Duration::from_secs(2);
+            let start = Instant::now();
+            loop {
+                {
+                    let reg = registry_clone.lock().unwrap();
+                    if reg.get(&correlation_id_clone).copied().unwrap_or(false) {
+                        break;
+                    }
+                }
+
+                if start.elapsed() > timeout {
+                    panic!("Timed out waiting for cancellation flag to be set");
+                }
+
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+        });
+
+        let canceller = tokio::spawn(async move {
+            cancel_processor
+                .process_message("receipt-handle", &cancellation_body)
+                .await
+                .expect("Cancellation request should be processed");
+        });
+
+        watcher.await.expect("Watcher task failed");
+        canceller.await.expect("Canceller task failed");
+
+        let reg = registry.lock().unwrap();
+        assert_eq!(
+            reg.get(&correlation_id),
+            Some(&true),
+            "Cancellation flag should be set to true"
+        );
     }
 }

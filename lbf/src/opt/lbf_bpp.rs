@@ -37,6 +37,13 @@ impl LBFOptimizerBP {
     }
 
     pub fn solve(&mut self) -> BPSolution {
+        self.solve_with_callback::<fn(&BPSolution)>(None)
+    }
+
+    pub fn solve_with_callback<F>(&mut self, mut on_solution: Option<&mut F>) -> BPSolution
+    where
+        F: FnMut(&BPSolution),
+    {
         let start = Instant::now();
 
         'outer: for item_id in item_placement_order(&self.instance) {
@@ -74,6 +81,10 @@ impl LBFOptimizerBP {
         }
 
         let solution = self.problem.save();
+
+        if let Some(handler) = on_solution.as_deref_mut() {
+            handler(&solution);
+        }
 
         info!(
             "[LBF] optimization finished in {:.3}ms ({} samples)",

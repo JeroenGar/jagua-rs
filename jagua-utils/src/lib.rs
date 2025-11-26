@@ -5,6 +5,4 @@
 
 pub mod svg_nesting;
 
-pub use svg_nesting::{
-    AdaptiveConfig, NestingResult, SubResultHandler, nest_svg_parts, nest_svg_parts_adaptive,
-};
+pub use svg_nesting::{NestingResult, NestingStrategy, SimpleNestingStrategy, nest_svg_parts};
