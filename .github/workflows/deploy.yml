@@ -13,10 +13,10 @@ env:
   AWS_REGION: eu-north-1
   ECR_REPOSITORY: jagua-sqs-processor
   IMAGE_TAG: ${{ github.sha }}
-  ECS_CLUSTER_STAGING: STAGING_CLUSTER_NAME
-  ECS_SERVICE_STAGING: STAGING_SERVICE_NAME
-  ECS_CLUSTER_PROD: PROD_CLUSTER_NAME
-  ECS_SERVICE_PROD: PROD_SERVICE_NAME
+  ECS_CLUSTER_STAGING: CUTLStagingCluster
+  ECS_SERVICE_STAGING: CUTLStagingJaguaSqsProcessorService
+  ECS_CLUSTER_PROD: CUTL-prodProductionCluster
+  ECS_SERVICE_PROD: CUTL-prodProductionClusterJaguaSqsProcessorService
 
 jobs:
   build-and-push:
