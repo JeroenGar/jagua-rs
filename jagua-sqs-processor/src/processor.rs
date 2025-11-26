@@ -391,22 +391,31 @@ impl SqsProcessor {
 
             // Use adaptive nesting strategy with cancellation checker
             let strategy = AdaptiveNestingStrategy::with_cancellation_checker(Box::new(cancellation_checker));
-            let nesting_result = strategy
-                .nest(
+            
+            // Run nest() in a blocking task to avoid blocking the async runtime
+            // This allows the improvement task to process messages while optimization runs
+            let svg_bytes_for_nest = svg_bytes.clone();
+            let amount_of_rotations = request.amount_of_rotations;
+            let correlation_id_for_error = request.correlation_id.clone();
+            let nesting_result = tokio::task::spawn_blocking(move || {
+                strategy.nest(
                     bin_width,
                     bin_height,
                     spacing,
-                    &svg_bytes,
+                    &svg_bytes_for_nest,
                     amount_of_parts,
-                    request.amount_of_rotations,
+                    amount_of_rotations,
                     improvement_callback,
                 )
-                .with_context(|| {
-                    format!(
-                        "Failed to process SVG nesting for correlation_id={}",
-                        request.correlation_id
-                    )
-                })?;
+            })
+            .await
+            .context("Failed to spawn blocking task for nesting")?
+            .with_context(|| {
+                format!(
+                    "Failed to process SVG nesting for correlation_id={}",
+                    correlation_id_for_error
+                )
+            })?;
 
             // Drop the sender to signal the async task that no more improvements will come
             drop(tx);
@@ -521,10 +530,31 @@ impl SqsProcessor {
                             };
                             let message_id = message.message_id().map(|s| s.to_string());
 
+                            // Acknowledge (delete) message immediately after receiving to prevent duplicate processing
+                            let sqs_client_for_delete = self.sqs_client.clone();
+                            let input_queue_url_for_delete = self.input_queue_url.clone();
+                            let receipt_handle_for_delete = receipt_handle.clone();
+                            let message_id_for_delete = message_id.clone();
+                            
+                            if let Err(e) = sqs_client_for_delete
+                                .delete_message()
+                                .queue_url(&input_queue_url_for_delete)
+                                .receipt_handle(&receipt_handle_for_delete)
+                                .send()
+                                .await
+                            {
+                                error!("Failed to acknowledge message: {}", e);
+                                continue; // Skip processing if we can't acknowledge
+                            }
+
+                            if let Some(msg_id) = &message_id {
+                                info!("Acknowledged message {}, processing concurrently", msg_id);
+                            } else {
+                                info!("Acknowledged message, processing concurrently");
+                            }
+
                             // Clone necessary data for the spawned task
                             let processor = self.clone();
-                            let input_queue_url = self.input_queue_url.clone();
-                            let sqs_client = self.sqs_client.clone();
                             let semaphore_clone = semaphore.clone();
                             let mut shutdown_rx_clone = shutdown_rx.resubscribe();
 
@@ -539,39 +569,10 @@ impl SqsProcessor {
                                     }
                                 };
 
-                                if let Some(msg_id) = &message_id {
-                                    info!("Received message {}, processing concurrently", msg_id);
-                                } else {
-                                    info!("Received message without message_id, processing concurrently");
-                                }
-
                                 // Process the message
                                 let process_result = processor.process_message(&receipt_handle, &body).await;
                                 if let Err(e) = &process_result {
                                     error!("Error during message processing: {}", e);
-                                }
-
-                                // Check for shutdown before deleting
-                                if shutdown_rx_clone.try_recv().is_ok() {
-                                    info!("Stopping before deleting message due to shutdown");
-                                    return;
-                                }
-
-                                // Delete message after processing
-                                if let Err(e) = sqs_client
-                                    .delete_message()
-                                    .queue_url(&input_queue_url)
-                                    .receipt_handle(&receipt_handle)
-                                    .send()
-                                    .await
-                                {
-                                    error!("Failed to delete message: {}", e);
-                                } else {
-                                    if let Some(msg_id) = &message_id {
-                                        info!("Acknowledged message {}", msg_id);
-                                    } else {
-                                        info!("Acknowledged message");
-                                    }
                                 }
                                 // Permit is automatically released when dropped here
                             });

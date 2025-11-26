@@ -71,11 +71,6 @@ impl AdaptiveNestingStrategy {
         let mut best_placed = 0;
 
         for loop_idx in 0..loops {
-            if self.is_cancelled() {
-                log::info!("Cancellation detected, stopping optimization");
-                break;
-            }
-
             let seed = (seed_offset * 1000 + loop_idx) as u64;
             let lbf_config = LBFConfig {
                 cde_config: cde_config.clone(),
@@ -323,22 +318,26 @@ impl NestingStrategy for AdaptiveNestingStrategy {
         const MAX_RUNS_WITHOUT_IMPROVEMENT: usize = 10;
         const MAX_RUN_DURATION_SECONDS: u64 = 60;
 
-        loop {
+        'outer: loop {
             if self.is_cancelled() {
                 log::info!("Cancellation detected, stopping adaptive optimization");
-                break;
+                break 'outer;
             }
 
             if total_runs >= MAX_TOTAL_RUNS {
                 log::info!("Reached maximum total runs ({}), stopping", MAX_TOTAL_RUNS);
-                break;
+                break 'outer;
             }
 
             // Try 10 runs with current parameters
             let mut improved_this_batch = false;
             let mut should_stop_due_to_timeout = false;
+            let mut cancelled = false;
             for batch_run in 0..MAX_RUNS_WITHOUT_IMPROVEMENT {
+                // Check cancellation at start of each run
                 if self.is_cancelled() {
+                    log::info!("Cancellation detected before starting run, stopping optimization");
+                    cancelled = true;
                     break;
                 }
 
@@ -469,12 +468,25 @@ impl NestingStrategy for AdaptiveNestingStrategy {
                         return Ok(best_result.unwrap());
                     }
                 }
+
+                // Check cancellation after processing improvements from this run
+                if self.is_cancelled() {
+                    log::info!("Cancellation detected after completing run, stopping optimization");
+                    cancelled = true;
+                    break;
+                }
+            }
+
+            // Check cancellation again after batch completes (in case it was set during the batch)
+            if cancelled || self.is_cancelled() {
+                log::info!("Cancellation detected after batch completion, stopping optimization");
+                break 'outer;
             }
 
             // Stop if a run exceeded the time limit
             if should_stop_due_to_timeout {
                 log::info!("Stopping adaptive optimization due to run timeout");
-                break;
+                break 'outer;
             }
 
             // If no improvement after 10 runs, increase parameters
