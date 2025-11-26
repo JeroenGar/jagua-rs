@@ -9,6 +9,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc;
+use tokio::sync::Semaphore;
 
 /// Request message structure for SQS queue
 /// For cancellation requests, only `correlation_id` and `cancelled: true` are required.
@@ -470,13 +471,17 @@ impl SqsProcessor {
         result
     }
 
-    /// Listen and process messages from the queue (single-threaded)
+    /// Listen and process messages from the queue (concurrent processing)
+    /// Processes up to 20 messages concurrently using tokio tasks with semaphore-based concurrency control.
     pub async fn listen_and_process(
         &self,
         _worker_count: usize, // Ignored, kept for compatibility
         mut shutdown_rx: broadcast::Receiver<()>,
     ) -> Result<()> {
-        info!("Starting single worker on queue: {}", self.input_queue_url);
+        info!("Starting concurrent worker on queue: {} (max 20 concurrent tasks)", self.input_queue_url);
+
+        // Create semaphore to limit concurrent processing to 20 tasks
+        let semaphore = Arc::new(Semaphore::new(20));
 
         loop {
             tokio::select! {
@@ -494,47 +499,82 @@ impl SqsProcessor {
 
                     if let Some(messages) = response.messages {
                         for message in messages {
-                            // Check for shutdown before processing
+                            // Check for shutdown before spawning
                             if shutdown_rx.try_recv().is_ok() {
                                 info!("Stopping before processing message due to shutdown");
                                 break;
                             }
 
-                            let receipt_handle = message
-                                .receipt_handle()
-                                .ok_or_else(|| anyhow::anyhow!("Message missing receipt handle"))?;
-                            let body = message
-                                .body()
-                                .ok_or_else(|| anyhow::anyhow!("Message missing body"))?;
+                            let receipt_handle = match message.receipt_handle() {
+                                Some(h) => h.to_string(),
+                                None => {
+                                    error!("Message missing receipt handle, skipping");
+                                    continue;
+                                }
+                            };
+                            let body = match message.body() {
+                                Some(b) => b.to_string(),
+                                None => {
+                                    error!("Message missing body, skipping");
+                                    continue;
+                                }
+                            };
+                            let message_id = message.message_id().map(|s| s.to_string());
 
-                            if let Some(message_id) = message.message_id() {
-                                info!("Received message {}", message_id);
-                            } else {
-                                info!("Received message without message_id");
-                            }
+                            // Clone necessary data for the spawned task
+                            let processor = self.clone();
+                            let input_queue_url = self.input_queue_url.clone();
+                            let sqs_client = self.sqs_client.clone();
+                            let semaphore_clone = semaphore.clone();
+                            let mut shutdown_rx_clone = shutdown_rx.resubscribe();
 
-                            let process_result = self.process_message(receipt_handle, body).await;
-                            if let Err(e) = &process_result {
-                                error!("Error during message processing: {}", e);
-                            }
+                            // Spawn concurrent task for processing
+                            tokio::spawn(async move {
+                                // Acquire semaphore permit (waits if 20 tasks are already running)
+                                let _permit = match semaphore_clone.acquire().await {
+                                    Ok(permit) => permit,
+                                    Err(e) => {
+                                        error!("Failed to acquire semaphore permit: {}", e);
+                                        return;
+                                    }
+                                };
 
-                            // Check for shutdown before deleting
-                            if shutdown_rx.try_recv().is_ok() {
-                                info!("Stopping before deleting message due to shutdown");
-                                break;
-                            }
+                                if let Some(msg_id) = &message_id {
+                                    info!("Received message {}, processing concurrently", msg_id);
+                                } else {
+                                    info!("Received message without message_id, processing concurrently");
+                                }
 
-                            if let Err(e) = self.sqs_client
-                                .delete_message()
-                                .queue_url(&self.input_queue_url)
-                                .receipt_handle(receipt_handle)
-                                .send()
-                                .await
-                            {
-                                error!("Failed to delete message: {}", e);
-                            } else {
-                                info!("Acknowledged message");
-                            }
+                                // Process the message
+                                let process_result = processor.process_message(&receipt_handle, &body).await;
+                                if let Err(e) = &process_result {
+                                    error!("Error during message processing: {}", e);
+                                }
+
+                                // Check for shutdown before deleting
+                                if shutdown_rx_clone.try_recv().is_ok() {
+                                    info!("Stopping before deleting message due to shutdown");
+                                    return;
+                                }
+
+                                // Delete message after processing
+                                if let Err(e) = sqs_client
+                                    .delete_message()
+                                    .queue_url(&input_queue_url)
+                                    .receipt_handle(&receipt_handle)
+                                    .send()
+                                    .await
+                                {
+                                    error!("Failed to delete message: {}", e);
+                                } else {
+                                    if let Some(msg_id) = &message_id {
+                                        info!("Acknowledged message {}", msg_id);
+                                    } else {
+                                        info!("Acknowledged message");
+                                    }
+                                }
+                                // Permit is automatically released when dropped here
+                            });
                         }
                     }
                 }

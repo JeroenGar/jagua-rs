@@ -336,6 +336,7 @@ impl NestingStrategy for AdaptiveNestingStrategy {
 
             // Try 10 runs with current parameters
             let mut improved_this_batch = false;
+            let mut should_stop_due_to_timeout = false;
             for batch_run in 0..MAX_RUNS_WITHOUT_IMPROVEMENT {
                 if self.is_cancelled() {
                     break;
@@ -376,6 +377,7 @@ impl NestingStrategy for AdaptiveNestingStrategy {
                         run_duration.as_secs(),
                         MAX_RUN_DURATION_SECONDS
                     );
+                    should_stop_due_to_timeout = true;
                     break;
                 }
 
@@ -467,6 +469,12 @@ impl NestingStrategy for AdaptiveNestingStrategy {
                         return Ok(best_result.unwrap());
                     }
                 }
+            }
+
+            // Stop if a run exceeded the time limit
+            if should_stop_due_to_timeout {
+                log::info!("Stopping adaptive optimization due to run timeout");
+                break;
             }
 
             // If no improvement after 10 runs, increase parameters
