@@ -67,6 +67,8 @@ COPY --from=builder /app/target/release/jagua-sqs-processor /app/jagua-sqs-proce
 # Set environment variables (can be overridden)
 ENV RUST_LOG=info
 ENV RUST_BACKTRACE=1
+ENV INPUT_QUEUE_URL=nesting-request
+ENV OUTPUT_QUEUE_URL=nesting-response
 
 # Run the application
 ENTRYPOINT ["/app/jagua-sqs-processor"]
