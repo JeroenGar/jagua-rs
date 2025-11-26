@@ -48,6 +48,7 @@ impl NestingStrategy for SimpleNestingStrategy {
         svg_part_bytes: &[u8],
         amount_of_parts: usize,
         amount_of_rotations: usize,
+        _improvement_callback: Option<crate::svg_nesting::strategy::ImprovementCallback>,
     ) -> Result<NestingResult> {
         // Parse SVG
         let path_data = extract_path_from_svg_bytes(svg_part_bytes)?;
@@ -125,11 +126,12 @@ impl NestingStrategy for SimpleNestingStrategy {
 
         let container_template = Container::new(0, container_shape, vec![], cde_config.clone())?;
 
-        // Build instance with requested rotations
+        // Build instance with requested rotations (capped at 4)
+        const MAX_ROTATIONS: usize = 4;
         let rotation_count = if amount_of_rotations == 0 {
             0
         } else {
-            amount_of_rotations.max(1)
+            amount_of_rotations.max(1).min(MAX_ROTATIONS)
         };
 
         let rotation_range = if rotation_count == 0 {

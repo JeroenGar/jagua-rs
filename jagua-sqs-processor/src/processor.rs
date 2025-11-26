@@ -1,13 +1,14 @@
 use anyhow::{anyhow, Context, Result};
 use aws_sdk_sqs::Client as SqsClient;
 use base64::{engine::general_purpose, Engine as _};
-use jagua_utils::svg_nesting::{NestingStrategy, SimpleNestingStrategy};
+use jagua_utils::svg_nesting::{NestingStrategy, AdaptiveNestingStrategy};
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::broadcast;
+use tokio::sync::mpsc;
 
 /// Request message structure for SQS queue
 /// For cancellation requests, only `correlation_id` and `cancelled: true` are required.
@@ -314,8 +315,81 @@ impl SqsProcessor {
             let svg_bytes = decode_svg(svg_base64)?;
             info!("Decoded SVG payload: {} bytes", svg_bytes.len());
 
-            // Use simple nesting strategy
-            let strategy = SimpleNestingStrategy::new();
+            // Create cancellation checker closure
+            let cancellation_registry = self.cancellation_registry.clone();
+            let correlation_id_clone = request.correlation_id.clone();
+            let cancellation_checker = move || {
+                let registry = cancellation_registry.lock().unwrap();
+                registry.get(&correlation_id_clone).copied().unwrap_or(false)
+            };
+
+            // Create channel for sending improvement results from sync callback to async task
+            let (tx, mut rx) = mpsc::unbounded_channel::<jagua_utils::svg_nesting::NestingResult>();
+            
+            // Spawn async task to handle improvement messages
+            let sqs_client_for_task = self.sqs_client.clone();
+            let output_queue_url_for_task = output_queue_url.to_string();
+            let correlation_id_for_task = request.correlation_id.clone();
+            let _improvement_task_handle = tokio::spawn(async move {
+                while let Some(result) = rx.recv().await {
+                    // Prepare response images
+                    let first_page_bytes = result.page_svgs.first()
+                        .unwrap_or_else(|| &result.combined_svg);
+                    let last_page_bytes = result
+                        .unplaced_parts_svg
+                        .as_ref()
+                        .unwrap_or_else(|| result.page_svgs.last().unwrap_or(first_page_bytes));
+                    
+                    let first_page_svg_base64 = encode_svg(first_page_bytes);
+                    let last_page_svg_base64 = encode_svg(last_page_bytes);
+
+                    // Create improvement response
+                    let response = SqsNestingResponse {
+                        correlation_id: correlation_id_for_task.clone(),
+                        first_page_svg_base64,
+                        last_page_svg_base64: Some(last_page_svg_base64),
+                        parts_placed: result.parts_placed,
+                        is_improvement: true,
+                        is_final: false,
+                        timestamp: current_timestamp(),
+                        error_message: None,
+                    };
+
+                    info!(
+                        "Sending improvement response: {} parts placed",
+                        response.parts_placed
+                    );
+
+                    // Send to SQS
+                    if let Err(e) = sqs_client_for_task
+                        .clone()
+                        .send_message()
+                        .queue_url(&output_queue_url_for_task)
+                        .message_body(&serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string()))
+                        .send()
+                        .await
+                    {
+                        error!("Failed to send improvement to queue: {}", e);
+                    } else {
+                        info!("Sent improvement response to queue");
+                    }
+                }
+            });
+
+            // Create improvement callback that sends to channel
+            let tx_for_callback = tx.clone();
+            let improvement_callback: Option<jagua_utils::svg_nesting::ImprovementCallback> = 
+                Some(Box::new(move |result: jagua_utils::svg_nesting::NestingResult| -> Result<()> {
+                    // Send result to channel (non-blocking)
+                    if let Err(e) = tx_for_callback.send(result) {
+                        log::warn!("Failed to send improvement result to channel: {}", e);
+                        return Err(anyhow!("Failed to send improvement result to channel: {}", e));
+                    }
+                    Ok(())
+                }));
+
+            // Use adaptive nesting strategy with cancellation checker
+            let strategy = AdaptiveNestingStrategy::with_cancellation_checker(Box::new(cancellation_checker));
             let nesting_result = strategy
                 .nest(
                     bin_width,
@@ -324,6 +398,7 @@ impl SqsProcessor {
                     &svg_bytes,
                     amount_of_parts,
                     request.amount_of_rotations,
+                    improvement_callback,
                 )
                 .with_context(|| {
                     format!(
@@ -331,6 +406,13 @@ impl SqsProcessor {
                         request.correlation_id
                     )
                 })?;
+
+            // Drop the sender to signal the async task that no more improvements will come
+            drop(tx);
+            
+            // Wait a bit for any pending improvement messages to be sent
+            // This ensures all improvements are sent before we send the final result
+            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
             info!(
                 "Nesting complete: {} parts placed out of {} requested ({} page SVGs generated)",
@@ -366,7 +448,7 @@ impl SqsProcessor {
             };
 
             info!(
-                "Sending response with parts_placed: {} (from nesting_result.parts_placed: {})",
+                "Sending final response with parts_placed: {} (from nesting_result.parts_placed: {})",
                 response.parts_placed, nesting_result.parts_placed
             );
 

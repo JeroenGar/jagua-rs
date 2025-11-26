@@ -5,7 +5,7 @@ mod strategy;
 mod svg_generation;
 
 pub use parsing::*;
-pub use strategy::{NestingStrategy, SimpleNestingStrategy};
+pub use strategy::{NestingStrategy, SimpleNestingStrategy, AdaptiveNestingStrategy, ImprovementCallback};
 pub use svg_generation::NestingResult;
 
 use anyhow::Result;
@@ -42,5 +42,6 @@ pub fn nest_svg_parts(
         svg_part_bytes,
         amount_of_parts,
         amount_of_rotations,
+        None,
     )
 }
