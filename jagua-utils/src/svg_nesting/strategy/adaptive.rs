@@ -319,7 +319,7 @@ impl NestingStrategy for AdaptiveNestingStrategy {
         let mut best_result: Option<NestingResult> = None;
         let mut best_placed = 0;
         let mut total_runs = 0;
-        const MAX_TOTAL_RUNS: usize = 10000;
+        const MAX_TOTAL_RUNS: usize = 100;
         const MAX_RUNS_WITHOUT_IMPROVEMENT: usize = 10;
         const MAX_RUN_DURATION_SECONDS: u64 = 60;
 
