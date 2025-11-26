@@ -23,6 +23,7 @@ COPY jagua-sqs-processor/Cargo.toml ./jagua-sqs-processor/
 COPY jagua-rs/src ./jagua-rs/src
 COPY jagua-utils/src ./jagua-utils/src
 COPY lbf/src ./lbf/src
+COPY lbf/benches ./lbf/benches
 COPY jagua-sqs-processor/src ./jagua-sqs-processor/src
 
 # Build the application in release mode
