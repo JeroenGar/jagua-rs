@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    if: github.ref == 'refs/heads/staging'
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
