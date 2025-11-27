@@ -27,4 +27,5 @@ env_logger = "0.11"
 [dev-dependencies]
 tokio-test = "0.4"
 mockall = "0.12"
+regex = "1"
 

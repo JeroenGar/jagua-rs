@@ -49,6 +49,29 @@ fn encode_svg(bytes: &[u8]) -> String {
     general_purpose::STANDARD.encode(bytes)
 }
 
+/// Generate an empty page SVG (used when all parts are placed)
+fn generate_empty_page_svg(bin_width: f32, bin_height: f32) -> Vec<u8> {
+    format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {} {}">
+  <g id="container_0">
+    <path d="M 0,0 L {},0 L {},{} L 0,{} z" fill="transparent" stroke="gray" stroke-width="1"/>
+  </g>
+  <text x="{}" y="{}" font-size="{}" font-family="monospace">Unplaced parts: 0</text>
+</svg>"#,
+        bin_width,
+        bin_height,
+        bin_width,
+        bin_width,
+        bin_height,
+        bin_height,
+        bin_width * 0.02,
+        bin_height * 0.05,
+        bin_width * 0.02
+    )
+    .into_bytes()
+}
+
 fn sanitize_svg_fields(response: &SqsNestingResponse) -> SqsNestingResponse {
     let mut sanitized = response.clone();
     sanitized.first_page_svg_base64 =
@@ -331,18 +354,29 @@ impl SqsProcessor {
             let sqs_client_for_task = self.sqs_client.clone();
             let output_queue_url_for_task = output_queue_url.to_string();
             let correlation_id_for_task = request.correlation_id.clone();
+            let bin_width_for_task = bin_width;
+            let bin_height_for_task = bin_height;
             let _improvement_task_handle = tokio::spawn(async move {
                 while let Some(result) = rx.recv().await {
                     // Prepare response images
                     let first_page_bytes = result.page_svgs.first()
                         .unwrap_or_else(|| &result.combined_svg);
-                    let last_page_bytes = result
-                        .unplaced_parts_svg
-                        .as_ref()
-                        .unwrap_or_else(|| result.page_svgs.last().unwrap_or(first_page_bytes));
+                    
+                    // If all parts are placed, use empty page for last page
+                    // Otherwise, use unplaced parts SVG if available, or last filled page
+                    let last_page_bytes: Vec<u8> = if result.parts_placed == result.total_parts_requested {
+                        // All parts placed - generate empty page
+                        generate_empty_page_svg(bin_width_for_task, bin_height_for_task)
+                    } else if let Some(ref unplaced_svg) = result.unplaced_parts_svg {
+                        // Some parts unplaced - use unplaced parts SVG
+                        unplaced_svg.clone()
+                    } else {
+                        // No unplaced parts SVG - use last filled page or first page
+                        result.page_svgs.last().unwrap_or(first_page_bytes).clone()
+                    };
                     
                     let first_page_svg_base64 = encode_svg(first_page_bytes);
-                    let last_page_svg_base64 = encode_svg(last_page_bytes);
+                    let last_page_svg_base64 = encode_svg(&last_page_bytes);
 
                     // Create improvement response
                     let response = SqsNestingResponse {
@@ -432,18 +466,25 @@ impl SqsProcessor {
             );
 
             // Prepare final response images
-            // Use first page SVG for first sheet (same logic as last sheet)
+            // Use first page SVG for first sheet
             let first_page_bytes = nesting_result.page_svgs.first()
                 .unwrap_or_else(|| &nesting_result.combined_svg);
             
-            // Use unplaced parts SVG for last page if available, otherwise use last filled page
-            let last_page_bytes = nesting_result
-                .unplaced_parts_svg
-                .as_ref()
-                .unwrap_or_else(|| nesting_result.page_svgs.last().unwrap_or(first_page_bytes));
+            // If all parts are placed, use empty page for last page
+            // Otherwise, use unplaced parts SVG if available, or last filled page
+            let last_page_bytes: Vec<u8> = if nesting_result.parts_placed == nesting_result.total_parts_requested {
+                // All parts placed - generate empty page
+                generate_empty_page_svg(bin_width, bin_height)
+            } else if let Some(ref unplaced_svg) = nesting_result.unplaced_parts_svg {
+                // Some parts unplaced - use unplaced parts SVG
+                unplaced_svg.clone()
+            } else {
+                // No unplaced parts SVG - use last filled page or first page
+                nesting_result.page_svgs.last().unwrap_or(first_page_bytes).clone()
+            };
             
             let first_page_svg_base64 = encode_svg(first_page_bytes);
-            let last_page_svg_base64 = encode_svg(last_page_bytes);
+            let last_page_svg_base64 = encode_svg(&last_page_bytes);
 
             // Send final result to queue
             let response = SqsNestingResponse {

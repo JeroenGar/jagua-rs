@@ -1589,6 +1589,7 @@ dependencies = [
  "jagua-utils",
  "log",
  "mockall",
+ "regex",
  "serde",
  "serde_json",
  "tokio",
