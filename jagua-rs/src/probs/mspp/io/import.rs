@@ -1,14 +1,14 @@
 use crate::entities::Item;
 use crate::geometry::shape_modification::ShapeModifyConfig;
 use crate::io::import::Importer;
-use crate::probs::spp::entities::{SPInstance, MStrip};
-use crate::probs::spp::io::ext_repr::ExtSPInstance;
 use anyhow::{Result, ensure};
 use itertools::Itertools;
 use rayon::prelude::*;
+use crate::probs::mspp::entities::{BinStrip, MSPInstance};
+use crate::probs::mspp::io::ext_repr::ExtMSPInstance;
 
 /// Imports an instance into the library
-pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPInstance> {
+pub fn import(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPInstance> {
     let items: Vec<(Item, usize)> = {
         let mut items = ext_instance
             .items
@@ -36,26 +36,19 @@ pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPIns
         items
     };
 
-    let total_item_area = items
-        .iter()
-        .map(|(item, demand)| item.area() * *demand as f32)
-        .sum::<f32>();
+    let ext_bin = &ext_instance.bin;
 
-    let fixed_height = ext_instance.strip_height;
-
-    // Initialize the base width for 100% density
-    let width = total_item_area / fixed_height;
-
-    let base_strip = MStrip::new(
-        fixed_height,
+    let base_strip = BinStrip::new(
+        ext_bin.max_width,
+        ext_bin.height,
         importer.cde_config,
         ShapeModifyConfig {
             offset: importer.shape_modify_config.offset,
             simplify_tolerance: None,
             narrow_concavity_cutoff_ratio: None,
         },
-        width,
+        ext_bin.max_width
     )?;
 
-    Ok(SPInstance::new(items, base_strip))
+    Ok(MSPInstance::new(items, base_strip))
 }

@@ -1,10 +1,12 @@
-use crate::entities::{Instance, Layout, PItemKey};
+use crate::entities::{Container, Instance, Layout, PItemKey};
 use crate::geometry::DTransformation;
 use crate::probs::mspp::entities::instance::MSPInstance;
-use crate::probs::mspp::entities::strip::MStrip;
+use crate::probs::mspp::entities::binstrip::BinStrip;
+use crate::probs::mspp::entities::MSPSolution;
 use crate::Instant;
 use itertools::Itertools;
-use slotmap::{new_key_type, SlotMap};
+use slotmap::{new_key_type, SecondaryMap, SlotMap};
+use crate::probs::mspp::util::assertions::problem_matches_solution;
 
 new_key_type! {
     /// Unique key for each [`Layout`] in a [`MSPProblem`] and [`MSPSolution`]
@@ -16,31 +18,29 @@ new_key_type! {
 pub struct MSPProblem {
     pub instance: MSPInstance,
     pub layouts: SlotMap<LayKey, Layout>,
-    pub strip: MStrip,
-    pub strip_layout_: Layout,
+    pub strips: SecondaryMap<LayKey, BinStrip>,
     pub item_demand_qtys: Vec<usize>,
 }
 
 impl MSPProblem {
     pub fn new(instance: MSPInstance) -> Self {
-        let item_demand_qtys = instance.items.iter().map(|(_, qty)| *qty).collect_vec();
-        let strip = instance.base_strip;
-        let strip_layout = Layout::new(strip.into());
-        let full_layouts = SlotMap::with_key();
+        let item_demand_qtys = instance.items.iter()
+            .map(|(_, qty)| *qty)
+            .collect_vec();
 
         Self {
             instance,
-            full_layouts,
-            strip,
-            strip_layout,
+            layouts: SlotMap::with_key(),
+            strips: SecondaryMap::new(),
             item_demand_qtys,
         }
     }
 
     /// Modifies the width of the strip in the back, keeping the front fixed.
-    pub fn change_strip_layout_width(&mut self, new_width: f32) {
-        self.strip.set_width(new_width);
-        self.strip_layout.swap_container(self.strip.into());
+    pub fn change_strip_width(&mut self, lkey: LayKey, new_width: f32) {
+        let bin_strip = &mut self.strips[lkey];
+        bin_strip.set_width(new_width);
+        self.layouts[lkey].swap_container(Container::from(*bin_strip));
     }
 
     pub fn remove_layout(&mut self, key: LayKey){
@@ -48,12 +48,11 @@ impl MSPProblem {
     }
 
     /// Shrinks the strip to the minimum width that fits all items.
-    pub fn fit_strip(&mut self) {
-        let feasible_before = self.layout.is_feasible();
+    pub fn fit_strip(&mut self, lkey: LayKey) {
+        let feasible_before = self.layouts[lkey].is_feasible();
 
         //Find the rightmost item in the strip and add some tolerance (avoiding false collision positives)
-        let item_x_max = self
-            .layout
+        let item_x_max = self.layouts[lkey]
             .placed_items
             .values()
             .map(|pi| pi.shape.bbox.x_max)
@@ -62,37 +61,42 @@ impl MSPProblem {
             * 1.00001;
 
         // add the shape offset if any, the strip needs to be at least `offset` wider than the items
-        let fitted_width = item_x_max + self.strip.shape_modify_config.offset.unwrap_or(0.0);
+        let fitted_width = item_x_max + self.strips[lkey].shape_modify_config.offset.unwrap_or(0.0);
 
-        self.change_strip_width(fitted_width);
-        debug_assert!(feasible_before == self.layout.is_feasible());
+        self.change_strip_width(lkey,fitted_width);
+        debug_assert!(feasible_before == self.layouts[lkey].is_feasible());
     }
 
     /// Places an item according to the given `SPPlacement` in the problem.
-    pub fn place_item(&mut self, placement: SPPlacement) -> PItemKey {
+    pub fn place_item(&mut self, placement: MSPPlacement) -> PItemKey {
         self.register_included_item(placement.item_id);
         let item = self.instance.item(placement.item_id);
 
-        self.layout.place_item(item, placement.d_transf)
+        self.layouts[placement.lkey].place_item(item, placement.d_transf)
     }
 
     /// Removes a placed item from the strip. Returns the placement of the item.
     /// Set `commit_instantly` to false if there's a high chance that this modification will be reverted.
-    pub fn remove_item(&mut self, pkey: PItemKey) -> SPPlacement {
-        let pi = self.layout.remove_item(pkey);
+    pub fn remove_item(&mut self, lkey: LayKey, pkey: PItemKey) -> MSPPlacement {
+        let pi = self.layouts[lkey].remove_item(pkey);
         self.deregister_included_item(pi.item_id);
 
-        SPPlacement {
+        MSPPlacement {
+            lkey,
             item_id: pi.item_id,
             d_transf: pi.d_transf,
         }
     }
 
-    /// Creates a snapshot of the current state of the problem as a [`SPSolution`].
-    pub fn save(&self) -> SPSolution {
-        let solution = SPSolution {
-            layout_snapshot: self.layout.save(),
-            strip: self.strip,
+    /// Creates a snapshot of the current state of the problem as a [`MSPSolution`].
+    pub fn save(&self) -> MSPSolution {
+        let solution = MSPSolution {
+            layout_snapshots: self
+                .layouts
+                .iter()
+                .map(|(lkey, l)| (lkey, l.save()))
+                .collect(),
+            strips: self.strips.clone(),
             time_stamp: Instant::now(),
         };
 
@@ -101,46 +105,70 @@ impl MSPProblem {
         solution
     }
 
-    /// Restores the state of the problem to the given [`SPSolution`].
-    pub fn restore(&mut self, solution: &SPSolution) {
-        if self.strip == solution.strip {
-            // the strip is the same, restore the layout
-            self.layout.restore(&solution.layout_snapshot);
-        } else {
-            // the strip has changed, rebuild the layout
-            self.layout = Layout::from_snapshot(&solution.layout_snapshot);
-            self.strip = solution.strip;
+    /// Restores the state of the problem to the given [`MSPSolution`].
+    pub fn restore(&mut self, solution: &MSPSolution) {
+        let mut layouts_to_remove = vec![];
+
+        //Check which layouts from the problem are also present in the solution.
+        //If a layout is present we might be able to do a (partial) restore instead of fully rebuilding everything.
+        for (lkey, layout) in self.layouts.iter_mut() {
+            match solution.layout_snapshots.get(lkey) {
+                Some(ls) => match layout.container.id == ls.container.id {
+                    true => layout.restore(ls),
+                    false => layouts_to_remove.push(lkey),
+                },
+                None => {
+                    layouts_to_remove.push(lkey);
+                }
+            }
         }
 
-        //Restore the item demands
+        //Remove all layouts that were not present in the solution (or have a different bin)
+        for lkey in layouts_to_remove {
+            self.layouts.remove(lkey);
+        }
+
+        //Create new layouts for all keys present in solution but not in problem
+        for (lkey, ls) in solution.layout_snapshots.iter() {
+            if !self.layouts.contains_key(lkey) {
+                self.layouts.insert(Layout::from_snapshot(ls));
+            }
+        }
+
+        //Restore the item demands and strips
         {
             self.item_demand_qtys
                 .iter_mut()
                 .enumerate()
-                .for_each(|(id, qty)| *qty = self.instance.item_qty(id));
+                .for_each(|(id, demand)| {
+                    *demand = self.instance.item_qty(id);
+                });
 
-            self.layout
-                .placed_items
-                .iter()
-                .for_each(|(_, pi)| self.item_demand_qtys[pi.item_id] -= 1);
+            self.strips.clear();
+            solution.strips.iter().for_each(|(lkey, strip)| {
+                self.strips.insert(lkey, strip.clone());
+            });
         }
+
         debug_assert!(problem_matches_solution(self, solution));
     }
 
-    fn register_full_layout(&mut self, layout: Layout) ->LayKey {
+    fn register_layout(&mut self, layout: Layout) -> LayKey {
         layout
             .placed_items
             .values()
             .for_each(|pi| self.register_included_item(pi.item_id));
-        self.full_layouts.insert(layout)
+        self.layouts.insert(layout)
     }
 
-    fn deregister_full_layout(&mut self, key: LayKey) {
-        let layout = self.full_layouts.remove(key).expect("layout key not present");
+    fn deregister_layout(&mut self, key: LayKey) {
+        let layout = self.layouts.remove(key).expect("layout key not present");
         layout
             .placed_items
             .values()
             .for_each(|pi| self.deregister_included_item(pi.item_id));
+
+        self.strips.remove(key);
     }
 
     fn register_included_item(&mut self, item_id: usize) {
@@ -164,17 +192,14 @@ impl MSPProblem {
     }
 
     pub fn all_layouts(&self) -> impl Iterator<Item = &Layout> {
-        self.full_layouts.values().chain(std::iter::once(&self.strip_layout))
-    }
-
-    pub fn strip_width(&self) -> f32 {
-        self.strip.width
+        self.layouts.values()
     }
 }
 
 /// Represents a placement of an item in the strip packing problem.
 #[derive(Debug, Clone, Copy)]
-pub struct SPPlacement {
+pub struct MSPPlacement {
+    pub lkey: LayKey,
     pub item_id: usize,
     pub d_transf: DTransformation,
 }

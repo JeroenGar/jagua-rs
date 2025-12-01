@@ -13,7 +13,7 @@ pub fn problem_matches_solution(spp: &MSPProblem, sol: &MSPSolution) -> bool {
     // assert_eq!(spp.density(), sol.density(&spp.instance));
     // assert!(layouts_match(&spp.layout, layout_snapshot));
 
-    todo!()
+    todo!();
 
     true
 }

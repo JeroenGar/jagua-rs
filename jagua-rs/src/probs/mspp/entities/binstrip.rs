@@ -6,10 +6,10 @@ use crate::geometry::{DTransformation, OriginalShape};
 use anyhow::{Result, ensure};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
-/// Represents a rectangular container with fixed height and maximum width.
+/// Represents a rectangular container with fixed height and a modifiable width between 0 and a maximum value.
 pub struct BinStrip {
     pub max_width: f32,
-    pub height: f32,
+    pub fixed_height: f32,
     pub cde_config: CDEConfig,
     pub shape_modify_config: ShapeModifyConfig,
     pub width: f32,
@@ -18,17 +18,17 @@ pub struct BinStrip {
 impl BinStrip {
     pub fn new(
         max_width: f32,
-        height: f32,
+        fixed_height: f32,
         cde_config: CDEConfig,
         shape_modify_config: ShapeModifyConfig,
         width: f32,
     ) -> Result<Self> {
-        ensure!(height > 0.0, "strip height must be positive");
+        ensure!(fixed_height > 0.0, "strip height must be positive");
         ensure!(max_width > 0.0, "strip maximum width must be positive");
         ensure!(width > 0.0, "strip width must be positive");
         Ok(BinStrip {
+            max_width,
             fixed_height,
-            min_width,
             cde_config,
             shape_modify_config,
             width,
@@ -42,19 +42,18 @@ impl BinStrip {
     }
 }
 
-impl From<MStrip> for Container {
-    fn from(s: MStrip) -> Container {
+impl From<BinStrip> for Container {
+    fn from(bs: BinStrip) -> Container {
         Container::new(
             0,
             OriginalShape {
-                shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.width, s.fixed_height).unwrap()),
+                shape: SPolygon::from(Rect::try_new(0.0, 0.0, bs.width, bs.fixed_height).unwrap()),
                 pre_transform: DTransformation::empty(),
                 modify_mode: ShapeModifyMode::Deflate,
-                modify_config: s.shape_modify_config,
+                modify_config: bs.shape_modify_config,
             },
             vec![],
-            s.cde_config,
-        )
-            .unwrap()
+            bs.cde_config,
+        ).unwrap()
     }
 }

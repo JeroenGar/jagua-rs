@@ -1,16 +1,16 @@
 use serde::{Deserialize, Serialize};
 
-use crate::io::ext_repr::ExtLayout;
+use crate::io::ext_repr::{ExtLayout, ExtShape};
 
 /// Strip Packing Problem instance
 #[derive(Serialize, Deserialize, Clone)]
-pub struct ExtSPInstance {
+pub struct ExtMSPInstance {
     /// The name of the instance
     pub name: String,
     /// Set of items to be produced
     pub items: Vec<ExtItem>,
-    /// Fixed height of the strip
-    pub strip_height: f32,
+    /// Container in which to pack the items
+    pub bin: ExtMSPBin,
 }
 
 /// Item with a demand
@@ -23,15 +23,21 @@ pub struct ExtItem {
     pub demand: u64,
 }
 
-/// Strip Packing Problem solution
+/// Multi-strip Packing Problem solution
 #[derive(Serialize, Deserialize, Clone)]
-pub struct ExtSPSolution {
-    /// The strip width of the solution
-    pub strip_width: f32,
+pub struct ExtMSPSolution {
     /// Layouts which compose the solution
-    pub layout: ExtLayout,
+    pub layouts: Vec<ExtLayout>,
     /// Sum of the area of the produced items divided by the sum of the area of the containers
     pub density: f32,
     /// The time it took to generate the solution in seconds
     pub run_time_sec: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ExtMSPBin {
+    /// Height of the container
+    pub height: f32,
+    /// Width of the container
+    pub max_width: f32
 }
