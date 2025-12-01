@@ -3,15 +3,16 @@ use crate::Instant;
 use crate::entities::LayoutSnapshot;
 use crate::probs::mspp::entities::instance::MSPInstance;
 use crate::probs::mspp::entities::problem::LayKey;
-use crate::probs::mspp::entities::binstrip::BinStrip;
+use crate::probs::mspp::entities::strip::Strip;
 
-/// Snapshot of [`SPProblem`](crate::probs::mspp::entities::MSPProblem) at a specific moment. Can be used to restore to a previous state.
+/// Snapshot of [`MSPProblem`](crate::probs::mspp::entities::MSPProblem) at a specific moment.
+/// Can be used to restore to a previous state.
 #[derive(Debug, Clone)]
 pub struct MSPSolution {
     /// A map of the layout snapshots, identified by the same keys as in the problem
     pub layout_snapshots: SecondaryMap<LayKey, LayoutSnapshot>,
     /// Snapshot of the strips used in each layout
-    pub strips: SecondaryMap<LayKey, BinStrip>,
+    pub strips: SecondaryMap<LayKey, Strip>,
     /// Instant the solution was created
     pub time_stamp: Instant,
 }

@@ -4,7 +4,7 @@ use crate::io::import::Importer;
 use anyhow::{Result, ensure};
 use itertools::Itertools;
 use rayon::prelude::*;
-use crate::probs::mspp::entities::{BinStrip, MSPInstance};
+use crate::probs::mspp::entities::{Strip, MSPInstance};
 use crate::probs::mspp::io::ext_repr::ExtMSPInstance;
 
 /// Imports an instance into the library
@@ -36,18 +36,18 @@ pub fn import(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPI
         items
     };
 
-    let ext_bin = &ext_instance.bin;
+    let ext_strip = &ext_instance.strip;
 
-    let base_strip = BinStrip::new(
-        ext_bin.max_width,
-        ext_bin.height,
+    let base_strip = Strip::new(
+        ext_strip.max_width,
+        ext_strip.height,
         importer.cde_config,
         ShapeModifyConfig {
             offset: importer.shape_modify_config.offset,
             simplify_tolerance: None,
             narrow_concavity_cutoff_ratio: None,
         },
-        ext_bin.max_width
+        ext_strip.max_width
     )?;
 
     Ok(MSPInstance::new(items, base_strip))

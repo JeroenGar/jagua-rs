@@ -1,7 +1,7 @@
 use crate::entities::{Container, Instance, Layout, PItemKey};
 use crate::geometry::DTransformation;
 use crate::probs::mspp::entities::instance::MSPInstance;
-use crate::probs::mspp::entities::binstrip::BinStrip;
+use crate::probs::mspp::entities::strip::Strip;
 use crate::probs::mspp::entities::MSPSolution;
 use crate::Instant;
 use itertools::Itertools;
@@ -13,12 +13,16 @@ new_key_type! {
     pub struct LayKey;
 }
 
-/// Modifiable counterpart of [`MSPInstance`]: items can be placed and removed, strip can be extended or fitted.
+/// Modifiable counterpart of [`MSPInstance`]: items can be placed and removed; layouts can be added, removed, and modified.
 #[derive(Clone)]
 pub struct MSPProblem {
+    /// The underlying instance
     pub instance: MSPInstance,
+    /// The layouts in the problem
     pub layouts: SlotMap<LayKey, Layout>,
-    pub strips: SecondaryMap<LayKey, BinStrip>,
+    /// The strips associated with each layout
+    pub strips: SecondaryMap<LayKey, Strip>,
+    /// The remaining demand quantities for each item
     pub item_demand_qtys: Vec<usize>,
 }
 

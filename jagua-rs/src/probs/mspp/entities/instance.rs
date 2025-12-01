@@ -1,6 +1,6 @@
 use crate::entities::{Container, Instance, Item};
 use std::iter;
-use crate::probs::mspp::entities::binstrip::BinStrip;
+use crate::probs::mspp::entities::strip::Strip;
 use crate::probs::mspp::util::assertions;
 
 #[derive(Debug, Clone)]
@@ -9,11 +9,11 @@ pub struct MSPInstance {
     /// The items to be packed and their demands
     pub items: Vec<(Item, usize)>,
     /// The strip in which to pack the items
-    pub base_strip: BinStrip,
+    pub base_strip: Strip,
 }
 
 impl MSPInstance {
-    pub fn new(items: Vec<(Item, usize)>, base_strip: BinStrip) -> Self {
+    pub fn new(items: Vec<(Item, usize)>, base_strip: Strip) -> Self {
         assert!(
             assertions::instance_item_ids_correct(&items),
             "All items should have consecutive IDs starting from 0"
