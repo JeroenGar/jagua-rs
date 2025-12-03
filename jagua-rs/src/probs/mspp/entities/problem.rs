@@ -1,12 +1,12 @@
+use crate::Instant;
 use crate::entities::{Container, Instance, Layout, PItemKey};
 use crate::geometry::DTransformation;
+use crate::probs::mspp::entities::MSPSolution;
 use crate::probs::mspp::entities::instance::MSPInstance;
 use crate::probs::mspp::entities::strip::Strip;
-use crate::probs::mspp::entities::MSPSolution;
-use crate::Instant;
-use itertools::Itertools;
-use slotmap::{new_key_type, SecondaryMap, SlotMap};
 use crate::probs::mspp::util::assertions::problem_matches_solution;
+use itertools::Itertools;
+use slotmap::{SecondaryMap, SlotMap, new_key_type};
 
 new_key_type! {
     /// Unique key for each [`Layout`] in a [`MSPProblem`] and [`MSPSolution`]
@@ -28,9 +28,7 @@ pub struct MSPProblem {
 
 impl MSPProblem {
     pub fn new(instance: MSPInstance) -> Self {
-        let item_demand_qtys = instance.items.iter()
-            .map(|(_, qty)| *qty)
-            .collect_vec();
+        let item_demand_qtys = instance.items.iter().map(|(_, qty)| *qty).collect_vec();
 
         Self {
             instance,
@@ -47,7 +45,7 @@ impl MSPProblem {
         self.layouts[lkey].swap_container(Container::from(*bin_strip));
     }
 
-    pub fn remove_layout(&mut self, key: LayKey){
+    pub fn remove_layout(&mut self, key: LayKey) {
         self.deregister_layout(key);
     }
 
@@ -67,7 +65,7 @@ impl MSPProblem {
         // add the shape offset if any, the strip needs to be at least `offset` wider than the items
         let fitted_width = item_x_max + self.strips[lkey].shape_modify_config.offset.unwrap_or(0.0);
 
-        self.change_strip_width(lkey,fitted_width);
+        self.change_strip_width(lkey, fitted_width);
         debug_assert!(feasible_before == self.layouts[lkey].is_feasible());
     }
 
@@ -117,10 +115,13 @@ impl MSPProblem {
         //If a layout is present we might be able to do a (partial) restore instead of fully rebuilding everything.
         for (lkey, layout) in self.layouts.iter_mut() {
             match solution.layout_snapshots.get(lkey) {
-                Some(ls) => match layout.container.id == ls.container.id {
-                    true => layout.restore(ls),
-                    false => layouts_to_remove.push(lkey),
-                },
+                Some(ls) => {
+                    //If the container (strip) still matches, we can do a restore
+                    match self.strips[lkey] == solution.strips[lkey] {
+                        true => layout.restore(ls),
+                        false => layouts_to_remove.push(lkey),
+                    }
+                }
                 None => {
                     layouts_to_remove.push(lkey);
                 }
@@ -184,11 +185,10 @@ impl MSPProblem {
     }
 
     pub fn density(&self) -> f32 {
-        let total_container_area = self.all_layouts()
-            .map(|l| l.container.area())
-            .sum::<f32>();
+        let total_container_area = self.all_layouts().map(|l| l.container.area()).sum::<f32>();
 
-        let total_item_area = self.all_layouts()
+        let total_item_area = self
+            .all_layouts()
             .map(|l| l.placed_item_area(&self.instance))
             .sum::<f32>();
 

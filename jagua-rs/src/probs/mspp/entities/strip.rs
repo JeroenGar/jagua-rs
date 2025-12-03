@@ -54,6 +54,7 @@ impl From<Strip> for Container {
             },
             vec![],
             bs.cde_config,
-        ).unwrap()
+        )
+        .unwrap()
     }
 }

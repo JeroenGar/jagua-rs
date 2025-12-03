@@ -1,11 +1,11 @@
 use crate::entities::Item;
 use crate::geometry::shape_modification::ShapeModifyConfig;
 use crate::io::import::Importer;
+use crate::probs::mspp::entities::{MSPInstance, Strip};
+use crate::probs::mspp::io::ext_repr::ExtMSPInstance;
 use anyhow::{Result, ensure};
 use itertools::Itertools;
 use rayon::prelude::*;
-use crate::probs::mspp::entities::{Strip, MSPInstance};
-use crate::probs::mspp::io::ext_repr::ExtMSPInstance;
 
 /// Imports an instance into the library
 pub fn import(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPInstance> {
@@ -47,7 +47,7 @@ pub fn import(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPI
             simplify_tolerance: None,
             narrow_concavity_cutoff_ratio: None,
         },
-        ext_strip.max_width
+        ext_strip.max_width,
     )?;
 
     Ok(MSPInstance::new(items, base_strip))

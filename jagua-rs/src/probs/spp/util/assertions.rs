@@ -1,6 +1,6 @@
 use crate::entities::Item;
 use crate::probs::spp::entities::{SPProblem, SPSolution};
-use crate::util::assertions::layouts_match;
+use crate::util::assertions::snapshot_matches_layout;
 
 pub fn problem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
     let SPSolution {
@@ -11,7 +11,7 @@ pub fn problem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
 
     assert_eq!(*strip, spp.strip);
     assert_eq!(spp.density(), sol.density(&spp.instance));
-    assert!(layouts_match(&spp.layout, layout_snapshot));
+    assert!(snapshot_matches_layout(&spp.layout, layout_snapshot));
 
     true
 }

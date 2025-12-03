@@ -39,5 +39,5 @@ pub struct ExtMSPStrip {
     /// Height of the container
     pub height: f32,
     /// Width of the container
-    pub max_width: f32
+    pub max_width: f32,
 }

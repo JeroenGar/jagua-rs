@@ -1,9 +1,9 @@
-use slotmap::SecondaryMap;
 use crate::Instant;
 use crate::entities::LayoutSnapshot;
 use crate::probs::mspp::entities::instance::MSPInstance;
 use crate::probs::mspp::entities::problem::LayKey;
 use crate::probs::mspp::entities::strip::Strip;
+use slotmap::SecondaryMap;
 
 /// Snapshot of [`MSPProblem`](crate::probs::mspp::entities::MSPProblem) at a specific moment.
 /// Can be used to restore to a previous state.

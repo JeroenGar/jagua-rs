@@ -13,7 +13,7 @@ use std::collections::HashSet;
 //Various checks to verify correctness of the state of the system
 //Used in debug_assertion!() blocks
 
-pub fn layouts_match(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool {
+pub fn snapshot_matches_layout(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool {
     if layout.container.id != layout_snapshot.container.id {
         return false;
     }

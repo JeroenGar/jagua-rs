@@ -1,7 +1,7 @@
 use crate::entities::{Container, Instance, Item};
-use std::iter;
 use crate::probs::mspp::entities::strip::Strip;
 use crate::probs::mspp::util::assertions;
+use std::iter;
 
 #[derive(Debug, Clone)]
 /// Instance of the Multi-Strip Packing Problem.

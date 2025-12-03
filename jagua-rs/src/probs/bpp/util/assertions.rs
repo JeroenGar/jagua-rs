@@ -1,6 +1,6 @@
 use crate::entities::Item;
 use crate::probs::bpp::entities::{BPProblem, BPSolution, Bin};
-use crate::util::assertions::layouts_match;
+use crate::util::assertions::snapshot_matches_layout;
 
 pub fn problem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
     let BPSolution {
@@ -8,12 +8,14 @@ pub fn problem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
         time_stamp: _,
     } = sol;
 
-    for (lkey, l) in &bpp.layouts {
+    assert_eq!(bpp.density(), sol.density(&bpp.instance));
+    bpp.layouts.iter().for_each(|(lkey, l)| {
         let ls = &layout_snapshots[lkey];
-        if !layouts_match(l, ls) {
-            return false;
-        }
-    }
+        assert!(snapshot_matches_layout(l, ls))
+    });
+    sol.layout_snapshots.keys().for_each(|lkey| {
+        assert!(bpp.layouts.contains_key(lkey));
+    });
 
     true
 }
