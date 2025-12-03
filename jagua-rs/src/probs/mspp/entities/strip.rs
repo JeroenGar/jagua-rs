@@ -43,17 +43,18 @@ impl Strip {
 }
 
 impl From<Strip> for Container {
-    fn from(bs: Strip) -> Container {
+    fn from(s: Strip) -> Container {
+        let id = s.width.to_bits() as usize;
         Container::new(
-            0,
+            id,
             OriginalShape {
-                shape: SPolygon::from(Rect::try_new(0.0, 0.0, bs.width, bs.fixed_height).unwrap()),
+                shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.width, s.fixed_height).unwrap()),
                 pre_transform: DTransformation::empty(),
                 modify_mode: ShapeModifyMode::Deflate,
-                modify_config: bs.shape_modify_config,
+                modify_config: s.shape_modify_config,
             },
             vec![],
-            bs.cde_config,
+            s.cde_config,
         )
         .unwrap()
     }

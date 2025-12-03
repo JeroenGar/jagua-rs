@@ -70,11 +70,29 @@ impl MSPProblem {
     }
 
     /// Places an item according to the given `SPPlacement` in the problem.
-    pub fn place_item(&mut self, placement: MSPPlacement) -> PItemKey {
-        self.register_included_item(placement.item_id);
-        let item = self.instance.item(placement.item_id);
+    pub fn place_item(&mut self, placement: MSPPlacement) -> (LayKey, PItemKey) {
+        let lkey = match placement.layout_id {
+            MSPLayoutType::Open(lkey) => lkey,
+            MSPLayoutType::Closed { strip_width } => {
+                //Open a new layout
+                let new_strip = Strip {
+                    width: strip_width,
+                    ..self.instance.base_strip
+                };
+                let layout = Layout::new(new_strip.into());
+                let lkey = self.register_layout(layout);
+                self.strips[lkey] = new_strip;
+                lkey
+            }
+        };
 
-        self.layouts[placement.lkey].place_item(item, placement.d_transf)
+        let layout = &mut self.layouts[lkey];
+        let item = self.instance.item(placement.item_id);
+        let pik = layout.place_item(item, placement.d_transf);
+
+        self.register_included_item(placement.item_id);
+
+        (lkey, pik)
     }
 
     /// Removes a placed item from the strip. Returns the placement of the item.
@@ -83,8 +101,17 @@ impl MSPProblem {
         let pi = self.layouts[lkey].remove_item(pkey);
         self.deregister_included_item(pi.item_id);
 
+        let layout_id = if self.layouts[lkey].is_empty() {
+            //if layout is empty, close it
+            let strip_width = self.strips[lkey].width;
+            self.deregister_layout(lkey);
+            MSPLayoutType::Closed { strip_width }
+        } else {
+            MSPLayoutType::Open(lkey)
+        };
+
         MSPPlacement {
-            lkey,
+            layout_id,
             item_id: pi.item_id,
             d_transf: pi.d_transf,
         }
@@ -151,7 +178,7 @@ impl MSPProblem {
 
             self.strips.clear();
             solution.strips.iter().for_each(|(lkey, strip)| {
-                self.strips.insert(lkey, strip.clone());
+                self.strips.insert(lkey, *strip);
             });
         }
 
@@ -203,7 +230,19 @@ impl MSPProblem {
 /// Represents a placement of an item in the strip packing problem.
 #[derive(Debug, Clone, Copy)]
 pub struct MSPPlacement {
-    pub lkey: LayKey,
+    /// Which [`Layout`] to place the item in
+    pub layout_id: MSPLayoutType,
+    /// The id of the [`Item`](crate::entities::Item) to be placed
     pub item_id: usize,
+    /// The transformation to apply to the item when placing it
     pub d_transf: DTransformation,
+}
+
+/// Enum to distinguish between already existing [`Layout`]s and new ones.
+#[derive(Debug, Clone, Copy)]
+pub enum MSPLayoutType {
+    /// An existing layout, identified by its key
+    Open(LayKey),
+    /// A new layout to be created from a strip of given width
+    Closed { strip_width: f32 },
 }

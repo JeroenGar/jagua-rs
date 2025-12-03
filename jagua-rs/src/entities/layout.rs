@@ -60,7 +60,6 @@ impl Layout {
     /// Restores the layout to a previous state using a snapshot.
     pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
         assert_eq!(self.container.id, layout_snapshot.container.id);
-        assert_eq!(self.container.area(), layout_snapshot.container.area());
 
         self.placed_items = layout_snapshot.placed_items.clone();
         self.cde.restore(&layout_snapshot.cde_snapshot);

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::io::ext_repr::{ExtLayout, ExtShape};
+use crate::io::ext_repr::ExtLayout;
 
 /// Multi-Strip Packing Problem instance
 #[derive(Serialize, Deserialize, Clone)]

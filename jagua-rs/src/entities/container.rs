@@ -13,6 +13,7 @@ use anyhow::{Result, ensure};
 /// A container in which [`Item`](crate::entities::Item)'s can be placed.
 #[derive(Clone, Debug)]
 pub struct Container {
+    /// Unique identifier of the container
     pub id: usize,
     /// Original contour of the container as defined in the input
     pub outer_orig: Arc<OriginalShape>,
