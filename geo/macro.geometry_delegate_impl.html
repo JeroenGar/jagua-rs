@@ -1,0 +1,79 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Implements the common pattern where a Geometry enum simply delegates its trait impl to it’s inner type."><title>geometry_delegate_impl in geo - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="geo" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-68b7e25d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc macro"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button><a class="logo-container" href="../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt=""></a></nav><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt="logo"></a><h2><a href="../geo/index.html">geo</a><span class="version">0.24.1</span></h2></div><div class="sidebar-elems"><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">geo</a></div><h1>Macro <span class="macro">geometry_delegate_impl</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/geo/types.rs.html#120-122">Source</a> </span></div><pre class="rust item-decl"><code>macro_rules! geometry_delegate_impl {
+    ($($a:tt)*) =&gt; { ... };
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Implements the common pattern where a Geometry enum simply delegates its trait impl to it’s inner type.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code>
+<span class="kw">trait </span>Foo&lt;T: GeoNum&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool;
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; i32;
+}
+
+<span class="comment">// Assuming we have an impl for all the inner types like this:
+</span><span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>Point&lt;T&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool { <span class="bool-val">true </span>}
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>)  -&gt; i32 { <span class="number">1 </span>}
+}
+<span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>Line&lt;T&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool { <span class="bool-val">false </span>}
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>)  -&gt; i32 { <span class="number">2 </span>}
+}
+<span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>LineString&lt;T&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool { <span class="bool-val">true </span>}
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>)  -&gt; i32 { <span class="number">3 </span>}
+}
+<span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>Polygon&lt;T&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool { <span class="bool-val">false </span>}
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>)  -&gt; i32 { <span class="number">4 </span>}
+}
+<span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>MultiPoint&lt;T&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool { <span class="bool-val">true </span>}
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>)  -&gt; i32 { <span class="number">5 </span>}
+}
+<span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>MultiLineString&lt;T&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool { <span class="bool-val">false </span>}
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>)  -&gt; i32 { <span class="number">6 </span>}
+}
+<span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>MultiPolygon&lt;T&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool { <span class="bool-val">true </span>}
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>)  -&gt; i32 { <span class="number">7 </span>}
+}
+<span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>GeometryCollection&lt;T&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool { <span class="bool-val">false </span>}
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>)  -&gt; i32 { <span class="number">8 </span>}
+}
+<span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>Rect&lt;T&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool { <span class="bool-val">true </span>}
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>)  -&gt; i32 { <span class="number">9 </span>}
+}
+<span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>Triangle&lt;T&gt; {
+    <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;)  -&gt; bool { <span class="bool-val">true </span>}
+    <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>)  -&gt; i32 { <span class="number">10 </span>}
+}
+
+<span class="comment">// If we want the impl for Geometry to simply delegate to it's
+// inner case...
+</span><span class="kw">impl</span>&lt;T: GeoNum&gt; Foo&lt;T&gt; <span class="kw">for </span>Geometry&lt;T&gt; {
+    <span class="comment">// Instead of writing out this trivial enum delegation...
+    // fn foo_1(&amp;self, coord: Coord&lt;T&gt;)  -&gt; bool {
+    //     match self {
+    //        Geometry::Point(g) =&gt; g.foo_1(coord),
+    //        Geometry::LineString(g) =&gt; g.foo_1(coord),
+    //        _ =&gt; unimplemented!("...etc for other cases")
+    //     }
+    // }
+    //
+    // fn foo_2(&amp;self)  -&gt; i32 {
+    //     match self {
+    //        Geometry::Point(g) =&gt; g.foo_2(),
+    //        Geometry::LineString(g) =&gt; g.foo_2(),
+    //        _ =&gt; unimplemented!("...etc for other cases")
+    //     }
+    // }
+
+    // we can equivalently write:
+    </span><span class="macro">geo::geometry_delegate_impl!</span> {
+        <span class="kw">fn </span>foo_1(<span class="kw-2">&amp;</span><span class="self">self</span>, coord: Coord&lt;T&gt;) -&gt; bool;
+        <span class="kw">fn </span>foo_2(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; i32;
+    }
+}</code></pre></div>
+</div></details></section></div></main></body></html>
