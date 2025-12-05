@@ -42,8 +42,8 @@ impl BPProblem {
     }
 
     /// Places an item according to the provided [`BPPlacement`] in the problem.
-    pub fn place_item(&mut self, p_opt: BPPlacement) -> (LayKey, PItemKey) {
-        let lkey = match p_opt.layout_id {
+    pub fn place_item(&mut self, placement: BPPlacement) -> (LayKey, PItemKey) {
+        let lkey = match placement.layout_id {
             BPLayoutType::Open(lkey) => lkey,
             BPLayoutType::Closed { bin_id } => {
                 //open a new layout
@@ -52,11 +52,12 @@ impl BPProblem {
                 self.register_layout(layout)
             }
         };
-        let layout = &mut self.layouts[lkey];
-        let item = self.instance.item(p_opt.item_id);
-        let pik = layout.place_item(item, p_opt.d_transf);
 
-        self.register_included_item(p_opt.item_id);
+        let layout = &mut self.layouts[lkey];
+        let item = self.instance.item(placement.item_id);
+        let pik = layout.place_item(item, placement.d_transf);
+
+        self.register_included_item(placement.item_id);
 
         (lkey, pik)
     }
@@ -246,7 +247,7 @@ impl BPPlacement {
     }
 }
 
-/// Enum to distinguish between both open [`Layout`]s, and potentially new ones.
+/// Enum to distinguish between already existing [`Layout`]s and new ones.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BPLayoutType {
     /// An existing layout, identified by its key
