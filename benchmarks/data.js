@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764973733139,
+  "lastUpdate": 1764974208314,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -3921,6 +3921,84 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k/5",
             "value": 215700,
             "range": "± 3111",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jeroen.gardeyn@hotmail.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "jeroen.gardeyn@hotmail.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "distinct": true,
+          "id": "8360e4d43818b806d750d6e83657386338267f02",
+          "message": "Add conditional deployment for main branch in CI workflows",
+          "timestamp": "2025-12-05T23:33:53+01:00",
+          "tree_id": "214e8559dd9af4e878ad528695ef407cef0f01fa",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/8360e4d43818b806d750d6e83657386338267f02"
+        },
+        "date": 1764974195218,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 2282204,
+            "range": "± 116714",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 2629288,
+            "range": "± 142602",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 2622920,
+            "range": "± 142212",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 2311868,
+            "range": "± 7389",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 4190699,
+            "range": "± 15904",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 8175222,
+            "range": "± 48130",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 242801,
+            "range": "± 8424",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 219328,
+            "range": "± 4343",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 216567,
+            "range": "± 4018",
             "unit": "ns/iter"
           }
         ]
