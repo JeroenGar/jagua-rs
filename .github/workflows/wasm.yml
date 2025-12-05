@@ -46,6 +46,7 @@ jobs:
           rm -f deploy/pkg/.gitignore
           ls -R deploy
       - name: Deploy LBF.wasm demo
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: JamesIves/github-pages-deploy-action@v4.7.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
