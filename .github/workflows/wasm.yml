@@ -8,6 +8,13 @@ on:
       - '**.toml'
       - '**.yml'
       - 'lbf/wasm-demo/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '**.rs'
+      - '**.toml'
+      - '**.yml'
+      - 'lbf/wasm-demo/**'
   workflow_dispatch: # Added for manual triggering if needed
 
 jobs:
