@@ -284,6 +284,7 @@ pub fn parse_subpath(tokens: &[&str], start_idx: usize) -> Result<(Vec<Point>, u
         }
     }
 
+    // Remove duplicate consecutive points and ensure polygon is properly closed
     let mut cleaned_points = Vec::new();
     for point in points {
         if cleaned_points.is_empty() || cleaned_points[cleaned_points.len() - 1] != point {
@@ -291,47 +292,87 @@ pub fn parse_subpath(tokens: &[&str], start_idx: usize) -> Result<(Vec<Point>, u
         }
     }
 
+    // Remove closing point if it's the same as the first point
     if cleaned_points.len() > 1 && cleaned_points[0] == cleaned_points[cleaned_points.len() - 1] {
         cleaned_points.pop();
     }
 
-    Ok((cleaned_points, i))
+    // Filter out zero-length edges and very small edges (consecutive identical or nearly identical points)
+    // This can happen if the SVG has malformed path data or precision issues
+    // Very small edges can cause quadtree issues, so we filter them out
+    const MIN_EDGE_LENGTH_SQ: f32 = 1e-10; // Minimum squared edge length (very small threshold)
+    let mut final_points = Vec::new();
+    for (idx, point) in cleaned_points.iter().enumerate() {
+        let next_idx = (idx + 1) % cleaned_points.len();
+        let next_point = &cleaned_points[next_idx];
+        // Calculate squared distance to filter out very small edges
+        let dx = point.0 - next_point.0;
+        let dy = point.1 - next_point.1;
+        let edge_length_sq = dx * dx + dy * dy;
+        // Only add point if it forms a non-zero-length edge with the next point
+        if edge_length_sq > MIN_EDGE_LENGTH_SQ {
+            final_points.push(*point);
+        }
+    }
+
+    // Ensure we have at least 3 points for a valid polygon
+    if final_points.len() < 3 {
+        anyhow::bail!("Sub-path has fewer than 3 points after removing zero-length and very small edges");
+    }
+    
+    // Ensure the polygon is closed (first and last points should be different)
+    // SPolygon expects an open polygon (no duplicate first/last point)
+    if final_points.len() > 0 && final_points[0] == final_points[final_points.len() - 1] {
+        final_points.pop();
+    }
+
+    Ok((final_points, i))
 }
 
 /// Parses SVG path data and extracts polygon coordinates
 /// The SVG path may contain multiple sub-paths (outer boundary and inner holes)
-/// Returns (outer_boundary, holes) where outer_boundary is the first sub-path and holes are subsequent sub-paths
+/// Returns (outer_boundary, holes) where outer_boundary is the sub-path with the largest absolute area
 pub fn parse_svg_path(path_data: &str) -> Result<(Vec<Point>, Vec<Vec<Point>>)> {
     let tokens: Vec<&str> = path_data
         .split_whitespace()
         .filter(|s| !s.is_empty())
         .collect();
 
-    let mut outer_boundary = Vec::new();
-    let mut holes = Vec::new();
+    let mut all_subpaths = Vec::new();
     let mut i = 0;
 
-    // Parse first sub-path as outer boundary
-    if i < tokens.len() && (tokens[i] == "M" || tokens[i] == "m") {
-        let (points, next_idx) = parse_subpath(&tokens, i)?;
-        if !points.is_empty() {
-            outer_boundary = points;
-        }
-        i = next_idx;
-    }
-
-    // Parse remaining sub-paths as holes
+    // Parse all sub-paths first
     while i < tokens.len() {
         if tokens[i] == "M" || tokens[i] == "m" {
             let (points, next_idx) = parse_subpath(&tokens, i)?;
             if !points.is_empty() {
-                holes.push(points);
+                all_subpaths.push(points);
             }
             i = next_idx;
         } else {
             i += 1;
         }
     }
+
+    if all_subpaths.is_empty() {
+        anyhow::bail!("No valid sub-paths found in SVG path data");
+    }
+
+    // Find the sub-path with the largest absolute area (this should be the outer boundary)
+    // The outer boundary is typically the largest polygon that contains all others
+    let mut max_area = calculate_signed_area(&all_subpaths[0]).abs();
+    let mut outer_boundary_idx = 0;
+    for (idx, subpath) in all_subpaths.iter().enumerate().skip(1) {
+        let area = calculate_signed_area(subpath).abs();
+        if area > max_area {
+            max_area = area;
+            outer_boundary_idx = idx;
+        }
+    }
+
+    // Separate outer boundary and holes
+    let outer_boundary = all_subpaths.remove(outer_boundary_idx);
+    let holes = all_subpaths;
 
     Ok((outer_boundary, holes))
 }

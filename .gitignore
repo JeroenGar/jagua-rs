@@ -24,3 +24,4 @@
 input/
 *.log
 *.pid
+*.env

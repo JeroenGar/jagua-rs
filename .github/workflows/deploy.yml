@@ -52,7 +52,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
       - name: Push staging tag for staging branch
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/staging'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/staging'
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

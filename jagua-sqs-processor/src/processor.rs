@@ -1,11 +1,14 @@
 use anyhow::{anyhow, Context, Result};
 use aws_sdk_sqs::Client as SqsClient;
+use aws_sdk_s3::Client as S3Client;
 use base64::{engine::general_purpose, Engine as _};
+use futures::StreamExt;
 use jagua_utils::svg_nesting::{NestingStrategy, AdaptiveNestingStrategy};
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc;
@@ -19,9 +22,12 @@ use tokio::sync::Semaphore;
 pub struct SqsNestingRequest {
     /// Unique identifier for tracking the request
     pub correlation_id: String,
-    /// Base64-encoded SVG payload (required if not cancelled)
+    /// Base64-encoded SVG payload (deprecated, use svg_url instead)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub svg_base64: Option<String>,
+    /// S3 URL to the input SVG file (format: s3://bucket/key or https://bucket.s3.region.amazonaws.com/key)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub svg_url: Option<String>,
     /// Bin width for nesting (required if not cancelled)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bin_width: Option<f32>,
@@ -74,12 +80,7 @@ fn generate_empty_page_svg(bin_width: f32, bin_height: f32) -> Vec<u8> {
 
 fn sanitize_svg_fields(response: &SqsNestingResponse) -> SqsNestingResponse {
     let mut sanitized = response.clone();
-    sanitized.first_page_svg_base64 =
-        format!("<{} bytes stripped>", response.first_page_svg_base64.len());
-    sanitized.last_page_svg_base64 = response
-        .last_page_svg_base64
-        .as_ref()
-        .map(|svg| format!("<{} bytes stripped>", svg.len()));
+    // URLs are already small, no need to sanitize
     sanitized
 }
 
@@ -106,11 +107,12 @@ fn default_rotations() -> usize {
 pub struct SqsNestingResponse {
     /// Correlation ID from request
     pub correlation_id: String,
-    /// Base64-encoded SVG for the first page
-    pub first_page_svg_base64: String,
-    /// Base64-encoded SVG for the last page (same as first when single page)
+    /// S3 URL to the first page SVG (format: s3://bucket/nesting/{requestId}/first-page.svg)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_page_svg_base64: Option<String>,
+    pub first_page_svg_url: Option<String>,
+    /// S3 URL to the last page SVG (format: s3://bucket/nesting/{requestId}/last-page.svg)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_page_svg_url: Option<String>,
     /// Number of parts placed
     pub parts_placed: usize,
     /// Whether this is an intermediate improvement (always false for simple strategy)
@@ -130,6 +132,8 @@ pub struct SqsNestingResponse {
 #[derive(Clone)]
 pub struct SqsProcessor {
     sqs_client: SqsClient,
+    s3_client: S3Client,
+    s3_bucket: String,
     input_queue_url: String,
     output_queue_url: String,
     cancellation_registry: Arc<Mutex<HashMap<String, bool>>>,
@@ -142,40 +146,202 @@ impl SqsProcessor {
     }
 
     /// Create a new SQS processor
-    pub fn new(sqs_client: SqsClient, input_queue_url: String, output_queue_url: String) -> Self {
+    pub fn new(
+        sqs_client: SqsClient,
+        s3_client: S3Client,
+        s3_bucket: String,
+        input_queue_url: String,
+        output_queue_url: String,
+    ) -> Self {
         Self {
             sqs_client,
+            s3_client,
+            s3_bucket,
             input_queue_url,
             output_queue_url,
             cancellation_registry: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
-    /// Send message to output queue
-    pub async fn send_to_output_queue(
+    /// Upload SVG to S3 and return the S3 URL
+    async fn upload_svg_to_s3(
         &self,
+        svg_bytes: &[u8],
+        request_id: &str,
+        filename: &str,
+    ) -> Result<String> {
+        upload_svg_to_s3_internal(&self.s3_client, &self.s3_bucket, svg_bytes, request_id, filename).await
+    }
+
+    /// Download SVG from S3 URL
+    async fn download_svg_from_s3(&self, s3_url: &str) -> Result<Vec<u8>> {
+        // Parse S3 URL (supports both s3://bucket/key and https://bucket.s3.region.amazonaws.com/key)
+        let (bucket, key) = parse_s3_url(s3_url)?;
+        
+        info!("Downloading SVG from S3: url={}, bucket={}, key={}", s3_url, bucket, key);
+
+        let response = match self.s3_client
+            .get_object()
+            .bucket(&bucket)
+            .key(&key)
+            .send()
+            .await
+        {
+            Ok(resp) => resp,
+            Err(e) => {
+                // Log detailed error information
+                error!("S3 GetObject failed: {}", e);
+                error!("S3 URL: {}, bucket: {}, key: {}", s3_url, bucket, key);
+                
+                // Try to extract more error details
+                use aws_sdk_s3::error::ProvideErrorMetadata;
+                if let Some(code) = e.code() {
+                    error!("S3 error code: {}", code);
+                }
+                if let Some(message) = e.message() {
+                    error!("S3 error message: {}", message);
+                }
+                
+                // Log the full error
+                error!("Full error details: {}", e);
+                
+                return Err(anyhow::anyhow!(
+                    "Failed to download SVG from S3: bucket={}, key={}, error={}",
+                    bucket, key, e
+                ));
+            }
+        };
+
+        // Collect the body stream into bytes
+        let mut svg_bytes = Vec::new();
+        let mut body_stream = response.body;
+        use futures::StreamExt;
+        while let Some(chunk_result) = body_stream.next().await {
+            let chunk = chunk_result.context("Failed to read chunk from S3 object body")?;
+            svg_bytes.extend_from_slice(&chunk);
+        }
+        info!("Downloaded SVG from S3: {} bytes", svg_bytes.len());
+        Ok(svg_bytes)
+    }
+}
+
+/// Parse S3 URL and extract bucket and key
+fn parse_s3_url(s3_url: &str) -> Result<(String, String)> {
+    // Handle s3://bucket/key format
+    if s3_url.starts_with("s3://") {
+        let path = &s3_url[5..];
+        if let Some(slash_pos) = path.find('/') {
+            let bucket = path[..slash_pos].to_string();
+            let key = path[slash_pos + 1..].to_string();
+            return Ok((bucket, key));
+        }
+        return Err(anyhow!("Invalid S3 URL format: {}", s3_url));
+    }
+    
+    // Handle https://bucket.s3.region.amazonaws.com/key format
+    if s3_url.starts_with("https://") {
+        let url = s3_url.strip_prefix("https://").unwrap();
+        // Extract bucket (first part before .s3)
+        if let Some(s3_pos) = url.find(".s3") {
+            let bucket = url[..s3_pos].to_string();
+            // Extract key (everything after .amazonaws.com/)
+            if let Some(aws_pos) = url.find(".amazonaws.com/") {
+                let key = url[aws_pos + 15..].to_string();
+                return Ok((bucket, key));
+            }
+        }
+        return Err(anyhow!("Invalid S3 HTTPS URL format: {}", s3_url));
+    }
+    
+    Err(anyhow!("Unsupported S3 URL format: {}", s3_url))
+}
+
+/// Internal helper function to upload SVG to S3 (used by both improvement and final responses)
+async fn upload_svg_to_s3_internal(
+    s3_client: &S3Client,
+    s3_bucket: &str,
+    svg_bytes: &[u8],
+    request_id: &str,
+    filename: &str,
+) -> Result<String> {
+    let s3_key = format!("nesting/{}/{}", request_id, filename);
+    let s3_url = format!("s3://{}/{}", s3_bucket, s3_key);
+    
+    info!("Uploading SVG to S3: bucket={}, key={}, size={} bytes", 
+        s3_bucket, s3_key, svg_bytes.len());
+
+    s3_client
+        .put_object()
+        .bucket(s3_bucket)
+        .key(&s3_key)
+        .body(aws_sdk_s3::primitives::ByteStream::from(svg_bytes.to_vec()))
+        .content_type("image/svg+xml")
+        .send()
+        .await
+        .with_context(|| {
+            format!(
+                "Failed to upload SVG to S3: bucket={}, key={}",
+                s3_bucket, s3_key
+            )
+        })?;
+
+    info!("Successfully uploaded SVG to S3: {}", s3_url);
+    Ok(s3_url)
+}
+
+impl SqsProcessor {
+    /// Send message to output queue
+    /// Helper function to send a message to SQS (used by both error and improvement responses)
+    async fn send_message_to_sqs(
+        sqs_client: &SqsClient,
         queue_url: &str,
         response: &SqsNestingResponse,
     ) -> Result<()> {
         let message_body =
             serde_json::to_string(response).context("Failed to serialize response")?;
 
+        // Check message size (SQS limit is 1 MiB = 1,048,576 bytes)
+        let message_size_kb = message_body.len() / 1024;
+        const SQS_MAX_SIZE: usize = 1024 * 1024; // 1 MiB
+        if message_body.len() > SQS_MAX_SIZE {
+            return Err(anyhow!(
+                "Message size {} KB exceeds SQS limit of {} KB (1 MiB)",
+                message_size_kb,
+                SQS_MAX_SIZE / 1024
+            ));
+        }
+
         debug!(
-            "Sending message to output queue: correlation_id={}, is_final={}",
-            response.correlation_id, response.is_final
+            "Sending message to output queue: correlation_id={}, is_final={}, size={} KB",
+            response.correlation_id, response.is_final, message_size_kb
         );
 
-        let sanitized_response = sanitize_svg_fields(response);
-        let sanitized_body = serde_json::to_string(&sanitized_response)
-            .unwrap_or_else(|_| "<failed to serialize sanitized response>".to_string());
-
-        self.sqs_client
+        sqs_client
             .send_message()
             .queue_url(queue_url)
             .message_body(&message_body)
             .send()
             .await
-            .context("Failed to send message to output queue")?;
+            .with_context(|| {
+                format!(
+                    "Failed to send message to queue {}: correlation_id={}, size={} KB",
+                    queue_url, response.correlation_id, message_size_kb
+                )
+            })?;
+
+        Ok(())
+    }
+
+    pub async fn send_to_output_queue(
+        &self,
+        queue_url: &str,
+        response: &SqsNestingResponse,
+    ) -> Result<()> {
+        let sanitized_response = sanitize_svg_fields(response);
+        let sanitized_body = serde_json::to_string(&sanitized_response)
+            .unwrap_or_else(|_| "<failed to serialize sanitized response>".to_string());
+
+        Self::send_message_to_sqs(&self.sqs_client, queue_url, response).await?;
 
         info!(
             "Emitted response to {} with stripped payload: {}",
@@ -210,8 +376,8 @@ impl SqsProcessor {
 
                         let error_response = SqsNestingResponse {
                             correlation_id: corr_id.to_string(),
-                            first_page_svg_base64: String::new(),
-                            last_page_svg_base64: None,
+                            first_page_svg_url: None,
+                            last_page_svg_url: None,
                             parts_placed: 0,
                             is_improvement: false,
                             is_final: true,
@@ -231,9 +397,35 @@ impl SqsProcessor {
             }
         };
 
+        // Calculate SVG size info for logging
+        let svg_size_info = if let Some(ref svg_url) = request.svg_url {
+            format!("S3 URL: {}", svg_url)
+        } else if let Some(ref svg_b64) = request.svg_base64 {
+            let base64_len = svg_b64.len();
+            // Try to decode to get exact size, fall back to approximation if decoding fails
+            match general_purpose::STANDARD.decode(svg_b64) {
+                Ok(decoded) => format!("{} bytes (base64: {} bytes)", decoded.len(), base64_len),
+                Err(_) => {
+                    // Base64 encoding increases size by ~33%, so approximate decoded size
+                    let approx_decoded_size = (base64_len * 3) / 4;
+                    format!("~{} bytes (base64: {} bytes, decode failed)", approx_decoded_size, base64_len)
+                }
+            }
+        } else {
+            "N/A".to_string()
+        };
+
         info!(
-            "Processing request: correlation_id={}",
-            request.correlation_id
+            "Processing request: correlation_id={}, bin_width={:?}, bin_height={:?}, spacing={:?}, amount_of_parts={:?}, amount_of_rotations={}, cancelled={}, svg_size={}, output_queue_url={:?}",
+            request.correlation_id,
+            request.bin_width,
+            request.bin_height,
+            request.spacing,
+            request.amount_of_parts,
+            request.amount_of_rotations,
+            request.cancelled,
+            svg_size_info,
+            request.output_queue_url.as_ref().map(|s| s.as_str()).unwrap_or("default")
         );
 
         // Handle cancellation requests
@@ -253,28 +445,119 @@ impl SqsProcessor {
             return Ok(());
         }
 
-        // Validate required fields for non-cancellation requests
-        if request.svg_base64.is_none() {
-            return Err(anyhow!("Missing required field: svg_base64"));
-        }
-        if request.bin_width.is_none() {
-            return Err(anyhow!("Missing required field: bin_width"));
-        }
-        if request.bin_height.is_none() {
-            return Err(anyhow!("Missing required field: bin_height"));
-        }
-        if request.spacing.is_none() {
-            return Err(anyhow!("Missing required field: spacing"));
-        }
-        if request.amount_of_parts.is_none() {
-            return Err(anyhow!("Missing required field: amount_of_parts"));
-        }
-
         // Determine output queue (use request override if provided)
         let output_queue_url = request
             .output_queue_url
             .clone()
             .unwrap_or_else(|| self.output_queue_url.clone());
+
+        // Validate required fields for non-cancellation requests
+        // Either svg_base64 or svg_url must be provided
+        if request.svg_base64.is_none() && request.svg_url.is_none() {
+            let error_msg = "Missing required field: either svg_base64 or svg_url must be provided";
+            error!("{}", error_msg);
+            let error_response = SqsNestingResponse {
+                correlation_id: request.correlation_id.clone(),
+                first_page_svg_url: None,
+                last_page_svg_url: None,
+                parts_placed: 0,
+                is_improvement: false,
+                is_final: true,
+                timestamp: current_timestamp(),
+                error_message: Some(error_msg.to_string()),
+            };
+            if let Err(send_err) = self
+                .send_to_output_queue(&output_queue_url, &error_response)
+                .await
+            {
+                error!("Failed to send error response: {}", send_err);
+            }
+            return Ok(());
+        }
+        if request.bin_width.is_none() {
+            let error_msg = "Missing required field: bin_width";
+            error!("{}", error_msg);
+            let error_response = SqsNestingResponse {
+                correlation_id: request.correlation_id.clone(),
+                first_page_svg_url: None,
+                last_page_svg_url: None,
+                parts_placed: 0,
+                is_improvement: false,
+                is_final: true,
+                timestamp: current_timestamp(),
+                error_message: Some(error_msg.to_string()),
+            };
+            if let Err(send_err) = self
+                .send_to_output_queue(&output_queue_url, &error_response)
+                .await
+            {
+                error!("Failed to send error response: {}", send_err);
+            }
+            return Ok(());
+        }
+        if request.bin_height.is_none() {
+            let error_msg = "Missing required field: bin_height";
+            error!("{}", error_msg);
+            let error_response = SqsNestingResponse {
+                correlation_id: request.correlation_id.clone(),
+                first_page_svg_url: None,
+                last_page_svg_url: None,
+                parts_placed: 0,
+                is_improvement: false,
+                is_final: true,
+                timestamp: current_timestamp(),
+                error_message: Some(error_msg.to_string()),
+            };
+            if let Err(send_err) = self
+                .send_to_output_queue(&output_queue_url, &error_response)
+                .await
+            {
+                error!("Failed to send error response: {}", send_err);
+            }
+            return Ok(());
+        }
+        if request.spacing.is_none() {
+            let error_msg = "Missing required field: spacing";
+            error!("{}", error_msg);
+            let error_response = SqsNestingResponse {
+                correlation_id: request.correlation_id.clone(),
+                first_page_svg_url: None,
+                last_page_svg_url: None,
+                parts_placed: 0,
+                is_improvement: false,
+                is_final: true,
+                timestamp: current_timestamp(),
+                error_message: Some(error_msg.to_string()),
+            };
+            if let Err(send_err) = self
+                .send_to_output_queue(&output_queue_url, &error_response)
+                .await
+            {
+                error!("Failed to send error response: {}", send_err);
+            }
+            return Ok(());
+        }
+        if request.amount_of_parts.is_none() {
+            let error_msg = "Missing required field: amount_of_parts";
+            error!("{}", error_msg);
+            let error_response = SqsNestingResponse {
+                correlation_id: request.correlation_id.clone(),
+                first_page_svg_url: None,
+                last_page_svg_url: None,
+                parts_placed: 0,
+                is_improvement: false,
+                is_final: true,
+                timestamp: current_timestamp(),
+                error_message: Some(error_msg.to_string()),
+            };
+            if let Err(send_err) = self
+                .send_to_output_queue(&output_queue_url, &error_response)
+                .await
+            {
+                error!("Failed to send error response: {}", send_err);
+            }
+            return Ok(());
+        }
 
         // Process the request and handle errors by sending error response
         let result = self
@@ -285,11 +568,11 @@ impl SqsProcessor {
             let error_msg = format!("{}", e);
             error!("Failed to process message: {}", error_msg);
 
-            // Send error response
+            // Send error response for internal processing errors
             let error_response = SqsNestingResponse {
                 correlation_id: request.correlation_id.clone(),
-                first_page_svg_base64: String::new(),
-                last_page_svg_base64: None,
+                first_page_svg_url: None,
+                last_page_svg_url: None,
                 parts_placed: 0,
                 is_improvement: false,
                 is_final: true,
@@ -329,20 +612,35 @@ impl SqsProcessor {
         // Ensure cleanup happens even on error
         let result = {
             // Unwrap required fields (validation already done in process_message)
-            let svg_base64 = request.svg_base64.as_ref().unwrap();
             let bin_width = request.bin_width.unwrap();
             let bin_height = request.bin_height.unwrap();
             let spacing = request.spacing.unwrap();
             let amount_of_parts = request.amount_of_parts.unwrap();
 
-            // Decode SVG payload
-            let svg_bytes = decode_svg(svg_base64)?;
-            info!("Decoded SVG payload: {} bytes", svg_bytes.len());
+            // Get SVG bytes - either from S3 or from base64
+            let decode_start = std::time::Instant::now();
+            let svg_bytes = if let Some(ref svg_url) = request.svg_url {
+                // Download from S3
+                info!("Downloading SVG from S3: {}", svg_url);
+                self.download_svg_from_s3(svg_url).await?
+            } else if let Some(ref svg_base64) = request.svg_base64 {
+                // Decode from base64
+                decode_svg(svg_base64)?
+            } else {
+                return Err(anyhow!("Neither svg_url nor svg_base64 provided"));
+            };
+            info!("SVG payload ready: {} bytes (took {:?})", svg_bytes.len(), decode_start.elapsed());
 
             // Create cancellation checker closure
             let cancellation_registry = self.cancellation_registry.clone();
             let correlation_id_clone = request.correlation_id.clone();
+            let cancellation_check_count = Arc::new(AtomicU64::new(0));
+            let cancellation_check_count_for_log = cancellation_check_count.clone();
             let cancellation_checker = move || {
+                let count = cancellation_check_count_for_log.fetch_add(1, Ordering::Relaxed) + 1;
+                if count % 1000 == 0 {
+                    log::debug!("Cancellation checker called {} times", count);
+                }
                 let registry = cancellation_registry.lock().unwrap();
                 registry.get(&correlation_id_clone).copied().unwrap_or(false)
             };
@@ -351,38 +649,66 @@ impl SqsProcessor {
             let (tx, mut rx) = mpsc::unbounded_channel::<jagua_utils::svg_nesting::NestingResult>();
             
             // Spawn async task to handle improvement messages
+            info!("Spawning async task to handle improvement messages");
             let sqs_client_for_task = self.sqs_client.clone();
+            let s3_client_for_task = self.s3_client.clone();
+            let s3_bucket_for_task = self.s3_bucket.clone();
             let output_queue_url_for_task = output_queue_url.to_string();
             let correlation_id_for_task = request.correlation_id.clone();
             let bin_width_for_task = bin_width;
             let bin_height_for_task = bin_height;
             let _improvement_task_handle = tokio::spawn(async move {
+                info!("Improvement task started, waiting for messages...");
                 while let Some(result) = rx.recv().await {
-                    // Prepare response images
+                    info!("Improvement task received message: {} parts placed, {} pages", result.parts_placed, result.page_svgs.len());
+                    
+                    // Get the first and last page SVGs for uploading to S3
                     let first_page_bytes = result.page_svgs.first()
                         .unwrap_or_else(|| &result.combined_svg);
+                    let last_page_bytes = result.page_svgs.last()
+                        .unwrap_or_else(|| &result.combined_svg);
                     
-                    // If all parts are placed, use empty page for last page
-                    // Otherwise, use unplaced parts SVG if available, or last filled page
-                    let last_page_bytes: Vec<u8> = if result.parts_placed == result.total_parts_requested {
-                        // All parts placed - generate empty page
-                        generate_empty_page_svg(bin_width_for_task, bin_height_for_task)
-                    } else if let Some(ref unplaced_svg) = result.unplaced_parts_svg {
-                        // Some parts unplaced - use unplaced parts SVG
-                        unplaced_svg.clone()
-                    } else {
-                        // No unplaced parts SVG - use last filled page or first page
-                        result.page_svgs.last().unwrap_or(first_page_bytes).clone()
+                    // Upload first page SVG to S3
+                    let first_page_svg_url = match upload_svg_to_s3_internal(
+                        &s3_client_for_task,
+                        &s3_bucket_for_task,
+                        first_page_bytes,
+                        &correlation_id_for_task,
+                        "first-page.svg",
+                    ).await {
+                        Ok(url) => {
+                            info!("Uploaded improvement first page SVG to S3: {}", url);
+                            Some(url)
+                        }
+                        Err(e) => {
+                            error!("Failed to upload improvement first page SVG to S3: {}", e);
+                            None
+                        }
                     };
                     
-                    let first_page_svg_base64 = encode_svg(first_page_bytes);
-                    let last_page_svg_base64 = encode_svg(&last_page_bytes);
+                    // Upload last page SVG to S3
+                    let last_page_svg_url = match upload_svg_to_s3_internal(
+                        &s3_client_for_task,
+                        &s3_bucket_for_task,
+                        last_page_bytes,
+                        &correlation_id_for_task,
+                        "last-page.svg",
+                    ).await {
+                        Ok(url) => {
+                            info!("Uploaded improvement last page SVG to S3: {}", url);
+                            Some(url)
+                        }
+                        Err(e) => {
+                            error!("Failed to upload improvement last page SVG to S3: {}", e);
+                            None
+                        }
+                    };
 
-                    // Create improvement response
+                    // Create improvement response with S3 URLs
                     let response = SqsNestingResponse {
                         correlation_id: correlation_id_for_task.clone(),
-                        first_page_svg_base64,
-                        last_page_svg_base64: Some(last_page_svg_base64),
+                        first_page_svg_url,
+                        last_page_svg_url,
                         parts_placed: result.parts_placed,
                         is_improvement: true,
                         is_final: false,
@@ -395,44 +721,67 @@ impl SqsProcessor {
                         response.parts_placed
                     );
 
-                    // Send to SQS
-                    if let Err(e) = sqs_client_for_task
-                        .clone()
-                        .send_message()
-                        .queue_url(&output_queue_url_for_task)
-                        .message_body(&serde_json::to_string(&response).unwrap_or_else(|_| "{}".to_string()))
-                        .send()
-                        .await
-                    {
-                        error!("Failed to send improvement to queue: {}", e);
-                    } else {
-                        info!("Sent improvement response to queue");
+                    // Send to SQS using the same method as error responses
+                    info!("Attempting to send improvement to queue: {}", output_queue_url_for_task);
+                    match Self::send_message_to_sqs(&sqs_client_for_task, &output_queue_url_for_task, &response).await {
+                        Ok(()) => {
+                            info!("Successfully sent improvement response to queue");
+                        }
+                        Err(e) => {
+                            error!("Failed to send improvement to queue: {}", e);
+                            // Log the error chain for debugging
+                            let mut error_chain = format!("{}", e);
+                            let mut source = e.source();
+                            while let Some(err) = source {
+                                error_chain.push_str(&format!(": {}", err));
+                                source = err.source();
+                            }
+                            error!("Full error chain: {}", error_chain);
+                        }
                     }
                 }
+                info!("Improvement task finished (channel closed)");
             });
 
             // Create improvement callback that sends to channel
+            info!("Creating improvement callback");
             let tx_for_callback = tx.clone();
             let improvement_callback: Option<jagua_utils::svg_nesting::ImprovementCallback> = 
                 Some(Box::new(move |result: jagua_utils::svg_nesting::NestingResult| -> Result<()> {
-                    // Send result to channel (non-blocking)
-                    if let Err(e) = tx_for_callback.send(result) {
-                        log::warn!("Failed to send improvement result to channel: {}", e);
-                        return Err(anyhow!("Failed to send improvement result to channel: {}", e));
+                    info!("Improvement callback called from blocking thread: {} parts placed, {} pages", result.parts_placed, result.page_svgs.len());
+                    // Send result to channel (non-blocking for unbounded channel)
+                    match tx_for_callback.send(result) {
+                        Ok(()) => {
+                            info!("Improvement result sent to channel successfully from blocking thread");
+                            Ok(())
+                        }
+                        Err(e) => {
+                            error!("Failed to send improvement result to channel: {}", e);
+                            Err(anyhow!("Failed to send improvement result to channel: {}", e))
+                        }
                     }
-                    Ok(())
                 }));
 
             // Use adaptive nesting strategy with cancellation checker
+            info!("Creating AdaptiveNestingStrategy with cancellation checker");
+            let strategy_start = std::time::Instant::now();
             let strategy = AdaptiveNestingStrategy::with_cancellation_checker(Box::new(cancellation_checker));
+            info!("Strategy created (took {:?})", strategy_start.elapsed());
+            
+            // Clone cancellation_check_count for logging after spawn_blocking
+            let cancellation_check_count_for_final_log = cancellation_check_count.clone();
             
             // Run nest() in a blocking task to avoid blocking the async runtime
             // This allows the improvement task to process messages while optimization runs
+            info!("Starting nesting optimization in spawn_blocking task");
+            let nest_start = std::time::Instant::now();
             let svg_bytes_for_nest = svg_bytes.clone();
             let amount_of_rotations = request.amount_of_rotations;
             let correlation_id_for_error = request.correlation_id.clone();
             let nesting_result = tokio::task::spawn_blocking(move || {
-                strategy.nest(
+                info!("Inside spawn_blocking: calling strategy.nest()");
+                let nest_call_start = std::time::Instant::now();
+                let result = strategy.nest(
                     bin_width,
                     bin_height,
                     spacing,
@@ -440,16 +789,21 @@ impl SqsProcessor {
                     amount_of_parts,
                     amount_of_rotations,
                     improvement_callback,
-                )
+                );
+                info!("Inside spawn_blocking: strategy.nest() completed (took {:?})", nest_call_start.elapsed());
+                result
             })
             .await
-            .context("Failed to spawn blocking task for nesting")?
-            .with_context(|| {
+            .context("Failed to spawn blocking task for nesting")?;
+            info!("spawn_blocking task completed (took {:?})", nest_start.elapsed());
+            let nesting_result = nesting_result.with_context(|| {
                 format!(
                     "Failed to process SVG nesting for correlation_id={}",
                     correlation_id_for_error
                 )
             })?;
+            info!("Nesting result obtained successfully");
+            info!("Cancellation checker was called {} times total", cancellation_check_count_for_final_log.load(Ordering::Relaxed));
 
             // Drop the sender to signal the async task that no more improvements will come
             drop(tx);
@@ -469,28 +823,38 @@ impl SqsProcessor {
             // Use first page SVG for first sheet
             let first_page_bytes = nesting_result.page_svgs.first()
                 .unwrap_or_else(|| &nesting_result.combined_svg);
+            let last_page_bytes = nesting_result.page_svgs.last()
+                .unwrap_or_else(|| &nesting_result.combined_svg);
             
-            // If all parts are placed, use empty page for last page
-            // Otherwise, use unplaced parts SVG if available, or last filled page
-            let last_page_bytes: Vec<u8> = if nesting_result.parts_placed == nesting_result.total_parts_requested {
-                // All parts placed - generate empty page
-                generate_empty_page_svg(bin_width, bin_height)
-            } else if let Some(ref unplaced_svg) = nesting_result.unplaced_parts_svg {
-                // Some parts unplaced - use unplaced parts SVG
-                unplaced_svg.clone()
-            } else {
-                // No unplaced parts SVG - use last filled page or first page
-                nesting_result.page_svgs.last().unwrap_or(first_page_bytes).clone()
+            // Upload first page SVG to S3
+            let first_page_svg_url = match self.upload_svg_to_s3(first_page_bytes, &request.correlation_id, "first-page.svg").await {
+                Ok(url) => {
+                    info!("Uploaded final result first page SVG to S3: {}", url);
+                    Some(url)
+                }
+                Err(e) => {
+                    error!("Failed to upload final result first page SVG to S3: {}", e);
+                    None
+                }
             };
             
-            let first_page_svg_base64 = encode_svg(first_page_bytes);
-            let last_page_svg_base64 = encode_svg(&last_page_bytes);
+            // Upload last page SVG to S3
+            let last_page_svg_url = match self.upload_svg_to_s3(last_page_bytes, &request.correlation_id, "last-page.svg").await {
+                Ok(url) => {
+                    info!("Uploaded final result last page SVG to S3: {}", url);
+                    Some(url)
+                }
+                Err(e) => {
+                    error!("Failed to upload final result last page SVG to S3: {}", e);
+                    None
+                }
+            };
 
-            // Send final result to queue
+            // Send final result to queue (with S3 URLs)
             let response = SqsNestingResponse {
                 correlation_id: request.correlation_id.clone(),
-                first_page_svg_base64,
-                last_page_svg_base64: Some(last_page_svg_base64),
+                first_page_svg_url,
+                last_page_svg_url,
                 parts_placed: nesting_result.parts_placed,
                 is_improvement: false,
                 is_final: true,
@@ -723,8 +1087,11 @@ mod tests {
     async fn test_parallel_cancellation_flag_shared_between_workers() {
         let config = aws_config::defaults(BehaviorVersion::latest()).load().await;
         let sqs_client = SqsClient::new(&config);
+        let s3_client = aws_sdk_s3::Client::new(&config);
         let processor = SqsProcessor::new(
             sqs_client,
+            s3_client,
+            "test-bucket".to_string(),
             "test-input-queue".to_string(),
             "test-output-queue".to_string(),
         );
@@ -738,6 +1105,7 @@ mod tests {
 
         let cancel_processor = processor.clone();
         let cancellation_request = SqsNestingRequest {
+            svg_url: None,
             correlation_id: correlation_id.clone(),
             svg_base64: None,
             bin_width: None,
@@ -788,5 +1156,142 @@ mod tests {
             Some(&true),
             "Cancellation flag should be set to true"
         );
+    }
+
+    #[tokio::test]
+    async fn test_s3_download() {
+        use std::env;
+        use aws_config::BehaviorVersion;
+        use aws_sdk_s3::Client as S3Client;
+        use aws_sdk_s3::error::ProvideErrorMetadata;
+
+        // Initialize logger for test output
+        let _ = env_logger::Builder::from_default_env()
+            .filter_level(log::LevelFilter::Debug)
+            .try_init();
+
+        // Get configuration from environment variables
+        let bucket = env::var("S3_BUCKET").unwrap_or_else(|_| "cutl-staging-uploads".to_string());
+        let test_key = "22db4d1f-44cb-4c3d-917d-17836ba986ac/projectParts/9720e425-6a18-4a46-aa4c-7a7934ae9f23/project_part_internal_svg.svg";
+        
+        println!("Testing S3 download:");
+        println!("  Bucket: {}", bucket);
+        println!("  Key: {}", test_key);
+        println!("  AWS_REGION: {:?}", env::var("AWS_REGION"));
+        println!("  AWS_ENDPOINT_URL: {:?}", env::var("AWS_ENDPOINT_URL"));
+        println!("  AWS_ACCESS_KEY_ID: {:?}", env::var("AWS_ACCESS_KEY_ID").map(|s| format!("{}...", &s[..10.min(s.len())])));
+
+        // Initialize AWS config
+        let mut config_loader = aws_config::defaults(BehaviorVersion::latest());
+        
+        // Configure LocalStack endpoint if provided
+        if let Ok(endpoint_url) = env::var("AWS_ENDPOINT_URL") {
+            config_loader = config_loader.endpoint_url(&endpoint_url);
+            println!("Using AWS endpoint: {}", endpoint_url);
+        }
+
+        let config = config_loader.load().await;
+        let s3_client = S3Client::new(&config);
+
+        // Test 1: Try to download the file
+        println!("\nTest 1: Downloading file from S3...");
+        let result = s3_client
+            .get_object()
+            .bucket(&bucket)
+            .key(test_key)
+            .send()
+            .await;
+
+        match result {
+            Ok(response) => {
+                println!("✓ Successfully got object from S3");
+                
+                // Try to read the body
+                let mut body_stream = response.body;
+                use futures::StreamExt;
+                let mut svg_bytes = Vec::new();
+                while let Some(chunk_result) = body_stream.next().await {
+                    match chunk_result {
+                        Ok(chunk) => {
+                            svg_bytes.extend_from_slice(&chunk);
+                        }
+                        Err(e) => {
+                            println!("✗ Error reading chunk: {}", e);
+                            return;
+                        }
+                    }
+                }
+                println!("✓ Successfully downloaded {} bytes", svg_bytes.len());
+                
+                // Try to parse as SVG
+                let svg_content = String::from_utf8_lossy(&svg_bytes);
+                if svg_content.contains("<svg") {
+                    println!("✓ Content appears to be valid SVG");
+                } else {
+                    println!("⚠ Content doesn't appear to be SVG (first 100 chars: {})", 
+                        svg_content.chars().take(100).collect::<String>());
+                }
+            }
+            Err(e) => {
+                println!("✗ Failed to download from S3: {}", e);
+                println!("Error details:");
+                
+                // Try to get more error information
+                if let Some(code) = e.code() {
+                    println!("  Error code: {:?}", code);
+                }
+                if let Some(message) = e.message() {
+                    println!("  Error message: {:?}", message);
+                }
+                
+                // Test 2: Try to list objects in the bucket to verify connectivity
+                println!("\nTest 2: Testing bucket connectivity by listing objects...");
+                let list_result = s3_client
+                    .list_objects_v2()
+                    .bucket(&bucket)
+                    .max_keys(5)
+                    .send()
+                    .await;
+                
+                match list_result {
+                    Ok(list_response) => {
+                        println!("✓ Successfully connected to bucket");
+                        let contents = list_response.contents();
+                        if !contents.is_empty() {
+                            println!("  Found {} objects (showing first 5)", contents.len());
+                            for (i, obj) in contents.iter().take(5).enumerate() {
+                                println!("    {}. {}", i + 1, obj.key().map(|k| k.to_string()).unwrap_or_else(|| "(no key)".to_string()));
+                            }
+                        } else {
+                            println!("  Bucket is empty");
+                        }
+                    }
+                    Err(e) => {
+                        println!("✗ Failed to list objects: {}", e);
+                        println!("  This suggests a connectivity or permissions issue");
+                    }
+                }
+                
+                // Test 3: Try to check if bucket exists
+                println!("\nTest 3: Checking if bucket exists...");
+                let head_result = s3_client
+                    .head_bucket()
+                    .bucket(&bucket)
+                    .send()
+                    .await;
+                
+                match head_result {
+                    Ok(_) => {
+                        println!("✓ Bucket exists and is accessible");
+                    }
+                    Err(e) => {
+                        println!("✗ Bucket check failed: {}", e);
+                        if let Some(code) = e.code() {
+                            println!("  Error code: {:?}", code);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

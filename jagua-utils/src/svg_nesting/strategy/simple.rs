@@ -55,7 +55,7 @@ impl NestingStrategy for SimpleNestingStrategy {
         let (polygon_points, holes) = parse_svg_path(&path_data)?;
 
         log::debug!(
-            "Parsed SVG path: {} outer boundary points, {} holes",
+            "Parsed SVG path (simple mechanism): {} outer boundary points, {} holes",
             polygon_points.len(),
             holes.len()
         );

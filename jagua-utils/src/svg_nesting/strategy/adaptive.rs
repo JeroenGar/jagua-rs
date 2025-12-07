@@ -212,7 +212,7 @@ impl NestingStrategy for AdaptiveNestingStrategy {
         let (polygon_points, holes) = parse_svg_path(&path_data)?;
 
         log::debug!(
-            "Parsed SVG path: {} outer boundary points, {} holes",
+            "Parsed SVG path (adaptive mechanism): {} outer boundary points, {} holes",
             polygon_points.len(),
             holes.len()
         );
@@ -252,7 +252,9 @@ impl NestingStrategy for AdaptiveNestingStrategy {
             },
         };
 
-        let importer = Importer::new(cde_config.clone(), Some(0.001), Some(spacing), None);
+        // Disable simplification to avoid issues with complex SVG shapes
+        // The simplify_tolerance of None means no simplification will be performed
+        let importer = Importer::new(cde_config.clone(), None, Some(spacing), None);
 
         let item_shape = OriginalShape {
             shape: polygon,
@@ -436,9 +438,9 @@ impl NestingStrategy for AdaptiveNestingStrategy {
                 }
 
                 log::info!(
-                    "Run {} completed: {} parts placed in {:.2}s",
+                    "Run {} completed: {} parts placed best result {} in {:.2}s",
                     total_runs,
-                    result.parts_placed,
+                    result.parts_placed, best_placed,
                     run_duration.as_secs_f64()
                 );
 
