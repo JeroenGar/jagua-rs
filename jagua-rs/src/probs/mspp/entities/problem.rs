@@ -96,7 +96,6 @@ impl MSPProblem {
     }
 
     /// Removes a placed item from the strip. Returns the placement of the item.
-    /// Set `commit_instantly` to false if there's a high chance that this modification will be reverted.
     pub fn remove_item(&mut self, lkey: LayKey, pkey: PItemKey) -> MSPPlacement {
         let pi = self.layouts[lkey].remove_item(pkey);
         self.deregister_included_item(pi.item_id);
