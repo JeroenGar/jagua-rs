@@ -84,9 +84,6 @@ impl Layout {
     }
 
     /// Removes an item from the layout by its unique key and returns the removed [`PlacedItem`].
-    /// If `commit_instant` is true, the removal is immediately fully executed to the collision detection engine.
-    /// If false, the item is disabled in the collision detection engine, but not yet fully removed.
-    /// Useful for scenarios with high probability of reverting the removal.
     pub fn remove_item(&mut self, pk: PItemKey) -> PlacedItem {
         let pi = self
             .placed_items
