@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Orientation"],"mod":["robust","simple"],"trait":["HasKernel","Kernel"]};

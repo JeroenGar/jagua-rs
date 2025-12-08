@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The `geo-buffer` crate provides methods to buffer (to inflate or deflate) certain primitive geometric types in the GeoRust ecosystem via a straight skeleton."><title>geo_buffer - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="geo_buffer" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-68b7e25d.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../geo_buffer/index.html">geo_<wbr>buffer</a><span class="version">0.2.0</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#quick-guide" title="Quick Guide">Quick Guide</a><ul><li><a href="#example-1" title="Example 1">Example 1</a></li><li><a href="#example-2" title="Example 2">Example 2</a></li><li><a href="#example-3" title="Example 3">Example 3</a></li><li><a href="#example-4" title="Example 4">Example 4</a></li></ul></li><li><a href="#reference" title="Reference">Reference</a></li><li><a href="#notes" title="Notes">Notes</a></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#functions" title="Functions">Functions</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>geo_buffer</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/geo_buffer/lib.rs.html#1-367">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The <code>geo-buffer</code> crate provides methods to buffer (to inflate or deflate) certain
+primitive geometric types in the <a href="https://georust.org">GeoRust</a> ecosystem via a straight skeleton.</p>
+<p>This crate can handle simple polygons properly as well as non-convex polygons, (valid) sets of polygons, and polygons with one or more holes.
+Note that each method assumes <strong>valid</strong> primitives as a parameter, but <a href="https://docs.rs/geo/0.24.1/geo/geometry/struct.Polygon.html">Polygon</a>/<a href="https://docs.rs/geo/0.24.1/geo/geometry/struct.MultiPolygon.html">MultiPolygon</a> modules
+<em>do not</em> enforce this validity automatically nor does this crate. (See more details on ‘Validity’ section in <a href="https://docs.rs/geo/0.24.1/geo/geometry/struct.Polygon.html">Polygon</a>/<a href="https://docs.rs/geo/0.24.1/geo/geometry/struct.MultiPolygon.html">MultiPolygon</a>
+and <a href="https://www.ogc.org/standard/sfa/">OGC standards</a>.)</p>
+<p>This crate use a <a href="https://en.wikipedia.org/wiki/Straight_skeleton">straight skeleton</a> to buffer (multi-)polygons. You can also get a straight skeleton separately by proper methods.</p>
+<p>For now, the only viable geometric primitives are <a href="https://docs.rs/geo/0.24.1/geo/geometry/struct.Polygon.html">Polygon</a> and <a href="https://docs.rs/geo/0.24.1/geo/geometry/struct.MultiPolygon.html">MultiPolygon</a> (the rest of the primitives will be added as well).</p>
+<h2 id="quick-guide"><a class="doc-anchor" href="#quick-guide">§</a>Quick Guide</h2>
+<p>The <code>buffer_polygon()</code> function (resp. <code>buffer_multi_polygon()</code> function) produces a <code>MultiPolygon</code> after applying
+an offset operation to the given <code>Polygon</code> (resp. <code>MultiPolygon</code>). The absolute value of the argument passed with
+determines the distance between each edge of the result multi-polygon and the original input. The sign determines the direction
+where the result expands. Positive values mean it going outward — that is, it inflates, — and negative values mean going inward
+— it deflates —.</p>
+<p>Each code snippets below is a brief guide to use this crate. Click ‘Result’ to expand the visualized result.
+(The red polygon designates the input, and the orange one designates the results.)</p>
+<h4 id="example-1"><a class="doc-anchor" href="#example-1">§</a>Example 1</h4>
+<p>You can manipulate a polygon with ease by a single function call.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo_buffer::buffer_polygon;
+<span class="kw">use </span>geo::{Polygon, MultiPolygon, LineString};
+ 
+<span class="kw">let </span>p1 = Polygon::new(
+    LineString::from(<span class="macro">vec!</span>[(<span class="number">0.</span>, <span class="number">0.</span>), (<span class="number">1.</span>, <span class="number">0.</span>), (<span class="number">1.</span>, <span class="number">1.</span>), (<span class="number">0.</span>, <span class="number">1.</span>)]), <span class="macro">vec!</span>[],
+);
+<span class="kw">let </span>p2: MultiPolygon = buffer_polygon(<span class="kw-2">&amp;</span>p1, -<span class="number">0.2</span>);
+ 
+<span class="kw">let </span>expected_exterior = LineString::from(<span class="macro">vec!</span>[(<span class="number">0.2</span>, <span class="number">0.2</span>), (<span class="number">0.8</span>, <span class="number">0.2</span>), (<span class="number">0.8</span>, <span class="number">0.8</span>), (<span class="number">0.2</span>, <span class="number">0.8</span>), (<span class="number">0.2</span>, <span class="number">0.2</span>)]);
+<span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>expected_exterior, p2.<span class="number">0</span>[<span class="number">0</span>].exterior())
+ </code></pre></div>
+<details>
+<summary style="cursor:pointer"> Result </summary>
+<img src="https://raw.githubusercontent.com/1011-git/geo-buffer/main/assets/ex1.svg" style="padding: 25px 30%;"/>
+</details>
+<h4 id="example-2"><a class="doc-anchor" href="#example-2">§</a>Example 2</h4>
+<p>This example shows the case where the polygon is split while it deflates.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo_buffer::buffer_polygon;
+<span class="kw">use </span>geo::{Polygon, MultiPolygon, LineString};
+ 
+<span class="kw">let </span>p1 = Polygon::new(
+    LineString::from(<span class="macro">vec!</span>[(<span class="number">0.</span>, <span class="number">0.</span>), (<span class="number">4.</span>, <span class="number">0.</span>), (<span class="number">4.</span>, <span class="number">4.</span>), (<span class="number">2.</span>, <span class="number">1.</span>), (<span class="number">0.</span>, <span class="number">4.</span>)]), <span class="macro">vec!</span>[],
+);
+<span class="kw">let </span>p2: MultiPolygon = buffer_polygon(<span class="kw-2">&amp;</span>p1, -<span class="number">0.45</span>);
+ </code></pre></div>
+<details>
+<summary style="cursor:pointer"> Result </summary>
+<img src="https://raw.githubusercontent.com/1011-git/geo-buffer/main/assets/ex2.svg" style="padding: 25px 30%;"/>
+</details>
+<h4 id="example-3"><a class="doc-anchor" href="#example-3">§</a>Example 3</h4>
+<p>You can apply this function to a set of <code>Polygon</code>s (i.e. <code>MultiPolygon</code>). The constituent polygons may be integrated while they expand.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo_buffer::buffer_multi_polygon;
+<span class="kw">use </span>geo::{Polygon, MultiPolygon, LineString};
+ 
+<span class="kw">let </span>p1 = Polygon::new(
+    LineString::from(<span class="macro">vec!</span>[(<span class="number">0.</span>, <span class="number">0.</span>), (<span class="number">2.</span>, <span class="number">0.</span>), (<span class="number">2.</span>, <span class="number">2.</span>), (<span class="number">0.</span>, <span class="number">2.</span>)]), <span class="macro">vec!</span>[],
+);
+<span class="kw">let </span>p2 = Polygon::new(
+    LineString::from(<span class="macro">vec!</span>[(<span class="number">3.</span>, <span class="number">3.</span>), (<span class="number">5.</span>, <span class="number">3.</span>), (<span class="number">5.</span>, <span class="number">5.</span>), (<span class="number">3.</span>, <span class="number">5.</span>)]), <span class="macro">vec!</span>[],
+);
+<span class="kw">let </span>mp1 = MultiPolygon::new(<span class="macro">vec!</span>[p1, p2]);
+<span class="kw">let </span>mp2 = buffer_multi_polygon(<span class="kw-2">&amp;</span>mp1, <span class="number">0.9</span>);
+ </code></pre></div>
+<details>
+<summary style="cursor:pointer"> Result </summary>
+<img src="https://raw.githubusercontent.com/1011-git/geo-buffer/main/assets/ex3.svg" style="padding: 25px 30%;"/>
+</details>
+<h4 id="example-4"><a class="doc-anchor" href="#example-4">§</a>Example 4</h4>
+<p>If you want to apply this function to each member (and not want to unify them), just traversing over an iterator and collecting them will be fine.
+(You can get a vector of <code>MultiPolygon</code>s thanks to the ‘turbofish’ syntax:<code>::&lt;&gt;</code>.)</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo_buffer::buffer_polygon;
+<span class="kw">use </span>geo::{Polygon, MultiPolygon, LineString};
+ 
+<span class="kw">let </span>p1 = Polygon::new(
+    LineString::from(<span class="macro">vec!</span>[(<span class="number">0.</span>, <span class="number">0.</span>), (<span class="number">2.</span>, <span class="number">0.</span>), (<span class="number">2.</span>, <span class="number">2.</span>), (<span class="number">0.</span>, <span class="number">2.</span>)]), <span class="macro">vec!</span>[],
+);
+<span class="kw">let </span>p2 = Polygon::new(
+    LineString::from(<span class="macro">vec!</span>[(<span class="number">3.</span>, <span class="number">3.</span>), (<span class="number">5.</span>, <span class="number">3.</span>), (<span class="number">5.</span>, <span class="number">5.</span>), (<span class="number">3.</span>, <span class="number">5.</span>)]), <span class="macro">vec!</span>[],
+);
+<span class="kw">let </span>mp1 = MultiPolygon::new(<span class="macro">vec!</span>[p1, p2]);
+<span class="kw">let </span>mp2 = mp1.<span class="number">0</span>.iter().map(|x| buffer_polygon(x, <span class="number">0.9</span>)).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+ </code></pre></div>
+<details>
+<summary style="cursor:pointer"> Result </summary>
+<img src="https://raw.githubusercontent.com/1011-git/geo-buffer/main/assets/ex4.svg" style="padding: 25px 30%;"/>
+</details>
+<h2 id="reference"><a class="doc-anchor" href="#reference">§</a>Reference</h2>
+<p>This is a Rust implementation of this paper<sup id="fnref1"><a href="#fn1">1</a></sup><sup id="fnref2"><a href="#fn2">2</a></sup>. (See also <a href="#Notes">Notes</a> below.)</p>
+<h2 id="notes"><a class="doc-anchor" href="#notes">§</a>Notes</h2>
+<p>It has been shown that the algorithm presented in this paper is incorrect.<sup id="fnref3"><a href="#fn3">3</a></sup> Thus we slightly modified the algorithm for some edge cases.</p>
+<div class="footnotes"><hr><ol><li id="fn1"><p>Felkel, Petr; Obdržálek, Štěpán (1998), <em>“Straight skeleton implementation”</em>, SCCG 98: Proceedings of the 14th Spring Conference on Computer Graphics, pp. 210–218.&nbsp;<a href="#fnref1">↩</a></p></li><li id="fn2"><p>The implementation of the straight skeleton algorithm in CGAL (The Computational Geometry Algorithms Library) is also based on this paper.&nbsp;<a href="#fnref2">↩</a></p></li><li id="fn3"><p>Huber, Stefan (2012), <em>Computing Straight Skeletons and Motorcycle Graphs: Theory and Practice</em>, Shaker Verlag.&nbsp;<a href="#fnref3">↩</a></p></li></ol></div></div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="skeleton/index.html" title="mod geo_buffer::skeleton">skeleton</a></dt><dt><a class="mod" href="util/index.html" title="mod geo_buffer::util">util</a></dt><dd>This module provides a conceptual structure of points and half-lines.</dd></dl><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.Coordinate.html" title="struct geo_buffer::Coordinate">Coordinate</a></dt><dd>This structure conceptually represents a point or a vector on
+the 2-dimensional Cartesian plane.</dd><dt><a class="struct" href="struct.Ray.html" title="struct geo_buffer::Ray">Ray</a></dt><dd>This structure conceptually represents a half-line (which also known as “Ray”).</dd></dl><h2 id="functions" class="section-header">Functions<a href="#functions" class="anchor">§</a></h2><dl class="item-table"><dt><a class="fn" href="fn.buffer_multi_polygon.html" title="fn geo_buffer::buffer_multi_polygon">buffer_<wbr>multi_<wbr>polygon</a></dt><dd>This function returns the buffered (multi-)polygon of the given multi-polygon. This function creates a miter-joint-like corners around each convex vertex.</dd><dt><a class="fn" href="fn.buffer_multi_polygon_rounded.html" title="fn geo_buffer::buffer_multi_polygon_rounded">buffer_<wbr>multi_<wbr>polygon_<wbr>rounded</a></dt><dd>This function returns the buffered (multi-)polygon of the given multi-polygon, but creates a rounded corners around each convex vertex.
+Therefore, distance from each point on border of the buffered polygon to the closest points on the given polygon is (approximately) equal.</dd><dt><a class="fn" href="fn.buffer_polygon.html" title="fn geo_buffer::buffer_polygon">buffer_<wbr>polygon</a></dt><dd>This function returns the buffered (multi-)polygon of the given polygon. This function creates a miter-joint-like corners around each convex vertex.</dd><dt><a class="fn" href="fn.buffer_polygon_rounded.html" title="fn geo_buffer::buffer_polygon_rounded">buffer_<wbr>polygon_<wbr>rounded</a></dt><dd>This function returns the buffered (multi-)polygon of the given polygon, but creates a rounded corners around each convex vertex.
+Therefore, distance from each point on border of the buffered polygon to the closest points on the given polygon is (approximately) equal.
+Click ‘Result’ below to see how this function works.</dd><dt><a class="fn" href="fn.skeleton_of_multi_polygon_to_linestring.html" title="fn geo_buffer::skeleton_of_multi_polygon_to_linestring">skeleton_<wbr>of_<wbr>multi_<wbr>polygon_<wbr>to_<wbr>linestring</a></dt><dd>This function returns a set of <code>LineSting</code> which represents an instantiated straight skeleton of the given multi-polygon.
+Each segment of the straight skeleton is represented as a single <code>LineString</code>, and the returned vector is a set of these <code>LineString</code>s.
+If either endpoints of a <code>LineString</code> is infinitely far from the other, then this <code>LineString</code> will be clipped to one which has shorter length.
+The order of these <code>LineString</code>s is arbitrary. (There is no gauranteed order on segments of the straight skeleton.)</dd><dt><a class="fn" href="fn.skeleton_of_polygon_to_linestring.html" title="fn geo_buffer::skeleton_of_polygon_to_linestring">skeleton_<wbr>of_<wbr>polygon_<wbr>to_<wbr>linestring</a></dt><dd>This function returns a set of <code>LineSting</code> which represents an instantiated straight skeleton of the given polygon.
+Each segment of the straight skeleton is represented as a single <code>LineString</code>, and the returned vector is a set of these <code>LineString</code>s.
+If either endpoints of a <code>LineString</code> is infinitely far from the other, then this <code>LineString</code> will be clipped to one which has shorter length.
+The order of these <code>LineString</code>s is arbitrary. (There is no gauranteed order on segments of the straight skeleton.)</dd></dl></section></div></main></body></html>

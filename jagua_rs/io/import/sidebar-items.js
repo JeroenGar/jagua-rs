@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["centering_transformation","eliminate_degenerate_vertices","ext_to_int_transformation","import_simple_polygon"],"struct":["Importer"]};

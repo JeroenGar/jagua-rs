@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/geographiclib-rs-0.2.5/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="geographiclib_rs" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-68b7e25d.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">geographiclib_rs/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! A subset of [geographiclib](https://geographiclib.sourceforge.io/) implemented in Rust.
+<a href=#2 id=2 data-nosnippet>2</a>//!
+<a href=#3 id=3 data-nosnippet>3</a>//! # Examples
+<a href=#4 id=4 data-nosnippet>4</a>//!
+<a href=#5 id=5 data-nosnippet>5</a>//! ```rust
+<a href=#6 id=6 data-nosnippet>6</a>//! // Determine the point 10000 km NE of JFK - the "direct" geodesic calculation.
+<a href=#7 id=7 data-nosnippet>7</a>//! use geographiclib_rs::{Geodesic, DirectGeodesic};
+<a href=#8 id=8 data-nosnippet>8</a>//!
+<a href=#9 id=9 data-nosnippet>9</a>//! let g = Geodesic::wgs84();
+<a href=#10 id=10 data-nosnippet>10</a>//! let jfk_lat = 40.64;
+<a href=#11 id=11 data-nosnippet>11</a>//! let jfk_lon = -73.78;
+<a href=#12 id=12 data-nosnippet>12</a>//! let northeast_azimuth = 45.0;
+<a href=#13 id=13 data-nosnippet>13</a>//!
+<a href=#14 id=14 data-nosnippet>14</a>//! let (lat, lon, az) = g.direct(jfk_lat, jfk_lon, northeast_azimuth, 10e6);
+<a href=#15 id=15 data-nosnippet>15</a>//!
+<a href=#16 id=16 data-nosnippet>16</a>//! use approx::assert_relative_eq;
+<a href=#17 id=17 data-nosnippet>17</a>//! assert_relative_eq!(lat, 32.621100463725796);
+<a href=#18 id=18 data-nosnippet>18</a>//! assert_relative_eq!(lon, 49.052487092959836);
+<a href=#19 id=19 data-nosnippet>19</a>//! assert_relative_eq!(az,  140.4059858768007);
+<a href=#20 id=20 data-nosnippet>20</a>//! ```
+<a href=#21 id=21 data-nosnippet>21</a>//!
+<a href=#22 id=22 data-nosnippet>22</a>//! ```rust
+<a href=#23 id=23 data-nosnippet>23</a>//! // Determine the distance between two points - the "inverse" geodesic calculation.
+<a href=#24 id=24 data-nosnippet>24</a>//! use geographiclib_rs::{Geodesic, InverseGeodesic};
+<a href=#25 id=25 data-nosnippet>25</a>//!
+<a href=#26 id=26 data-nosnippet>26</a>//! let g = Geodesic::wgs84();
+<a href=#27 id=27 data-nosnippet>27</a>//! let p1 = (34.095925, -118.2884237);
+<a href=#28 id=28 data-nosnippet>28</a>//! let p2 = (59.4323439, 24.7341649);
+<a href=#29 id=29 data-nosnippet>29</a>//! let s12: f64 = g.inverse(p1.0, p1.1, p2.0, p2.1);
+<a href=#30 id=30 data-nosnippet>30</a>//!
+<a href=#31 id=31 data-nosnippet>31</a>//! use approx::assert_relative_eq;
+<a href=#32 id=32 data-nosnippet>32</a>//! assert_relative_eq!(s12, 9094718.72751138);
+<a href=#33 id=33 data-nosnippet>33</a>//! ```
+<a href=#34 id=34 data-nosnippet>34</a>//!
+<a href=#35 id=35 data-nosnippet>35</a>//! ```rust
+<a href=#36 id=36 data-nosnippet>36</a>//! // Determine the perimeter and area of a polygon.
+<a href=#37 id=37 data-nosnippet>37</a>//! use geographiclib_rs::{Geodesic, PolygonArea, Winding};
+<a href=#38 id=38 data-nosnippet>38</a>//!
+<a href=#39 id=39 data-nosnippet>39</a>//! let g = Geodesic::wgs84();
+<a href=#40 id=40 data-nosnippet>40</a>//! let mut pa = PolygonArea::new(&amp;g, Winding::CounterClockwise);
+<a href=#41 id=41 data-nosnippet>41</a>//! pa.add_point(0.0, 0.0);
+<a href=#42 id=42 data-nosnippet>42</a>//! pa.add_point(0.0, 1.0);
+<a href=#43 id=43 data-nosnippet>43</a>//! pa.add_point(1.0, 1.0);
+<a href=#44 id=44 data-nosnippet>44</a>//! pa.add_point(1.0, 0.0);
+<a href=#45 id=45 data-nosnippet>45</a>//!
+<a href=#46 id=46 data-nosnippet>46</a>//! let (perimeter_m, area_m_squared, num_points) = pa.compute(false);
+<a href=#47 id=47 data-nosnippet>47</a>//!
+<a href=#48 id=48 data-nosnippet>48</a>//! use approx::assert_relative_eq;
+<a href=#49 id=49 data-nosnippet>49</a>//! assert_relative_eq!(perimeter_m, 443770.91724830196);
+<a href=#50 id=50 data-nosnippet>50</a>//! assert_relative_eq!(area_m_squared, 12308778361.469452);
+<a href=#51 id=51 data-nosnippet>51</a>//! assert_eq!(num_points, 4);
+<a href=#52 id=52 data-nosnippet>52</a>//! ```
+<a href=#53 id=53 data-nosnippet>53</a>//!
+<a href=#54 id=54 data-nosnippet>54</a>//! ```rust
+<a href=#55 id=55 data-nosnippet>55</a>//! // Determine the distance between rovers Pathfinder and Curiosity on Mars
+<a href=#56 id=56 data-nosnippet>56</a>//! use geographiclib_rs::{Geodesic, InverseGeodesic};
+<a href=#57 id=57 data-nosnippet>57</a>//!
+<a href=#58 id=58 data-nosnippet>58</a>//! let mars = Geodesic::new(3396190.0, 1.0 / 169.8944472);
+<a href=#59 id=59 data-nosnippet>59</a>//! let pathfinder = (19.26, 326.75);
+<a href=#60 id=60 data-nosnippet>60</a>//! let curiosity = (-4.765700445, 137.39820983);
+<a href=#61 id=61 data-nosnippet>61</a>//! let distance_m: f64 = mars.inverse(curiosity.0, curiosity.1, pathfinder.0, pathfinder.1);
+<a href=#62 id=62 data-nosnippet>62</a>//!
+<a href=#63 id=63 data-nosnippet>63</a>//! assert_eq!(distance_m.round(), 9639113.0);
+<a href=#64 id=64 data-nosnippet>64</a>//! ```
+<a href=#65 id=65 data-nosnippet>65</a>//!
+<a href=#66 id=66 data-nosnippet>66</a>//! # Features
+<a href=#67 id=67 data-nosnippet>67</a>//!
+<a href=#68 id=68 data-nosnippet>68</a>//! 1. `accurate`: Enabled by default. Use the [`accurate`](https://docs.rs/accurate/latest/accurate/) crate to provide high accuracy polygon areas and perimeters in `PolygonArea`. Can be disabled for better performance or when `PolygonArea` is not being used.
+<a href=#69 id=69 data-nosnippet>69</a>
+<a href=#70 id=70 data-nosnippet>70</a></span><span class="comment">// Since this library is a port of an existing (cpp) codebase, there are times we opt
+<a href=#71 id=71 data-nosnippet>71</a>// to follow the upstream implementation rather than follow rust idioms.
+<a href=#72 id=72 data-nosnippet>72</a></span><span class="attr">#![allow(clippy::bool_to_int_with_if)]
+<a href=#73 id=73 data-nosnippet>73</a>#![allow(clippy::manual_range_contains)]
+<a href=#74 id=74 data-nosnippet>74</a>#![allow(clippy::excessive_precision)]
+<a href=#75 id=75 data-nosnippet>75</a>
+<a href=#76 id=76 data-nosnippet>76</a></span><span class="kw">mod </span>geodesic;
+<a href=#77 id=77 data-nosnippet>77</a><span class="kw">pub use </span>geodesic::{DirectGeodesic, Geodesic, InverseGeodesic};
+<a href=#78 id=78 data-nosnippet>78</a>
+<a href=#79 id=79 data-nosnippet>79</a><span class="kw">pub mod </span>geodesic_capability;
+<a href=#80 id=80 data-nosnippet>80</a><span class="kw">pub use </span>geodesic_capability <span class="kw">as </span>capability;
+<a href=#81 id=81 data-nosnippet>81</a>
+<a href=#82 id=82 data-nosnippet>82</a><span class="kw">mod </span>geodesic_line;
+<a href=#83 id=83 data-nosnippet>83</a><span class="kw">pub use </span>geodesic_line::GeodesicLine;
+<a href=#84 id=84 data-nosnippet>84</a><span class="kw">mod </span>geomath;
+<a href=#85 id=85 data-nosnippet>85</a><span class="kw">mod </span>polygon_area;
+<a href=#86 id=86 data-nosnippet>86</a><span class="kw">pub use </span>polygon_area::PolygonArea;
+<a href=#87 id=87 data-nosnippet>87</a><span class="kw">pub use </span>polygon_area::Winding;</code></pre></div></section></main></body></html>
