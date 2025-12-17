@@ -33,4 +33,8 @@ impl MSPSolution {
 
         total_item_area / total_container_area
     }
+
+    pub fn total_strip_width(&self) -> f32 {
+        self.strips.iter().map(|(_,s)| s.width).sum()
+    }
 }

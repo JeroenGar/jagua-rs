@@ -36,7 +36,7 @@ pub fn import(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPI
         items
     };
 
-    let ext_strip = &ext_instance.strip;
+    let ext_strip = &ext_instance.strips;
 
     let base_strip = Strip::new(
         ext_strip.max_width,

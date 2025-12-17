@@ -10,7 +10,7 @@ pub struct ExtMSPInstance {
     /// Set of items to be produced
     pub items: Vec<ExtItem>,
     /// Container in which to pack the items
-    pub strip: ExtMSPStrip,
+    pub strips: ExtMSPStrip,
 }
 
 /// Item with a demand

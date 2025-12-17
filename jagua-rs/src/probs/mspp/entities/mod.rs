@@ -13,3 +13,5 @@ pub use problem::MSPProblem;
 pub use solution::MSPSolution;
 #[doc(inline)]
 pub use strip::Strip;
+#[doc(inline)]
+pub use problem::LayKey;

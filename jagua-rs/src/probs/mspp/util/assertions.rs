@@ -11,13 +11,13 @@ pub fn problem_matches_solution(spp: &MSPProblem, sol: &MSPSolution) -> bool {
 
     assert_eq!(*strips, spp.strips);
     assert_eq!(spp.density(), sol.density(&spp.instance));
-    spp.layouts.iter().for_each(|(lkey, l)| {
-        let ls = &layout_snapshots[lkey];
+    spp.layouts.iter().for_each(|(lk, l)| {
+        let ls = &layout_snapshots[lk];
         assert!(snapshot_matches_layout(l, ls))
     });
     sol.layout_snapshots
         .keys()
-        .for_each(|lkey| assert!(spp.layouts.contains_key(lkey)));
+        .for_each(|lk| assert!(spp.layouts.contains_key(lk)));
 
     true
 }
