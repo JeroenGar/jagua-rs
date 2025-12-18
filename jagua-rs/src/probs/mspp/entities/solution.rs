@@ -35,6 +35,6 @@ impl MSPSolution {
     }
 
     pub fn total_strip_width(&self) -> f32 {
-        self.strips.iter().map(|(_,s)| s.width).sum()
+        self.strips.iter().map(|(_, s)| s.width).sum()
     }
 }

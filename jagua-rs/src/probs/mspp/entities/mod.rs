@@ -6,6 +6,8 @@ mod strip;
 #[doc(inline)]
 pub use instance::MSPInstance;
 #[doc(inline)]
+pub use problem::LayKey;
+#[doc(inline)]
 pub use problem::MSPPlacement;
 #[doc(inline)]
 pub use problem::MSPProblem;
@@ -13,5 +15,3 @@ pub use problem::MSPProblem;
 pub use solution::MSPSolution;
 #[doc(inline)]
 pub use strip::Strip;
-#[doc(inline)]
-pub use problem::LayKey;

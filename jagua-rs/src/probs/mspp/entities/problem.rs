@@ -104,11 +104,7 @@ impl MSPProblem {
     /// Creates a snapshot of the current state of the problem as a [`MSPSolution`].
     pub fn save(&self) -> MSPSolution {
         let solution = MSPSolution {
-            layout_snapshots: self
-                .layouts
-                .iter()
-                .map(|(lk, l)| (lk, l.save()))
-                .collect(),
+            layout_snapshots: self.layouts.iter().map(|(lk, l)| (lk, l.save())).collect(),
             strips: self.strips.clone(),
             time_stamp: Instant::now(),
         };
@@ -210,14 +206,15 @@ impl MSPProblem {
         self.layouts.values()
     }
 
-    pub fn extendable_strips(&self) -> impl Iterator<Item=LayKey> {
-        self.strips.iter()
-            .filter(|(_,s)| s.width < s.max_width)
-            .map(|(lk,_)| lk)
+    pub fn extendable_strips(&self) -> impl Iterator<Item = LayKey> {
+        self.strips
+            .iter()
+            .filter(|(_, s)| s.width < s.max_width)
+            .map(|(lk, _)| lk)
     }
 
     pub fn total_strip_width(&self) -> f32 {
-        self.strips.iter().map(|(_,s)| s.width).sum()
+        self.strips.iter().map(|(_, s)| s.width).sum()
     }
 }
 

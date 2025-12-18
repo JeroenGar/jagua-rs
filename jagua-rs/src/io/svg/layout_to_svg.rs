@@ -34,12 +34,13 @@ pub fn layout_to_svg(
     let vbox = bbox.scale(1.1);
     let vbox_svg = format!(
         "{} {} {} {}",
-        vbox.x_min, vbox.y_min, vbox.width(), vbox.height()
+        vbox.x_min,
+        vbox.y_min,
+        vbox.width(),
+        vbox.height()
     );
 
-    Document::new()
-        .set("viewBox", vbox_svg)
-        .add(group)
+    Document::new().set("viewBox", vbox_svg).add(group)
 }
 
 pub fn layout_to_svg_group(
@@ -50,8 +51,14 @@ pub fn layout_to_svg_group(
 ) -> (Group, Rect) {
     let container = &layout.container;
 
-    let bbox = container.outer_orig.bbox()
-        .resize_by(container.outer_orig.bbox().height() * 0.01, container.outer_orig.bbox().height() * 0.01).unwrap();
+    let bbox = container
+        .outer_orig
+        .bbox()
+        .resize_by(
+            container.outer_orig.bbox().height() * 0.01,
+            container.outer_orig.bbox().height() * 0.01,
+        )
+        .unwrap();
 
     let theme = &options.theme;
 
