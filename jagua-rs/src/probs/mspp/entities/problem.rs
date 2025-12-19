@@ -40,9 +40,14 @@ impl MSPProblem {
 
     /// Modifies the width of the strip in the back, keeping the front fixed.
     pub fn change_strip_width(&mut self, lk: LayKey, new_width: f32) {
-        let bin_strip = &mut self.strips[lk];
-        bin_strip.set_width(new_width);
-        self.layouts[lk].swap_container(Container::from(*bin_strip));
+        if new_width > 0.0 {
+            let strip = &mut self.strips[lk];
+            strip.set_width(new_width);
+            self.layouts[lk].swap_container(Container::from(*strip));
+        } else {
+            //Width must be positive, remove the layout
+            self.remove_layout(lk);
+        }
     }
 
     pub fn remove_layout(&mut self, key: LayKey) {
