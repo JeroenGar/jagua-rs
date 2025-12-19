@@ -6,7 +6,8 @@ use crate::geometry::{DTransformation, OriginalShape};
 use anyhow::{Result, ensure};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
-/// Represents a rectangular container with fixed height and a variable width between [0,max_width].
+/// Represents a rectangular container with fixed height and a variable width between \]0,max_width\].
+/// Can be converted into a [`Container`] for use in layouts.
 pub struct Strip {
     pub max_width: f32,
     pub fixed_height: f32,

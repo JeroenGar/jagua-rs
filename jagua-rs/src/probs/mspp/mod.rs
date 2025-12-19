@@ -1,4 +1,4 @@
-/// Entities to model the Mixed Strip Packing Problem (MSPP)
+/// Entities to model the problem
 pub mod entities;
 
 /// Importing problem instances into and exporting solutions out of this library

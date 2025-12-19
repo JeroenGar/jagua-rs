@@ -38,22 +38,8 @@ impl MSPProblem {
         }
     }
 
-    /// Modifies the width of the strip in the back, keeping the front fixed.
-    pub fn change_strip_width(&mut self, lk: LayKey, new_width: f32) {
-        if new_width > 0.0 {
-            let strip = &mut self.strips[lk];
-            strip.set_width(new_width);
-            self.layouts[lk].swap_container(Container::from(*strip));
-        } else {
-            //Width must be positive, remove the layout
-            self.remove_layout(lk);
-        }
-    }
-
-    pub fn remove_layout(&mut self, key: LayKey) {
-        self.deregister_layout(key);
-    }
-
+    /// Adds a new layout to the problem based on the given strip.
+    /// Returns the key of the newly added layout.
     pub fn add_layout_from_strip(&mut self, strip: Strip) -> LayKey {
         let layout = Layout::new(Container::from(strip));
         let lk = self.register_layout(layout);
@@ -61,7 +47,12 @@ impl MSPProblem {
         lk
     }
 
-    /// Shrinks the strip to the minimum width that fits all items.
+    /// Removes a layout from the problem. All items placed inside it will be deregistered.
+    pub fn remove_layout(&mut self, key: LayKey) {
+        self.deregister_layout(key);
+    }
+
+    /// Modifies a layout by shrinking its strip to the smallest width that can still contain all placed items.
     pub fn fit_strip(&mut self, lk: LayKey) {
         let feasible_before = self.layouts[lk].is_feasible();
 
@@ -81,7 +72,8 @@ impl MSPProblem {
         debug_assert!(feasible_before == self.layouts[lk].is_feasible());
     }
 
-    /// Places an item according to the given `SPPlacement` in the problem.
+    /// Places an item according to the given `MSPPlacement` in the problem.
+    /// Returns the layout key and the placed item key.
     pub fn place_item(&mut self, placement: MSPPlacement) -> (LayKey, PItemKey) {
         let lk = placement.lk;
 
@@ -94,7 +86,8 @@ impl MSPProblem {
         (lk, pik)
     }
 
-    /// Removes a placed item from the strip. Returns the placement of the item.
+    /// Removes a placed item from a layout.
+    /// Returns the corresponding `MSPPlacement` to place it back.
     pub fn remove_item(&mut self, lk: LayKey, pk: PItemKey) -> MSPPlacement {
         let pi = self.layouts[lk].remove_item(pk);
         self.deregister_included_item(pi.item_id);
@@ -120,7 +113,7 @@ impl MSPProblem {
     }
 
     /// Restores the state of the problem to the given [`MSPSolution`].
-    /// Returns `true` if any of the layout keys changed (i.e., layouts were added or removed).
+    /// Returns `true` if any keys in the layout map changed (i.e., layouts were added or removed).
     pub fn restore(&mut self, solution: &MSPSolution) -> bool {
         let mut layout_keys_changed = false;
         let mut layouts_to_remove = vec![];
@@ -181,6 +174,19 @@ impl MSPProblem {
         layout_keys_changed
     }
 
+    /// Modifies the width of the strip of the layout.
+    /// If the width is non-positive, the layout is removed.
+    pub fn change_strip_width(&mut self, lk: LayKey, new_width: f32) {
+        if new_width > 0.0 {
+            let strip = &mut self.strips[lk];
+            strip.set_width(new_width);
+            self.layouts[lk].swap_container(Container::from(*strip));
+        } else {
+            //Width must be positive, remove the layout
+            self.remove_layout(lk);
+        }
+    }
+
     fn register_layout(&mut self, layout: Layout) -> LayKey {
         layout
             .placed_items
@@ -207,6 +213,7 @@ impl MSPProblem {
         self.item_demand_qtys[item_id] += 1;
     }
 
+    /// Computes the density of the problem as the ratio between the total area of placed items and the total area of containers.
     pub fn density(&self) -> f32 {
         let total_container_area = self.all_layouts().map(|l| l.container.area()).sum::<f32>();
 
@@ -222,6 +229,7 @@ impl MSPProblem {
         self.layouts.values()
     }
 
+    /// Returns an iterator over the keys of layouts whose strips are not yet at maximum width.
     pub fn extendable_strips(&self) -> impl Iterator<Item = LayKey> {
         self.strips
             .iter()
@@ -229,12 +237,13 @@ impl MSPProblem {
             .map(|(lk, _)| lk)
     }
 
+    /// Returns the total width of the strips of all the layouts in the problem.
     pub fn total_strip_width(&self) -> f32 {
         self.strips.iter().map(|(_, s)| s.width).sum()
     }
 }
 
-/// Represents a placement of an item in the strip packing problem.
+/// Represents a specific placement of an item in the [`MSPProblem`].
 #[derive(Debug, Clone, Copy)]
 pub struct MSPPlacement {
     /// Which [`Layout`] to place the item in

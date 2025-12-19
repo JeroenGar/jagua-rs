@@ -6,6 +6,6 @@ pub mod spp;
 #[cfg(feature = "bpp")]
 pub mod bpp;
 
-/// Mixed Strip Packing Problem (MSPP) module
+/// Multi Strip Packing Problem (MSPP) module
 #[cfg(feature = "mspp")]
 pub mod mspp;
