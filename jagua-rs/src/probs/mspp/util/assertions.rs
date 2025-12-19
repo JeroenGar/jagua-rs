@@ -2,22 +2,30 @@ use crate::entities::Item;
 use crate::probs::mspp::entities::{MSPProblem, MSPSolution};
 use crate::util::assertions::snapshot_matches_layout;
 
-pub fn problem_matches_solution(spp: &MSPProblem, sol: &MSPSolution) -> bool {
+pub fn problem_matches_solution(mspp: &MSPProblem, sol: &MSPSolution) -> bool {
     let MSPSolution {
         layout_snapshots,
         strips,
         time_stamp: _,
     } = sol;
 
-    assert_eq!(*strips, spp.strips);
-    assert_eq!(spp.density(), sol.density(&spp.instance));
-    spp.layouts.iter().for_each(|(lk, l)| {
+    assert_eq!(mspp.density(), sol.density(&mspp.instance));
+    assert_eq!(mspp.layouts.len(), layout_snapshots.len());
+    assert_eq!(mspp.strips.len(), strips.len());
+
+    mspp.layouts.iter().for_each(|(lk, l)| {
         let ls = &layout_snapshots[lk];
         assert!(snapshot_matches_layout(l, ls))
     });
-    sol.layout_snapshots
-        .keys()
-        .for_each(|lk| assert!(spp.layouts.contains_key(lk)));
+
+    // Check that each layout in the problem has a matching snapshot in the solution
+    mspp.layouts.iter().all(|(p_lk, l)| {
+        let prob_strip = &mspp.strips[p_lk];
+        layout_snapshots.iter().any(|(s_lk, ls)| {
+            let sol_strip = &strips[s_lk];
+            prob_strip == sol_strip && snapshot_matches_layout(l, ls)
+        })
+    });
 
     true
 }

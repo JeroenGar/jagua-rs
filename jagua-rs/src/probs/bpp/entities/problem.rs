@@ -95,7 +95,9 @@ impl BPProblem {
     }
 
     /// Restores the state of the problem to the given [`BPSolution`].
-    pub fn restore(&mut self, solution: &BPSolution) {
+    /// Returns `true` if any of the layout keys changed (i.e., layouts were added or removed).
+    pub fn restore(&mut self, solution: &BPSolution) -> bool {
+        let mut layout_keys_changed = false;
         let mut layouts_to_remove = vec![];
 
         //Check which layouts from the problem are also present in the solution.
@@ -114,6 +116,7 @@ impl BPProblem {
 
         //Remove all layouts that were not present in the solution (or have a different bin)
         for lkey in layouts_to_remove {
+            layout_keys_changed = true;
             self.layouts.remove(lkey);
         }
 
@@ -121,6 +124,7 @@ impl BPProblem {
         for (lkey, ls) in solution.layout_snapshots.iter() {
             if !self.layouts.contains_key(lkey) {
                 self.layouts.insert(Layout::from_snapshot(ls));
+                layout_keys_changed = true;
             }
         }
 
@@ -150,6 +154,7 @@ impl BPProblem {
         }
 
         debug_assert!(problem_matches_solution(self, solution));
+        layout_keys_changed
     }
 
     pub fn density(&self) -> f32 {

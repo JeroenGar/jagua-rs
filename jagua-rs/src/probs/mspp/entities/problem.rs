@@ -115,7 +115,9 @@ impl MSPProblem {
     }
 
     /// Restores the state of the problem to the given [`MSPSolution`].
-    pub fn restore(&mut self, solution: &MSPSolution) {
+    /// Returns `true` if any of the layout keys changed (i.e., layouts were added or removed).
+    pub fn restore(&mut self, solution: &MSPSolution) -> bool {
+        let mut layout_keys_changed = false;
         let mut layouts_to_remove = vec![];
 
         //Check which layouts from the problem are also present in the solution.
@@ -123,13 +125,22 @@ impl MSPProblem {
         for (lk, layout) in self.layouts.iter_mut() {
             match solution.layout_snapshots.get(lk) {
                 Some(ls) => {
-                    //If the container (strip) still matches, we can do a restore
+                    //The key is present in the solution
                     match self.strips[lk] == solution.strips[lk] {
-                        true => layout.restore(ls),
-                        false => layouts_to_remove.push(lk),
+                        true => {
+                            //Strips match, do a simple restore
+                            layout.restore(ls)
+                        }
+                        false => {
+                            //The strip changed, we need to swap the container and then restore
+                            self.strips[lk] = solution.strips[lk];
+                            layout.swap_container(Container::from(self.strips[lk]));
+                            layout.restore(ls)
+                        }
                     }
                 }
                 None => {
+                    //Layout not present in solution, mark for removal
                     layouts_to_remove.push(lk);
                 }
             }
@@ -137,13 +148,17 @@ impl MSPProblem {
 
         //Remove all layouts that were not present in the solution (or have a different bin)
         for lk in layouts_to_remove {
+            layout_keys_changed = true;
             self.layouts.remove(lk);
+            self.strips.remove(lk);
         }
 
         //Create new layouts for all keys present in solution but not in problem
         for (lk, ls) in solution.layout_snapshots.iter() {
             if !self.layouts.contains_key(lk) {
-                self.layouts.insert(Layout::from_snapshot(ls));
+                layout_keys_changed = true;
+                let new_lk = self.layouts.insert(Layout::from_snapshot(ls));
+                self.strips.insert(new_lk, solution.strips[lk]);
             }
         }
 
@@ -155,14 +170,10 @@ impl MSPProblem {
                 .for_each(|(id, demand)| {
                     *demand = self.instance.item_qty(id);
                 });
-
-            self.strips.clear();
-            solution.strips.iter().for_each(|(lk, strip)| {
-                self.strips.insert(lk, *strip);
-            });
         }
 
         debug_assert!(problem_matches_solution(self, solution));
+        layout_keys_changed
     }
 
     fn register_layout(&mut self, layout: Layout) -> LayKey {

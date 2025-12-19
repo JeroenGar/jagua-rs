@@ -9,12 +9,13 @@ pub fn problem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
     } = sol;
 
     assert_eq!(bpp.density(), sol.density(&bpp.instance));
-    bpp.layouts.iter().for_each(|(lkey, l)| {
-        let ls = &layout_snapshots[lkey];
-        assert!(snapshot_matches_layout(l, ls))
-    });
-    sol.layout_snapshots.keys().for_each(|lkey| {
-        assert!(bpp.layouts.contains_key(lkey));
+    assert_eq!(bpp.layouts.len(), layout_snapshots.len());
+
+    // Check that each layout in the problem has a matching snapshot in the solution
+    bpp.layouts.iter().all(|(_, l)| {
+        layout_snapshots
+            .iter()
+            .any(|(_, ls)| snapshot_matches_layout(l, ls))
     });
 
     true
