@@ -3,7 +3,7 @@ use crate::collision_detection::hazards::collector::BasicHazardCollector;
 use crate::collision_detection::hazards::filter::NoFilter;
 use crate::entities::{Instance, Layout, LayoutSnapshot};
 use crate::geometry::geo_traits::Transformable;
-use crate::geometry::primitives::{Circle, Edge};
+use crate::geometry::primitives::{Circle, Edge, Rect};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::export::int_to_ext_transformation;
 use crate::io::svg::svg_util;
@@ -29,14 +29,41 @@ pub fn layout_to_svg(
     options: SvgDrawOptions,
     title: &str,
 ) -> Document {
+    let (group, bbox) = layout_to_svg_group(layout, instance, options, title);
+
+    let vbox = bbox.scale(1.1);
+    let vbox_svg = format!(
+        "{} {} {} {}",
+        vbox.x_min,
+        vbox.y_min,
+        vbox.width(),
+        vbox.height()
+    );
+
+    Document::new().set("viewBox", vbox_svg).add(group)
+}
+
+pub fn layout_to_svg_group(
+    layout: &Layout,
+    instance: &impl Instance,
+    options: SvgDrawOptions,
+    title: &str,
+) -> (Group, Rect) {
     let container = &layout.container;
 
-    let vbox = container.outer_orig.bbox().scale(1.10);
+    let bbox = container
+        .outer_orig
+        .bbox()
+        .resize_by(
+            container.outer_orig.bbox().height() * 0.01,
+            container.outer_orig.bbox().height() * 0.01,
+        )
+        .unwrap();
 
     let theme = &options.theme;
 
     let stroke_width =
-        f32::min(vbox.width(), vbox.height()) * 0.001 * theme.stroke_width_multiplier;
+        f32::min(bbox.width(), bbox.height()) * 0.001 * theme.stroke_width_multiplier;
 
     let label = {
         //print some information on above the left top of the container
@@ -408,8 +435,6 @@ pub fn layout_to_svg(
         }
     };
 
-    let vbox_svg = (vbox.x_min, vbox.y_min, vbox.width(), vbox.height());
-
     if options.highlight_cd_shapes {
         highlight_cd_shape_group = highlight_cd_shape_group.add(svg_util::data_to_path(
             svg_util::simple_polygon_data(&container.outer_cd),
@@ -427,13 +452,14 @@ pub fn layout_to_svg(
     .flatten()
     .fold(Group::new().set("id", "optionals"), |g, opt| g.add(opt));
 
-    Document::new()
-        .set("viewBox", vbox_svg)
+    let combined_group = Group::new()
         .add(container_group)
         .add(items_group)
         .add(qz_group)
         .add(optionals)
-        .add(label)
+        .add(label);
+
+    (combined_group, bbox)
 }
 fn transform_to_svg(dt: DTransformation) -> String {
     //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform

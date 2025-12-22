@@ -6,8 +6,10 @@ use crate::geometry::{DTransformation, OriginalShape};
 use anyhow::{Result, ensure};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
-/// Represents a rectangular container with fixed height and variable width.
+/// Represents a rectangular container with fixed height and a variable width between \]0,max_width\].
+/// Can be converted into a [`Container`] for use in layouts.
 pub struct Strip {
+    pub max_width: f32,
     pub fixed_height: f32,
     pub cde_config: CDEConfig,
     pub shape_modify_config: ShapeModifyConfig,
@@ -16,14 +18,17 @@ pub struct Strip {
 
 impl Strip {
     pub fn new(
+        max_width: f32,
         fixed_height: f32,
         cde_config: CDEConfig,
         shape_modify_config: ShapeModifyConfig,
         width: f32,
     ) -> Result<Self> {
         ensure!(fixed_height > 0.0, "strip height must be positive");
+        ensure!(max_width > 0.0, "strip maximum width must be positive");
         ensure!(width > 0.0, "strip width must be positive");
         Ok(Strip {
+            max_width,
             fixed_height,
             cde_config,
             shape_modify_config,
@@ -32,6 +37,7 @@ impl Strip {
     }
 
     pub fn set_width(&mut self, width: f32) {
+        assert!(width <= self.max_width, "strip width exceeds maximum width");
         assert!(width > 0.0, "strip width must be positive");
         self.width = width;
     }

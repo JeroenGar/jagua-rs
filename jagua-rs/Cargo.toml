@@ -33,6 +33,8 @@ web-time = { workspace = true }
 spp = []
 ## Enables support for the Bin Packing Problem
 bpp = []
+## Enables support for the Multi Strip Packing Problem
+mspp = []
 
 [package.metadata.docs.rs]
 all-features = true

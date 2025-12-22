@@ -68,7 +68,8 @@ irregular C&P problems and boasts a **powerful Collision Detection Engine (CDE)*
   - [x] Modelled problem variants:
     - [x] Bin Packing Problem (with feature `bpp`)
     - [x] Strip Packing Problem (with feature `spp`)
-    - [ ] Knapsack Problem (coming soon)
+    - [x] Multi Strip Packing Problem (with feature `mspp`)
+    - [ ] Knapsack Problem (todo)
 
 
 ## `lbf` ↙️

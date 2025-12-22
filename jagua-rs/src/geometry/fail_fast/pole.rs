@@ -7,36 +7,6 @@ use crate::geometry::primitives::SPolygon;
 
 use anyhow::{Result, anyhow};
 
-/// Computes the *pole* - the largest circle which is both inside of `shape` while being outside all other `poles`.
-/// Closely related to [Pole of Inaccessibility (PoI)](https://en.wikipedia.org/wiki/Pole_of_inaccessibility),
-/// and inspired by Mapbox's [`polylabel`](https://github.com/mapbox/polylabel) algorithm.
-pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Result<Circle> {
-    let square_bbox = shape.bbox.inflate_to_square();
-    let root = POINode::new(square_bbox, MAX_POI_TREE_DEPTH, shape, poles);
-    let mut queue = VecDeque::from([root]);
-    let mut best: Option<Circle> = None;
-    let distance = |circle: &Option<Circle>| circle.as_ref().map_or(0.0, |c| c.radius);
-
-    while let Some(node) = queue.pop_front() {
-        //check if better than current best
-        if node.distance > distance(&best) {
-            best = Some(Circle::try_new(node.bbox.centroid(), node.distance).unwrap());
-        }
-
-        //see if worth it to split
-        if node.distance_upperbound() > distance(&best)
-            && let Some(children) = node.split(shape, poles)
-        {
-            queue.extend(children);
-        }
-    }
-    best.ok_or(anyhow!(
-        "no pole found with {} levels of recursion. Please check the input shape: {:?}",
-        MAX_POI_TREE_DEPTH,
-        &shape.vertices
-    ))
-}
-
 ///Generates a set of 'poles' for a shape according to specified coverage limits.
 ///See [`compute_pole`] for details on what a 'pole' is.
 pub fn generate_surrogate_poles(
@@ -74,6 +44,36 @@ pub fn generate_surrogate_poles(
         )
     }
     Ok(all_poles)
+}
+
+/// Computes the *pole* - the largest circle which is both inside of `shape` while being outside all other `poles`.
+/// Closely related to [Pole of Inaccessibility (PoI)](https://en.wikipedia.org/wiki/Pole_of_inaccessibility),
+/// and inspired by Mapbox's [`polylabel`](https://github.com/mapbox/polylabel) algorithm.
+pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Result<Circle> {
+    let square_bbox = shape.bbox.inflate_to_square();
+    let root = POINode::new(square_bbox, MAX_POI_TREE_DEPTH, shape, poles);
+    let mut queue = VecDeque::from([root]);
+    let mut best: Option<Circle> = None;
+    let distance = |circle: &Option<Circle>| circle.as_ref().map_or(0.0, |c| c.radius);
+
+    while let Some(node) = queue.pop_front() {
+        //check if better than current best
+        if node.distance > distance(&best) {
+            best = Some(Circle::try_new(node.bbox.centroid(), node.distance).unwrap());
+        }
+
+        //see if worth it to split
+        if node.distance_upperbound() > distance(&best)
+            && let Some(children) = node.split(shape, poles)
+        {
+            queue.extend(children);
+        }
+    }
+    best.ok_or(anyhow!(
+        "no pole found with {} levels of recursion. Please check the input shape: {:?}",
+        MAX_POI_TREE_DEPTH,
+        &shape.vertices
+    ))
 }
 
 const MAX_POI_TREE_DEPTH: usize = 10;
