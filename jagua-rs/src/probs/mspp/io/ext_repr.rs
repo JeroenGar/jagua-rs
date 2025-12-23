@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::io::ext_repr::ExtLayout;
+use crate::io::ext_repr::{ExtContainer, ExtLayout};
 
 /// Multi-Strip Packing Problem instance
 #[derive(Serialize, Deserialize, Clone)]
@@ -28,6 +28,8 @@ pub struct ExtItem {
 pub struct ExtMSPSolution {
     /// Layouts which compose the solution
     pub layouts: Vec<ExtLayout>,
+    /// Containers used in the solution
+    pub containers: Vec<ExtContainer>,
     /// Sum of the area of the produced items divided by the sum of the area of the containers
     pub density: f32,
     /// The time it took to generate the solution in seconds
