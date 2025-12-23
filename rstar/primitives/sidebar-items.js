@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["GeomWithData","Line","PointWithData","Rectangle"]};

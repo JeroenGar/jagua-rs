@@ -1,0 +1,135 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Determine the perimeter and area of a geometry on an ellipsoidal model of the earth."><title>GeodesicArea in geo::algorithm::geodesic_area - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="geo" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt=""></a></nav><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt="logo"></a><h2><a href="../../../geo/index.html">geo</a><span class="version">0.24.1</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Geodesic<wbr>Area</a></h2><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.geodesic_area_signed" title="geodesic_area_signed">geodesic_area_signed</a></li><li><a href="#tymethod.geodesic_area_unsigned" title="geodesic_area_unsigned">geodesic_area_unsigned</a></li><li><a href="#tymethod.geodesic_perimeter" title="geodesic_perimeter">geodesic_perimeter</a></li><li><a href="#tymethod.geodesic_perimeter_area_signed" title="geodesic_perimeter_area_signed">geodesic_perimeter_area_signed</a></li><li><a href="#tymethod.geodesic_perimeter_area_unsigned" title="geodesic_perimeter_area_unsigned">geodesic_perimeter_area_unsigned</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In geo::<wbr>algorithm::<wbr>geodesic_<wbr>area</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">geo</a>::<wbr><a href="../index.html">algorithm</a>::<wbr><a href="index.html">geodesic_area</a></div><h1>Trait <span class="trait">GeodesicArea</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/geo/algorithm/geodesic_area.rs.html#9-162">Source</a> </span></div><pre class="rust item-decl"><code>pub trait GeodesicArea&lt;T&gt; {
+    // Required methods
+    fn <a href="#tymethod.geodesic_area_signed" class="fn">geodesic_area_signed</a>(&amp;self) -&gt; T;
+<span class="item-spacer"></span>    fn <a href="#tymethod.geodesic_area_unsigned" class="fn">geodesic_area_unsigned</a>(&amp;self) -&gt; T;
+<span class="item-spacer"></span>    fn <a href="#tymethod.geodesic_perimeter" class="fn">geodesic_perimeter</a>(&amp;self) -&gt; T;
+<span class="item-spacer"></span>    fn <a href="#tymethod.geodesic_perimeter_area_signed" class="fn">geodesic_perimeter_area_signed</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.tuple.html">(T, T)</a>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.geodesic_perimeter_area_unsigned" class="fn">geodesic_perimeter_area_unsigned</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.tuple.html">(T, T)</a>;
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Determine the perimeter and area of a geometry on an ellipsoidal model of the earth.</p>
+<p>This uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.geodesic_area_signed" class="method"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#60">Source</a><h4 class="code-header">fn <a href="#tymethod.geodesic_area_signed" class="fn">geodesic_area_signed</a>(&amp;self) -&gt; T</h4></section></summary><div class="docblock"><p>Determine the area of a geometry on an ellipsoidal model of the earth.</p>
+<p>This uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<h5 id="assumptions"><a class="doc-anchor" href="#assumptions">§</a>Assumptions</h5>
+<ul>
+<li>Polygons are assumed to be wound in a counter-clockwise direction
+for the exterior ring and a clockwise direction for interior rings.
+This is the standard winding for geometries that follow the Simple Feature standard.
+Alternative windings may result in a negative area. See “Interpreting negative area values” below.</li>
+<li>Polygons are assumed to be smaller than half the size of the earth. If you expect to be dealing
+with polygons larger than this, please use the <code>unsigned</code> methods.</li>
+</ul>
+<h5 id="units"><a class="doc-anchor" href="#units">§</a>Units</h5>
+<ul>
+<li>return value: meter²</li>
+</ul>
+<h5 id="interpreting-negative-area-values"><a class="doc-anchor" href="#interpreting-negative-area-values">§</a>Interpreting negative area values</h5>
+<p>A negative value can mean one of two things:</p>
+<ol>
+<li>The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.</li>
+<li>The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the <code>unsigned</code> methods.</li>
+</ol>
+<h5 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>geo::polygon;
+<span class="kw">use </span>geo::Polygon;
+
+<span class="comment">// The O2 in London
+</span><span class="kw">let </span><span class="kw-2">mut </span>polygon: Polygon&lt;f64&gt; = <span class="macro">polygon!</span>[
+    (x: <span class="number">0.00388383</span>, y: <span class="number">51.501574</span>),
+    (x: <span class="number">0.00538587</span>, y: <span class="number">51.502278</span>),
+    (x: <span class="number">0.00553607</span>, y: <span class="number">51.503299</span>),
+    (x: <span class="number">0.00467777</span>, y: <span class="number">51.504181</span>),
+    (x: <span class="number">0.00327229</span>, y: <span class="number">51.504435</span>),
+    (x: <span class="number">0.00187754</span>, y: <span class="number">51.504168</span>),
+    (x: <span class="number">0.00087976</span>, y: <span class="number">51.503380</span>),
+    (x: <span class="number">0.00107288</span>, y: <span class="number">51.502324</span>),
+    (x: <span class="number">0.00185608</span>, y: <span class="number">51.501770</span>),
+    (x: <span class="number">0.00388383</span>, y: <span class="number">51.501574</span>),
+];
+
+<span class="kw">let </span>area = polygon.geodesic_area_unsigned();
+
+<span class="macro">assert_eq!</span>(
+    <span class="number">78_596.</span>, <span class="comment">// meters
+    </span>area.round()
+);</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.geodesic_area_unsigned" class="method"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#97">Source</a><h4 class="code-header">fn <a href="#tymethod.geodesic_area_unsigned" class="fn">geodesic_area_unsigned</a>(&amp;self) -&gt; T</h4></section></summary><div class="docblock"><p>Determine the area of a geometry on an ellipsoidal model of the earth. Supports very large geometries that cover a significant portion of the earth.</p>
+<p>This uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<h5 id="assumptions-1"><a class="doc-anchor" href="#assumptions-1">§</a>Assumptions</h5>
+<ul>
+<li>Polygons are assumed to be wound in a counter-clockwise direction
+for the exterior ring and a clockwise direction for interior rings.
+This is the standard winding for geometries that follow the Simple Features standard.
+Using alternative windings will result in incorrect results.</li>
+</ul>
+<h5 id="units-1"><a class="doc-anchor" href="#units-1">§</a>Units</h5>
+<ul>
+<li>return value: meter²</li>
+</ul>
+<h5 id="examples-1"><a class="doc-anchor" href="#examples-1">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>geo::polygon;
+<span class="kw">use </span>geo::Polygon;
+
+<span class="comment">// Describe a polygon that covers all of the earth EXCEPT this small square.
+// The outside of the polygon is in this square, the inside of the polygon is the rest of the earth.
+</span><span class="kw">let </span><span class="kw-2">mut </span>polygon: Polygon&lt;f64&gt; = <span class="macro">polygon!</span>[
+    (x: <span class="number">0.0</span>, y: <span class="number">0.0</span>),
+    (x: <span class="number">0.0</span>, y: <span class="number">1.0</span>),
+    (x: <span class="number">1.0</span>, y: <span class="number">1.0</span>),
+    (x: <span class="number">1.0</span>, y: <span class="number">0.0</span>),
+];
+
+<span class="kw">let </span>area = polygon.geodesic_area_unsigned();
+
+<span class="comment">// Over 5 trillion square meters!
+</span><span class="macro">assert_eq!</span>(area, <span class="number">510053312945726.94</span>);</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.geodesic_perimeter" class="method"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#111">Source</a><h4 class="code-header">fn <a href="#tymethod.geodesic_perimeter" class="fn">geodesic_perimeter</a>(&amp;self) -&gt; T</h4></section></summary><div class="docblock"><p>Determine the perimeter of a geometry on an ellipsoidal model of the earth.</p>
+<p>This uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<p>For a polygon this returns the sum of the perimeter of the exterior ring and interior rings.
+To get the perimeter of just the exterior ring of a polygon, do <code>polygon.exterior().geodesic_length()</code>.</p>
+<h5 id="units-2"><a class="doc-anchor" href="#units-2">§</a>Units</h5>
+<ul>
+<li>return value: meter</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.geodesic_perimeter_area_signed" class="method"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#140">Source</a><h4 class="code-header">fn <a href="#tymethod.geodesic_perimeter_area_signed" class="fn">geodesic_perimeter_area_signed</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.tuple.html">(T, T)</a></h4></section></summary><div class="docblock"><p>Determine the perimeter and area of a geometry on an ellipsoidal model of the earth, all in one operation.</p>
+<p>This returns the perimeter and area in a <code>(perimeter, area)</code> tuple and uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<h5 id="area-assumptions"><a class="doc-anchor" href="#area-assumptions">§</a>Area Assumptions</h5>
+<ul>
+<li>Polygons are assumed to be wound in a counter-clockwise direction
+for the exterior ring and a clockwise direction for interior rings.
+This is the standard winding for Geometries that follow the Simple Features standard.
+Alternative windings may result in a negative area. See “Interpreting negative area values” below.</li>
+<li>Polygons are assumed to be smaller than half the size of the earth. If you expect to be dealing
+with polygons larger than this, please use the ‘unsigned’ methods.</li>
+</ul>
+<h5 id="perimeter"><a class="doc-anchor" href="#perimeter">§</a>Perimeter</h5>
+<p>For a polygon this returns the sum of the perimeter of the exterior ring and interior rings.
+To get the perimeter of just the exterior ring of a polygon, do <code>polygon.exterior().geodesic_length()</code>.</p>
+<h5 id="units-3"><a class="doc-anchor" href="#units-3">§</a>Units</h5>
+<ul>
+<li>return value: (meter, meter²)</li>
+</ul>
+<h5 id="interpreting-negative-area-values-1"><a class="doc-anchor" href="#interpreting-negative-area-values-1">§</a>Interpreting negative area values</h5>
+<p>A negative area value can mean one of two things:</p>
+<ol>
+<li>The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.</li>
+<li>The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the ‘unsigned’ methods.</li>
+</ol>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.geodesic_perimeter_area_unsigned" class="method"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#161">Source</a><h4 class="code-header">fn <a href="#tymethod.geodesic_perimeter_area_unsigned" class="fn">geodesic_perimeter_area_unsigned</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.tuple.html">(T, T)</a></h4></section></summary><div class="docblock"><p>Determine the perimeter and area of a geometry on an ellipsoidal model of the earth, all in one operation. Supports very large geometries that cover a significant portion of the earth.</p>
+<p>This returns the perimeter and area in a <code>(perimeter, area)</code> tuple and uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<h5 id="area-assumptions-1"><a class="doc-anchor" href="#area-assumptions-1">§</a>Area Assumptions</h5>
+<ul>
+<li>Polygons are assumed to be wound in a counter-clockwise direction
+for the exterior ring and a clockwise direction for interior rings.
+This is the standard winding for Geometries that follow the Simple Features standard.
+Using alternative windings will result in incorrect results.</li>
+</ul>
+<h5 id="perimeter-1"><a class="doc-anchor" href="#perimeter-1">§</a>Perimeter</h5>
+<p>For a polygon this returns the perimeter of the exterior ring and interior rings.
+To get the perimeter of just the exterior ring of a polygon, do <code>polygon.exterior().geodesic_length()</code>.</p>
+<h5 id="units-4"><a class="doc-anchor" href="#units-4">§</a>Units</h5>
+<ul>
+<li>return value: (meter, meter²)</li>
+</ul>
+</div></details></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-GeodesicArea%3Cf64%3E-for-Geometry" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#340-348">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-Geometry" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="enum" href="../../geometry/enum.Geometry.html" title="enum geo::geometry::Geometry">Geometry</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt;</h3></section><section id="impl-GeodesicArea%3Cf64%3E-for-GeometryCollection" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#337">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-GeometryCollection" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="struct" href="../../geometry/struct.GeometryCollection.html" title="struct geo::geometry::GeometryCollection">GeometryCollection</a></h3></section><section id="impl-GeodesicArea%3Cf64%3E-for-Line" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#331">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-Line" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="struct" href="../../geometry/struct.Line.html" title="struct geo::geometry::Line">Line</a></h3></section><section id="impl-GeodesicArea%3Cf64%3E-for-LineString" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#332">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-LineString" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="struct" href="../../geometry/struct.LineString.html" title="struct geo::geometry::LineString">LineString</a></h3></section><section id="impl-GeodesicArea%3Cf64%3E-for-MultiLineString" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#334">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-MultiLineString" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="struct" href="../../geometry/struct.MultiLineString.html" title="struct geo::geometry::MultiLineString">MultiLineString</a></h3></section><section id="impl-GeodesicArea%3Cf64%3E-for-MultiPoint" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#333">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-MultiPoint" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="struct" href="../../geometry/struct.MultiPoint.html" title="struct geo::geometry::MultiPoint">MultiPoint</a></h3></section><section id="impl-GeodesicArea%3Cf64%3E-for-MultiPolygon" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#338">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-MultiPolygon" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="struct" href="../../geometry/struct.MultiPolygon.html" title="struct geo::geometry::MultiPolygon">MultiPolygon</a></h3></section><section id="impl-GeodesicArea%3Cf64%3E-for-Point" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#330">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-Point" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="struct" href="../../geometry/struct.Point.html" title="struct geo::geometry::Point">Point</a></h3></section><section id="impl-GeodesicArea%3Cf64%3E-for-Polygon" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#164-187">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-Polygon" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="struct" href="../../geometry/struct.Polygon.html" title="struct geo::geometry::Polygon">Polygon</a></h3></section><section id="impl-GeodesicArea%3Cf64%3E-for-Rect" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#335">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-Rect" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="struct" href="../../geometry/struct.Rect.html" title="struct geo::geometry::Rect">Rect</a></h3></section><section id="impl-GeodesicArea%3Cf64%3E-for-Triangle" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/geodesic_area.rs.html#336">Source</a><a href="#impl-GeodesicArea%3Cf64%3E-for-Triangle" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea">GeodesicArea</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.f64.html">f64</a>&gt; for <a class="struct" href="../../geometry/struct.Triangle.html" title="struct geo::geometry::Triangle">Triangle</a></h3></section></div><script src="../../../trait.impl/geo/algorithm/geodesic_area/trait.GeodesicArea.js" data-ignore-extern-crates="geo_types" async></script></section></div></main></body></html>

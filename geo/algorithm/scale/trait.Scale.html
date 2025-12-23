@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="An affine transformation which scales a geometry up or down by a factor."><title>Scale in geo::algorithm::scale - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="geo" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt=""></a></nav><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt="logo"></a><h2><a href="../../../geo/index.html">geo</a><span class="version">0.24.1</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Scale</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#performance" title="Performance">Performance</a></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.scale" title="scale">scale</a></li><li><a href="#tymethod.scale_around_point" title="scale_around_point">scale_around_point</a></li><li><a href="#tymethod.scale_around_point_mut" title="scale_around_point_mut">scale_around_point_mut</a></li><li><a href="#tymethod.scale_mut" title="scale_mut">scale_mut</a></li><li><a href="#tymethod.scale_xy" title="scale_xy">scale_xy</a></li><li><a href="#tymethod.scale_xy_mut" title="scale_xy_mut">scale_xy_mut</a></li></ul><h3><a href="#dyn-compatibility">Dyn Compatibility</a></h3><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In geo::<wbr>algorithm::<wbr>scale</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">geo</a>::<wbr><a href="../index.html">algorithm</a>::<wbr><a href="index.html">scale</a></div><h1>Trait <span class="trait">Scale</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/geo/algorithm/scale.rs.html#11-85">Source</a> </span></div><pre class="rust item-decl"><code>pub trait Scale&lt;T: <a class="trait" href="../../trait.CoordNum.html" title="trait geo::CoordNum">CoordNum</a>&gt; {
+    // Required methods
+    fn <a href="#tymethod.scale" class="fn">scale</a>(&amp;self, scale_factor: T) -&gt; Self;
+<span class="item-spacer"></span>    fn <a href="#tymethod.scale_mut" class="fn">scale_mut</a>(&amp;mut self, scale_factor: T);
+<span class="item-spacer"></span>    fn <a href="#tymethod.scale_xy" class="fn">scale_xy</a>(&amp;self, x_factor: T, y_factor: T) -&gt; Self;
+<span class="item-spacer"></span>    fn <a href="#tymethod.scale_xy_mut" class="fn">scale_xy_mut</a>(&amp;mut self, x_factor: T, y_factor: T);
+<span class="item-spacer"></span>    fn <a href="#tymethod.scale_around_point" class="fn">scale_around_point</a>(
+        &amp;self,
+        x_factor: T,
+        y_factor: T,
+        origin: impl <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="../../geometry/struct.Coord.html" title="struct geo::geometry::Coord">Coord</a>&lt;T&gt;&gt;,
+    ) -&gt; Self;
+<span class="item-spacer"></span>    fn <a href="#tymethod.scale_around_point_mut" class="fn">scale_around_point_mut</a>(
+        &amp;mut self,
+        x_factor: T,
+        y_factor: T,
+        origin: impl <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="../../geometry/struct.Coord.html" title="struct geo::geometry::Coord">Coord</a>&lt;T&gt;&gt;,
+    );
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>An affine transformation which scales a geometry up or down by a factor.</p>
+<h3 id="performance"><a class="doc-anchor" href="#performance">§</a>Performance</h3>
+<p>If you will be performing multiple transformations, like <a href="trait.Scale.html" title="trait geo::algorithm::scale::Scale"><code>Scale</code></a>,
+<a href="../skew/trait.Skew.html" title="trait geo::algorithm::skew::Skew"><code>Skew</code></a>, <a href="../translate/trait.Translate.html" title="trait geo::algorithm::translate::Translate"><code>Translate</code></a>, or <a href="../rotate/trait.Rotate.html" title="trait geo::algorithm::rotate::Rotate"><code>Rotate</code></a>, it is more
+efficient to compose the transformations and apply them as a single operation using the
+<a href="../affine_ops/trait.AffineOps.html" title="trait geo::algorithm::affine_ops::AffineOps"><code>AffineOps</code></a> trait.</p>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.scale" class="method"><a class="src rightside" href="../../../src/geo/algorithm/scale.rs.html#30">Source</a><h4 class="code-header">fn <a href="#tymethod.scale" class="fn">scale</a>(&amp;self, scale_factor: T) -&gt; Self</h4></section></summary><div class="docblock"><p>Scale a geometry from it’s bounding box center.</p>
+<h5 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::Scale;
+<span class="kw">use </span>geo::{LineString, line_string};
+
+<span class="kw">let </span>ls: LineString = <span class="macro">line_string!</span>[(x: <span class="number">0.</span>, y: <span class="number">0.</span>), (x: <span class="number">10.</span>, y: <span class="number">10.</span>)];
+
+<span class="kw">let </span>scaled = ls.scale(<span class="number">2.</span>);
+
+<span class="macro">assert_eq!</span>(scaled, <span class="macro">line_string!</span>[
+    (x: -<span class="number">5.</span>, y: -<span class="number">5.</span>),
+    (x: <span class="number">15.</span>, y: <span class="number">15.</span>)
+]);</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.scale_mut" class="method"><a class="src rightside" href="../../../src/geo/algorithm/scale.rs.html#33">Source</a><h4 class="code-header">fn <a href="#tymethod.scale_mut" class="fn">scale_mut</a>(&amp;mut self, scale_factor: T)</h4></section></summary><div class="docblock"><p>Mutable version of <a href="trait.Scale.html#tymethod.scale"><code>scale</code></a></p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.scale_xy" class="method"><a class="src rightside" href="../../../src/geo/algorithm/scale.rs.html#54">Source</a><h4 class="code-header">fn <a href="#tymethod.scale_xy" class="fn">scale_xy</a>(&amp;self, x_factor: T, y_factor: T) -&gt; Self</h4></section></summary><div class="docblock"><p>Scale a geometry from it’s bounding box center, using different values for <code>x_factor</code> and
+<code>y_factor</code> to distort the geometry’s <a href="https://en.wikipedia.org/wiki/Aspect_ratio">aspect ratio</a>.</p>
+<h5 id="examples-1"><a class="doc-anchor" href="#examples-1">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::Scale;
+<span class="kw">use </span>geo::{LineString, line_string};
+
+<span class="kw">let </span>ls: LineString = <span class="macro">line_string!</span>[(x: <span class="number">0.</span>, y: <span class="number">0.</span>), (x: <span class="number">10.</span>, y: <span class="number">10.</span>)];
+
+<span class="kw">let </span>scaled = ls.scale_xy(<span class="number">2.</span>, <span class="number">4.</span>);
+
+<span class="macro">assert_eq!</span>(scaled, <span class="macro">line_string!</span>[
+    (x: -<span class="number">5.</span>, y: -<span class="number">15.</span>),
+    (x: <span class="number">15.</span>, y: <span class="number">25.</span>)
+]);</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.scale_xy_mut" class="method"><a class="src rightside" href="../../../src/geo/algorithm/scale.rs.html#57">Source</a><h4 class="code-header">fn <a href="#tymethod.scale_xy_mut" class="fn">scale_xy_mut</a>(&amp;mut self, x_factor: T, y_factor: T)</h4></section></summary><div class="docblock"><p>Mutable version of <a href="trait.Scale.html#tymethod.scale_xy"><code>scale_xy</code></a>.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.scale_around_point" class="method"><a class="src rightside" href="../../../src/geo/algorithm/scale.rs.html#81">Source</a><h4 class="code-header">fn <a href="#tymethod.scale_around_point" class="fn">scale_around_point</a>(
+    &amp;self,
+    x_factor: T,
+    y_factor: T,
+    origin: impl <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="../../geometry/struct.Coord.html" title="struct geo::geometry::Coord">Coord</a>&lt;T&gt;&gt;,
+) -&gt; Self</h4></section></summary><div class="docblock"><p>Scale a geometry around a point of <code>origin</code>.</p>
+<p>The point of origin is <em>usually</em> given as the 2D bounding box centre of the geometry, in
+which case you can just use <a href="trait.Scale.html#tymethod.scale"><code>scale</code></a> or <a href="trait.Scale.html#tymethod.scale_xy"><code>scale_xy</code></a>, but
+this method allows you to specify any point.</p>
+<h5 id="examples-2"><a class="doc-anchor" href="#examples-2">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::Scale;
+<span class="kw">use </span>geo::{LineString, line_string};
+
+<span class="kw">let </span>ls: LineString = <span class="macro">line_string!</span>[(x: <span class="number">0.</span>, y: <span class="number">0.</span>), (x: <span class="number">10.</span>, y: <span class="number">10.</span>)];
+
+<span class="kw">let </span>scaled = ls.scale_xy(<span class="number">2.</span>, <span class="number">4.</span>);
+
+<span class="macro">assert_eq!</span>(scaled, <span class="macro">line_string!</span>[
+    (x: -<span class="number">5.</span>, y: -<span class="number">15.</span>),
+    (x: <span class="number">15.</span>, y: <span class="number">25.</span>)
+]);</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.scale_around_point_mut" class="method"><a class="src rightside" href="../../../src/geo/algorithm/scale.rs.html#84">Source</a><h4 class="code-header">fn <a href="#tymethod.scale_around_point_mut" class="fn">scale_around_point_mut</a>(
+    &amp;mut self,
+    x_factor: T,
+    y_factor: T,
+    origin: impl <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="../../geometry/struct.Coord.html" title="struct geo::geometry::Coord">Coord</a>&lt;T&gt;&gt;,
+)</h4></section></summary><div class="docblock"><p>Mutable version of <a href="trait.Scale.html#tymethod.scale_around_point"><code>scale_around_point</code></a>.</p>
+</div></details></div><h2 id="dyn-compatibility" class="section-header">Dyn Compatibility<a href="#dyn-compatibility" class="anchor">§</a></h2><div class="dyn-compatibility-info"><p>This trait is <b>not</b> <a href="https://doc.rust-lang.org/1.90.0/reference/items/traits.html#dyn-compatibility">dyn compatible</a>.</p><p><i>In older versions of Rust, dyn compatibility was called "object safety", so this trait is not object safe.</i></p></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-Scale%3CT%3E-for-G" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/scale.rs.html#87-130">Source</a><a href="#impl-Scale%3CT%3E-for-G" class="anchor">§</a><h3 class="code-header">impl&lt;T, IR, G&gt; <a class="trait" href="trait.Scale.html" title="trait geo::algorithm::scale::Scale">Scale</a>&lt;T&gt; for G<div class="where">where
+    T: <a class="trait" href="../../trait.CoordFloat.html" title="trait geo::CoordFloat">CoordFloat</a>,
+    IR: <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.90.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../../geometry/struct.Rect.html" title="struct geo::geometry::Rect">Rect</a>&lt;T&gt;&gt;&gt;,
+    G: <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a> + <a class="trait" href="../affine_ops/trait.AffineOps.html" title="trait geo::algorithm::affine_ops::AffineOps">AffineOps</a>&lt;T&gt; + <a class="trait" href="../bounding_rect/trait.BoundingRect.html" title="trait geo::algorithm::bounding_rect::BoundingRect">BoundingRect</a>&lt;T, Output = IR&gt;,</div></h3></section></div><script src="../../../trait.impl/geo/algorithm/scale/trait.Scale.js" async></script></section></div></main></body></html>

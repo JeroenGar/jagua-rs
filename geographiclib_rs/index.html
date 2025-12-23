@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A subset of geographiclib implemented in Rust."><title>geographiclib_rs - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="geographiclib_rs" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-68b7e25d.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../geographiclib_rs/index.html">geographiclib_<wbr>rs</a><span class="version">0.2.5</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#examples" title="Examples">Examples</a></li><li><a href="#features" title="Features">Features</a></li></ul><h3><a href="#reexports">Crate Items</a></h3><ul class="block"><li><a href="#reexports" title="Re-exports">Re-exports</a></li><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#traits" title="Traits">Traits</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>geographiclib_rs</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/geographiclib_rs/lib.rs.html#1-87">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A subset of <a href="https://geographiclib.sourceforge.io/">geographiclib</a> implemented in Rust.</p>
+<h2 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// Determine the point 10000 km NE of JFK - the "direct" geodesic calculation.
+</span><span class="kw">use </span>geographiclib_rs::{Geodesic, DirectGeodesic};
+
+<span class="kw">let </span>g = Geodesic::wgs84();
+<span class="kw">let </span>jfk_lat = <span class="number">40.64</span>;
+<span class="kw">let </span>jfk_lon = -<span class="number">73.78</span>;
+<span class="kw">let </span>northeast_azimuth = <span class="number">45.0</span>;
+
+<span class="kw">let </span>(lat, lon, az) = g.direct(jfk_lat, jfk_lon, northeast_azimuth, <span class="number">10e6</span>);
+
+<span class="kw">use </span>approx::assert_relative_eq;
+<span class="macro">assert_relative_eq!</span>(lat, <span class="number">32.621100463725796</span>);
+<span class="macro">assert_relative_eq!</span>(lon, <span class="number">49.052487092959836</span>);
+<span class="macro">assert_relative_eq!</span>(az,  <span class="number">140.4059858768007</span>);</code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// Determine the distance between two points - the "inverse" geodesic calculation.
+</span><span class="kw">use </span>geographiclib_rs::{Geodesic, InverseGeodesic};
+
+<span class="kw">let </span>g = Geodesic::wgs84();
+<span class="kw">let </span>p1 = (<span class="number">34.095925</span>, -<span class="number">118.2884237</span>);
+<span class="kw">let </span>p2 = (<span class="number">59.4323439</span>, <span class="number">24.7341649</span>);
+<span class="kw">let </span>s12: f64 = g.inverse(p1.<span class="number">0</span>, p1.<span class="number">1</span>, p2.<span class="number">0</span>, p2.<span class="number">1</span>);
+
+<span class="kw">use </span>approx::assert_relative_eq;
+<span class="macro">assert_relative_eq!</span>(s12, <span class="number">9094718.72751138</span>);</code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// Determine the perimeter and area of a polygon.
+</span><span class="kw">use </span>geographiclib_rs::{Geodesic, PolygonArea, Winding};
+
+<span class="kw">let </span>g = Geodesic::wgs84();
+<span class="kw">let </span><span class="kw-2">mut </span>pa = PolygonArea::new(<span class="kw-2">&amp;</span>g, Winding::CounterClockwise);
+pa.add_point(<span class="number">0.0</span>, <span class="number">0.0</span>);
+pa.add_point(<span class="number">0.0</span>, <span class="number">1.0</span>);
+pa.add_point(<span class="number">1.0</span>, <span class="number">1.0</span>);
+pa.add_point(<span class="number">1.0</span>, <span class="number">0.0</span>);
+
+<span class="kw">let </span>(perimeter_m, area_m_squared, num_points) = pa.compute(<span class="bool-val">false</span>);
+
+<span class="kw">use </span>approx::assert_relative_eq;
+<span class="macro">assert_relative_eq!</span>(perimeter_m, <span class="number">443770.91724830196</span>);
+<span class="macro">assert_relative_eq!</span>(area_m_squared, <span class="number">12308778361.469452</span>);
+<span class="macro">assert_eq!</span>(num_points, <span class="number">4</span>);</code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// Determine the distance between rovers Pathfinder and Curiosity on Mars
+</span><span class="kw">use </span>geographiclib_rs::{Geodesic, InverseGeodesic};
+
+<span class="kw">let </span>mars = Geodesic::new(<span class="number">3396190.0</span>, <span class="number">1.0 </span>/ <span class="number">169.8944472</span>);
+<span class="kw">let </span>pathfinder = (<span class="number">19.26</span>, <span class="number">326.75</span>);
+<span class="kw">let </span>curiosity = (-<span class="number">4.765700445</span>, <span class="number">137.39820983</span>);
+<span class="kw">let </span>distance_m: f64 = mars.inverse(curiosity.<span class="number">0</span>, curiosity.<span class="number">1</span>, pathfinder.<span class="number">0</span>, pathfinder.<span class="number">1</span>);
+
+<span class="macro">assert_eq!</span>(distance_m.round(), <span class="number">9639113.0</span>);</code></pre></div>
+<h2 id="features"><a class="doc-anchor" href="#features">§</a>Features</h2>
+<ol>
+<li><code>accurate</code>: Enabled by default. Use the <a href="https://docs.rs/accurate/latest/accurate/"><code>accurate</code></a> crate to provide high accuracy polygon areas and perimeters in <code>PolygonArea</code>. Can be disabled for better performance or when <code>PolygonArea</code> is not being used.</li>
+</ol>
+</div></details><h2 id="reexports" class="section-header">Re-exports<a href="#reexports" class="anchor">§</a></h2><dl class="item-table reexports"><dt id="reexport.capability"><code>pub use <a class="mod" href="geodesic_capability/index.html" title="mod geographiclib_rs::geodesic_capability">geodesic_capability</a> as capability;</code></dt></dl><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="geodesic_capability/index.html" title="mod geographiclib_rs::geodesic_capability">geodesic_<wbr>capability</a></dt></dl><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.Geodesic.html" title="struct geographiclib_rs::Geodesic">Geodesic</a></dt><dt><a class="struct" href="struct.GeodesicLine.html" title="struct geographiclib_rs::GeodesicLine">Geodesic<wbr>Line</a></dt><dd>A geodesic line.</dd><dt><a class="struct" href="struct.PolygonArea.html" title="struct geographiclib_rs::PolygonArea">Polygon<wbr>Area</a></dt><dd>Compute the perimeter and area of a polygon on a Geodesic.</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.Winding.html" title="enum geographiclib_rs::Winding">Winding</a></dt><dd>Clockwise or CounterClockwise winding</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.DirectGeodesic.html" title="trait geographiclib_rs::DirectGeodesic">Direct<wbr>Geodesic</a></dt><dd>Place a second point, given the first point, an azimuth, and a distance.</dd><dt><a class="trait" href="trait.InverseGeodesic.html" title="trait geographiclib_rs::InverseGeodesic">Inverse<wbr>Geodesic</a></dt><dd>Measure the distance (and other values) between two points.</dd></dl></section></div></main></body></html>
