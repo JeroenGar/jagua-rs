@@ -39,15 +39,15 @@ pub fn import(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPI
     let ext_strip = &ext_instance.strips;
 
     let base_strip = Strip::new(
-        ext_strip.max_width,
-        ext_strip.height,
+        ext_strip.max_height,
+        ext_strip.width,
         importer.cde_config,
         ShapeModifyConfig {
             offset: importer.shape_modify_config.offset,
             simplify_tolerance: None,
             narrow_concavity_cutoff_ratio: None,
         },
-        ext_strip.max_width,
+        ext_strip.max_height,
     )?;
 
     Ok(MSPInstance::new(items, base_strip))

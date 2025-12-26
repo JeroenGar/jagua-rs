@@ -6,50 +6,50 @@ use crate::geometry::{DTransformation, OriginalShape};
 use anyhow::{Result, ensure};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
-/// Represents a rectangular container with fixed height and a variable width between \]0,max_width\].
+/// Represents a rectangular container with fixed width and a variable height between \]0,max_height\].
 /// Can be converted into a [`Container`] for use in layouts.
 pub struct Strip {
-    pub max_width: f32,
-    pub fixed_height: f32,
+    pub max_height: f32,
+    pub fixed_width: f32,
     pub cde_config: CDEConfig,
     pub shape_modify_config: ShapeModifyConfig,
-    pub width: f32,
+    pub height: f32,
 }
 
 impl Strip {
     pub fn new(
-        max_width: f32,
-        fixed_height: f32,
+        max_height: f32,
+        fixed_width: f32,
         cde_config: CDEConfig,
         shape_modify_config: ShapeModifyConfig,
-        width: f32,
+        height: f32,
     ) -> Result<Self> {
-        ensure!(fixed_height > 0.0, "strip height must be positive");
-        ensure!(max_width > 0.0, "strip maximum width must be positive");
-        ensure!(width > 0.0, "strip width must be positive");
+        ensure!(fixed_width > 0.0, "strip width must be positive");
+        ensure!(max_height > 0.0, "strip maximum height must be positive");
+        ensure!(height > 0.0, "strip height must be positive");
         Ok(Strip {
-            max_width,
-            fixed_height,
+            max_height,
+            fixed_width,
             cde_config,
             shape_modify_config,
-            width,
+            height,
         })
     }
 
-    pub fn set_width(&mut self, width: f32) {
-        assert!(width <= self.max_width, "strip width exceeds maximum width");
-        assert!(width > 0.0, "strip width must be positive");
-        self.width = width;
+    pub fn set_height(&mut self, height: f32) {
+        assert!(height <= self.max_height, "strip height exceeds maximum height");
+        assert!(height > 0.0, "strip height must be positive");
+        self.height = height;
     }
 }
 
 impl From<Strip> for Container {
     fn from(s: Strip) -> Container {
-        let id = s.width.to_bits() as usize;
+        let id = s.height.to_bits() as usize;
         Container::new(
             id,
             OriginalShape {
-                shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.width, s.fixed_height).unwrap()),
+                shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.fixed_width, s.height).unwrap()),
                 pre_transform: DTransformation::empty(),
                 modify_mode: ShapeModifyMode::Deflate,
                 modify_config: s.shape_modify_config,

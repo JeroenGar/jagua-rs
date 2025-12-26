@@ -52,23 +52,23 @@ impl MSPProblem {
         self.deregister_layout(key);
     }
 
-    /// Modifies a layout by shrinking its strip to the smallest width that can still contain all placed items.
+    /// Modifies a layout by shrinking its strip to the smallest height that can still contain all placed items.
     pub fn fit_strip(&mut self, lk: LayKey) {
         let feasible_before = self.layouts[lk].is_feasible();
 
-        //Find the rightmost item in the strip and add some tolerance (avoiding false collision positives)
-        let item_x_max = self.layouts[lk]
+        //Find the topmost item in the strip and add some tolerance (avoiding false collision positives)
+        let item_y_max = self.layouts[lk]
             .placed_items
             .values()
-            .map(|pi| pi.shape.bbox.x_max)
+            .map(|pi| pi.shape.bbox.y_max)
             .max_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap()
             * 1.00001;
 
-        // add the shape offset if any, the strip needs to be at least `offset` wider than the items
-        let fitted_width = item_x_max + self.strips[lk].shape_modify_config.offset.unwrap_or(0.0);
+        // add the shape offset if any, the strip needs to be at least `offset` taller than the items
+        let fitted_height = item_y_max + self.strips[lk].shape_modify_config.offset.unwrap_or(0.0);
 
-        self.change_strip_width(lk, fitted_width);
+        self.change_strip_height(lk, fitted_height);
         debug_assert!(feasible_before == self.layouts[lk].is_feasible());
     }
 
@@ -174,15 +174,15 @@ impl MSPProblem {
         layout_keys_changed
     }
 
-    /// Modifies the width of the strip of the layout.
-    /// If the width is non-positive, the layout is removed.
-    pub fn change_strip_width(&mut self, lk: LayKey, new_width: f32) {
-        if new_width > 0.0 {
+    /// Modifies the height of the strip of the layout.
+    /// If the height is non-positive, the layout is removed.
+    pub fn change_strip_height(&mut self, lk: LayKey, new_height: f32) {
+        if new_height > 0.0 {
             let strip = &mut self.strips[lk];
-            strip.set_width(new_width);
+            strip.set_height(new_height);
             self.layouts[lk].swap_container(Container::from(*strip));
         } else {
-            //Width must be positive, remove the layout
+            //Height must be positive, remove the layout
             self.remove_layout(lk);
         }
     }
@@ -229,17 +229,17 @@ impl MSPProblem {
         self.layouts.values()
     }
 
-    /// Returns an iterator over the keys of layouts whose strips are not yet at maximum width.
+    /// Returns an iterator over the keys of layouts whose strips are not yet at maximum height.
     pub fn extendable_strips(&self) -> impl Iterator<Item = LayKey> {
         self.strips
             .iter()
-            .filter(|(_, s)| s.width < s.max_width)
+            .filter(|(_, s)| s.height < s.max_height)
             .map(|(lk, _)| lk)
     }
 
-    /// Returns the total width of the strips of all the layouts in the problem.
-    pub fn total_strip_width(&self) -> f32 {
-        self.strips.iter().map(|(_, s)| s.width).sum()
+    /// Returns the total height of the strips of all the layouts in the problem.
+    pub fn total_strip_height(&self) -> f32 {
+        self.strips.iter().map(|(_, s)| s.height).sum()
     }
 }
 

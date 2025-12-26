@@ -23,7 +23,7 @@ impl MSPSolution {
         let total_container_area = self
             .strips
             .values()
-            .map(|s| s.fixed_height * s.width)
+            .map(|s| s.fixed_width * s.height)
             .sum::<f32>();
 
         let total_item_area = self
@@ -35,8 +35,8 @@ impl MSPSolution {
         total_item_area / total_container_area
     }
 
-    /// Returns the total width of the strips of all the layouts in the solution.
-    pub fn total_strip_width(&self) -> f32 {
-        self.strips.iter().map(|(_, s)| s.width).sum()
+    /// Returns the total height of the strips of all the layouts in the solution.
+    pub fn total_strip_height(&self) -> f32 {
+        self.strips.iter().map(|(_, s)| s.height).sum()
     }
 }

@@ -38,8 +38,8 @@ pub struct ExtMSPSolution {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ExtMSPStrip {
-    /// Height of the container
-    pub height: f32,
     /// Width of the container
-    pub max_width: f32,
+    pub width: f32,
+    /// Maximum height of the container
+    pub max_height: f32,
 }

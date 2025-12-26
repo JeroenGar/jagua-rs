@@ -5,8 +5,8 @@ use std::iter;
 
 #[derive(Debug, Clone)]
 /// Instance of the "Multi Strip Packing Problem".
-/// The goal is to pack a set of items into strips of fixed height and variable width, minimizing the total width used.
-/// The strips have a maximum width and multiple strips can be used to pack all items.
+/// The goal is to pack a set of items into strips of fixed width and variable height, minimizing the total height used.
+/// The strips have a maximum height and multiple strips can be used to pack all items.
 pub struct MSPInstance {
     /// The items to be packed and their demands
     pub items: Vec<(Item, usize)>,
