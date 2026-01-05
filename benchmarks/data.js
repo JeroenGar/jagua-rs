@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766480263069,
+  "lastUpdate": 1767612625230,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -4311,6 +4311,84 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k/5",
             "value": 213511,
             "range": "± 2919",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jeroen.gardeyn@hotmail.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "76aab0fa70688ee50d1809f5376f71c758ea0b7c",
+          "message": "export external solutions back into the library. (#66)\n\n- Currently only implemented for strip packing",
+          "timestamp": "2026-01-05T12:27:02+01:00",
+          "tree_id": "57dc2c612ddb9db17732a8b7029d23ba0946b25e",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/76aab0fa70688ee50d1809f5376f71c758ea0b7c"
+        },
+        "date": 1767612608677,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 2253936,
+            "range": "± 106829",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 2593600,
+            "range": "± 134400",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 2582138,
+            "range": "± 133763",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 2310603,
+            "range": "± 38775",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 4129686,
+            "range": "± 72422",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 7995976,
+            "range": "± 137237",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 244486,
+            "range": "± 8062",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 219713,
+            "range": "± 4240",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 215812,
+            "range": "± 2923",
             "unit": "ns/iter"
           }
         ]
