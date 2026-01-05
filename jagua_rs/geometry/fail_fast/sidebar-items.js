@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["compute_pole","generate_piers","generate_surrogate_poles"],"struct":["SPSurrogate","SPSurrogateConfig"]};

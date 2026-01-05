@@ -1,0 +1,353 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rstar-0.10.0/src/algorithm/rstar.rs`."><title>rstar.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rstar" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rstar/algorithm/</div>rstar.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::envelope::Envelope;
+<a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::node::{envelope_for_children, ParentNode, RTreeNode};
+<a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span><span class="kw">crate</span>::object::RTreeObject;
+<a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::params::{InsertionStrategy, RTreeParams};
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span><span class="kw">crate</span>::point::{Point, PointExt};
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span><span class="kw">crate</span>::rtree::RTree;
+<a href=#7 id=7 data-nosnippet>7</a>
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>alloc::vec::Vec;
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>num_traits::{Bounded, Zero};
+<a href=#10 id=10 data-nosnippet>10</a>
+<a href=#11 id=11 data-nosnippet>11</a><span class="doccomment">/// Inserts points according to the r-star heuristic.
+<a href=#12 id=12 data-nosnippet>12</a>///
+<a href=#13 id=13 data-nosnippet>13</a>/// The r*-heuristic focusses on good insertion quality at the costs of
+<a href=#14 id=14 data-nosnippet>14</a>/// insertion performance. This strategy is best for use cases with few
+<a href=#15 id=15 data-nosnippet>15</a>/// insertions and many nearest neighbor queries.
+<a href=#16 id=16 data-nosnippet>16</a>///
+<a href=#17 id=17 data-nosnippet>17</a>/// `RStarInsertionStrategy` is used as the default insertion strategy.
+<a href=#18 id=18 data-nosnippet>18</a>/// See [InsertionStrategy] for more information on insertion strategies.
+<a href=#19 id=19 data-nosnippet>19</a></span><span class="kw">pub enum </span>RStarInsertionStrategy {}
+<a href=#20 id=20 data-nosnippet>20</a>
+<a href=#21 id=21 data-nosnippet>21</a><span class="kw">enum </span>InsertionResult&lt;T&gt;
+<a href=#22 id=22 data-nosnippet>22</a><span class="kw">where
+<a href=#23 id=23 data-nosnippet>23</a>    </span>T: RTreeObject,
+<a href=#24 id=24 data-nosnippet>24</a>{
+<a href=#25 id=25 data-nosnippet>25</a>    Split(RTreeNode&lt;T&gt;),
+<a href=#26 id=26 data-nosnippet>26</a>    Reinsert(Vec&lt;RTreeNode&lt;T&gt;&gt;, usize),
+<a href=#27 id=27 data-nosnippet>27</a>    Complete,
+<a href=#28 id=28 data-nosnippet>28</a>}
+<a href=#29 id=29 data-nosnippet>29</a>
+<a href=#30 id=30 data-nosnippet>30</a><span class="kw">impl </span>InsertionStrategy <span class="kw">for </span>RStarInsertionStrategy {
+<a href=#31 id=31 data-nosnippet>31</a>    <span class="kw">fn </span>insert&lt;T, Params&gt;(tree: <span class="kw-2">&amp;mut </span>RTree&lt;T, Params&gt;, t: T)
+<a href=#32 id=32 data-nosnippet>32</a>    <span class="kw">where
+<a href=#33 id=33 data-nosnippet>33</a>        </span>Params: RTreeParams,
+<a href=#34 id=34 data-nosnippet>34</a>        T: RTreeObject,
+<a href=#35 id=35 data-nosnippet>35</a>    {
+<a href=#36 id=36 data-nosnippet>36</a>        <span class="kw">use </span>InsertionAction::<span class="kw-2">*</span>;
+<a href=#37 id=37 data-nosnippet>37</a>
+<a href=#38 id=38 data-nosnippet>38</a>        <span class="kw">enum </span>InsertionAction&lt;T: RTreeObject&gt; {
+<a href=#39 id=39 data-nosnippet>39</a>            PerformSplit(RTreeNode&lt;T&gt;),
+<a href=#40 id=40 data-nosnippet>40</a>            PerformReinsert(RTreeNode&lt;T&gt;),
+<a href=#41 id=41 data-nosnippet>41</a>        }
+<a href=#42 id=42 data-nosnippet>42</a>
+<a href=#43 id=43 data-nosnippet>43</a>        <span class="kw">let </span>first = recursive_insert::&lt;<span class="kw">_</span>, Params&gt;(tree.root_mut(), RTreeNode::Leaf(t), <span class="number">0</span>);
+<a href=#44 id=44 data-nosnippet>44</a>        <span class="kw">let </span><span class="kw-2">mut </span>target_height = <span class="number">0</span>;
+<a href=#45 id=45 data-nosnippet>45</a>        <span class="kw">let </span><span class="kw-2">mut </span>insertion_stack = Vec::new();
+<a href=#46 id=46 data-nosnippet>46</a>        <span class="kw">match </span>first {
+<a href=#47 id=47 data-nosnippet>47</a>            InsertionResult::Split(node) =&gt; insertion_stack.push(PerformSplit(node)),
+<a href=#48 id=48 data-nosnippet>48</a>            InsertionResult::Reinsert(nodes_to_reinsert, real_target_height) =&gt; {
+<a href=#49 id=49 data-nosnippet>49</a>                insertion_stack.extend(nodes_to_reinsert.into_iter().map(PerformReinsert));
+<a href=#50 id=50 data-nosnippet>50</a>                target_height = real_target_height;
+<a href=#51 id=51 data-nosnippet>51</a>            }
+<a href=#52 id=52 data-nosnippet>52</a>            InsertionResult::Complete =&gt; {}
+<a href=#53 id=53 data-nosnippet>53</a>        };
+<a href=#54 id=54 data-nosnippet>54</a>
+<a href=#55 id=55 data-nosnippet>55</a>        <span class="kw">while let </span><span class="prelude-val">Some</span>(next) = insertion_stack.pop() {
+<a href=#56 id=56 data-nosnippet>56</a>            <span class="kw">match </span>next {
+<a href=#57 id=57 data-nosnippet>57</a>                PerformSplit(node) =&gt; {
+<a href=#58 id=58 data-nosnippet>58</a>                    <span class="comment">// The root node was split, create a new root and increase height
+<a href=#59 id=59 data-nosnippet>59</a>                    </span><span class="kw">let </span>new_root = ParentNode::new_root::&lt;Params&gt;();
+<a href=#60 id=60 data-nosnippet>60</a>                    <span class="kw">let </span>old_root = ::core::mem::replace(tree.root_mut(), new_root);
+<a href=#61 id=61 data-nosnippet>61</a>                    <span class="kw">let </span>new_envelope = old_root.envelope.merged(<span class="kw-2">&amp;</span>node.envelope());
+<a href=#62 id=62 data-nosnippet>62</a>                    <span class="kw">let </span>root = tree.root_mut();
+<a href=#63 id=63 data-nosnippet>63</a>                    root.envelope = new_envelope;
+<a href=#64 id=64 data-nosnippet>64</a>                    root.children.push(RTreeNode::Parent(old_root));
+<a href=#65 id=65 data-nosnippet>65</a>                    root.children.push(node);
+<a href=#66 id=66 data-nosnippet>66</a>                    target_height += <span class="number">1</span>;
+<a href=#67 id=67 data-nosnippet>67</a>                }
+<a href=#68 id=68 data-nosnippet>68</a>                PerformReinsert(node_to_reinsert) =&gt; {
+<a href=#69 id=69 data-nosnippet>69</a>                    <span class="kw">let </span>root = tree.root_mut();
+<a href=#70 id=70 data-nosnippet>70</a>                    <span class="kw">match </span>forced_insertion::&lt;T, Params&gt;(root, node_to_reinsert, target_height) {
+<a href=#71 id=71 data-nosnippet>71</a>                        InsertionResult::Split(node) =&gt; insertion_stack.push(PerformSplit(node)),
+<a href=#72 id=72 data-nosnippet>72</a>                        InsertionResult::Reinsert(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; {
+<a href=#73 id=73 data-nosnippet>73</a>                            <span class="macro">panic!</span>(<span class="string">"Unexpected reinsert. This is a bug in rstar."</span>)
+<a href=#74 id=74 data-nosnippet>74</a>                        }
+<a href=#75 id=75 data-nosnippet>75</a>                        InsertionResult::Complete =&gt; {}
+<a href=#76 id=76 data-nosnippet>76</a>                    }
+<a href=#77 id=77 data-nosnippet>77</a>                }
+<a href=#78 id=78 data-nosnippet>78</a>            }
+<a href=#79 id=79 data-nosnippet>79</a>        }
+<a href=#80 id=80 data-nosnippet>80</a>    }
+<a href=#81 id=81 data-nosnippet>81</a>}
+<a href=#82 id=82 data-nosnippet>82</a>
+<a href=#83 id=83 data-nosnippet>83</a><span class="kw">fn </span>forced_insertion&lt;T, Params&gt;(
+<a href=#84 id=84 data-nosnippet>84</a>    node: <span class="kw-2">&amp;mut </span>ParentNode&lt;T&gt;,
+<a href=#85 id=85 data-nosnippet>85</a>    t: RTreeNode&lt;T&gt;,
+<a href=#86 id=86 data-nosnippet>86</a>    target_height: usize,
+<a href=#87 id=87 data-nosnippet>87</a>) -&gt; InsertionResult&lt;T&gt;
+<a href=#88 id=88 data-nosnippet>88</a><span class="kw">where
+<a href=#89 id=89 data-nosnippet>89</a>    </span>T: RTreeObject,
+<a href=#90 id=90 data-nosnippet>90</a>    Params: RTreeParams,
+<a href=#91 id=91 data-nosnippet>91</a>{
+<a href=#92 id=92 data-nosnippet>92</a>    node.envelope.merge(<span class="kw-2">&amp;</span>t.envelope());
+<a href=#93 id=93 data-nosnippet>93</a>    <span class="kw">let </span>expand_index = choose_subtree(node, <span class="kw-2">&amp;</span>t);
+<a href=#94 id=94 data-nosnippet>94</a>
+<a href=#95 id=95 data-nosnippet>95</a>    <span class="kw">if </span>target_height == <span class="number">0 </span>|| node.children.len() &lt; expand_index {
+<a href=#96 id=96 data-nosnippet>96</a>        <span class="comment">// Force insertion into this node
+<a href=#97 id=97 data-nosnippet>97</a>        </span>node.children.push(t);
+<a href=#98 id=98 data-nosnippet>98</a>        <span class="kw">return </span>resolve_overflow_without_reinsertion::&lt;<span class="kw">_</span>, Params&gt;(node);
+<a href=#99 id=99 data-nosnippet>99</a>    }
+<a href=#100 id=100 data-nosnippet>100</a>
+<a href=#101 id=101 data-nosnippet>101</a>    <span class="kw">if let </span>RTreeNode::Parent(<span class="kw-2">ref mut </span>follow) = node.children[expand_index] {
+<a href=#102 id=102 data-nosnippet>102</a>        <span class="kw">match </span>forced_insertion::&lt;<span class="kw">_</span>, Params&gt;(follow, t, target_height - <span class="number">1</span>) {
+<a href=#103 id=103 data-nosnippet>103</a>            InsertionResult::Split(child) =&gt; {
+<a href=#104 id=104 data-nosnippet>104</a>                node.envelope.merge(<span class="kw-2">&amp;</span>child.envelope());
+<a href=#105 id=105 data-nosnippet>105</a>                node.children.push(child);
+<a href=#106 id=106 data-nosnippet>106</a>                resolve_overflow_without_reinsertion::&lt;<span class="kw">_</span>, Params&gt;(node)
+<a href=#107 id=107 data-nosnippet>107</a>            }
+<a href=#108 id=108 data-nosnippet>108</a>            other =&gt; other,
+<a href=#109 id=109 data-nosnippet>109</a>        }
+<a href=#110 id=110 data-nosnippet>110</a>    } <span class="kw">else </span>{
+<a href=#111 id=111 data-nosnippet>111</a>        <span class="macro">unreachable!</span>(<span class="string">"This is a bug in rstar."</span>)
+<a href=#112 id=112 data-nosnippet>112</a>    }
+<a href=#113 id=113 data-nosnippet>113</a>}
+<a href=#114 id=114 data-nosnippet>114</a>
+<a href=#115 id=115 data-nosnippet>115</a><span class="kw">fn </span>recursive_insert&lt;T, Params&gt;(
+<a href=#116 id=116 data-nosnippet>116</a>    node: <span class="kw-2">&amp;mut </span>ParentNode&lt;T&gt;,
+<a href=#117 id=117 data-nosnippet>117</a>    t: RTreeNode&lt;T&gt;,
+<a href=#118 id=118 data-nosnippet>118</a>    current_height: usize,
+<a href=#119 id=119 data-nosnippet>119</a>) -&gt; InsertionResult&lt;T&gt;
+<a href=#120 id=120 data-nosnippet>120</a><span class="kw">where
+<a href=#121 id=121 data-nosnippet>121</a>    </span>T: RTreeObject,
+<a href=#122 id=122 data-nosnippet>122</a>    Params: RTreeParams,
+<a href=#123 id=123 data-nosnippet>123</a>{
+<a href=#124 id=124 data-nosnippet>124</a>    node.envelope.merge(<span class="kw-2">&amp;</span>t.envelope());
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="kw">let </span>expand_index = choose_subtree(node, <span class="kw-2">&amp;</span>t);
+<a href=#126 id=126 data-nosnippet>126</a>
+<a href=#127 id=127 data-nosnippet>127</a>    <span class="kw">if </span>node.children.len() &lt; expand_index {
+<a href=#128 id=128 data-nosnippet>128</a>        <span class="comment">// Force insertion into this node
+<a href=#129 id=129 data-nosnippet>129</a>        </span>node.children.push(t);
+<a href=#130 id=130 data-nosnippet>130</a>        <span class="kw">return </span>resolve_overflow::&lt;<span class="kw">_</span>, Params&gt;(node, current_height);
+<a href=#131 id=131 data-nosnippet>131</a>    }
+<a href=#132 id=132 data-nosnippet>132</a>
+<a href=#133 id=133 data-nosnippet>133</a>    <span class="kw">let </span>expand = <span class="kw">if let </span>RTreeNode::Parent(<span class="kw-2">ref mut </span>follow) = node.children[expand_index] {
+<a href=#134 id=134 data-nosnippet>134</a>        recursive_insert::&lt;<span class="kw">_</span>, Params&gt;(follow, t, current_height + <span class="number">1</span>)
+<a href=#135 id=135 data-nosnippet>135</a>    } <span class="kw">else </span>{
+<a href=#136 id=136 data-nosnippet>136</a>        <span class="macro">panic!</span>(<span class="string">"This is a bug in rstar."</span>)
+<a href=#137 id=137 data-nosnippet>137</a>    };
+<a href=#138 id=138 data-nosnippet>138</a>
+<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">match </span>expand {
+<a href=#140 id=140 data-nosnippet>140</a>        InsertionResult::Split(child) =&gt; {
+<a href=#141 id=141 data-nosnippet>141</a>            node.envelope.merge(<span class="kw-2">&amp;</span>child.envelope());
+<a href=#142 id=142 data-nosnippet>142</a>            node.children.push(child);
+<a href=#143 id=143 data-nosnippet>143</a>            resolve_overflow::&lt;<span class="kw">_</span>, Params&gt;(node, current_height)
+<a href=#144 id=144 data-nosnippet>144</a>        }
+<a href=#145 id=145 data-nosnippet>145</a>        InsertionResult::Reinsert(a, b) =&gt; {
+<a href=#146 id=146 data-nosnippet>146</a>            node.envelope = envelope_for_children(<span class="kw-2">&amp;</span>node.children);
+<a href=#147 id=147 data-nosnippet>147</a>            InsertionResult::Reinsert(a, b)
+<a href=#148 id=148 data-nosnippet>148</a>        }
+<a href=#149 id=149 data-nosnippet>149</a>        other =&gt; other,
+<a href=#150 id=150 data-nosnippet>150</a>    }
+<a href=#151 id=151 data-nosnippet>151</a>}
+<a href=#152 id=152 data-nosnippet>152</a>
+<a href=#153 id=153 data-nosnippet>153</a><span class="kw">fn </span>choose_subtree&lt;T&gt;(node: <span class="kw-2">&amp;mut </span>ParentNode&lt;T&gt;, to_insert: <span class="kw-2">&amp;</span>RTreeNode&lt;T&gt;) -&gt; usize
+<a href=#154 id=154 data-nosnippet>154</a><span class="kw">where
+<a href=#155 id=155 data-nosnippet>155</a>    </span>T: RTreeObject,
+<a href=#156 id=156 data-nosnippet>156</a>{
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="kw">let </span>all_leaves = <span class="kw">match </span>node.children.first() {
+<a href=#158 id=158 data-nosnippet>158</a>        <span class="prelude-val">Some</span>(RTreeNode::Leaf(<span class="kw">_</span>)) =&gt; <span class="kw">return </span>usize::max_value(),
+<a href=#159 id=159 data-nosnippet>159</a>        <span class="prelude-val">Some</span>(RTreeNode::Parent(<span class="kw-2">ref </span>data)) =&gt; data
+<a href=#160 id=160 data-nosnippet>160</a>            .children
+<a href=#161 id=161 data-nosnippet>161</a>            .first()
+<a href=#162 id=162 data-nosnippet>162</a>            .map(RTreeNode::is_leaf)
+<a href=#163 id=163 data-nosnippet>163</a>            .unwrap_or(<span class="bool-val">true</span>),
+<a href=#164 id=164 data-nosnippet>164</a>        <span class="kw">_ </span>=&gt; <span class="kw">return </span>usize::max_value(),
+<a href=#165 id=165 data-nosnippet>165</a>    };
+<a href=#166 id=166 data-nosnippet>166</a>
+<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">let </span>zero: &lt;&lt;T::Envelope <span class="kw">as </span>Envelope&gt;::Point <span class="kw">as </span>Point&gt;::Scalar = Zero::zero();
+<a href=#168 id=168 data-nosnippet>168</a>    <span class="kw">let </span>insertion_envelope = to_insert.envelope();
+<a href=#169 id=169 data-nosnippet>169</a>    <span class="kw">let </span><span class="kw-2">mut </span>inclusion_count = <span class="number">0</span>;
+<a href=#170 id=170 data-nosnippet>170</a>    <span class="kw">let </span><span class="kw-2">mut </span>min_area = &lt;&lt;T::Envelope <span class="kw">as </span>Envelope&gt;::Point <span class="kw">as </span>Point&gt;::Scalar::max_value();
+<a href=#171 id=171 data-nosnippet>171</a>    <span class="kw">let </span><span class="kw-2">mut </span>min_index = <span class="number">0</span>;
+<a href=#172 id=172 data-nosnippet>172</a>    <span class="kw">for </span>(index, child) <span class="kw">in </span>node.children.iter().enumerate() {
+<a href=#173 id=173 data-nosnippet>173</a>        <span class="kw">let </span>envelope = child.envelope();
+<a href=#174 id=174 data-nosnippet>174</a>        <span class="kw">if </span>envelope.contains_envelope(<span class="kw-2">&amp;</span>insertion_envelope) {
+<a href=#175 id=175 data-nosnippet>175</a>            inclusion_count += <span class="number">1</span>;
+<a href=#176 id=176 data-nosnippet>176</a>            <span class="kw">let </span>area = envelope.area();
+<a href=#177 id=177 data-nosnippet>177</a>            <span class="kw">if </span>area &lt; min_area {
+<a href=#178 id=178 data-nosnippet>178</a>                min_area = area;
+<a href=#179 id=179 data-nosnippet>179</a>                min_index = index;
+<a href=#180 id=180 data-nosnippet>180</a>            }
+<a href=#181 id=181 data-nosnippet>181</a>        }
+<a href=#182 id=182 data-nosnippet>182</a>    }
+<a href=#183 id=183 data-nosnippet>183</a>    <span class="kw">if </span>inclusion_count == <span class="number">0 </span>{
+<a href=#184 id=184 data-nosnippet>184</a>        <span class="comment">// No inclusion found, subtree depends on overlap and area increase
+<a href=#185 id=185 data-nosnippet>185</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>min = (zero, zero, zero);
+<a href=#186 id=186 data-nosnippet>186</a>
+<a href=#187 id=187 data-nosnippet>187</a>        <span class="kw">for </span>(index, child1) <span class="kw">in </span>node.children.iter().enumerate() {
+<a href=#188 id=188 data-nosnippet>188</a>            <span class="kw">let </span>envelope = child1.envelope();
+<a href=#189 id=189 data-nosnippet>189</a>            <span class="kw">let </span><span class="kw-2">mut </span>new_envelope = envelope.clone();
+<a href=#190 id=190 data-nosnippet>190</a>            new_envelope.merge(<span class="kw-2">&amp;</span>insertion_envelope);
+<a href=#191 id=191 data-nosnippet>191</a>            <span class="kw">let </span>overlap_increase = <span class="kw">if </span>all_leaves {
+<a href=#192 id=192 data-nosnippet>192</a>                <span class="comment">// Calculate minimal overlap increase
+<a href=#193 id=193 data-nosnippet>193</a>                </span><span class="kw">let </span><span class="kw-2">mut </span>overlap = zero;
+<a href=#194 id=194 data-nosnippet>194</a>                <span class="kw">let </span><span class="kw-2">mut </span>new_overlap = zero;
+<a href=#195 id=195 data-nosnippet>195</a>                <span class="kw">for </span>child2 <span class="kw">in </span><span class="kw-2">&amp;</span>node.children {
+<a href=#196 id=196 data-nosnippet>196</a>                    <span class="kw">if </span>child1 <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ </span>!= child2 <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ </span>{
+<a href=#197 id=197 data-nosnippet>197</a>                        <span class="kw">let </span>child_envelope = child2.envelope();
+<a href=#198 id=198 data-nosnippet>198</a>                        <span class="kw">let </span>temp1 = envelope.intersection_area(<span class="kw-2">&amp;</span>child_envelope);
+<a href=#199 id=199 data-nosnippet>199</a>                        overlap = overlap + temp1;
+<a href=#200 id=200 data-nosnippet>200</a>                        <span class="kw">let </span>temp2 = new_envelope.intersection_area(<span class="kw-2">&amp;</span>child_envelope);
+<a href=#201 id=201 data-nosnippet>201</a>                        new_overlap = new_overlap + temp2;
+<a href=#202 id=202 data-nosnippet>202</a>                    }
+<a href=#203 id=203 data-nosnippet>203</a>                }
+<a href=#204 id=204 data-nosnippet>204</a>                new_overlap - overlap
+<a href=#205 id=205 data-nosnippet>205</a>            } <span class="kw">else </span>{
+<a href=#206 id=206 data-nosnippet>206</a>                <span class="comment">// Don't calculate overlap increase if not all children are leaves
+<a href=#207 id=207 data-nosnippet>207</a>                </span>zero
+<a href=#208 id=208 data-nosnippet>208</a>            };
+<a href=#209 id=209 data-nosnippet>209</a>            <span class="comment">// Calculate area increase and area
+<a href=#210 id=210 data-nosnippet>210</a>            </span><span class="kw">let </span>area = new_envelope.area();
+<a href=#211 id=211 data-nosnippet>211</a>            <span class="kw">let </span>area_increase = area - envelope.area();
+<a href=#212 id=212 data-nosnippet>212</a>            <span class="kw">let </span>new_min = (overlap_increase, area_increase, area);
+<a href=#213 id=213 data-nosnippet>213</a>            <span class="kw">if </span>new_min &lt; min || index == <span class="number">0 </span>{
+<a href=#214 id=214 data-nosnippet>214</a>                min = new_min;
+<a href=#215 id=215 data-nosnippet>215</a>                min_index = index;
+<a href=#216 id=216 data-nosnippet>216</a>            }
+<a href=#217 id=217 data-nosnippet>217</a>        }
+<a href=#218 id=218 data-nosnippet>218</a>    }
+<a href=#219 id=219 data-nosnippet>219</a>    min_index
+<a href=#220 id=220 data-nosnippet>220</a>}
+<a href=#221 id=221 data-nosnippet>221</a>
+<a href=#222 id=222 data-nosnippet>222</a><span class="comment">// Never returns a request for reinsertion
+<a href=#223 id=223 data-nosnippet>223</a></span><span class="kw">fn </span>resolve_overflow_without_reinsertion&lt;T, Params&gt;(node: <span class="kw-2">&amp;mut </span>ParentNode&lt;T&gt;) -&gt; InsertionResult&lt;T&gt;
+<a href=#224 id=224 data-nosnippet>224</a><span class="kw">where
+<a href=#225 id=225 data-nosnippet>225</a>    </span>T: RTreeObject,
+<a href=#226 id=226 data-nosnippet>226</a>    Params: RTreeParams,
+<a href=#227 id=227 data-nosnippet>227</a>{
+<a href=#228 id=228 data-nosnippet>228</a>    <span class="kw">if </span>node.children.len() &gt; Params::MAX_SIZE {
+<a href=#229 id=229 data-nosnippet>229</a>        <span class="kw">let </span>off_split = split::&lt;<span class="kw">_</span>, Params&gt;(node);
+<a href=#230 id=230 data-nosnippet>230</a>        InsertionResult::Split(off_split)
+<a href=#231 id=231 data-nosnippet>231</a>    } <span class="kw">else </span>{
+<a href=#232 id=232 data-nosnippet>232</a>        InsertionResult::Complete
+<a href=#233 id=233 data-nosnippet>233</a>    }
+<a href=#234 id=234 data-nosnippet>234</a>}
+<a href=#235 id=235 data-nosnippet>235</a>
+<a href=#236 id=236 data-nosnippet>236</a><span class="kw">fn </span>resolve_overflow&lt;T, Params&gt;(node: <span class="kw-2">&amp;mut </span>ParentNode&lt;T&gt;, current_depth: usize) -&gt; InsertionResult&lt;T&gt;
+<a href=#237 id=237 data-nosnippet>237</a><span class="kw">where
+<a href=#238 id=238 data-nosnippet>238</a>    </span>T: RTreeObject,
+<a href=#239 id=239 data-nosnippet>239</a>    Params: RTreeParams,
+<a href=#240 id=240 data-nosnippet>240</a>{
+<a href=#241 id=241 data-nosnippet>241</a>    <span class="kw">if </span>Params::REINSERTION_COUNT == <span class="number">0 </span>{
+<a href=#242 id=242 data-nosnippet>242</a>        resolve_overflow_without_reinsertion::&lt;<span class="kw">_</span>, Params&gt;(node)
+<a href=#243 id=243 data-nosnippet>243</a>    } <span class="kw">else if </span>node.children.len() &gt; Params::MAX_SIZE {
+<a href=#244 id=244 data-nosnippet>244</a>        <span class="kw">let </span>nodes_for_reinsertion = get_nodes_for_reinsertion::&lt;<span class="kw">_</span>, Params&gt;(node);
+<a href=#245 id=245 data-nosnippet>245</a>        InsertionResult::Reinsert(nodes_for_reinsertion, current_depth)
+<a href=#246 id=246 data-nosnippet>246</a>    } <span class="kw">else </span>{
+<a href=#247 id=247 data-nosnippet>247</a>        InsertionResult::Complete
+<a href=#248 id=248 data-nosnippet>248</a>    }
+<a href=#249 id=249 data-nosnippet>249</a>}
+<a href=#250 id=250 data-nosnippet>250</a>
+<a href=#251 id=251 data-nosnippet>251</a><span class="kw">fn </span>split&lt;T, Params&gt;(node: <span class="kw-2">&amp;mut </span>ParentNode&lt;T&gt;) -&gt; RTreeNode&lt;T&gt;
+<a href=#252 id=252 data-nosnippet>252</a><span class="kw">where
+<a href=#253 id=253 data-nosnippet>253</a>    </span>T: RTreeObject,
+<a href=#254 id=254 data-nosnippet>254</a>    Params: RTreeParams,
+<a href=#255 id=255 data-nosnippet>255</a>{
+<a href=#256 id=256 data-nosnippet>256</a>    <span class="kw">let </span>axis = get_split_axis::&lt;<span class="kw">_</span>, Params&gt;(node);
+<a href=#257 id=257 data-nosnippet>257</a>    <span class="kw">let </span>zero = &lt;&lt;T::Envelope <span class="kw">as </span>Envelope&gt;::Point <span class="kw">as </span>Point&gt;::Scalar::zero();
+<a href=#258 id=258 data-nosnippet>258</a>    <span class="macro">debug_assert!</span>(node.children.len() &gt;= <span class="number">2</span>);
+<a href=#259 id=259 data-nosnippet>259</a>    <span class="comment">// Sort along axis
+<a href=#260 id=260 data-nosnippet>260</a>    </span>T::Envelope::sort_envelopes(axis, <span class="kw-2">&amp;mut </span>node.children);
+<a href=#261 id=261 data-nosnippet>261</a>    <span class="kw">let </span><span class="kw-2">mut </span>best = (zero, zero);
+<a href=#262 id=262 data-nosnippet>262</a>    <span class="kw">let </span>min_size = Params::MIN_SIZE;
+<a href=#263 id=263 data-nosnippet>263</a>    <span class="kw">let </span><span class="kw-2">mut </span>best_index = min_size;
+<a href=#264 id=264 data-nosnippet>264</a>
+<a href=#265 id=265 data-nosnippet>265</a>    <span class="kw">for </span>k <span class="kw">in </span>min_size..=node.children.len() - min_size {
+<a href=#266 id=266 data-nosnippet>266</a>        <span class="kw">let </span><span class="kw-2">mut </span>first_envelope = node.children[k - <span class="number">1</span>].envelope();
+<a href=#267 id=267 data-nosnippet>267</a>        <span class="kw">let </span><span class="kw-2">mut </span>second_envelope = node.children[k].envelope();
+<a href=#268 id=268 data-nosnippet>268</a>        <span class="kw">let </span>(l, r) = node.children.split_at(k);
+<a href=#269 id=269 data-nosnippet>269</a>        <span class="kw">for </span>child <span class="kw">in </span>l {
+<a href=#270 id=270 data-nosnippet>270</a>            first_envelope.merge(<span class="kw-2">&amp;</span>child.envelope());
+<a href=#271 id=271 data-nosnippet>271</a>        }
+<a href=#272 id=272 data-nosnippet>272</a>        <span class="kw">for </span>child <span class="kw">in </span>r {
+<a href=#273 id=273 data-nosnippet>273</a>            second_envelope.merge(<span class="kw-2">&amp;</span>child.envelope());
+<a href=#274 id=274 data-nosnippet>274</a>        }
+<a href=#275 id=275 data-nosnippet>275</a>
+<a href=#276 id=276 data-nosnippet>276</a>        <span class="kw">let </span>overlap_value = first_envelope.intersection_area(<span class="kw-2">&amp;</span>second_envelope);
+<a href=#277 id=277 data-nosnippet>277</a>        <span class="kw">let </span>area_value = first_envelope.area() + second_envelope.area();
+<a href=#278 id=278 data-nosnippet>278</a>        <span class="kw">let </span>new_best = (overlap_value, area_value);
+<a href=#279 id=279 data-nosnippet>279</a>        <span class="kw">if </span>new_best &lt; best || k == min_size {
+<a href=#280 id=280 data-nosnippet>280</a>            best = new_best;
+<a href=#281 id=281 data-nosnippet>281</a>            best_index = k;
+<a href=#282 id=282 data-nosnippet>282</a>        }
+<a href=#283 id=283 data-nosnippet>283</a>    }
+<a href=#284 id=284 data-nosnippet>284</a>    <span class="kw">let </span>off_split = node.children.split_off(best_index);
+<a href=#285 id=285 data-nosnippet>285</a>    node.envelope = envelope_for_children(<span class="kw-2">&amp;</span>node.children);
+<a href=#286 id=286 data-nosnippet>286</a>    RTreeNode::Parent(ParentNode::new_parent(off_split))
+<a href=#287 id=287 data-nosnippet>287</a>}
+<a href=#288 id=288 data-nosnippet>288</a>
+<a href=#289 id=289 data-nosnippet>289</a><span class="kw">fn </span>get_split_axis&lt;T, Params&gt;(node: <span class="kw-2">&amp;mut </span>ParentNode&lt;T&gt;) -&gt; usize
+<a href=#290 id=290 data-nosnippet>290</a><span class="kw">where
+<a href=#291 id=291 data-nosnippet>291</a>    </span>T: RTreeObject,
+<a href=#292 id=292 data-nosnippet>292</a>    Params: RTreeParams,
+<a href=#293 id=293 data-nosnippet>293</a>{
+<a href=#294 id=294 data-nosnippet>294</a>    <span class="kw">let </span><span class="kw-2">mut </span>best_goodness = &lt;&lt;T::Envelope <span class="kw">as </span>Envelope&gt;::Point <span class="kw">as </span>Point&gt;::Scalar::max_value();
+<a href=#295 id=295 data-nosnippet>295</a>    <span class="kw">let </span><span class="kw-2">mut </span>best_axis = <span class="number">0</span>;
+<a href=#296 id=296 data-nosnippet>296</a>    <span class="kw">let </span>min_size = Params::MIN_SIZE;
+<a href=#297 id=297 data-nosnippet>297</a>    <span class="kw">let </span>until = node.children.len() - min_size + <span class="number">1</span>;
+<a href=#298 id=298 data-nosnippet>298</a>    <span class="kw">for </span>axis <span class="kw">in </span><span class="number">0</span>..&lt;T::Envelope <span class="kw">as </span>Envelope&gt;::Point::DIMENSIONS {
+<a href=#299 id=299 data-nosnippet>299</a>        <span class="comment">// Sort children along the current axis
+<a href=#300 id=300 data-nosnippet>300</a>        </span>T::Envelope::sort_envelopes(axis, <span class="kw-2">&amp;mut </span>node.children);
+<a href=#301 id=301 data-nosnippet>301</a>        <span class="kw">let </span><span class="kw-2">mut </span>first_envelope = T::Envelope::new_empty();
+<a href=#302 id=302 data-nosnippet>302</a>        <span class="kw">let </span><span class="kw-2">mut </span>second_envelope = T::Envelope::new_empty();
+<a href=#303 id=303 data-nosnippet>303</a>        <span class="kw">for </span>child <span class="kw">in </span><span class="kw-2">&amp;</span>node.children[..min_size] {
+<a href=#304 id=304 data-nosnippet>304</a>            first_envelope.merge(<span class="kw-2">&amp;</span>child.envelope());
+<a href=#305 id=305 data-nosnippet>305</a>        }
+<a href=#306 id=306 data-nosnippet>306</a>        <span class="kw">for </span>child <span class="kw">in </span><span class="kw-2">&amp;</span>node.children[until..] {
+<a href=#307 id=307 data-nosnippet>307</a>            second_envelope.merge(<span class="kw-2">&amp;</span>child.envelope());
+<a href=#308 id=308 data-nosnippet>308</a>        }
+<a href=#309 id=309 data-nosnippet>309</a>        <span class="kw">for </span>k <span class="kw">in </span>min_size..until {
+<a href=#310 id=310 data-nosnippet>310</a>            <span class="kw">let </span><span class="kw-2">mut </span>first_modified = first_envelope.clone();
+<a href=#311 id=311 data-nosnippet>311</a>            <span class="kw">let </span><span class="kw-2">mut </span>second_modified = second_envelope.clone();
+<a href=#312 id=312 data-nosnippet>312</a>            <span class="kw">let </span>(l, r) = node.children.split_at(k);
+<a href=#313 id=313 data-nosnippet>313</a>            <span class="kw">for </span>child <span class="kw">in </span>l {
+<a href=#314 id=314 data-nosnippet>314</a>                first_modified.merge(<span class="kw-2">&amp;</span>child.envelope());
+<a href=#315 id=315 data-nosnippet>315</a>            }
+<a href=#316 id=316 data-nosnippet>316</a>            <span class="kw">for </span>child <span class="kw">in </span>r {
+<a href=#317 id=317 data-nosnippet>317</a>                second_modified.merge(<span class="kw-2">&amp;</span>child.envelope());
+<a href=#318 id=318 data-nosnippet>318</a>            }
+<a href=#319 id=319 data-nosnippet>319</a>
+<a href=#320 id=320 data-nosnippet>320</a>            <span class="kw">let </span>perimeter_value =
+<a href=#321 id=321 data-nosnippet>321</a>                first_modified.perimeter_value() + second_modified.perimeter_value();
+<a href=#322 id=322 data-nosnippet>322</a>            <span class="kw">if </span>best_goodness &gt; perimeter_value {
+<a href=#323 id=323 data-nosnippet>323</a>                best_axis = axis;
+<a href=#324 id=324 data-nosnippet>324</a>                best_goodness = perimeter_value;
+<a href=#325 id=325 data-nosnippet>325</a>            }
+<a href=#326 id=326 data-nosnippet>326</a>        }
+<a href=#327 id=327 data-nosnippet>327</a>    }
+<a href=#328 id=328 data-nosnippet>328</a>    best_axis
+<a href=#329 id=329 data-nosnippet>329</a>}
+<a href=#330 id=330 data-nosnippet>330</a>
+<a href=#331 id=331 data-nosnippet>331</a><span class="kw">fn </span>get_nodes_for_reinsertion&lt;T, Params&gt;(node: <span class="kw-2">&amp;mut </span>ParentNode&lt;T&gt;) -&gt; Vec&lt;RTreeNode&lt;T&gt;&gt;
+<a href=#332 id=332 data-nosnippet>332</a><span class="kw">where
+<a href=#333 id=333 data-nosnippet>333</a>    </span>T: RTreeObject,
+<a href=#334 id=334 data-nosnippet>334</a>    Params: RTreeParams,
+<a href=#335 id=335 data-nosnippet>335</a>{
+<a href=#336 id=336 data-nosnippet>336</a>    <span class="kw">let </span>center = node.envelope.center();
+<a href=#337 id=337 data-nosnippet>337</a>    <span class="comment">// Sort with increasing order so we can use Vec::split_off
+<a href=#338 id=338 data-nosnippet>338</a>    </span>node.children.sort_by(|l, r| {
+<a href=#339 id=339 data-nosnippet>339</a>        <span class="kw">let </span>l_center = l.envelope().center();
+<a href=#340 id=340 data-nosnippet>340</a>        <span class="kw">let </span>r_center = r.envelope().center();
+<a href=#341 id=341 data-nosnippet>341</a>        l_center
+<a href=#342 id=342 data-nosnippet>342</a>            .sub(<span class="kw-2">&amp;</span>center)
+<a href=#343 id=343 data-nosnippet>343</a>            .length_2()
+<a href=#344 id=344 data-nosnippet>344</a>            .partial_cmp(<span class="kw-2">&amp;</span>(r_center.sub(<span class="kw-2">&amp;</span>center)).length_2())
+<a href=#345 id=345 data-nosnippet>345</a>            .unwrap()
+<a href=#346 id=346 data-nosnippet>346</a>    });
+<a href=#347 id=347 data-nosnippet>347</a>    <span class="kw">let </span>num_children = node.children.len();
+<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">let </span>result = node
+<a href=#349 id=349 data-nosnippet>349</a>        .children
+<a href=#350 id=350 data-nosnippet>350</a>        .split_off(num_children - Params::REINSERTION_COUNT);
+<a href=#351 id=351 data-nosnippet>351</a>    node.envelope = envelope_for_children(<span class="kw-2">&amp;</span>node.children);
+<a href=#352 id=352 data-nosnippet>352</a>    result
+<a href=#353 id=353 data-nosnippet>353</a>}</code></pre></div></section></main></body></html>

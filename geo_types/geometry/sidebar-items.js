@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Geometry"],"struct":["Coord","GeometryCollection","Line","LineString","MultiLineString","MultiPoint","MultiPolygon","Point","Polygon","Rect","Triangle"],"type":["Coordinate"]};

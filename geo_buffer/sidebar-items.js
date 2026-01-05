@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["buffer_multi_polygon","buffer_multi_polygon_rounded","buffer_polygon","buffer_polygon_rounded","skeleton_of_multi_polygon_to_linestring","skeleton_of_polygon_to_linestring"],"mod":["skeleton","util"],"struct":["Coordinate","Ray"]};

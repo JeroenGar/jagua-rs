@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["incircle","orient2d"],"struct":["Coord"]};

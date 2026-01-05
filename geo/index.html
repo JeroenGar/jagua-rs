@@ -1,0 +1,167 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The `geo` crate provides geospatial primitive types and algorithms."><title>geo - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="geo" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-68b7e25d.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button><a class="logo-container" href="../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt=""></a></nav><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt="logo"></a><h2><a href="../geo/index.html">geo</a><span class="version">0.24.1</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#types" title="Types">Types</a><ul><li><a href="#semantics" title="Semantics">Semantics</a></li></ul></li><li><a href="#algorithms" title="Algorithms">Algorithms</a><ul><li><a href="#area" title="Area">Area</a></li><li><a href="#boolean-operations" title="Boolean Operations">Boolean Operations</a></li><li><a href="#distance" title="Distance">Distance</a></li><li><a href="#length" title="Length">Length</a></li><li><a href="#outlier-detection" title="Outlier Detection">Outlier Detection</a></li><li><a href="#simplification" title="Simplification">Simplification</a></li><li><a href="#query" title="Query">Query</a></li><li><a href="#similarity" title="Similarity">Similarity</a></li><li><a href="#topology" title="Topology">Topology</a></li><li><a href="#winding" title="Winding">Winding</a></li><li><a href="#iteration" title="Iteration">Iteration</a></li><li><a href="#boundary" title="Boundary">Boundary</a></li><li><a href="#affine-transformations" title="Affine transformations">Affine transformations</a></li><li><a href="#conversion" title="Conversion">Conversion</a></li><li><a href="#miscellaneous" title="Miscellaneous">Miscellaneous</a></li></ul></li><li><a href="#features" title="Features">Features</a></li><li><a href="#ecosystem" title="Ecosystem">Ecosystem</a></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#macros" title="Macros">Macros</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#traits" title="Traits">Traits</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>geo</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/geo/lib.rs.html#1-294">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The <code>geo</code> crate provides geospatial primitive types and algorithms.</p>
+<h2 id="types"><a class="doc-anchor" href="#types">§</a>Types</h2>
+<ul>
+<li><strong><a href="geometry/struct.Coord.html" title="struct geo::geometry::Coord"><code>Coord</code></a></strong>: A two-dimensional coordinate. All geometry types are composed of <a href="geometry/struct.Coord.html" title="struct geo::geometry::Coord"><code>Coord</code></a>s, though <a href="geometry/struct.Coord.html" title="struct geo::geometry::Coord"><code>Coord</code></a> itself is not a <a href="geometry/enum.Geometry.html" title="enum geo::geometry::Geometry"><code>Geometry</code></a> type.</li>
+<li><strong><a href="geometry/struct.Point.html" title="struct geo::geometry::Point"><code>Point</code></a></strong>: A single point represented by one <a href="geometry/struct.Coord.html" title="struct geo::geometry::Coord"><code>Coord</code></a></li>
+<li><strong><a href="geometry/struct.MultiPoint.html" title="struct geo::geometry::MultiPoint"><code>MultiPoint</code></a></strong>: A collection of <a href="geometry/struct.Point.html" title="struct geo::geometry::Point"><code>Point</code></a>s</li>
+<li><strong><a href="geometry/struct.Line.html" title="struct geo::geometry::Line"><code>Line</code></a></strong>: A line segment represented by two <a href="geometry/struct.Coord.html" title="struct geo::geometry::Coord"><code>Coord</code></a>s</li>
+<li><strong><a href="geometry/struct.LineString.html" title="struct geo::geometry::LineString"><code>LineString</code></a></strong>: A series of contiguous line segments represented by two or more
+<a href="geometry/struct.Coord.html" title="struct geo::geometry::Coord"><code>Coord</code></a>s</li>
+<li><strong><a href="geometry/struct.MultiLineString.html" title="struct geo::geometry::MultiLineString"><code>MultiLineString</code></a></strong>: A collection of <a href="geometry/struct.LineString.html" title="struct geo::geometry::LineString"><code>LineString</code></a>s</li>
+<li><strong><a href="geometry/struct.Polygon.html" title="struct geo::geometry::Polygon"><code>Polygon</code></a></strong>: A bounded area represented by one <a href="geometry/struct.LineString.html" title="struct geo::geometry::LineString"><code>LineString</code></a> exterior ring, and zero or
+more <a href="geometry/struct.LineString.html" title="struct geo::geometry::LineString"><code>LineString</code></a> interior rings</li>
+<li><strong><a href="geometry/struct.MultiPolygon.html" title="struct geo::geometry::MultiPolygon"><code>MultiPolygon</code></a></strong>: A collection of <a href="geometry/struct.Polygon.html" title="struct geo::geometry::Polygon"><code>Polygon</code></a>s</li>
+<li><strong><a href="geometry/struct.Rect.html" title="struct geo::geometry::Rect"><code>Rect</code></a></strong>: An axis-aligned bounded rectangle represented by minimum and maximum
+<a href="geometry/struct.Coord.html" title="struct geo::geometry::Coord"><code>Coord</code></a>s</li>
+<li><strong><a href="geometry/struct.Triangle.html" title="struct geo::geometry::Triangle"><code>Triangle</code></a></strong>: A bounded area represented by three <a href="geometry/struct.Coord.html" title="struct geo::geometry::Coord"><code>Coord</code></a> vertices</li>
+<li><strong><a href="geometry/struct.GeometryCollection.html" title="struct geo::geometry::GeometryCollection"><code>GeometryCollection</code></a></strong>: A collection of <a href="geometry/enum.Geometry.html" title="enum geo::geometry::Geometry"><code>Geometry</code></a>s</li>
+<li><strong><a href="geometry/enum.Geometry.html" title="enum geo::geometry::Geometry"><code>Geometry</code></a></strong>: An enumeration of all geometry types, excluding <a href="geometry/struct.Coord.html" title="struct geo::geometry::Coord"><code>Coord</code></a></li>
+</ul>
+<p>The preceding types are reexported from the <a href="https://crates.io/crates/geo-types"><code>geo-types</code></a> crate. Consider using that crate
+if you only need access to these types and no other <code>geo</code> functionality.</p>
+<h3 id="semantics"><a class="doc-anchor" href="#semantics">§</a>Semantics</h3>
+<p>The geospatial types provided here aim to adhere to the <a href="https://www.ogc.org/standards/sfa">OpenGIS Simple feature access</a>
+standards. Thus, the types here are inter-operable with other implementations of the standards:
+<a href="https://github.com/locationtech/jts">JTS</a>, <a href="https://trac.osgeo.org/geos">GEOS</a>, etc.</p>
+<h2 id="algorithms"><a class="doc-anchor" href="#algorithms">§</a>Algorithms</h2><h3 id="area"><a class="doc-anchor" href="#area">§</a>Area</h3>
+<ul>
+<li><strong><a href="algorithm/area/trait.Area.html" title="trait geo::algorithm::area::Area"><code>Area</code></a></strong>: Calculate the planar area of a geometry</li>
+<li><strong><a href="algorithm/chamberlain_duquette_area/trait.ChamberlainDuquetteArea.html" title="trait geo::algorithm::chamberlain_duquette_area::ChamberlainDuquetteArea"><code>ChamberlainDuquetteArea</code></a></strong>: Calculate the geodesic area of a geometry on a sphere using the algorithm presented in <em>Some Algorithms for Polygons on a Sphere</em> by Chamberlain and Duquette (2007)</li>
+<li><strong><a href="algorithm/geodesic_area/trait.GeodesicArea.html" title="trait geo::algorithm::geodesic_area::GeodesicArea"><code>GeodesicArea</code></a></strong>: Calculate the geodesic area and perimeter of a geometry on an ellipsoid using the algorithm presented in <em>Algorithms for geodesics</em> by Charles Karney (2013)</li>
+</ul>
+<h3 id="boolean-operations"><a class="doc-anchor" href="#boolean-operations">§</a>Boolean Operations</h3>
+<ul>
+<li><strong><a href="algorithm/bool_ops/trait.BooleanOps.html" title="trait geo::algorithm::bool_ops::BooleanOps"><code>BooleanOps</code></a></strong>: combine or split (Multi)Polygons using intersecton, union, xor, or difference operations</li>
+</ul>
+<h3 id="distance"><a class="doc-anchor" href="#distance">§</a>Distance</h3>
+<ul>
+<li><strong><a href="algorithm/euclidean_distance/trait.EuclideanDistance.html" title="trait geo::algorithm::euclidean_distance::EuclideanDistance"><code>EuclideanDistance</code></a></strong>: Calculate the minimum euclidean distance between geometries</li>
+<li><strong><a href="algorithm/geodesic_distance/trait.GeodesicDistance.html" title="trait geo::algorithm::geodesic_distance::GeodesicDistance"><code>GeodesicDistance</code></a></strong>: Calculate the minimum geodesic distance between geometries using the algorithm presented in <em>Algorithms for geodesics</em> by Charles Karney (2013)</li>
+<li><strong><a href="algorithm/haversine_distance/trait.HaversineDistance.html" title="trait geo::algorithm::haversine_distance::HaversineDistance"><code>HaversineDistance</code></a></strong>: Calculate the minimum geodesic distance between geometries using the haversine formula</li>
+<li><strong><a href="algorithm/vincenty_distance/trait.VincentyDistance.html" title="trait geo::algorithm::vincenty_distance::VincentyDistance"><code>VincentyDistance</code></a></strong>: Calculate the minimum geodesic distance between geometries using Vincenty’s formula</li>
+</ul>
+<h3 id="length"><a class="doc-anchor" href="#length">§</a>Length</h3>
+<ul>
+<li><strong><a href="algorithm/euclidean_length/trait.EuclideanLength.html" title="trait geo::algorithm::euclidean_length::EuclideanLength"><code>EuclideanLength</code></a></strong>: Calculate the euclidean length of a geometry</li>
+<li><strong><a href="algorithm/geodesic_length/trait.GeodesicLength.html" title="trait geo::algorithm::geodesic_length::GeodesicLength"><code>GeodesicLength</code></a></strong>: Calculate the geodesic length of a geometry using the algorithm presented in <em>Algorithms for geodesics</em> by Charles Karney (2013)</li>
+<li><strong><a href="algorithm/haversine_length/trait.HaversineLength.html" title="trait geo::algorithm::haversine_length::HaversineLength"><code>HaversineLength</code></a></strong>: Calculate the geodesic length of a geometry using the haversine formula</li>
+<li><strong><a href="algorithm/vincenty_length/trait.VincentyLength.html" title="trait geo::algorithm::vincenty_length::VincentyLength"><code>VincentyLength</code></a></strong>: Calculate the geodesic length of a geometry using Vincenty’s formula</li>
+</ul>
+<h3 id="outlier-detection"><a class="doc-anchor" href="#outlier-detection">§</a>Outlier Detection</h3>
+<ul>
+<li><strong><a href="algorithm/outlier_detection/trait.OutlierDetection.html" title="trait geo::algorithm::outlier_detection::OutlierDetection"><code>OutlierDetection</code></a></strong>: Detect outliers in a group of points using <a href="https://en.wikipedia.org/wiki/Local_outlier_factor">LOF</a></li>
+</ul>
+<h3 id="simplification"><a class="doc-anchor" href="#simplification">§</a>Simplification</h3>
+<ul>
+<li><strong><a href="algorithm/simplify/trait.Simplify.html" title="trait geo::algorithm::simplify::Simplify"><code>Simplify</code></a></strong>: Simplify a geometry using the Ramer–Douglas–Peucker algorithm</li>
+<li><strong><a href="algorithm/simplify/trait.SimplifyIdx.html" title="trait geo::algorithm::simplify::SimplifyIdx"><code>SimplifyIdx</code></a></strong>: Calculate a simplified geometry using the Ramer–Douglas–Peucker algorithm, returning coordinate indices</li>
+<li><strong><a href="algorithm/simplify_vw/trait.SimplifyVw.html" title="trait geo::algorithm::simplify_vw::SimplifyVw"><code>SimplifyVw</code></a></strong>: Simplify a geometry using the Visvalingam-Whyatt algorithm</li>
+<li><strong><a href="algorithm/simplify_vw/trait.SimplifyVwPreserve.html" title="trait geo::algorithm::simplify_vw::SimplifyVwPreserve"><code>SimplifyVwPreserve</code></a></strong>: Simplify a geometry using a topology-preserving variant of the Visvalingam-Whyatt algorithm</li>
+<li><strong><a href="algorithm/simplify_vw/trait.SimplifyVwIdx.html" title="trait geo::algorithm::simplify_vw::SimplifyVwIdx"><code>SimplifyVwIdx</code></a></strong>: Calculate a simplified geometry using a topology-preserving variant of the Visvalingam-Whyatt algorithm, returning coordinate indices</li>
+</ul>
+<h3 id="query"><a class="doc-anchor" href="#query">§</a>Query</h3>
+<ul>
+<li><strong><a href="algorithm/haversine_bearing/trait.HaversineBearing.html" title="trait geo::algorithm::haversine_bearing::HaversineBearing"><code>HaversineBearing</code></a></strong>: Calculate the bearing between points using great circle calculations.</li>
+<li><strong><a href="algorithm/geodesic_bearing/trait.GeodesicBearing.html" title="trait geo::algorithm::geodesic_bearing::GeodesicBearing"><code>GeodesicBearing</code></a></strong>: Calculate the bearing between points on a <a href="https://en.wikipedia.org/wiki/Geodesics_on_an_ellipsoid">geodesic</a></li>
+<li><strong><a href="algorithm/closest_point/trait.ClosestPoint.html" title="trait geo::algorithm::closest_point::ClosestPoint"><code>ClosestPoint</code></a></strong>: Find the point on a geometry
+closest to a given point</li>
+<li><strong><a href="algorithm/is_convex/trait.IsConvex.html" title="trait geo::algorithm::is_convex::IsConvex"><code>IsConvex</code></a></strong>: Calculate the convexity of a
+<a href="geometry/struct.LineString.html" title="struct geo::geometry::LineString"><code>LineString</code></a></li>
+<li><strong><a href="algorithm/line_interpolate_point/trait.LineInterpolatePoint.html" title="trait geo::algorithm::line_interpolate_point::LineInterpolatePoint"><code>LineInterpolatePoint</code></a></strong>:
+Generates a point that lies a given fraction along the line</li>
+<li><strong><a href="algorithm/line_locate_point/trait.LineLocatePoint.html" title="trait geo::algorithm::line_locate_point::LineLocatePoint"><code>LineLocatePoint</code></a></strong>: Calculate the
+fraction of a line’s total length representing the location of the closest point on the
+line to the given point</li>
+</ul>
+<h3 id="similarity"><a class="doc-anchor" href="#similarity">§</a>Similarity</h3>
+<ul>
+<li><strong><a href="algorithm/frechet_distance/trait.FrechetDistance.html" title="trait geo::algorithm::frechet_distance::FrechetDistance"><code>FrechetDistance</code></a></strong>: Calculate the similarity between <a href="geometry/struct.LineString.html" title="struct geo::geometry::LineString"><code>LineString</code></a>s using the Fréchet distance</li>
+</ul>
+<h3 id="topology"><a class="doc-anchor" href="#topology">§</a>Topology</h3>
+<ul>
+<li><strong><a href="algorithm/contains/trait.Contains.html" title="trait geo::algorithm::contains::Contains"><code>Contains</code></a></strong>: Calculate if a geometry contains another
+geometry</li>
+<li><strong><a href="algorithm/coordinate_position/trait.CoordinatePosition.html" title="trait geo::algorithm::coordinate_position::CoordinatePosition"><code>CoordinatePosition</code></a></strong>: Calculate
+the position of a coordinate relative to a geometry</li>
+<li><strong><a href="algorithm/dimensions/trait.HasDimensions.html" title="trait geo::algorithm::dimensions::HasDimensions"><code>HasDimensions</code></a></strong>: Determine the dimensions of a geometry</li>
+<li><strong><a href="algorithm/intersects/trait.Intersects.html" title="trait geo::algorithm::intersects::Intersects"><code>Intersects</code></a></strong>: Calculate if a geometry intersects
+another geometry</li>
+<li><strong><a href="algorithm/line_intersection/fn.line_intersection.html" title="fn geo::algorithm::line_intersection::line_intersection"><code>line_intersection</code></a></strong>: Calculates the
+intersection, if any, between two lines.</li>
+<li><strong><a href="algorithm/relate/trait.Relate.html" title="trait geo::algorithm::relate::Relate"><code>Relate</code></a></strong>: Topologically relate two geometries based on
+<a href="https://en.wikipedia.org/wiki/DE-9IM">DE-9IM</a> semantics.</li>
+<li><strong><a href="algorithm/within/trait.Within.html" title="trait geo::algorithm::within::Within"><code>Within</code></a></strong>: Calculate if a geometry lies completely within another geometry.</li>
+</ul>
+<h3 id="winding"><a class="doc-anchor" href="#winding">§</a>Winding</h3>
+<ul>
+<li><strong><a href="algorithm/orient/trait.Orient.html" title="trait geo::algorithm::orient::Orient"><code>Orient</code></a></strong>: Apply a specified winding <a href="algorithm/orient/enum.Direction.html" title="enum geo::algorithm::orient::Direction"><code>Direction</code></a> to a <a href="geometry/struct.Polygon.html" title="struct geo::geometry::Polygon"><code>Polygon</code></a>’s interior and exterior rings</li>
+<li><strong><a href="algorithm/winding_order/trait.Winding.html" title="trait geo::algorithm::winding_order::Winding"><code>Winding</code></a></strong>: Calculate and manipulate the <a href="algorithm/winding_order/enum.WindingOrder.html" title="enum geo::algorithm::winding_order::WindingOrder"><code>WindingOrder</code></a> of a <a href="geometry/struct.LineString.html" title="struct geo::geometry::LineString"><code>LineString</code></a></li>
+</ul>
+<h3 id="iteration"><a class="doc-anchor" href="#iteration">§</a>Iteration</h3>
+<ul>
+<li><strong><a href="algorithm/coords_iter/trait.CoordsIter.html" title="trait geo::algorithm::coords_iter::CoordsIter"><code>CoordsIter</code></a></strong>: Iterate over the coordinates of a geometry</li>
+<li><strong><a href="algorithm/map_coords/trait.MapCoords.html" title="trait geo::algorithm::map_coords::MapCoords"><code>MapCoords</code></a></strong>: Map a function over all the coordinates
+in a geometry, returning a new geometry</li>
+<li><strong><a href="algorithm/map_coords/trait.MapCoordsInPlace.html" title="trait geo::algorithm::map_coords::MapCoordsInPlace"><code>MapCoordsInPlace</code></a></strong>: Map a function over all the
+coordinates in a geometry in-place</li>
+<li><strong><a href="algorithm/lines_iter/trait.LinesIter.html" title="trait geo::algorithm::lines_iter::LinesIter"><code>LinesIter</code></a></strong>: Iterate over lines of a geometry</li>
+</ul>
+<h3 id="boundary"><a class="doc-anchor" href="#boundary">§</a>Boundary</h3>
+<ul>
+<li><strong><a href="algorithm/bounding_rect/trait.BoundingRect.html" title="trait geo::algorithm::bounding_rect::BoundingRect"><code>BoundingRect</code></a></strong>: Calculate the axis-aligned
+bounding rectangle of a geometry</li>
+<li><strong><a href="algorithm/minimum_rotated_rect/trait.MinimumRotatedRect.html" title="trait geo::algorithm::minimum_rotated_rect::MinimumRotatedRect"><code>MinimumRotatedRect</code></a></strong>: Calculate the
+minimum bounding box of a geometry</li>
+<li><strong><a href="algorithm/concave_hull/trait.ConcaveHull.html" title="trait geo::algorithm::concave_hull::ConcaveHull"><code>ConcaveHull</code></a></strong>: Calculate the concave hull of a
+geometry</li>
+<li><strong><a href="algorithm/convex_hull/trait.ConvexHull.html" title="trait geo::algorithm::convex_hull::ConvexHull"><code>ConvexHull</code></a></strong>: Calculate the convex hull of a
+geometry</li>
+<li><strong><a href="algorithm/extremes/trait.Extremes.html" title="trait geo::algorithm::extremes::Extremes"><code>Extremes</code></a></strong>: Calculate the extreme coordinates and
+indices of a geometry</li>
+</ul>
+<h3 id="affine-transformations"><a class="doc-anchor" href="#affine-transformations">§</a>Affine transformations</h3>
+<ul>
+<li><strong><a href="algorithm/rotate/trait.Rotate.html" title="trait geo::algorithm::rotate::Rotate"><code>Rotate</code></a></strong>: Rotate a geometry around its centroid</li>
+<li><strong><a href="algorithm/scale/trait.Scale.html" title="trait geo::algorithm::scale::Scale"><code>Scale</code></a></strong>: Scale a geometry up or down by a factor</li>
+<li><strong><a href="algorithm/skew/trait.Skew.html" title="trait geo::algorithm::skew::Skew"><code>Skew</code></a></strong>: Skew a geometry by shearing angles along the <code>x</code> and <code>y</code> dimension</li>
+<li><strong><a href="algorithm/translate/trait.Translate.html" title="trait geo::algorithm::translate::Translate"><code>Translate</code></a></strong>: Translate a geometry along its axis</li>
+<li><strong><a href="algorithm/affine_ops/trait.AffineOps.html" title="trait geo::algorithm::affine_ops::AffineOps"><code>AffineOps</code></a></strong>: generalised composable affine operations</li>
+</ul>
+<h3 id="conversion"><a class="doc-anchor" href="#conversion">§</a>Conversion</h3>
+<ul>
+<li><strong><a href="algorithm/convert/trait.Convert.html" title="trait geo::algorithm::convert::Convert"><code>Convert</code></a></strong>: Convert (infalliby) the type of a geometry’s coordinate value</li>
+<li><strong><a href="algorithm/convert/trait.TryConvert.html" title="trait geo::algorithm::convert::TryConvert"><code>TryConvert</code></a></strong>: Convert (falliby) the type of a geometry’s coordinate value</li>
+</ul>
+<h3 id="miscellaneous"><a class="doc-anchor" href="#miscellaneous">§</a>Miscellaneous</h3>
+<ul>
+<li><strong><a href="algorithm/centroid/trait.Centroid.html" title="trait geo::algorithm::centroid::Centroid"><code>Centroid</code></a></strong>: Calculate the centroid of a geometry</li>
+<li><strong><a href="algorithm/geodesic_destination/trait.GeodesicDestination.html" title="trait geo::algorithm::geodesic_destination::GeodesicDestination"><code>GeodesicDestination</code></a></strong>: Given a start point, bearing, and distance, calculate the destination point on a <a href="https://en.wikipedia.org/wiki/Geodesics_on_an_ellipsoid">geodesic</a></li>
+<li><strong><a href="algorithm/geodesic_intermediate/trait.GeodesicIntermediate.html" title="trait geo::algorithm::geodesic_intermediate::GeodesicIntermediate"><code>GeodesicIntermediate</code></a></strong>: Calculate intermediate points on a <a href="https://en.wikipedia.org/wiki/Geodesics_on_an_ellipsoid">geodesic</a></li>
+<li><strong><a href="algorithm/haversine_destination/trait.HaversineDestination.html" title="trait geo::algorithm::haversine_destination::HaversineDestination"><code>HaversineDestination</code></a></strong>: Given a start point, bearing, and distance, calculate the destination point on a sphere</li>
+<li><strong><a href="algorithm/haversine_intermediate/trait.HaversineIntermediate.html" title="trait geo::algorithm::haversine_intermediate::HaversineIntermediate"><code>HaversineIntermediate</code></a></strong>: Calculate intermediate points on a sphere</li>
+<li><strong><a href="proj"><code>proj</code></a></strong>: Project geometries with the <code>proj</code> crate (requires the <code>use-proj</code> feature)</li>
+<li><strong><a href="algorithm/chaikin_smoothing/trait.ChaikinSmoothing.html" title="trait geo::algorithm::chaikin_smoothing::ChaikinSmoothing"><code>ChaikinSmoothing</code></a></strong>: Smoothen <code>LineString</code>, <code>Polygon</code>, <code>MultiLineString</code> and <code>MultiPolygon</code> using Chaikins algorithm.</li>
+<li><strong><a href="algorithm/densify/trait.Densify.html" title="trait geo::algorithm::densify::Densify"><code>Densify</code></a></strong>: Densify linear geometry components by interpolating points</li>
+<li><strong><a href="Transform"><code>Transform</code></a></strong>: Transform a geometry using Proj.</li>
+<li><strong><a href="algorithm/remove_repeated_points/trait.RemoveRepeatedPoints.html" title="trait geo::algorithm::remove_repeated_points::RemoveRepeatedPoints"><code>RemoveRepeatedPoints</code></a></strong>: Remove repeated points from a geometry.</li>
+</ul>
+<h2 id="features"><a class="doc-anchor" href="#features">§</a>Features</h2>
+<p>The following optional <a href="https://doc.rust-lang.org/cargo/reference/features.html">Cargo features</a> are available:</p>
+<ul>
+<li><code>proj-network</code>: Enables <a href="https://proj.org/usage/network.html">network grid</a> support for the <a href="https://github.com/georust/proj"><code>proj</code> crate</a>. After enabling this feature, <a href="https://docs.rs/proj/*/proj/#grid-file-download">further configuration</a> is required to use the network grid</li>
+<li><code>use-proj</code>: Enables coordinate conversion and transformation of <code>Point</code> geometries using the <a href="https://github.com/georust/proj"><code>proj</code> crate</a></li>
+<li><code>use-serde</code>: Allows geometry types to be serialized and deserialized with <a href="https://serde.rs/">Serde</a></li>
+</ul>
+<h2 id="ecosystem"><a class="doc-anchor" href="#ecosystem">§</a>Ecosystem</h2>
+<p>There’s a wide variety of <code>geo</code>-compatible crates in the ecosystem that offer functionality not
+included in the <code>geo</code> crate, including:</p>
+<ul>
+<li>Reading and writing file formats (e.g. <a href="https://crates.io/crates/geojson">GeoJSON</a>, <a href="https://crates.io/crates/wkt">WKT</a>,
+<a href="https://crates.io/crates/shapefile">shapefile</a>)</li>
+<li><a href="https://crates.io/crates/latlon">Latitude and longitude parsing</a></li>
+<li><a href="https://crates.io/crates/polylabel">Label placement</a></li>
+<li><a href="https://crates.io/crates/geocoding">Geocoding</a></li>
+<li><a href="https://georust.org">and much more…</a></li>
+</ul>
+</div></details><h2 id="reexports" class="section-header">Re-exports<a href="#reexports" class="anchor">§</a></h2><dl class="item-table reexports"><dt><code>pub use crate::<a class="mod" href="algorithm/index.html" title="mod geo::algorithm">algorithm</a>::*;</code></dt><dt><code>pub use <a class="mod" href="geometry/index.html" title="mod geo::geometry">geometry</a>::*;</code></dt></dl><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="algorithm/index.html" title="mod geo::algorithm">algorithm</a></dt><dd>This module includes all the functions of geometric calculations</dd><dt><a class="mod" href="geometry/index.html" title="mod geo::geometry">geometry</a></dt><dd>This module makes all geometry types available</dd><dt><a class="mod" href="prelude/index.html" title="mod geo::prelude">prelude</a></dt><dd>A prelude which re-exports the traits for manipulating objects in this
+crate. Typically imported with <code>use geo::prelude::*</code>.</dd></dl><h2 id="macros" class="section-header">Macros<a href="#macros" class="anchor">§</a></h2><dl class="item-table"><dt><a class="macro" href="macro.coord.html" title="macro geo::coord">coord</a></dt><dd>Creates a <a href="./struct.Coord.html"><code>Coord</code></a> from the given scalars.</dd><dt><a class="macro" href="macro.geometry_delegate_impl.html" title="macro geo::geometry_delegate_impl">geometry_<wbr>delegate_<wbr>impl</a></dt><dd>Implements the common pattern where a Geometry enum simply delegates its trait impl to it’s inner type.</dd><dt><a class="macro" href="macro.line_string.html" title="macro geo::line_string">line_<wbr>string</a></dt><dd>Creates a <a href="./line_string/struct.LineString.html"><code>LineString</code></a> containing the given coordinates.</dd><dt><a class="macro" href="macro.point.html" title="macro geo::point">point</a></dt><dd>Creates a <a href="./struct.Point.html"><code>Point</code></a> from the given coordinates.</dd><dt><a class="macro" href="macro.polygon.html" title="macro geo::polygon">polygon</a></dt><dd>Creates a <a href="./struct.Polygon.html"><code>Polygon</code></a> containing the given coordinates.</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.Closest.html" title="enum geo::Closest">Closest</a></dt><dd>The result of trying to find the closest spot on an object to a point.</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.CoordFloat.html" title="trait geo::CoordFloat">Coord<wbr>Float</a></dt><dd>For algorithms which can only use floating point <code>Point</code>s/<code>Coord</code>s, like area or length calculations</dd><dt><a class="trait" href="trait.CoordNum.html" title="trait geo::CoordNum">Coord<wbr>Num</a></dt><dd>For algorithms which can use both integer <strong>and</strong> floating point <code>Point</code>s/<code>Coord</code>s</dd><dt><a class="trait" href="trait.GeoFloat.html" title="trait geo::GeoFloat">GeoFloat</a></dt><dd>A common numeric trait used for geo algorithms</dd><dt><a class="trait" href="trait.GeoNum.html" title="trait geo::GeoNum">GeoNum</a></dt><dd>A trait for methods which work for both integers <strong>and</strong> floating point</dd></dl></section></div></main></body></html>

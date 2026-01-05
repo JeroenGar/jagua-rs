@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["convex_hull_from_points","convex_hull_from_surrogate","convex_hull_indices"]};

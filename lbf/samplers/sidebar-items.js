@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["ls_sampler","rotation_distr","uniform_rect_sampler"]};
