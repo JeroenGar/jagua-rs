@@ -7,5 +7,8 @@ pub mod ext_repr;
 /// Exports a strip packing solution out of the library.
 pub use export::export;
 
-/// Imports a strip packing instance into the library.
-pub use import::import;
+#[doc(inline)]
+pub use import::import_instance;
+
+#[doc(inline)]
+pub use import::import_solution;

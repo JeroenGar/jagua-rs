@@ -1,6 +1,6 @@
 use crate::entities::Item;
 use crate::io::import::Importer;
-use crate::probs::bpp::entities::{BPInstance, Bin};
+use crate::probs::bpp::entities::{BPInstance, BPSolution, Bin};
 use crate::probs::bpp::io::ext_repr::ExtBPInstance;
 use itertools::Itertools;
 use rayon::prelude::*;
@@ -8,7 +8,7 @@ use rayon::prelude::*;
 use anyhow::{Result, ensure};
 
 /// Imports an instance into the library
-pub fn import(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPInstance> {
+pub fn import_instance(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPInstance> {
     let items = {
         let mut items = ext_instance
             .items
@@ -62,4 +62,9 @@ pub fn import(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPIns
     };
 
     Ok(BPInstance::new(items, bins))
+}
+
+/// Imports a solution into the library.
+pub fn import_solution(_instance: &BPInstance, _ext_solution: &ExtBPInstance) -> BPSolution {
+    unimplemented!("not yet implemented")
 }

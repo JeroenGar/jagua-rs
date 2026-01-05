@@ -1,14 +1,14 @@
 use crate::entities::Item;
 use crate::geometry::shape_modification::ShapeModifyConfig;
 use crate::io::import::Importer;
-use crate::probs::mspp::entities::{MSPInstance, Strip};
+use crate::probs::mspp::entities::{MSPInstance, MSPSolution, Strip};
 use crate::probs::mspp::io::ext_repr::ExtMSPInstance;
 use anyhow::{Result, ensure};
 use itertools::Itertools;
 use rayon::prelude::*;
 
 /// Imports an instance into the library
-pub fn import(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPInstance> {
+pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPInstance> {
     let items: Vec<(Item, usize)> = {
         let mut items = ext_instance
             .items
@@ -51,4 +51,9 @@ pub fn import(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPI
     )?;
 
     Ok(MSPInstance::new(items, base_strip))
+}
+
+/// Imports a solution into the library.
+pub fn import_solution(_instance: &MSPInstance, _ext_solution: &ExtMSPInstance) -> MSPSolution {
+    unimplemented!("not yet implemented")
 }
