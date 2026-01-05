@@ -18,7 +18,7 @@ pub const N_ITEMS_REMOVED: usize = 5;
 pub fn create_instance(cde_config: CDEConfig, poly_simpl_tolerance: Option<f32>) -> SPInstance {
     let ext_instance = io::read_spp_instance(Path::new(SWIM_PATH)).unwrap();
     let importer = Importer::new(cde_config, poly_simpl_tolerance, None, None);
-    spp::io::import(&importer, &ext_instance).unwrap()
+    spp::io::import_instance(&importer, &ext_instance).unwrap()
 }
 
 /// Creates a Strip Packing Problem, fill the layout using with the LBF Optimizer and removes some items from the layout

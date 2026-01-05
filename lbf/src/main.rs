@@ -89,7 +89,7 @@ fn main_spp(
         Some(seed) => SmallRng::seed_from_u64(seed),
         None => SmallRng::from_os_rng(),
     };
-    let instance = spp::io::import(&importer, &ext_instance)?;
+    let instance = spp::io::import_instance(&importer, &ext_instance)?;
     let sol = LBFOptimizerSP::new(instance.clone(), config, rng).solve();
 
     {
@@ -130,7 +130,7 @@ fn main_bpp(
         Some(seed) => SmallRng::seed_from_u64(seed),
         None => SmallRng::from_os_rng(),
     };
-    let instance = bpp::io::import(&importer, &ext_instance)?;
+    let instance = bpp::io::import_instance(&importer, &ext_instance)?;
     let sol = LBFOptimizerBP::new(instance.clone(), config, rng).solve();
 
     {

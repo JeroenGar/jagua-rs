@@ -86,7 +86,7 @@ pub fn run_lbf_bpp_wasm(
     };
 
     // Import instance
-    let instance = bpp::io::import(&importer, &ext_instance)
+    let instance = bpp::io::import_instance(&importer, &ext_instance)
         .map_err(|e| JsValue::from_str(&format!("Importer error: {}", e)))?;
 
     // Solve
@@ -165,7 +165,7 @@ pub fn run_lbf_spp_wasm(
     };
 
     // Import instance
-    let instance = spp::io::import(&importer, &ext_instance)
+    let instance = spp::io::import_instance(&importer, &ext_instance)
         .map_err(|e| JsValue::from_str(&format!("Importer error: {}", e)))?;
 
     // Solve

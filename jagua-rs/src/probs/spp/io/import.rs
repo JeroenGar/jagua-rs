@@ -1,14 +1,15 @@
-use crate::entities::Item;
+use crate::entities::{Instance, Item};
+use crate::geometry::DTransformation;
 use crate::geometry::shape_modification::ShapeModifyConfig;
-use crate::io::import::Importer;
-use crate::probs::spp::entities::{SPInstance, Strip};
-use crate::probs::spp::io::ext_repr::ExtSPInstance;
+use crate::io::import::{Importer, ext_to_int_transformation};
+use crate::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution, Strip};
+use crate::probs::spp::io::ext_repr::{ExtSPInstance, ExtSPSolution};
 use anyhow::{Result, ensure};
 use itertools::Itertools;
 use rayon::prelude::*;
 
 /// Imports an instance into the library
-pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPInstance> {
+pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPInstance> {
     let items: Vec<(Item, usize)> = {
         let mut items = ext_instance
             .items
@@ -58,4 +59,22 @@ pub fn import(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPIns
     )?;
 
     Ok(SPInstance::new(items, base_strip))
+}
+
+/// Imports a solution into the library.
+pub fn import_solution(instance: &SPInstance, ext_solution: &ExtSPSolution) -> SPSolution {
+    let mut prob = SPProblem::new(instance.clone());
+    prob.change_strip_width(ext_solution.strip_width);
+
+    for ext_placement in ext_solution.layout.placed_items.iter().cloned() {
+        let item_id = ext_placement.item_id as usize;
+        let d_transf = {
+            let ext_transf = DTransformation::from(ext_placement.transformation);
+            let item = &instance.item(item_id);
+            ext_to_int_transformation(&ext_transf, &item.shape_orig.pre_transform)
+        };
+        prob.place_item(SPPlacement { item_id, d_transf });
+    }
+
+    prob.save()
 }

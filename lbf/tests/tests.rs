@@ -32,7 +32,7 @@ mod tests {
     #[test_case("../assets/trousers.json"; "trousers")]
     fn test_strip_packing(instance_path: &str) -> Result<()> {
         let ext_instance = read_spp_instance(Path::new(instance_path))?;
-        let instance = spp::io::import(&importer(), &ext_instance)?;
+        let instance = spp::io::import_instance(&importer(), &ext_instance)?;
 
         for qt_depth in QT_DEPTHS {
             let mut config = config();
@@ -85,7 +85,7 @@ mod tests {
     #[test_case("../assets/baldacci6.json"; "baldacci6")]
     fn test_bin_packing(instance_path: &str) -> Result<()> {
         let ext_instance = read_bpp_instance(Path::new(instance_path))?;
-        let instance = bpp::io::import(&importer(), &ext_instance)?;
+        let instance = bpp::io::import_instance(&importer(), &ext_instance)?;
 
         for qt_depth in QT_DEPTHS {
             let mut config = config();

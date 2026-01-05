@@ -113,3 +113,9 @@ impl From<DTransformation> for ExtTransformation {
         }
     }
 }
+
+impl From<ExtTransformation> for DTransformation {
+    fn from(ext_dt: ExtTransformation) -> Self {
+        DTransformation::new(ext_dt.rotation.to_radians(), ext_dt.translation)
+    }
+}
