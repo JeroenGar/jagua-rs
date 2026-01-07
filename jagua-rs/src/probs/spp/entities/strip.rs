@@ -43,7 +43,9 @@ impl From<Strip> for Container {
         Container::new(
             id,
             OriginalShape {
-                shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.width, s.fixed_height).unwrap()),
+            // [!] NEW LINE: Uses s.width for BOTH dimensions
+                shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.width, s.width).unwrap()),
+//                shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.width, s.fixed_height).unwrap()),
                 pre_transform: DTransformation::empty(),
                 modify_mode: ShapeModifyMode::Deflate,
                 modify_config: s.shape_modify_config,
