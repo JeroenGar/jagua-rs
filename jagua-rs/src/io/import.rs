@@ -77,21 +77,52 @@ impl Importer {
 
         let base_quality = ext_item.min_quality;
 
-        let allowed_orientations = match ext_item.allowed_orientations.as_ref() {
-            Some(a_o) => {
-                if a_o.is_empty() || (a_o.len() == 1 && a_o[0] == 0.0) {
-                    RotationRange::None
-                } else {
-                    RotationRange::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
-                }
+        let allowed_orientations = if let Some((mean_deg, std_deg)) = ext_item.allowed_orientations_std {
+            // Generate a discrete distribution around the mean
+            // We pick representative points: mean, +/- 0.5std, +/- 1.0std, +/- 1.5std, +/- 2.0std
+            let mean = mean_deg.to_radians();
+            let std = std_deg.to_radians();
+            let mut angles = vec![mean];
+        
+            let multipliers = [0.5, 1.0, 1.5, 2.0];
+            for m in multipliers {
+                angles.push(mean + m * std);
+                angles.push(mean - m * std);
             }
-            None => RotationRange::Continuous,
+        
+            RotationRange::Discrete(angles)
+        } else {
+            // [Existing logic]
+            match ext_item.allowed_orientations.as_ref() {
+                Some(a_o) => {
+                    if a_o.is_empty() || (a_o.len() == 1 && a_o[0] == 0.0) {
+                        RotationRange::None
+                    } else {
+                        RotationRange::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
+                    }
+                }
+                None => RotationRange::Continuous,
+            }
+        };
+        
+        // [CHANGE] Parse Allowed Area
+        // Assuming ExtItem has optional fields: restrict_x: Option<(f32, f32)>, restrict_y: ...
+        let allowed_area = if let (Some((min_x, max_x)), Some((min_y, max_y))) = (ext_item.restrict_x, ext_item.restrict_y) {
+             Some(Rect::try_new(min_x, min_y, max_x, max_y)?)
+        } else if let Some((min_x, max_x)) = ext_item.restrict_x {
+             // If only X is restricted, use effectively infinite Y (or handle in sampler)
+             Some(Rect::try_new(min_x, -1e9, max_x, 1e9)?) 
+        } else if let Some((min_y, max_y)) = ext_item.restrict_y {
+             Some(Rect::try_new(-1e9, min_y, 1e9, max_y)?)
+        } else {
+             None
         };
 
         Item::new(
             ext_item.id as usize,
             original_shape,
             allowed_orientations,
+            allowed_area, // [CHANGE] Pass to constructor
             base_quality,
             self.cde_config.item_surrogate_config,
         )

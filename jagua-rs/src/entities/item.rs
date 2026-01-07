@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::geometry::OriginalShape;
 use crate::geometry::fail_fast::SPSurrogateConfig;
 use crate::geometry::geo_enums::RotationRange;
-use crate::geometry::primitives::SPolygon;
+use crate::geometry::primitives::{SPolygon, Rect}; // Ensure Rect is imported
 
 use anyhow::Result;
 
@@ -17,6 +17,8 @@ pub struct Item {
     pub shape_cd: Arc<SPolygon>,
     /// Allowed rotations in which the item can be placed
     pub allowed_rotation: RotationRange,
+    // If None, the item can be placed anywhere in the container.
+    pub allowed_area: Option<Rect>,
     /// The minimum quality the item should be produced out of, if `None` the item requires full quality
     pub min_quality: Option<usize>,
     /// Configuration for the surrogate generation
@@ -28,6 +30,7 @@ impl Item {
         id: usize,
         original_shape: OriginalShape,
         allowed_rotation: RotationRange,
+        allowed_area: Option<Rect>, // [CHANGE] Add argument
         min_quality: Option<usize>,
         surrogate_config: SPSurrogateConfig,
     ) -> Result<Item> {
@@ -42,6 +45,7 @@ impl Item {
             shape_orig,
             shape_cd: shape_int,
             allowed_rotation,
+            allowed_area, // [CHANGE] Set field
             min_quality,
             surrogate_config,
         })

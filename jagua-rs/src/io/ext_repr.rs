@@ -10,6 +10,10 @@ pub struct ExtItem {
     /// Continuous rotation if not specified
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allowed_orientations: Option<Vec<f32>>,
+    // [NEW] Tuple: (rotation_angle_degrees, std_dev_degrees)
+    pub allowed_orientations_std: Option<(f32, f32)>,
+    pub restrict_x: Option<(f32, f32)>,
+    pub restrict_y: Option<(f32, f32)>,
     /// Shape of the item
     pub shape: ExtShape,
     /// The minimum required quality of the item.
