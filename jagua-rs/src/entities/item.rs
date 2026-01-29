@@ -4,6 +4,7 @@ use crate::geometry::OriginalShape;
 use crate::geometry::fail_fast::SPSurrogateConfig;
 use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::primitives::{SPolygon, Rect}; // Ensure Rect is imported
+use crate::geometry::DTransformation;
 
 use anyhow::Result;
 
@@ -23,6 +24,7 @@ pub struct Item {
     pub min_quality: Option<usize>,
     /// Configuration for the surrogate generation
     pub surrogate_config: SPSurrogateConfig,
+    pub fixed_placement: Option<DTransformation>,
 }
 
 impl Item {
@@ -33,6 +35,7 @@ impl Item {
         allowed_area: Option<Rect>, // [CHANGE] Add argument
         min_quality: Option<usize>,
         surrogate_config: SPSurrogateConfig,
+        fixed_placement: Option<DTransformation>,
     ) -> Result<Item> {
         let shape_orig = Arc::new(original_shape);
         let shape_int = {
@@ -48,6 +51,7 @@ impl Item {
             allowed_area, // [CHANGE] Set field
             min_quality,
             surrogate_config,
+            fixed_placement,
         })
     }
 

@@ -61,7 +61,7 @@ impl SPProblem {
         self.register_included_item(placement.item_id);
         let item = self.instance.item(placement.item_id);
 
-        self.layout.place_item(item, placement.d_transf)
+        self.layout.place_item(item, placement.d_transf, false)
     }
 
     /// Removes a placed item from the strip. Returns the placement of the item.

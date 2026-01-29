@@ -70,10 +70,10 @@ impl Layout {
 
     /// Places an item in the layout at a specific position by applying a transformation.
     /// Returns the unique key for the placed item.
-    pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation) -> PItemKey {
+    pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation, is_locked: bool) -> PItemKey {
         let pk = self
             .placed_items
-            .insert(PlacedItem::new(item, d_transformation));
+            .insert(PlacedItem::new(item, d_transformation, is_locked));
         let pi = &self.placed_items[pk];
         let hazard = Hazard::new((pk, pi).into(), pi.shape.clone(), true);
 

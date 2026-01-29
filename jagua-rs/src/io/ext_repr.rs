@@ -14,6 +14,11 @@ pub struct ExtItem {
     pub allowed_orientations_std: Option<(f32, f32)>,
     pub restrict_x: Option<(f32, f32)>,
     pub restrict_y: Option<(f32, f32)>,
+    /// Initial placement for the item (x, y, rotation)
+    pub initial_placement: Option<ExtTransformation>, 
+    /// If true, the solver will NOT move this item (it acts as a static obstacle)
+    #[serde(default)]
+    pub is_fixed: bool,
     /// Shape of the item
     pub shape: ExtShape,
     /// The minimum required quality of the item.

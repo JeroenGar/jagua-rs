@@ -1,6 +1,7 @@
 use crate::collision_detection::CDEConfig;
 use crate::entities::Item;
 use crate::entities::{Container, InferiorQualityZone, N_QUALITIES};
+//use crate::entities::{Instance, Layout};
 use crate::geometry::OriginalShape;
 use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::primitives::Point;
@@ -117,6 +118,23 @@ impl Importer {
         } else {
              None
         };
+        
+        // [FIX] Ensure this logic for fixed_placement is present
+        let fixed_placement = if ext_item.is_fixed {
+            if let Some(initial_placement) = &ext_item.initial_placement {
+                let d_transf = DTransformation::new(
+                    initial_placement.rotation.to_radians(),
+                    initial_placement.translation
+                );
+                // We need the original shape to transform correctly, assuming original_shape is defined above
+                Some(ext_to_int_transformation(&d_transf, &original_shape.pre_transform))
+            } else {
+                warn!("[IMPORT] Item {} is marked fixed but has no initial_placement. Treating as free.", ext_item.id);
+                None
+            }
+        } else {
+            None
+        };
 
         Item::new(
             ext_item.id as usize,
@@ -125,6 +143,7 @@ impl Importer {
             allowed_area, // [CHANGE] Pass to constructor
             base_quality,
             self.cde_config.item_surrogate_config,
+            fixed_placement, // <--- Add this 7th argument
         )
     }
 

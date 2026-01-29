@@ -21,10 +21,12 @@ pub struct PlacedItem {
     pub d_transf: DTransformation,
     /// The shape of the `Item` after it has been transformed and placed in a `Layout`
     pub shape: SPolygon,
+    // [NEW] If true, this item is part of the "unmelted crystal" and should not be moved
+    pub is_locked: bool,
 }
 
 impl PlacedItem {
-    pub fn new(item: &Item, d_transf: DTransformation) -> Self {
+    pub fn new(item: &Item, d_transf: DTransformation, is_locked: bool) -> Self {
         let transf = d_transf.compose();
         let shape = item.shape_cd.transform_clone(&transf);
 
@@ -32,6 +34,7 @@ impl PlacedItem {
             item_id: item.id,
             d_transf,
             shape,
+            is_locked, // [CHANGE] Set field
         }
     }
 }
