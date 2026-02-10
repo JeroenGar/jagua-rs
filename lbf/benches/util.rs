@@ -42,7 +42,7 @@ pub fn create_lbf_problem(
         .placed_items
         .iter()
         .map(|(k, _)| k)
-        .choose_multiple(&mut rng, n_items_removed);
+        .sample(&mut rng, n_items_removed);
 
     let p_opts = placed_items_to_remove
         .iter()

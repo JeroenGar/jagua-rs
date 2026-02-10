@@ -87,7 +87,7 @@ fn main_spp(
     );
     let rng = match config.prng_seed {
         Some(seed) => SmallRng::seed_from_u64(seed),
-        None => SmallRng::from_os_rng(),
+        None => rand::make_rng(),
     };
     let instance = spp::io::import_instance(&importer, &ext_instance)?;
     let sol = LBFOptimizerSP::new(instance.clone(), config, rng).solve();
@@ -128,7 +128,7 @@ fn main_bpp(
     );
     let rng = match config.prng_seed {
         Some(seed) => SmallRng::seed_from_u64(seed),
-        None => SmallRng::from_os_rng(),
+        None => rand::make_rng(),
     };
     let instance = bpp::io::import_instance(&importer, &ext_instance)?;
     let sol = LBFOptimizerBP::new(instance.clone(), config, rng).solve();
