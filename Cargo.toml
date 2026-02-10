@@ -4,7 +4,7 @@ members = ["jagua-rs", "lbf"]
 
 [workspace.dependencies]
 ndarray = "0.17"
-rand = { version = "0.9", features = ["small_rng"] }
+rand = { version = "0.10", features = ["small_rng"] }
 getrandom = { version = "0.3", default-features = false, features = ["wasm_js"] }
 rand_distr = "0.5"
 ordered-float = "5.0"
