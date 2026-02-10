@@ -129,6 +129,10 @@ impl SPProblem {
     pub fn strip_width(&self) -> f32 {
         self.strip.width
     }
+
+    pub fn n_placed_items(&self) -> usize {
+        self.layout.placed_items.len()
+    }
 }
 
 /// Represents a placement of an item in the strip packing problem.

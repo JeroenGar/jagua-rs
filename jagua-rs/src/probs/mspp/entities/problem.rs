@@ -241,6 +241,10 @@ impl MSPProblem {
     pub fn total_strip_width(&self) -> f32 {
         self.strips.iter().map(|(_, s)| s.width).sum()
     }
+
+    pub fn n_placed_items(&self) -> usize {
+        self.layouts.values().map(|l| l.placed_items.len()).sum()
+    }
 }
 
 /// Represents a specific placement of an item in the [`MSPProblem`].

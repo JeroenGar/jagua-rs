@@ -228,6 +228,10 @@ impl BPProblem {
     fn close_bin(&mut self, bin_id: usize) {
         self.bin_stock_qtys[bin_id] += 1
     }
+
+    pub fn n_placed_items(&self) -> usize {
+        self.layouts.values().map(|l| l.placed_items.len()).sum()
+    }
 }
 
 #[derive(Clone, Debug, Copy)]
