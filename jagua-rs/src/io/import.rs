@@ -27,7 +27,7 @@ impl Importer {
     /// * `cde_config` - Configuration for the CDE (Collision Detection Engine).
     /// * `simplify_tolerance` - See [`ShapeModifyConfig`].
     /// * `min_item_separation` - Optional minimum separation distance between items and any other hazard. If enabled, every hazard is inflated/deflated by half this value. See [`ShapeModifyConfig`].
-    /// * `narrow_concavity_cutoff_ratio` - Optional maximum distance for closing narrow concavities. If enabled, the shapes are modified to close narrow concavities that are smaller than this value. See [`ShapeModifyConfig`].
+    /// * `narrow_concavity_cutoff` - Optional definition for closing narrow concavities. If enabled, the shapes are modified to close "narrow" concavities. See [`ShapeModifyConfig`].
     pub fn new(
         cde_config: CDEConfig,
         simplify_tolerance: Option<f32>,

@@ -77,7 +77,7 @@ pub fn run_lbf_bpp_wasm(
         config.cde_config,
         config.poly_simpl_tolerance,
         config.min_item_separation,
-        config.narrow_concavity_cutoff_ratio,
+        config.narrow_concavity_cutoff,
     );
 
     let rng = match config.prng_seed {
