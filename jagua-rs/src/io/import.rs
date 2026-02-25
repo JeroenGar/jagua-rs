@@ -32,13 +32,13 @@ impl Importer {
         cde_config: CDEConfig,
         simplify_tolerance: Option<f32>,
         min_item_separation: Option<f32>,
-        narrow_concavity_cutoff_ratio: Option<f32>,
+        narrow_concavity_cutoff: Option<(f32, f32)>,
     ) -> Importer {
         Importer {
             shape_modify_config: ShapeModifyConfig {
                 offset: min_item_separation.map(|f| f / 2.0),
                 simplify_tolerance,
-                narrow_concavity_cutoff_ratio,
+                narrow_concavity_cutoff,
             },
             cde_config,
         }

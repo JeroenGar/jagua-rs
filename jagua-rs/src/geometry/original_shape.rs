@@ -34,9 +34,10 @@ impl OriginalShape {
             let pre_simplified = internal.clone();
             // Simplify the shape
             internal = simplify_shape(&internal, self.modify_mode, tolerance);
-            if let Some(max_concav_dist) = self.modify_config.narrow_concavity_cutoff_ratio {
+            if let Some(narrow_concavity_cutoff) = self.modify_config.narrow_concavity_cutoff {
                 // Close narrow concavities
-                internal = close_narrow_concavities(&internal, self.modify_mode, max_concav_dist);
+                internal =
+                    close_narrow_concavities(&internal, self.modify_mode, narrow_concavity_cutoff);
                 // Do another simplification after closing concavities
                 internal = simplify_shape(&internal, self.modify_mode, tolerance / 10.0);
             }

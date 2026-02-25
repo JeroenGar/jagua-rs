@@ -45,7 +45,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Re
         ShapeModifyConfig {
             offset: importer.shape_modify_config.offset,
             simplify_tolerance: None,
-            narrow_concavity_cutoff_ratio: None,
+            narrow_concavity_distance_cutoff: None,
         },
         ext_strip.max_width,
     )?;

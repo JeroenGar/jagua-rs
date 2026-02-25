@@ -33,11 +33,14 @@ pub struct ShapeModifyConfig {
     /// If undefined, no offset is applied.
     /// See [`offset_shape`]
     pub offset: Option<f32>,
-    /// Maximum distance between two vertices for which a concavity is considered narrow and can be closed.
-    /// Defined as a fraction of the item's diameter.
-    /// If undefined, no concavity closing is performed.
+    /// Definition for narrow concavities that can be closed by a straight edge.
+    /// Defined as a tuple of (max_distance_ratio, max_area_ratio) where:
+    /// - max_distance_ratio: maximum distance between two vertices of a polygon to consider it a narrow concavity, defined as a fraction of the item's diameter.
+    /// - max_area_ratio: maximum area of the sub-shape formed by the vertices between the two vertices, defined as a fraction of the item's area.
+    ///
+    /// If undefined, no narrow concavities will be closed.
     /// See [`close_narrow_concavities`]
-    pub narrow_concavity_cutoff_ratio: Option<f32>,
+    pub narrow_concavity_cutoff: Option<(f32, f32)>,
 }
 
 /// Simplifies a [`SPolygon`] by reducing the number of edges.
@@ -374,7 +377,7 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
 pub fn close_narrow_concavities(
     orig_shape: &SPolygon,
     mode: ShapeModifyMode,
-    max_distance_ratio: f32,
+    (cutoff_distance_ratio, cutoff_area_ratio): (f32, f32),
 ) -> SPolygon {
     let mut n_concav_closed = 0;
     let mut shape = orig_shape.clone();
@@ -401,7 +404,7 @@ pub fn close_narrow_concavities(
                     .expect("invalid edge in string candidate")
                     .scale(0.9999); //slightly shrink the edge to avoid self-intersections
 
-                if c_edge.length() > max_distance_ratio * shape.diameter {
+                if c_edge.length() > cutoff_distance_ratio * shape.diameter {
                     //If the edge is too long, skip it
                     continue;
                 }
@@ -433,6 +436,10 @@ pub fn close_narrow_concavities(
                 };
                 if sub_shape_area >= 0.0 {
                     //if the area is not negative, skip it
+                    continue;
+                }
+                if sub_shape_area.abs() > cutoff_area_ratio * shape.area {
+                    //if the area is too large, skip it
                     continue;
                 }
 
@@ -490,9 +497,10 @@ pub fn close_narrow_concavities(
 
     if n_concav_closed > 0 {
         info!(
-            "[PS] [EXPERIMENTAL] closed {} concavities closer than {:.3}% of diameter, reducing vertices from {} to {}",
+            "[PS] [EXPERIMENTAL] closed {} concavities closer than {:.3}% of diameter and less than {:.3}% of area, reducing vertices from {} to {}",
             n_concav_closed,
-            max_distance_ratio * 100.0,
+            cutoff_distance_ratio * 100.0,
+            cutoff_area_ratio * 100.0,
             orig_shape.n_vertices(),
             shape.n_vertices()
         );

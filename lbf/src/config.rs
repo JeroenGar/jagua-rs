@@ -11,9 +11,10 @@ pub struct LBFConfig {
     pub cde_config: CDEConfig,
     /// Max deviation from the original polygon area as a fraction. If undefined, the algorithm will run without simplification
     pub poly_simpl_tolerance: Option<f32>,
-    /// Maximum distance between two vertices of a polygon to consider it a narrow concavity (which will be closed).
-    /// Defined as a fraction of the largest item in the instance.
-    pub narrow_concavity_cutoff_ratio: Option<f32>,
+    /// Definition of what is considered a narrow concavity that will be closed
+    /// See [`jagua_rs::geometry::shape_modification::ShapeModifyConfig`] for more details.
+    /// If undefined, the algorithm will run without closing narrow concavities
+    pub narrow_concavity_cutoff: Option<(f32, f32)>,
     /// Minimum distance between items and other hazards.
     /// If undefined, the algorithm will run without this constraint
     pub min_item_separation: Option<f32>,
@@ -40,7 +41,7 @@ impl Default for LBFConfig {
                 },
             },
             poly_simpl_tolerance: Some(0.001),
-            narrow_concavity_cutoff_ratio: Some(0.01),
+            narrow_concavity_cutoff: Some((0.01, 0.01)),
             min_item_separation: None,
             prng_seed: None,
             n_samples: 5000,
