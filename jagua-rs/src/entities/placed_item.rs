@@ -1,9 +1,9 @@
-use std::sync::Arc;
 use crate::entities::Item;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::SPolygon;
 use slotmap::new_key_type;
+use std::sync::Arc;
 
 #[cfg(doc)]
 use crate::entities::Layout;
