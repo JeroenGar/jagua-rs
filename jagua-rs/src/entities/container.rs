@@ -57,7 +57,7 @@ impl Container {
         let base_cde = {
             let mut hazards = vec![Hazard::new(
                 HazardEntity::Exterior,
-                outer.as_ref().clone(),
+                outer.clone(),
                 false,
             )];
             let qz_hazards = quality_zones
@@ -128,7 +128,7 @@ impl InferiorQualityZone {
                     idx,
                 },
             };
-            Hazard::new(entity, shape.as_ref().clone(), false)
+            Hazard::new(entity, shape.clone(), false)
         })
     }
 

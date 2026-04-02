@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use crate::entities::Item;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Transformable;
@@ -20,7 +21,7 @@ pub struct PlacedItem {
     /// The transformation that was applied to the `Item` before it was placed
     pub d_transf: DTransformation,
     /// The shape of the `Item` after it has been transformed and placed in a `Layout`
-    pub shape: SPolygon,
+    pub shape: Arc<SPolygon>,
 }
 
 impl PlacedItem {
@@ -31,7 +32,7 @@ impl PlacedItem {
         PlacedItem {
             item_id: item.id,
             d_transf,
-            shape,
+            shape: Arc::new(shape),
         }
     }
 }
