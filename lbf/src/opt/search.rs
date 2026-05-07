@@ -56,7 +56,7 @@ pub fn search(
 
             if worth_testing && !cde.detect_poly_collision(&buffer, filter) {
                 //sample is valid and improves on the current best
-                debug!("[UNI: {i}/{uni_sample_budget}] better: {} ", &d_transf);
+                debug!("[UNI: {i}/{uni_sample_budget}] better: {} ", d_transf);
 
                 best = Some((d_transf, cost));
 
@@ -92,7 +92,7 @@ pub fn search(
             if worth_testing && !cde.detect_poly_collision(&buffer, filter) {
                 //sample is valid and improves on the current best
                 ls_sampler.shift_mean(d_transf);
-                debug!("[LS: {i}/{ls_sample_budget}] better: {}", &d_transf);
+                debug!("[LS: {i}/{ls_sample_budget}] better: {}", d_transf);
                 (*best_sample, *best_cost) = (d_transf, cost);
             }
         }

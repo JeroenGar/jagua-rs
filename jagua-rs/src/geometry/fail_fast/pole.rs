@@ -72,7 +72,7 @@ pub fn compute_pole(shape: &SPolygon, poles: &[Circle]) -> Result<Circle> {
     best.ok_or(anyhow!(
         "no pole found with {} levels of recursion. Please check the input shape: {:?}",
         MAX_POI_TREE_DEPTH,
-        &shape.vertices
+        shape.vertices
     ))
 }
 
