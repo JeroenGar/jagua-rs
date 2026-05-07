@@ -45,6 +45,9 @@ impl SPolygon {
         if points.iter().unique().count() != points.len() {
             bail!("Simple polygon should not contain duplicate points: {points:?}");
         }
+        if let Some((e1_idx, e2_idx)) = SPolygon::find_self_intersection(&points) {
+            bail!("Simple polygon contains intersecting edges {e1_idx} and {e2_idx}: {points:?}");
+        }
 
         let area = match SPolygon::calculate_area(&points) {
             0.0 => bail!("Simple polygon has no area: {points:?}"),
@@ -189,6 +192,19 @@ impl SPolygon {
         c_y /= 6.0 * area;
 
         (c_x, c_y).into()
+    }
+
+    fn find_self_intersection(points: &[Point]) -> Option<(usize, usize)> {
+        let edge = |i| Edge {
+            start: points[i],
+            end: points[(i + 1) % points.len()],
+        };
+        let are_neighboring_edges = |i, j| i + 1 == j || (i == 0 && j == points.len() - 1);
+
+        (0..points.len()).combinations(2).find_map(|pair| {
+            let (i, j) = (pair[0], pair[1]);
+            (!are_neighboring_edges(i, j) && edge(i).collides_with(&edge(j))).then_some((i, j))
+        })
     }
 }
 
