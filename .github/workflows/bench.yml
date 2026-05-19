@@ -52,7 +52,6 @@ jobs:
           benchmark-data-dir-path: 'benchmarks'
           save-data-file: false
           gh-pages-branch: 'gh-pages'
-          gh-repository: github.com/${{ github.repository }}
           summary-always: true
           comment-always: false
 
