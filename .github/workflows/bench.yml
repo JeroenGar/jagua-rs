@@ -21,9 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write  # Added for comment-on-alert
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Fetch full history for commit comparisons
 
@@ -39,22 +38,28 @@ jobs:
           export RUSTFLAGS=$RUSTFLAGS
           cargo bench --bench ci_bench -- --output-format bencher | tee output.txt
 
+      - name: Summarize benchmark result
+        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Performance Tracker
+          tool: 'cargo'
+          output-file-path: output.txt
+          benchmark-data-dir-path: 'benchmarks'
+          save-data-file: false
+          summary-always: true
+
       - name: Store benchmark result
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: Performance Tracker
           tool: 'cargo'
           output-file-path: output.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Only push benchmarks when
-          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          auto-push: true
           # Enable alerts for performance regressions
           alert-threshold: '120%' # Alert if performance regresses by more than 20%
-          fail-on-alert: false
-          alert-comment-cc-users: '@JeroenGar' # Replace with actual username or team
           benchmark-data-dir-path: 'benchmarks'
-          save-data-file: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-          gh-pages-branch: 'gh-pages'
-          gh-repository: github.com/${{ github.repository }}
-          summary-always: true # Always show benchmark summary in PR comments
+          summary-always: true
           comment-always: true
