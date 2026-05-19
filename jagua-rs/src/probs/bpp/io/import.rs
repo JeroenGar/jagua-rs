@@ -15,7 +15,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtBPInstance) -> Res
             .par_iter()
             .map(|ext_item| {
                 let item = importer.import_item(&ext_item.base)?;
-                let demand = ext_item.demand as usize;
+                let demand = usize::try_from(ext_item.demand).unwrap();
                 Ok((item, demand))
             })
             .collect::<Result<Vec<(Item, usize)>>>()?;

@@ -40,6 +40,7 @@ pub trait Transformable: Clone {
     fn transform(&mut self, t: &Transformation) -> &mut Self;
 
     /// Applies a transformation to a clone.
+    #[must_use]
     fn transform_clone(&self, t: &Transformation) -> Self {
         let mut clone = self.clone();
         clone.transform(t);

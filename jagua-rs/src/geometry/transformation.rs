@@ -1,3 +1,5 @@
+#![allow(clippy::inline_always)]
+
 use std::borrow::Borrow;
 use std::ops::{Add, Div, Mul, Sub};
 

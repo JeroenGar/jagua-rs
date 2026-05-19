@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use log::{debug, error, info, warn};
 use ordered_float::OrderedFloat;
+use rand_distr::num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -68,7 +69,11 @@ pub fn simplify_shape(
             .map(|i| {
                 let i_prev = (i - 1).rem_euclid(n_points);
                 let i_next = (i + 1).rem_euclid(n_points);
-                Corner(i_prev as usize, i as usize, i_next as usize)
+                Corner(
+                    i_prev.cast_unsigned(),
+                    i.cast_unsigned(),
+                    i_next.cast_unsigned(),
+                )
             })
             .collect_vec();
 
@@ -366,7 +371,7 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
         geo_poly_offset
             .exterior()
             .points()
-            .map(|p| (p.x() as f32, p.y() as f32))
+            .map(|p| (p.x().to_f32().unwrap(), p.y().to_f32().unwrap()))
             .collect_vec(),
     );
 
@@ -479,16 +484,16 @@ pub fn close_narrow_concavities(
             );
             if start <= end {
                 // if j does not wrap around the shape
-                ref_points.drain((start as usize)..=(end as usize));
+                ref_points.drain(start.cast_unsigned()..=end.cast_unsigned());
             } else {
                 // if j wraps around the shape
-                if (start as usize) < n_points {
+                if start.cast_unsigned() < n_points {
                     //remove from `start` to back
-                    ref_points.drain(start as usize..);
+                    ref_points.drain(start.cast_unsigned()..);
                 }
                 if end >= 0 {
                     //remove from front to `end`
-                    ref_points.drain(0..=(end as usize));
+                    ref_points.drain(0..=end.cast_unsigned());
                 }
             }
             shape = SPolygon::new(ref_points).expect("invalid shape after closing concavity");

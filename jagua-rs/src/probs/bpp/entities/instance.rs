@@ -20,6 +20,7 @@ impl BPInstance {
         Self { items, bins }
     }
 
+    #[allow(clippy::cast_precision_loss)]
     #[must_use]
     pub fn item_area(&self) -> f32 {
         self.items

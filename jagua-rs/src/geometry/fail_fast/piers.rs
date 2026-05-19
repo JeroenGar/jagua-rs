@@ -93,6 +93,7 @@ pub fn generate_piers(shape: &SPolygon, n: usize, poles: &[Circle]) -> Result<Ve
     Ok(selected_piers)
 }
 
+#[allow(clippy::cast_precision_loss)]
 fn generate_ray_transformations(
     bbox: Rect,
     rays_per_angle: usize,

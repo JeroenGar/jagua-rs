@@ -101,6 +101,7 @@ impl SvgLayoutTheme {
     };
 }
 
+#[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 pub fn change_brightness(color: Color, fraction: f32) -> Color {
     let Color(r, g, b) = color;
 
@@ -110,6 +111,7 @@ pub fn change_brightness(color: Color, fraction: f32) -> Color {
     Color(r, g, b)
 }
 
+#[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 pub fn blend_colors(color_1: Color, color_2: Color) -> Color {
     //blend color_1 and color_2
     let Color(r_1, g_1, b_1) = color_1;
@@ -201,6 +203,7 @@ pub fn quad_tree_data(
     )
 }
 
+#[allow(clippy::similar_names)]
 fn qt_node_data(
     qt_node: &QTNode,
     mut data_eh: Data, //entire hazards data

@@ -127,7 +127,7 @@ pub fn layout_to_svg_group(
             .add(title)
     };
 
-    let qz_group = {
+    let quality_zones_group = {
         let mut qz_group = Group::new().set("id", "quality_zones");
 
         //quality zones
@@ -310,7 +310,7 @@ pub fn layout_to_svg_group(
     };
 
     //draw quadtree (if enabled)
-    let qt_group = if options.quadtree {
+    let quad_tree_group = if options.quadtree {
         let qt_data = svg_util::quad_tree_data(&layout.cde().quadtree, &NoFilter);
         let qt_group = Group::new()
             .set("id", "quadtree")
@@ -435,7 +435,7 @@ pub fn layout_to_svg_group(
     let optionals = [
         Some(highlight_cd_shape_group),
         Some(surrogate_group),
-        qt_group,
+        quad_tree_group,
         collision_group,
     ]
     .into_iter()
@@ -445,7 +445,7 @@ pub fn layout_to_svg_group(
     let combined_group = Group::new()
         .add(container_group)
         .add(items_group)
-        .add(qz_group)
+        .add(quality_zones_group)
         .add(optionals)
         .add(label);
 

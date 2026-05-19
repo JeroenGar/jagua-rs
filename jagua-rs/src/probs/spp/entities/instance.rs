@@ -23,6 +23,7 @@ impl SPInstance {
         Self { items, base_strip }
     }
 
+    #[allow(clippy::cast_precision_loss)]
     #[must_use]
     pub fn item_area(&self) -> f32 {
         self.items

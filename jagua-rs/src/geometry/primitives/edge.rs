@@ -66,6 +66,7 @@ impl Edge {
 
     /// Returns the closest point which lies on the edge to the given point
     #[must_use]
+    #[allow(clippy::many_single_char_names)]
     pub fn closest_point_on_edge(&self, point: &Point) -> Point {
         //from https://stackoverflow.com/a/6853926
         let Point(x1, y1) = self.start;

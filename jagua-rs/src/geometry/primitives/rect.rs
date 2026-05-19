@@ -316,6 +316,7 @@ impl AlmostCollidesWith<Point> for Rect {
 
 impl CollidesWith<Edge> for Rect {
     #[inline(always)]
+    #[allow(clippy::similar_names)]
     fn collides_with(&self, edge: &Edge) -> bool {
         //inspired by: https://stackoverflow.com/questions/99353/how-to-test-if-a-line-segment-intersects-an-axis-aligned-rectange-in-2d
 

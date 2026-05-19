@@ -54,6 +54,7 @@ impl QTHazardVec {
         }
     }
 
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     /// Returns the strongest hazard (if any) (`Entire` > `Partial` > `None`)
     /// Ignores any hazards that are deemed irrelevant by the filter.

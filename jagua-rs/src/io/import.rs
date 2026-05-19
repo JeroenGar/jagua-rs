@@ -88,7 +88,7 @@ impl Importer {
         };
 
         Item::new(
-            ext_item.id as usize,
+            usize::try_from(ext_item.id).unwrap(),
             original_shape,
             allowed_orientations,
             base_quality,
@@ -186,7 +186,7 @@ impl Importer {
             .collect::<Result<Vec<InferiorQualityZone>>>()?;
 
         Container::new(
-            ext_cont.id as usize,
+            usize::try_from(ext_cont.id).unwrap(),
             original_outer,
             quality_zones,
             self.cde_config,
