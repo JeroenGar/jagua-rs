@@ -45,15 +45,9 @@ jobs:
           name: Performance Tracker
           tool: 'cargo'
           output-file-path: output.txt
-          auto-push: false
-          # Enable alerts for performance regressions
-          alert-threshold: '120%' # Alert if performance regresses by more than 20%
-          fail-on-alert: false
           benchmark-data-dir-path: 'benchmarks'
           save-data-file: false
-          gh-pages-branch: 'gh-pages'
           summary-always: true
-          comment-always: false
 
       - name: Store benchmark result
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -66,11 +60,6 @@ jobs:
           auto-push: true
           # Enable alerts for performance regressions
           alert-threshold: '120%' # Alert if performance regresses by more than 20%
-          fail-on-alert: false
-          alert-comment-cc-users: '@JeroenGar' # Replace with actual username or team
           benchmark-data-dir-path: 'benchmarks'
-          save-data-file: true
-          gh-pages-branch: 'gh-pages'
-          gh-repository: github.com/${{ github.repository }}
           summary-always: true
           comment-always: true
