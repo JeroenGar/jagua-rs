@@ -52,10 +52,12 @@ impl SPSurrogate {
         })
     }
 
+    #[must_use]
     pub fn ff_poles(&self) -> &[Circle] {
         &self.poles[0..self.config.n_ff_poles]
     }
 
+    #[must_use]
     pub fn ff_piers(&self) -> &[Edge] {
         &self.piers
     }
@@ -131,6 +133,7 @@ pub struct SPSurrogateConfig {
 }
 
 impl SPSurrogateConfig {
+    #[must_use]
     pub fn none() -> Self {
         Self {
             n_pole_limits: [(0, 0.0); N_POLE_LIMITS],

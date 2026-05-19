@@ -25,6 +25,7 @@ pub struct PlacedItem {
 }
 
 impl PlacedItem {
+    #[must_use]
     pub fn new(item: &Item, d_transf: DTransformation) -> Self {
         let transf = d_transf.compose();
         let shape = item.shape_cd.transform_clone(&transf);

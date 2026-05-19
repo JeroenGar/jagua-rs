@@ -375,6 +375,7 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
 
 #[allow(clippy::too_many_lines)]
 /// Closes narrow concavities in a [`SPolygon`] by replacing them with a straight edge, eliminating the vertices in between.
+#[must_use]
 pub fn close_narrow_concavities(
     orig_shape: &SPolygon,
     mode: ShapeModifyMode,
@@ -512,6 +513,7 @@ pub fn close_narrow_concavities(
     shape
 }
 
+#[must_use]
 pub fn shape_modification_valid(orig: &SPolygon, simpl: &SPolygon, mode: ShapeModifyMode) -> bool {
     //make sure each point of the original shape is either in the new shape or included (in case of inflation)/excluded (in case of deflation) in the new shape
     let on_edge = |p: &Point| {

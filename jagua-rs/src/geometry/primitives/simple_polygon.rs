@@ -82,10 +82,12 @@ impl SPolygon {
         Ok(())
     }
 
+    #[must_use]
     pub fn vertex(&self, i: usize) -> Point {
         self.vertices[i]
     }
 
+    #[must_use]
     pub fn edge(&self, i: usize) -> Edge {
         assert!(i < self.n_vertices(), "index out of bounds");
         let j = if i == self.n_vertices() - 1 { 0 } else { i + 1 };
@@ -99,14 +101,17 @@ impl SPolygon {
         (0..self.n_vertices()).map(move |i| self.edge(i))
     }
 
+    #[must_use]
     pub fn n_vertices(&self) -> usize {
         self.vertices.len()
     }
 
+    #[must_use]
     pub fn surrogate(&self) -> &SPSurrogate {
         self.surrogate.as_ref().expect("surrogate not generated")
     }
 
+    #[must_use]
     pub fn calculate_diameter(points: Vec<Point>) -> f32 {
         //The two points furthest apart must be part of the convex hull
         let ch = convex_hull_from_points(points);
@@ -122,6 +127,7 @@ impl SPolygon {
         sq_diam.sqrt()
     }
 
+    #[must_use]
     pub fn generate_bounding_box(points: &[Point]) -> Rect {
         let (mut x_min, mut y_min) = (f32::MAX, f32::MAX);
         let (mut x_max, mut y_max) = (f32::MIN, f32::MIN);
@@ -137,6 +143,7 @@ impl SPolygon {
 
     //https://en.wikipedia.org/wiki/Shoelace_formula
     //counterclockwise = positive area, clockwise = negative area
+    #[must_use]
     pub fn calculate_area(points: &[Point]) -> f32 {
         let mut sigma: f32 = 0.0;
         for i in 0..points.len() {
@@ -173,6 +180,7 @@ impl SPolygon {
         compute_pole(&dummy_sp, &[])
     }
 
+    #[must_use]
     pub fn centroid(&self) -> Point {
         //based on: https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
 

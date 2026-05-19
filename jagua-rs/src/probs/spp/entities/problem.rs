@@ -16,6 +16,7 @@ pub struct SPProblem {
 }
 
 impl SPProblem {
+    #[must_use]
     pub fn new(instance: SPInstance) -> Self {
         let item_demand_qtys = instance.items.iter().map(|(_, qty)| *qty).collect_vec();
         let strip = instance.base_strip;
@@ -76,6 +77,7 @@ impl SPProblem {
     }
 
     /// Creates a snapshot of the current state of the problem as a [`SPSolution`].
+    #[must_use]
     pub fn save(&self) -> SPSolution {
         let solution = SPSolution {
             layout_snapshot: self.layout.save(),
@@ -122,14 +124,17 @@ impl SPProblem {
         self.item_demand_qtys[item_id] += 1;
     }
 
+    #[must_use]
     pub fn density(&self) -> f32 {
         self.layout.density(&self.instance)
     }
 
+    #[must_use]
     pub fn strip_width(&self) -> f32 {
         self.strip.width
     }
 
+    #[must_use]
     pub fn n_placed_items(&self) -> usize {
         self.layout.placed_items.len()
     }

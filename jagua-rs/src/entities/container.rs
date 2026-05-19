@@ -131,6 +131,7 @@ impl InferiorQualityZone {
         })
     }
 
+    #[must_use]
     pub fn area(&self) -> f32 {
         self.shapes_orig.iter().map(|shape| shape.area()).sum()
     }

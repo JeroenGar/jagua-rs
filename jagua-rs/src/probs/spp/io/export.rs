@@ -4,6 +4,7 @@ use crate::probs::spp::entities::{SPInstance, SPSolution};
 use crate::probs::spp::io::ext_repr::ExtSPSolution;
 
 /// Exports a solution out of the library
+#[must_use]
 pub fn export(instance: &SPInstance, solution: &SPSolution, epoch: Instant) -> ExtSPSolution {
     ExtSPSolution {
         strip_width: solution.strip.width,

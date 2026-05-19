@@ -51,18 +51,22 @@ impl OriginalShape {
         Ok(internal)
     }
 
+    #[must_use]
     pub fn centroid(&self) -> Point {
         self.shape.centroid()
     }
 
+    #[must_use]
     pub fn area(&self) -> f32 {
         self.shape.area
     }
 
+    #[must_use]
     pub fn bbox(&self) -> Rect {
         self.shape.bbox
     }
 
+    #[must_use]
     pub fn diameter(&self) -> f32 {
         self.shape.diameter
     }

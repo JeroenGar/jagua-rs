@@ -14,6 +14,7 @@ pub struct BPSolution {
 }
 
 impl BPSolution {
+    #[must_use]
     pub fn density(&self, instance: &BPInstance) -> f32 {
         let total_bin_area = self
             .layout_snapshots
@@ -30,6 +31,7 @@ impl BPSolution {
         total_item_area / total_bin_area
     }
 
+    #[must_use]
     pub fn cost(&self, instance: &BPInstance) -> u64 {
         self.layout_snapshots
             .values()

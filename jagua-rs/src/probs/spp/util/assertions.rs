@@ -2,6 +2,7 @@ use crate::entities::Item;
 use crate::probs::spp::entities::{SPProblem, SPSolution};
 use crate::util::assertions::snapshot_matches_layout;
 
+#[must_use]
 pub fn problem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
     let SPSolution {
         strip,
@@ -16,6 +17,7 @@ pub fn problem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
     true
 }
 
+#[must_use]
 pub fn instance_item_ids_correct(items: &[(Item, usize)]) -> bool {
     items
         .iter()

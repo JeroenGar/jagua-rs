@@ -18,6 +18,7 @@ impl Edge {
         Ok(Edge { start, end })
     }
 
+    #[must_use]
     pub fn extend_at_front(mut self, d: f32) -> Self {
         //extend the line at the front by distance d
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
@@ -27,6 +28,7 @@ impl Edge {
         self
     }
 
+    #[must_use]
     pub fn extend_at_back(mut self, d: f32) -> Self {
         //extend the line at the back by distance d
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
@@ -36,6 +38,7 @@ impl Edge {
         self
     }
 
+    #[must_use]
     pub fn scale(mut self, factor: f32) -> Self {
         let (dx, dy) = (self.end.0 - self.start.0, self.end.1 - self.start.1);
         self.start.0 -= dx * (factor - 1.0) / 2.0;
@@ -45,11 +48,13 @@ impl Edge {
         self
     }
 
+    #[must_use]
     pub fn reverse(mut self) -> Self {
         std::mem::swap(&mut self.start, &mut self.end);
         self
     }
 
+    #[must_use]
     pub fn collides_at(&self, other: &Edge) -> Option<Point> {
         match edge_intersection(self, other, true) {
             Intersection::No => None,
@@ -60,6 +65,7 @@ impl Edge {
     }
 
     /// Returns the closest point which lies on the edge to the given point
+    #[must_use]
     pub fn closest_point_on_edge(&self, point: &Point) -> Point {
         //from https://stackoverflow.com/a/6853926
         let Point(x1, y1) = self.start;
@@ -86,26 +92,32 @@ impl Edge {
         Point(xx, yy)
     }
 
+    #[must_use]
     pub fn x_min(&self) -> f32 {
         f32::min(self.start.0, self.end.0)
     }
 
+    #[must_use]
     pub fn y_min(&self) -> f32 {
         f32::min(self.start.1, self.end.1)
     }
 
+    #[must_use]
     pub fn x_max(&self) -> f32 {
         f32::max(self.start.0, self.end.0)
     }
 
+    #[must_use]
     pub fn y_max(&self) -> f32 {
         f32::max(self.start.1, self.end.1)
     }
 
+    #[must_use]
     pub fn length(&self) -> f32 {
         self.start.distance_to(&self.end)
     }
 
+    #[must_use]
     pub fn centroid(&self) -> Point {
         Point(
             f32::midpoint(self.start.0, self.end.0),
@@ -113,6 +125,7 @@ impl Edge {
         )
     }
 
+    #[must_use]
     pub fn bbox(&self) -> Rect {
         Rect {
             x_min: self.x_min(),

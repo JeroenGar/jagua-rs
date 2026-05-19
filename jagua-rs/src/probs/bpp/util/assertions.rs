@@ -2,6 +2,7 @@ use crate::entities::Item;
 use crate::probs::bpp::entities::{BPProblem, BPSolution, Bin};
 use crate::util::assertions::snapshot_matches_layout;
 
+#[must_use]
 pub fn problem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
     let BPSolution {
         layout_snapshots,
@@ -21,6 +22,7 @@ pub fn problem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
     true
 }
 
+#[must_use]
 pub fn instance_item_bin_ids_correct(items: &[(Item, usize)], bins: &[Bin]) -> bool {
     items.iter().enumerate().all(|(i, (item, _))| item.id == i)
         && bins.iter().enumerate().all(|(i, bin)| bin.id == i)

@@ -21,6 +21,7 @@ pub struct Layout {
 }
 
 impl Layout {
+    #[must_use]
     pub fn new(container: Container) -> Self {
         let cde = container.base_cde.as_ref().clone();
         Layout {
@@ -30,6 +31,7 @@ impl Layout {
         }
     }
 
+    #[must_use]
     pub fn from_snapshot(ls: &LayoutSnapshot) -> Self {
         let mut layout = Layout::new(ls.container.clone());
         layout.restore(ls);
@@ -49,6 +51,7 @@ impl Layout {
     }
 
     /// Saves the current state of the layout to be potentially restored to later.
+    #[must_use]
     pub fn save(&self) -> LayoutSnapshot {
         LayoutSnapshot {
             container: self.container.clone(),
@@ -100,6 +103,7 @@ impl Layout {
     }
 
     /// True if no items are placed
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.placed_items.is_empty()
     }
@@ -120,11 +124,13 @@ impl Layout {
     }
 
     /// Returns the collision detection engine for this layout
+    #[must_use]
     pub fn cde(&self) -> &CDEngine {
         &self.cde
     }
 
     /// Returns true if all the items are placed without colliding
+    #[must_use]
     pub fn is_feasible(&self) -> bool {
         self.placed_items.iter().all(|(pk, pi)| {
             let hkey = self

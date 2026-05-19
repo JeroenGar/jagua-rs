@@ -25,6 +25,7 @@ pub struct QTNode {
 }
 
 impl QTNode {
+    #[must_use]
     pub fn new(level: u8, bbox: Rect, cd_threshold: u8) -> Self {
         QTNode {
             level,

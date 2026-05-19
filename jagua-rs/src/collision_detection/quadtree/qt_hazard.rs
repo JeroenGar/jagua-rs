@@ -33,6 +33,7 @@ pub enum QTHazPresence {
 }
 impl QTHazard {
     /// Converts a [`Hazard`] into a [`QTHazard`], assuming it is for the root of the quadtree.
+    #[must_use]
     pub fn from_root(qt_root_bbox: Rect, haz: &Hazard, hkey: HazKey) -> Self {
         Self {
             qt_bbox: qt_root_bbox,
@@ -45,6 +46,7 @@ impl QTHazard {
     /// Returns the resulting `QTHazards` after constricting to the provided quadrants.
     /// The quadrants should be ordered according to the [Cartesian system](https://en.wikipedia.org/wiki/Quadrant_(plane_geometry))
     /// and should all be inside the bounds from which `self` was created.
+    #[must_use]
     pub fn constrict(&self, quadrants: [Rect; 4], haz_map: &SlotMap<HazKey, Hazard>) -> [Self; 4] {
         debug_assert!(
             quadrants
@@ -166,6 +168,7 @@ impl QTHazard {
         }
     }
 
+    #[must_use]
     pub fn n_edges(&self) -> usize {
         match &self.presence {
             QTHazPresence::None | QTHazPresence::Entire => 0,

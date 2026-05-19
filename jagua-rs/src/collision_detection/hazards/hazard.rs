@@ -24,6 +24,7 @@ pub struct Hazard {
 }
 
 impl Hazard {
+    #[must_use]
     pub fn new(entity: HazardEntity, shape: Arc<SPolygon>, dynamic: bool) -> Self {
         Self {
             entity,
@@ -53,6 +54,7 @@ pub enum HazardEntity {
 
 impl HazardEntity {
     /// Whether the entity induced a hazard within the entire interior or exterior of its shape
+    #[must_use]
     pub fn scope(&self) -> GeoPosition {
         match self {
             HazardEntity::PlacedItem { .. }

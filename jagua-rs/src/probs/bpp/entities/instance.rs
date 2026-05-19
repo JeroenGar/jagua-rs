@@ -13,12 +13,14 @@ pub struct BPInstance {
 }
 
 impl BPInstance {
+    #[must_use]
     pub fn new(items: Vec<(Item, usize)>, bins: Vec<Bin>) -> Self {
         assert!(instance_item_bin_ids_correct(&items, &bins));
 
         Self { items, bins }
     }
 
+    #[must_use]
     pub fn item_area(&self) -> f32 {
         self.items
             .iter()
@@ -26,6 +28,7 @@ impl BPInstance {
             .sum()
     }
 
+    #[must_use]
     pub fn item_qty(&self, id: usize) -> usize {
         self.items[id].1
     }
@@ -34,10 +37,12 @@ impl BPInstance {
         self.bins.iter()
     }
 
+    #[must_use]
     pub fn bin_qty(&self, id: usize) -> usize {
         self.bins[id].stock
     }
 
+    #[must_use]
     pub fn total_item_qty(&self) -> usize {
         self.items.iter().map(|(_, qty)| *qty).sum()
     }

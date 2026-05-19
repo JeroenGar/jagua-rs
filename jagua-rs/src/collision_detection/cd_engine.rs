@@ -31,6 +31,7 @@ pub struct CDEngine {
 }
 
 impl CDEngine {
+    #[must_use]
     pub fn new(bbox: Rect, static_hazards: Vec<Hazard>, config: CDEConfig) -> CDEngine {
         let mut quadtree = QTNode::new(config.quadtree_depth, bbox, config.cd_threshold);
         let mut hazards_map = SlotMap::with_key();
@@ -95,6 +96,7 @@ impl CDEngine {
         hazard
     }
 
+    #[must_use]
     pub fn save(&self) -> CDESnapshot {
         let dynamic_hazards = self
             .hazards_map
@@ -228,6 +230,7 @@ impl CDEngine {
     /// * `shape` - The shape to be checked for containment
     /// * `haz_shape` - The shape of the respective hazard
     /// * `haz_entity` - The entity inducing the hazard
+    #[must_use]
     pub fn detect_containment_collision(
         &self,
         shape: &SPolygon,
@@ -311,6 +314,7 @@ impl CDEngine {
 
     /// Returns the lowest `QTNode` that completely surrounds the given bounding box.
     /// Used to initiate collision checks from lower in the quadtree.
+    #[must_use]
     pub fn get_virtual_root(&self, bbox: Rect) -> &QTNode {
         let mut v_root = &self.quadtree;
         while let Some(children) = v_root.children.as_ref() {
@@ -326,10 +330,12 @@ impl CDEngine {
         v_root
     }
 
+    #[must_use]
     pub fn bbox(&self) -> Rect {
         self.quadtree.bbox
     }
 
+    #[must_use]
     pub fn haz_key_from_pi_key(&self, pik: PItemKey) -> Option<HazKey> {
         self.hazards_map
             .iter()

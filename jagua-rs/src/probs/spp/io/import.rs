@@ -62,6 +62,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Res
 }
 
 /// Imports a solution into the library.
+#[must_use]
 pub fn import_solution(instance: &SPInstance, ext_solution: &ExtSPSolution) -> SPSolution {
     let mut prob = SPProblem::new(instance.clone());
     prob.change_strip_width(ext_solution.strip_width);

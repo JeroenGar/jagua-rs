@@ -9,7 +9,6 @@
 #![allow(
     clippy::missing_panics_doc,
     clippy::missing_errors_doc,
-    clippy::must_use_candidate,
     clippy::inline_always,
     clippy::cast_sign_loss,
     clippy::cast_possible_truncation,

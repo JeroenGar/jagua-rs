@@ -26,6 +26,7 @@ impl Importer {
     /// * `simplify_tolerance` - See [`ShapeModifyConfig`].
     /// * `min_item_separation` - Optional minimum separation distance between items and any other hazard. If enabled, every hazard is inflated/deflated by half this value. See [`ShapeModifyConfig`].
     /// * `narrow_concavity_cutoff` - Optional definition for closing narrow concavities. If enabled, the shapes are modified to close "narrow" concavities. See [`ShapeModifyConfig`].
+    #[must_use]
     pub fn new(
         cde_config: CDEConfig,
         simplify_tolerance: Option<f32>,
@@ -209,6 +210,7 @@ pub fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {
 }
 
 /// Returns a transformation that translates the shape's centroid to the origin.
+#[must_use]
 pub fn centering_transformation(shape: &SPolygon) -> DTransformation {
     let Point(cx, cy) = shape.centroid();
     DTransformation::new(0.0, (-cx, -cy))
@@ -218,6 +220,7 @@ pub fn centering_transformation(shape: &SPolygon) -> DTransformation {
 ///
 /// * `ext_transf` - The external transformation.
 /// * `pre_transf` - The transformation that was applied to the original shape to derive the internal representation.
+#[must_use]
 pub fn ext_to_int_transformation(
     ext_transf: &DTransformation,
     pre_transf: &DTransformation,

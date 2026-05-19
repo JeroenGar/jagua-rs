@@ -4,6 +4,7 @@ use crate::probs::bpp::entities::{BPInstance, BPSolution};
 use crate::probs::bpp::io::ext_repr::ExtBPSolution;
 
 /// Exports a solution out of the library
+#[must_use]
 pub fn export(instance: &BPInstance, solution: &BPSolution, epoch: Instant) -> ExtBPSolution {
     ExtBPSolution {
         cost: solution.cost(instance),

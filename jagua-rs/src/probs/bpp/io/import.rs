@@ -65,6 +65,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtBPInstance) -> Res
 }
 
 /// Imports a solution into the library.
+#[must_use]
 pub fn import_solution(_instance: &BPInstance, _ext_solution: &ExtBPInstance) -> BPSolution {
     unimplemented!("not yet implemented")
 }
