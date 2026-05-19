@@ -8,7 +8,7 @@ pub fn problem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
         time_stamp: _,
     } = sol;
 
-    assert_eq!(bpp.density(), sol.density(&bpp.instance));
+    assert!((bpp.density() - sol.density(&bpp.instance)).abs() <= f32::EPSILON);
     assert_eq!(bpp.layouts.len(), layout_snapshots.len());
 
     // Check that each layout in the problem has a matching snapshot in the solution

@@ -102,12 +102,15 @@ impl BPProblem {
 
         //Check which layouts from the problem are also present in the solution.
         //If a layout is present we might be able to do a (partial) restore instead of fully rebuilding everything.
-        for (lkey, layout) in self.layouts.iter_mut() {
+        for (lkey, layout) in &mut self.layouts {
             match solution.layout_snapshots.get(lkey) {
-                Some(ls) => match layout.container.id == ls.container.id {
-                    true => layout.restore(ls),
-                    false => layouts_to_remove.push(lkey),
-                },
+                Some(ls) => {
+                    if layout.container.id == ls.container.id {
+                        layout.restore(ls)
+                    } else {
+                        layouts_to_remove.push(lkey)
+                    }
+                }
                 None => {
                     layouts_to_remove.push(lkey);
                 }
@@ -121,7 +124,7 @@ impl BPProblem {
         }
 
         //Create new layouts for all keys present in solution but not in problem
-        for (lkey, ls) in solution.layout_snapshots.iter() {
+        for (lkey, ls) in &solution.layout_snapshots {
             if !self.layouts.contains_key(lkey) {
                 self.layouts.insert(Layout::from_snapshot(ls));
                 layout_keys_changed = true;
@@ -222,11 +225,11 @@ impl BPProblem {
     }
 
     fn open_bin(&mut self, bin_id: usize) {
-        self.bin_stock_qtys[bin_id] -= 1
+        self.bin_stock_qtys[bin_id] -= 1;
     }
 
     fn close_bin(&mut self, bin_id: usize) {
-        self.bin_stock_qtys[bin_id] += 1
+        self.bin_stock_qtys[bin_id] += 1;
     }
 
     pub fn n_placed_items(&self) -> usize {

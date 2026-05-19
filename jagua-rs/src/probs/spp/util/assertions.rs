@@ -10,7 +10,7 @@ pub fn problem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
     } = sol;
 
     assert_eq!(*strip, spp.strip);
-    assert_eq!(spp.density(), sol.density(&spp.instance));
+    assert!((spp.density() - sol.density(&spp.instance)).abs() <= f32::EPSILON);
     assert!(snapshot_matches_layout(&spp.layout, layout_snapshot));
 
     true

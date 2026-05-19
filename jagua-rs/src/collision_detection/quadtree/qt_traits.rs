@@ -7,8 +7,8 @@ use std::cmp::Ordering;
 /// for collisions with the edges of the registered hazards. These include: [Rect], [Edge] and [Circle].
 pub trait QTQueryable: CollidesWith<Edge> + CollidesWith<Rect> {
     /// Checks
-    fn collides_with_quadrants(&self, _r: &Rect, qs: [&Rect; 4]) -> [bool; 4] {
-        debug_assert!(_r.quadrants().iter().zip(qs.iter()).all(|(q, r)| *q == **r));
+    fn collides_with_quadrants(&self, r: &Rect, qs: [&Rect; 4]) -> [bool; 4] {
+        debug_assert!(r.quadrants().iter().zip(qs.iter()).all(|(q, r)| *q == **r));
         qs.map(|q| self.collides_with(q))
     }
 }

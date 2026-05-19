@@ -34,9 +34,9 @@ pub struct ShapeModifyConfig {
     /// See [`offset_shape`]
     pub offset: Option<f32>,
     /// Definition for narrow concavities that can be closed by a straight edge.
-    /// Defined as a tuple of (max_distance_ratio, max_area_ratio) where:
-    /// - max_distance_ratio: maximum distance between two vertices of a polygon to consider it a narrow concavity, defined as a fraction of the item's diameter.
-    /// - max_area_ratio: maximum area of the sub-shape formed by the vertices between the two vertices, defined as a fraction of the item's area.
+    /// Defined as a tuple of (`max_distance_ratio`, `max_area_ratio`) where:
+    /// - `max_distance_ratio`: maximum distance between two vertices of a polygon to consider it a narrow concavity, defined as a fraction of the item's diameter.
+    /// - `max_area_ratio`: maximum area of the sub-shape formed by the vertices between the two vertices, defined as a fraction of the item's area.
     ///
     /// If undefined, no narrow concavities will be closed.
     /// See [`close_narrow_concavities`]
@@ -58,7 +58,7 @@ pub fn simplify_shape(
     let mut ref_points = shape.vertices.clone();
 
     for _ in 0..shape.n_vertices() {
-        let n_points = ref_points.len() as isize;
+        let n_points = ref_points.len().cast_signed();
         if n_points < 4 {
             //can't simplify further
             break;
@@ -77,7 +77,7 @@ pub fn simplify_shape(
             //reverse the order of the corners
             corners.reverse();
             //reverse each corner
-            corners.iter_mut().for_each(|c| c.flip());
+            corners.iter_mut().for_each(Corner::flip);
         }
 
         let mut candidates = vec![];
@@ -86,7 +86,7 @@ pub fn simplify_shape(
         let mut prev_corner_type = CornerType::from(prev_corner.to_points(&ref_points));
 
         //Go over all corners and generate candidates
-        for corner in corners.iter() {
+        for corner in &corners {
             let corner_type = CornerType::from(corner.to_points(&ref_points));
 
             //Generate a removal candidate (or not)
@@ -94,10 +94,10 @@ pub fn simplify_shape(
                 (CornerType::Concave, _) => candidates.push(Candidate::Concave(*corner)),
                 (CornerType::Collinear, _) => candidates.push(Candidate::Collinear(*corner)),
                 (CornerType::Convex, CornerType::Convex) => {
-                    candidates.push(Candidate::ConvexConvex(*prev_corner, *corner))
+                    candidates.push(Candidate::ConvexConvex(*prev_corner, *corner));
                 }
                 (_, _) => {}
-            };
+            }
             (prev_corner, prev_corner_type) = (corner, corner_type);
         }
 
@@ -219,7 +219,7 @@ fn edge_iter(points: &[Point]) -> impl Iterator<Item = Edge> + '_ {
 }
 
 fn execute_candidate(shape: &[Point], candidate: &Candidate) -> Vec<Point> {
-    let mut points = shape.iter().cloned().collect_vec();
+    let mut points = shape.iter().copied().collect_vec();
     match candidate {
         Candidate::Collinear(c) | Candidate::Concave(c) => {
             points.remove(c.1);
@@ -268,9 +268,9 @@ fn calculate_intersection_in_front(l1: &Edge, l2: &Edge) -> Option<Point> {
     let u_nom = (x2 - x4) * (y2 - y1) - (y2 - y4) * (x2 - x1);
     let u_denom = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
 
-    let t = if t_denom != 0.0 { t_nom / t_denom } else { 0.0 };
+    let t = if t_denom == 0.0 { 0.0 } else { t_nom / t_denom };
 
-    let u = if u_denom != 0.0 { u_nom / u_denom } else { 0.0 };
+    let u = if u_denom == 0.0 { 0.0 } else { u_nom / u_denom };
 
     if t < 0.0 && u < 0.0 {
         //intersection is in front both vectors
@@ -342,13 +342,13 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
     let geo_poly = geo_types::Polygon::new(
         sp.vertices
             .iter()
-            .map(|p| (p.0 as f64, p.1 as f64))
+            .map(|p| (f64::from(p.0), f64::from(p.1)))
             .collect(),
         vec![],
     );
 
     // Create the offset polygon
-    let geo_poly_offsets = geo_buffer::buffer_polygon_rounded(&geo_poly, offset as f64).0;
+    let geo_poly_offsets = geo_buffer::buffer_polygon_rounded(&geo_poly, f64::from(offset)).0;
 
     let geo_poly_offset = match geo_poly_offsets.len() {
         0 => bail!("Offset resulted in an empty polygon"),
@@ -373,6 +373,7 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
     import::import_simple_polygon(&ext_s_polygon)
 }
 
+#[allow(clippy::too_many_lines)]
 /// Closes narrow concavities in a [`SPolygon`] by replacing them with a straight edge, eliminating the vertices in between.
 pub fn close_narrow_concavities(
     orig_shape: &SPolygon,
@@ -414,7 +415,9 @@ pub fn close_narrow_concavities(
                 {
                     //If we are only allowed to inflate the shape and any end point is inside the shape, skip it
                     continue;
-                } else if mode == ShapeModifyMode::Deflate
+                }
+
+                if mode == ShapeModifyMode::Deflate
                     && !(shape.collides_with(&c_edge.start) && shape.collides_with(&c_edge.end))
                 {
                     //If we are only allowed to deflate the shape and both end points are not inside the shape, skip it
@@ -460,8 +463,8 @@ pub fn close_narrow_concavities(
         }
         if let Some((i, j)) = best_candidate {
             let mut ref_points = shape.vertices.clone();
-            let start = i as isize + 1;
-            let end = j as isize - 1;
+            let start = i.cast_signed() + 1;
+            let end = j.cast_signed() - 1;
             debug!(
                 "[PS] closing concavity between points (idx: {}, {:?}) and (idx: {}, {:?}) with edge length {:.3} ({} vertices eliminated)",
                 i,

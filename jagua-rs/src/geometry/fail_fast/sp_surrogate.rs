@@ -44,9 +44,9 @@ impl SPSurrogate {
             piers::generate_piers(simple_poly, config.n_ff_piers, relevant_poles_for_piers)?;
 
         Ok(Self {
-            convex_hull_indices,
             poles,
             piers,
+            convex_hull_indices,
             convex_hull_area,
             config,
         })
@@ -73,14 +73,14 @@ impl Transformable for SPSurrogate {
         } = self;
 
         //transform poles
-        poles.iter_mut().for_each(|c| {
+        for c in poles.iter_mut() {
             c.transform(t);
-        });
+        }
 
         //transform piers
-        piers.iter_mut().for_each(|p| {
+        for p in piers.iter_mut() {
             p.transform(t);
-        });
+        }
 
         self
     }

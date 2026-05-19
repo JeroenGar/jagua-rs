@@ -111,7 +111,7 @@ fn assert_caches_correct(qthazard_vec: &QTHazardVec) -> bool {
         qthazard_vec
             .hazards
             .iter()
-            .map(|hz| hz.n_edges())
+            .map(QTHazard::n_edges)
             .sum::<usize>(),
         qthazard_vec.n_active_edges,
         "Active edges count is not correct!"

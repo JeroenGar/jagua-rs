@@ -55,10 +55,10 @@ impl HazardEntity {
     /// Whether the entity induced a hazard within the entire interior or exterior of its shape
     pub fn scope(&self) -> GeoPosition {
         match self {
-            HazardEntity::PlacedItem { .. } => GeoPosition::Interior,
+            HazardEntity::PlacedItem { .. }
+            | HazardEntity::Hole { .. }
+            | HazardEntity::InferiorQualityZone { .. } => GeoPosition::Interior,
             HazardEntity::Exterior => GeoPosition::Exterior,
-            HazardEntity::Hole { .. } => GeoPosition::Interior,
-            HazardEntity::InferiorQualityZone { .. } => GeoPosition::Interior,
         }
     }
 }

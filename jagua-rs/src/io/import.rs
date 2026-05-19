@@ -150,7 +150,7 @@ impl Importer {
                             width,
                             height,
                         } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)
-                            .map(|r| r.into()),
+                            .map(Into::into),
                         ExtShape::SimplePolygon(esp) => import_simple_polygon(esp),
                         ExtShape::Polygon(_) => {
                             unimplemented!("No support for polygon to simplepolygon conversion yet")

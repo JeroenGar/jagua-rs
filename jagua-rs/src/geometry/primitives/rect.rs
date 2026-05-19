@@ -117,7 +117,7 @@ impl Rect {
     }
 
     /// Returns a new rectangle with the same centroid as `self` but expanded by `dx` in both x-directions and by `dy` in both y-directions.
-    /// If the new rectangle is invalid (x_min >= x_max or y_min >= y_max), returns None.
+    /// If the new rectangle is invalid (`x_min` >= `x_max` or `y_min` >= `y_max`), returns None.
     pub fn resize_by(mut self, dx: f32, dy: f32) -> Option<Self> {
         self.x_min -= dx;
         self.y_min -= dy;
@@ -150,7 +150,7 @@ impl Rect {
         [q1, q2, q3, q4]
     }
 
-    /// Returns the four corners of `self`, in the same order as [Rect::quadrants].
+    /// Returns the four corners of `self`, in the same order as [`Rect::quadrants`].
     pub fn corners(&self) -> [Point; 4] {
         [
             Point(self.x_max, self.y_max),
@@ -160,7 +160,7 @@ impl Rect {
         ]
     }
 
-    /// Returns the four sides that make up `self`, in the same order as [Rect::quadrants].
+    /// Returns the four sides that make up `self`, in the same order as [`Rect::quadrants`].
     pub fn sides(&self) -> [Edge; 4] {
         let c = self.corners();
         [
@@ -183,7 +183,7 @@ impl Rect {
         ]
     }
 
-    /// Returns the four edges that make up `self`, in the same order as [Rect::quadrants].
+    /// Returns the four edges that make up `self`, in the same order as [`Rect::quadrants`].
     pub fn edges(&self) -> [Edge; 4] {
         let c = self.corners();
         [
@@ -247,8 +247,8 @@ impl Rect {
 
     pub fn centroid(&self) -> Point {
         Point(
-            (self.x_min + self.x_max) / 2.0,
-            (self.y_min + self.y_max) / 2.0,
+            f32::midpoint(self.x_min, self.x_max),
+            f32::midpoint(self.y_min, self.y_max),
         )
     }
 
@@ -377,21 +377,20 @@ impl SeparationDistance<Point> for Rect {
 
     #[inline(always)]
     fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, f32) {
-        match self.collides_with(point) {
-            false => (GeoPosition::Exterior, self.sq_distance_to(point)),
-            true => {
-                let Point(x, y) = *point;
-                let min_distance = [
-                    (x - self.x_min).abs(),
-                    (x - self.x_max).abs(),
-                    (y - self.y_min).abs(),
-                    (y - self.y_max).abs(),
-                ]
-                .into_iter()
-                .min_by_key(|&d| OrderedFloat(d))
-                .unwrap();
-                (GeoPosition::Interior, min_distance.powi(2))
-            }
+        if self.collides_with(point) {
+            let Point(x, y) = *point;
+            let min_distance = [
+                (x - self.x_min).abs(),
+                (x - self.x_max).abs(),
+                (y - self.y_min).abs(),
+                (y - self.y_max).abs(),
+            ]
+            .into_iter()
+            .min_by_key(|&d| OrderedFloat(d))
+            .unwrap();
+            (GeoPosition::Interior, min_distance.powi(2))
+        } else {
+            (GeoPosition::Exterior, self.sq_distance_to(point))
         }
     }
 }

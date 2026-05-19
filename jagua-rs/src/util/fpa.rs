@@ -23,9 +23,10 @@ impl PartialEq<Self> for FPA {
 
 impl PartialOrd<Self> for FPA {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self.eq(other) {
-            true => Some(Ordering::Equal),
-            false => self.0.partial_cmp(&other.0),
+        if self.eq(other) {
+            Some(Ordering::Equal)
+        } else {
+            self.0.partial_cmp(&other.0)
         }
     }
 }

@@ -128,23 +128,23 @@ fn clip(shape: &SPolygon, ray: &Edge) -> Vec<Edge> {
     //collect all intersections of the ray with the shape, sorted by distance to the ray's start
     let intersections = shape
         .edge_iter()
-        .flat_map(|edge| edge.collides_at(ray))
+        .filter_map(|edge| edge.collides_at(ray))
         .sorted_by_key(|p| NotNan::new(ray.start.distance_to(p)).unwrap())
         .collect_vec();
 
     //every pair of (sorted) intersections defines a clipped line
     intersections
         .chunks(2)
-        .flat_map(|pair| {
+        .filter_map(|pair| {
             if pair.len() == 1 {
                 return None;
             }
             let start = pair[0];
             let end = pair[1];
-            if start != end {
-                Some(Edge::try_new(start, end).unwrap().scale(CLIPPING_TRIM))
-            } else {
+            if start == end {
                 None
+            } else {
+                Some(Edge::try_new(start, end).unwrap().scale(CLIPPING_TRIM))
             }
         })
         .collect_vec()
@@ -193,9 +193,10 @@ fn loss_function(
 
         let min_distance_to_ray = f32::min(*min_distance_to_existing_ray, distance_to_new_ray);
 
-        match min_distance_to_ray < radius_of_ray_influence {
-            true => f32::min(*min_distance_to_pole, min_distance_to_ray),
-            false => *min_distance_to_pole,
+        if min_distance_to_ray < radius_of_ray_influence {
+            f32::min(*min_distance_to_pole, min_distance_to_ray)
+        } else {
+            *min_distance_to_pole
         }
     })
     .map(|d| d.powi(2))

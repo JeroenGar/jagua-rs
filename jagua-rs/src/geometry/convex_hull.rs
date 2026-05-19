@@ -8,7 +8,7 @@ use anyhow::{Result, bail};
 pub fn convex_hull_indices(shape: &SPolygon) -> Vec<usize> {
     let c_hull = convex_hull_from_points(shape.vertices.clone());
     let mut indices = vec![];
-    for p in c_hull.iter() {
+    for p in &c_hull {
         indices.push(shape.vertices.iter().position(|x| x == p).unwrap());
     }
     indices

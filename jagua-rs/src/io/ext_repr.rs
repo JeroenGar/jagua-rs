@@ -35,7 +35,7 @@ pub struct ExtContainer {
 #[serde(tag = "type", content = "data")]
 #[serde(rename_all = "snake_case")]
 pub enum ExtShape {
-    /// Axis-aligned rectangle. With its left bottom corner at (x_min, y_min), a width and height
+    /// Axis-aligned rectangle. With its left bottom corner at (`x_min`, `y_min`), a width and height
     Rectangle {
         x_min: f32,
         y_min: f32,

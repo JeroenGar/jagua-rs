@@ -42,7 +42,7 @@ impl QTHazard {
         }
     }
 
-    /// Returns the resulting QTHazards after constricting to the provided quadrants.
+    /// Returns the resulting `QTHazards` after constricting to the provided quadrants.
     /// The quadrants should be ordered according to the [Cartesian system](https://en.wikipedia.org/wiki/Quadrant_(plane_geometry))
     /// and should all be inside the bounds from which `self` was created.
     pub fn constrict(&self, quadrants: [Rect; 4], haz_map: &SlotMap<HazKey, Hazard>) -> [Self; 4] {
@@ -91,7 +91,7 @@ impl QTHazard {
                     let mut constricted_hazards = quadrants.map(|q| {
                         //For every quadrant, collect the edges that are colliding with it
                         let mut colliding_edges = None;
-                        for edge in partial_haz.edges.iter() {
+                        for edge in &partial_haz.edges {
                             if q.collides_with(edge) {
                                 colliding_edges.get_or_insert_with(Vec::new).push(*edge);
                             }

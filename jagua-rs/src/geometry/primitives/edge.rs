@@ -108,8 +108,8 @@ impl Edge {
 
     pub fn centroid(&self) -> Point {
         Point(
-            (self.start.0 + self.end.0) / 2.0,
-            (self.start.1 + self.end.1) / 2.0,
+            f32::midpoint(self.start.0, self.end.0),
+            f32::midpoint(self.start.1, self.end.1),
         )
     }
 
@@ -218,9 +218,10 @@ fn edge_intersection(e1: &Edge, e2: &Edge, calc_loc: bool) -> Intersection {
     let u = u_nom / u_denom;
     if (0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u) {
         //intersection point is within the bounds of both edges
-        let loc = match calc_loc {
-            false => None,
-            true => Some(Point(x2 + t * (x1 - x2), y2 + t * (y1 - y2))),
+        let loc = if calc_loc {
+            Some(Point(x2 + t * (x1 - x2), y2 + t * (y1 - y2)))
+        } else {
+            None
         };
         return Intersection::Yes(loc);
     }

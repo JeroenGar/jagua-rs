@@ -31,7 +31,7 @@ pub fn snapshot_matches_layout(layout: &Layout, layout_snapshot: &LayoutSnapshot
 
 pub fn collision_hazards_sorted_correctly(hazards: &[QTHazard]) -> bool {
     let mut partial_hazard_detected = false;
-    for hazard in hazards.iter() {
+    for hazard in hazards {
         match hazard.presence {
             QTHazPresence::Partial(_) => {
                 partial_hazard_detected = true;
@@ -44,7 +44,7 @@ pub fn collision_hazards_sorted_correctly(hazards: &[QTHazard]) -> bool {
             QTHazPresence::None => {
                 panic!("None hazard should never be collision hazard vec");
             }
-        };
+        }
     }
     true
 }
@@ -94,7 +94,7 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
     //rebuild the quadtree
     let container = &layout.container;
     let mut fresh_cde = container.base_cde.as_ref().clone();
-    for (pk, pi) in layout.placed_items.iter() {
+    for (pk, pi) in &layout.placed_items {
         let hazard = Hazard::new((pk, pi).into(), pi.shape.clone(), true);
         fresh_cde.register_hazard(hazard);
     }
@@ -223,7 +223,7 @@ fn hazards_match<'a>(
     true
 }
 
-/// Checks if the quadrants follow the layout set in [Rect::QUADRANT_NEIGHBOR_LAYOUT]
+/// Checks if the quadrants follow the layout set in [`Rect::QUADRANT_NEIGHBOR_LAYOUT`]
 pub fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
     let layout = Rect::QUADRANT_NEIGHBOR_LAYOUT;
     for (idx, q) in quadrants.iter().enumerate() {

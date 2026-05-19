@@ -35,7 +35,7 @@ impl CDEngine {
         let mut quadtree = QTNode::new(config.quadtree_depth, bbox, config.cd_threshold);
         let mut hazards_map = SlotMap::with_key();
 
-        for haz in static_hazards.into_iter() {
+        for haz in static_hazards {
             let hkey = hazards_map.insert(haz);
             let qt_haz = QTHazard::from_root(quadtree.bbox, &hazards_map[hkey], hkey);
             quadtree.register_hazard(qt_haz, &hazards_map);
@@ -119,7 +119,7 @@ impl CDEngine {
             .collect_vec();
         let mut hazards_to_add = vec![];
 
-        for hazard in snapshot.dynamic_hazards.iter() {
+        for hazard in &snapshot.dynamic_hazards {
             let present = hazards_to_remove
                 .iter()
                 .position(|(_, h)| h == &hazard.entity);
@@ -158,10 +158,7 @@ impl CDEngine {
     /// * `shape` - The shape (already transformed) to be checked for collisions
     /// * `filter` - Hazard filter to be applied
     pub fn detect_poly_collision(&self, shape: &SPolygon, filter: &impl HazardFilter) -> bool {
-        if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding {
-            //The CDE does not capture the entire shape, so we can immediately return true
-            true
-        } else {
+        if self.bbox().relation_to(shape.bbox) == GeoRelation::Surrounding {
             //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
             let v_qt_root = self.get_virtual_root(shape.bbox);
 
@@ -193,6 +190,9 @@ impl CDEngine {
             }
 
             false
+        } else {
+            //The CDE does not capture the entire shape, so we can immediately return true
+            true
         }
     }
 
@@ -301,7 +301,7 @@ impl CDEngine {
     ) {
         for pole in base_surrogate.ff_poles() {
             let t_pole = pole.transform_clone(transform);
-            self.quadtree.collect_collisions(&t_pole, collector)
+            self.quadtree.collect_collisions(&t_pole, collector);
         }
         for pier in base_surrogate.ff_piers() {
             let t_pier = pier.transform_clone(transform);
