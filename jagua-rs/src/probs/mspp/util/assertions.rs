@@ -2,6 +2,7 @@ use crate::entities::Item;
 use crate::probs::mspp::entities::{MSPProblem, MSPSolution};
 use crate::util::assertions::snapshot_matches_layout;
 
+#[must_use]
 pub fn problem_matches_solution(mspp: &MSPProblem, sol: &MSPSolution) -> bool {
     let MSPSolution {
         layout_snapshots,
@@ -9,13 +10,13 @@ pub fn problem_matches_solution(mspp: &MSPProblem, sol: &MSPSolution) -> bool {
         time_stamp: _,
     } = sol;
 
-    assert_eq!(mspp.density(), sol.density(&mspp.instance));
+    assert!((mspp.density() - sol.density(&mspp.instance)).abs() <= f32::EPSILON);
     assert_eq!(mspp.layouts.len(), layout_snapshots.len());
     assert_eq!(mspp.strips.len(), strips.len());
 
     mspp.layouts.iter().for_each(|(lk, l)| {
         let ls = &layout_snapshots[lk];
-        assert!(snapshot_matches_layout(l, ls))
+        assert!(snapshot_matches_layout(l, ls));
     });
 
     // Check that each layout in the problem has a matching snapshot in the solution
@@ -30,6 +31,7 @@ pub fn problem_matches_solution(mspp: &MSPProblem, sol: &MSPSolution) -> bool {
     true
 }
 
+#[must_use]
 pub fn instance_item_ids_correct(items: &[(Item, usize)]) -> bool {
     items
         .iter()

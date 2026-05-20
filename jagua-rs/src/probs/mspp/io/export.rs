@@ -8,6 +8,7 @@ use crate::probs::mspp::io::ext_repr::ExtMSPSolution;
 use itertools::Itertools;
 
 /// Exports a solution out of the library
+#[must_use]
 pub fn export(instance: &MSPInstance, solution: &MSPSolution, epoch: Instant) -> ExtMSPSolution {
     ExtMSPSolution {
         layouts: solution
