@@ -43,6 +43,7 @@ pub fn layout_to_svg(
     Document::new().set("viewBox", vbox_svg).add(group)
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn layout_to_svg_group(
     layout: &Layout,
     instance: &impl Instance,
@@ -126,7 +127,7 @@ pub fn layout_to_svg_group(
             .add(title)
     };
 
-    let qz_group = {
+    let quality_zones_group = {
         let mut qz_group = Group::new().set("id", "quality_zones");
 
         //quality zones
@@ -166,7 +167,7 @@ pub fn layout_to_svg_group(
         let mut surrogate_defs = Definitions::new();
         for item in instance.items() {
             let color = match item.min_quality {
-                None => theme.item_fill.to_owned(),
+                None => theme.item_fill,
                 Some(q) => svg_util::blend_colors(theme.item_fill, theme.qz_fill[q]),
             };
             item_defs = item_defs.add(Group::new().set("id", format!("item_{}", item.id)).add(
@@ -186,13 +187,12 @@ pub fn layout_to_svg_group(
                 ),
             ));
 
-            let int_transf = match options.draw_cd_shapes {
-                true => Transformation::empty(), //already in internal coordinates
-                false => {
-                    // The original shape is drawn on the SVG, we need to inverse the pre-transform
-                    let pre_transform = item.shape_orig.pre_transform.compose();
-                    pre_transform.inverse()
-                }
+            let int_transf = if options.draw_cd_shapes {
+                Transformation::empty()
+            } else {
+                // The original shape is drawn on the SVG, we need to inverse the pre-transform
+                let pre_transform = item.shape_orig.pre_transform.compose();
+                pre_transform.inverse()
             };
 
             if options.surrogate {
@@ -224,7 +224,7 @@ pub fn layout_to_svg_group(
                 let poi = &surrogate.poles[0];
                 let ff_poles = surrogate.ff_poles();
 
-                for pole in surrogate.poles.iter() {
+                for pole in &surrogate.poles {
                     if pole == poi {
                         let svg_circle =
                             svg_util::circle(pole.transform_clone(&int_transf), &poi_style);
@@ -245,7 +245,7 @@ pub fn layout_to_svg_group(
                         &ff_style,
                     ));
                 }
-                surrogate_defs = surrogate_defs.add(surrogate_group)
+                surrogate_defs = surrogate_defs.add(surrogate_group);
             }
 
             if options.highlight_cd_shapes {
@@ -257,7 +257,7 @@ pub fn layout_to_svg_group(
                 ));
                 if options.draw_cd_shapes {
                     //draw all the vertices as dots
-                    for p in t_shape_cd.vertices.iter() {
+                    for p in &t_shape_cd.vertices {
                         let circle = Circle {
                             center: *p,
                             radius: 0.5 * stroke_width,
@@ -277,12 +277,11 @@ pub fn layout_to_svg_group(
         let mut highlight_cd_shapes_group = Group::new().set("id", "highlight_cd_shapes");
 
         for pi in layout.placed_items.values() {
-            let dtransf = match options.draw_cd_shapes {
-                true => pi.d_transf,
-                false => {
-                    let item = instance.item(pi.item_id);
-                    int_to_ext_transformation(&pi.d_transf, &item.shape_orig.pre_transform)
-                }
+            let dtransf = if options.draw_cd_shapes {
+                pi.d_transf
+            } else {
+                let item = instance.item(pi.item_id);
+                int_to_ext_transformation(&pi.d_transf, &item.shape_orig.pre_transform)
             };
             let title = Title::new(format!("item, id: {}, transf: [{}]", pi.item_id, dtransf));
             let pi_ref = Use::new()
@@ -311,128 +310,119 @@ pub fn layout_to_svg_group(
     };
 
     //draw quadtree (if enabled)
-    let qt_group = match options.quadtree {
-        false => None,
-        true => {
-            let qt_data = svg_util::quad_tree_data(&layout.cde().quadtree, &NoFilter);
-            let qt_group = Group::new()
-                .set("id", "quadtree")
-                .add(svg_util::data_to_path(
-                    qt_data.0,
-                    &[
-                        ("fill", "red"),
-                        ("stroke-width", &*format!("{}", stroke_width * 0.25)),
-                        ("fill-rule", "nonzero"),
-                        ("fill-opacity", "0.6"),
-                        ("stroke", "black"),
-                    ],
-                ))
-                .add(svg_util::data_to_path(
-                    qt_data.1,
-                    &[
-                        ("fill", "none"),
-                        ("stroke-width", &*format!("{}", stroke_width * 0.25)),
-                        ("fill-rule", "nonzero"),
-                        ("fill-opacity", "0.3"),
-                        ("stroke", "black"),
-                    ],
-                ))
-                .add(svg_util::data_to_path(
-                    qt_data.2,
-                    &[
-                        ("fill", "green"),
-                        ("fill-opacity", "0.6"),
-                        ("stroke-width", &*format!("{}", stroke_width * 0.25)),
-                        ("stroke", "black"),
-                    ],
-                ));
-            Some(qt_group)
-        }
+    let quad_tree_group = if options.quadtree {
+        let qt_data = svg_util::quad_tree_data(&layout.cde().quadtree, &NoFilter);
+        let qt_group = Group::new()
+            .set("id", "quadtree")
+            .add(svg_util::data_to_path(
+                qt_data.0,
+                &[
+                    ("fill", "red"),
+                    ("stroke-width", &*format!("{}", stroke_width * 0.25)),
+                    ("fill-rule", "nonzero"),
+                    ("fill-opacity", "0.6"),
+                    ("stroke", "black"),
+                ],
+            ))
+            .add(svg_util::data_to_path(
+                qt_data.1,
+                &[
+                    ("fill", "none"),
+                    ("stroke-width", &*format!("{}", stroke_width * 0.25)),
+                    ("fill-rule", "nonzero"),
+                    ("fill-opacity", "0.3"),
+                    ("stroke", "black"),
+                ],
+            ))
+            .add(svg_util::data_to_path(
+                qt_data.2,
+                &[
+                    ("fill", "green"),
+                    ("fill-opacity", "0.6"),
+                    ("stroke-width", &*format!("{}", stroke_width * 0.25)),
+                    ("stroke", "black"),
+                ],
+            ));
+        Some(qt_group)
+    } else {
+        None
     };
 
     //highlight colliding items (if enabled)
-    let collision_group = match options.highlight_collisions {
-        false => None,
-        true => {
-            let mut collision_group = Group::new().set("id", "collision_lines");
-            for (pk, pi) in layout.placed_items.iter() {
-                let collector = {
-                    let mut collector =
-                        BasicHazardCollector::with_capacity(layout.cde().hazards_map.len());
-                    layout
-                        .cde()
-                        .collect_poly_collisions(&pi.shape, &mut collector);
-                    collector.retain(|_, entity| {
-                        // filter out the item itself
-                        if let HazardEntity::PlacedItem {
-                            pk: colliding_pk, ..
-                        } = entity
-                        {
-                            *colliding_pk != pk
-                        } else {
-                            true
-                        }
-                    });
-                    collector
-                };
-                for (_, haz_entity) in collector.iter() {
-                    match haz_entity {
-                        HazardEntity::PlacedItem {
-                            pk: colliding_pk, ..
-                        } => {
-                            let haz_hash = {
-                                let mut hasher = DefaultHasher::new();
-                                haz_entity.hash(&mut hasher);
-                                hasher.finish()
-                            };
-                            let pi_hash = {
-                                let mut hasher = DefaultHasher::new();
-                                HazardEntity::from((pk, pi)).hash(&mut hasher);
-                                hasher.finish()
-                            };
+    let collision_group = if options.highlight_collisions {
+        let mut collision_group = Group::new().set("id", "collision_lines");
+        for (pk, pi) in &layout.placed_items {
+            let collector = {
+                let mut collector =
+                    BasicHazardCollector::with_capacity(layout.cde().hazards_map.len());
+                layout
+                    .cde()
+                    .collect_poly_collisions(&pi.shape, &mut collector);
+                collector.retain(|_, entity| {
+                    // filter out the item itself
+                    if let HazardEntity::PlacedItem {
+                        pk: colliding_pk, ..
+                    } = entity
+                    {
+                        *colliding_pk != pk
+                    } else {
+                        true
+                    }
+                });
+                collector
+            };
+            for (_, haz_entity) in &collector {
+                match haz_entity {
+                    HazardEntity::PlacedItem {
+                        pk: colliding_pk, ..
+                    } => {
+                        let haz_hash = {
+                            let mut hasher = DefaultHasher::new();
+                            haz_entity.hash(&mut hasher);
+                            hasher.finish()
+                        };
+                        let pi_hash = {
+                            let mut hasher = DefaultHasher::new();
+                            HazardEntity::from((pk, pi)).hash(&mut hasher);
+                            hasher.finish()
+                        };
 
-                            if haz_hash < pi_hash {
-                                // avoid duplicate lines
-                                let start = pi.shape.poi.center;
-                                let end = layout.placed_items[*colliding_pk].shape.poi.center;
-                                collision_group = collision_group.add(svg_util::data_to_path(
-                                    svg_util::edge_data(Edge { start, end }),
-                                    &[
-                                        (
-                                            "stroke",
-                                            &*format!("{}", theme.collision_highlight_color),
-                                        ),
-                                        ("stroke-opacity", "0.75"),
-                                        ("stroke-width", &*format!("{}", stroke_width * 4.0)),
-                                        (
-                                            "stroke-dasharray",
-                                            &*format!(
-                                                "{} {}",
-                                                4.0 * stroke_width,
-                                                8.0 * stroke_width
-                                            ),
-                                        ),
-                                        ("stroke-linecap", "round"),
-                                        ("stroke-linejoin", "round"),
-                                    ],
-                                ));
-                            }
-                        }
-                        HazardEntity::Exterior => {
-                            collision_group = collision_group.add(svg_util::point(
-                                pi.shape.poi.center,
-                                Some(&*format!("{}", theme.collision_highlight_color)),
-                                Some(3.0 * stroke_width),
+                        if haz_hash < pi_hash {
+                            // avoid duplicate lines
+                            let start = pi.shape.poi.center;
+                            let end = layout.placed_items[*colliding_pk].shape.poi.center;
+                            collision_group = collision_group.add(svg_util::data_to_path(
+                                svg_util::edge_data(Edge { start, end }),
+                                &[
+                                    ("stroke", &*format!("{}", theme.collision_highlight_color)),
+                                    ("stroke-opacity", "0.75"),
+                                    ("stroke-width", &*format!("{}", stroke_width * 4.0)),
+                                    (
+                                        "stroke-dasharray",
+                                        &*format!("{} {}", 4.0 * stroke_width, 8.0 * stroke_width),
+                                    ),
+                                    ("stroke-linecap", "round"),
+                                    ("stroke-linejoin", "round"),
+                                ],
                             ));
                         }
-                        _ => {
-                            warn!("unexpected hazard entity");
-                        }
+                    }
+                    HazardEntity::Exterior => {
+                        collision_group = collision_group.add(svg_util::point(
+                            pi.shape.poi.center,
+                            Some(&*format!("{}", theme.collision_highlight_color)),
+                            Some(3.0 * stroke_width),
+                        ));
+                    }
+                    _ => {
+                        warn!("unexpected hazard entity");
                     }
                 }
             }
-            Some(collision_group)
         }
+        Some(collision_group)
+    } else {
+        None
     };
 
     if options.highlight_cd_shapes {
@@ -445,17 +435,17 @@ pub fn layout_to_svg_group(
     let optionals = [
         Some(highlight_cd_shape_group),
         Some(surrogate_group),
-        qt_group,
+        quad_tree_group,
         collision_group,
     ]
     .into_iter()
     .flatten()
-    .fold(Group::new().set("id", "optionals"), |g, opt| g.add(opt));
+    .fold(Group::new().set("id", "optionals"), Group::add);
 
     let combined_group = Group::new()
         .add(container_group)
         .add(items_group)
-        .add(qz_group)
+        .add(quality_zones_group)
         .add(optionals)
         .add(label);
 

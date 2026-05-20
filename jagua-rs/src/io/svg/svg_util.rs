@@ -9,6 +9,7 @@ use std::fmt::{Display, Formatter};
 use svg::node::element::path::Data;
 use svg::node::element::{Circle, Path};
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, Copy)]
 #[serde(default)]
 pub struct SvgDrawOptions {
@@ -100,23 +101,25 @@ impl SvgLayoutTheme {
     };
 }
 
+#[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 pub fn change_brightness(color: Color, fraction: f32) -> Color {
     let Color(r, g, b) = color;
 
-    let r = (r as f32 * fraction) as u8;
-    let g = (g as f32 * fraction) as u8;
-    let b = (b as f32 * fraction) as u8;
+    let r = (f32::from(r) * fraction) as u8;
+    let g = (f32::from(g) * fraction) as u8;
+    let b = (f32::from(b) * fraction) as u8;
     Color(r, g, b)
 }
 
+#[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 pub fn blend_colors(color_1: Color, color_2: Color) -> Color {
     //blend color_1 and color_2
     let Color(r_1, g_1, b_1) = color_1;
     let Color(r_2, g_2, b_2) = color_2;
 
-    let r = ((r_1 as f32 * 0.5) + (r_2 as f32 * 0.5)) as u8;
-    let g = ((g_1 as f32 * 0.5) + (g_2 as f32 * 0.5)) as u8;
-    let b = ((b_1 as f32 * 0.5) + (b_2 as f32 * 0.5)) as u8;
+    let r = ((f32::from(r_1) * 0.5) + (f32::from(r_2) * 0.5)) as u8;
+    let g = ((f32::from(g_1) * 0.5) + (f32::from(g_2) * 0.5)) as u8;
+    let b = ((f32::from(b_1) * 0.5) + (f32::from(b_2) * 0.5)) as u8;
 
     Color(r, g, b)
 }
@@ -172,9 +175,10 @@ pub fn original_shape_data(
     internal: &SPolygon,
     draw_internal: bool,
 ) -> Data {
-    match draw_internal {
-        true => simple_polygon_data(internal),
-        false => simple_polygon_data(&original.shape),
+    if draw_internal {
+        simple_polygon_data(internal)
+    } else {
+        simple_polygon_data(&original.shape)
     }
 }
 
@@ -199,6 +203,7 @@ pub fn quad_tree_data(
     )
 }
 
+#[allow(clippy::similar_names)]
 fn qt_node_data(
     qt_node: &QTNode,
     mut data_eh: Data, //entire hazards data
@@ -208,35 +213,34 @@ fn qt_node_data(
 ) -> (Data, Data, Data) {
     //Only draw qt_nodes that do not have a child
 
-    match (qt_node.children.as_ref(), qt_node.hazards.strongest(filter)) {
-        (Some(children), Some(_)) => {
-            //not a leaf node, go to children
-            for child in children.iter() {
-                let data = qt_node_data(child, data_eh, data_ph, data_nh, filter);
-                data_eh = data.0;
-                data_ph = data.1;
-                data_nh = data.2;
-            }
+    if let (Some(children), Some(_)) =
+        (qt_node.children.as_ref(), qt_node.hazards.strongest(filter))
+    {
+        //not a leaf node, go to children
+        for child in children.iter() {
+            let data = qt_node_data(child, data_eh, data_ph, data_nh, filter);
+            data_eh = data.0;
+            data_ph = data.1;
+            data_nh = data.2;
         }
-        (Some(_), None) | (None, _) => {
-            //leaf node, draw it
-            let rect = &qt_node.bbox;
-            let draw = |data: Data| -> Data {
-                data.move_to((rect.x_min, rect.y_min))
-                    .line_to((rect.x_max, rect.y_min))
-                    .line_to((rect.x_max, rect.y_max))
-                    .line_to((rect.x_min, rect.y_max))
-                    .close()
-            };
+    } else {
+        //leaf node, draw it
+        let rect = &qt_node.bbox;
+        let draw = |data: Data| -> Data {
+            data.move_to((rect.x_min, rect.y_min))
+                .line_to((rect.x_max, rect.y_min))
+                .line_to((rect.x_max, rect.y_max))
+                .line_to((rect.x_min, rect.y_max))
+                .close()
+        };
 
-            match qt_node.hazards.strongest(filter) {
-                Some(ch) => match ch.presence {
-                    QTHazPresence::Entire => data_eh = draw(data_eh),
-                    QTHazPresence::Partial(_) => data_ph = draw(data_ph),
-                    QTHazPresence::None => unreachable!(),
-                },
-                None => data_nh = draw(data_nh),
-            }
+        match qt_node.hazards.strongest(filter) {
+            Some(ch) => match ch.presence {
+                QTHazPresence::Entire => data_eh = draw(data_eh),
+                QTHazPresence::Partial(_) => data_ph = draw(data_ph),
+                QTHazPresence::None => unreachable!(),
+            },
+            None => data_nh = draw(data_nh),
         }
     }
 
@@ -246,7 +250,7 @@ fn qt_node_data(
 pub fn data_to_path(data: Data, params: &[(&str, &str)]) -> Path {
     let mut path = Path::new();
     for param in params {
-        path = path.set(param.0, param.1)
+        path = path.set(param.0, param.1);
     }
     path.set("d", data)
 }
@@ -265,7 +269,7 @@ pub fn circle(circle: geometry::primitives::Circle, params: &[(&str, &str)]) -> 
         .set("cy", circle.center.1)
         .set("r", circle.radius);
     for param in params {
-        circle = circle.set(param.0, param.1)
+        circle = circle.set(param.0, param.1);
     }
     circle
 }

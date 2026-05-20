@@ -31,10 +31,12 @@ const TRANSFORM_FORMULA: fn(f32, f32, &Transformation) -> (f32, f32) = |x, y, t|
 };
 
 impl Point {
+    #[must_use]
     pub fn x(&self) -> f32 {
         self.0
     }
 
+    #[must_use]
     pub fn y(&self) -> f32 {
         self.1
     }

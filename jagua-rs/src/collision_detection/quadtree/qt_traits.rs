@@ -7,8 +7,8 @@ use std::cmp::Ordering;
 /// for collisions with the edges of the registered hazards. These include: [Rect], [Edge] and [Circle].
 pub trait QTQueryable: CollidesWith<Edge> + CollidesWith<Rect> {
     /// Checks
-    fn collides_with_quadrants(&self, _r: &Rect, qs: [&Rect; 4]) -> [bool; 4] {
-        debug_assert!(_r.quadrants().iter().zip(qs.iter()).all(|(q, r)| *q == **r));
+    fn collides_with_quadrants(&self, r: &Rect, qs: [&Rect; 4]) -> [bool; 4] {
+        debug_assert!(r.quadrants().iter().zip(qs.iter()).all(|(q, r)| *q == **r));
         qs.map(|q| self.collides_with(q))
     }
 }
@@ -17,6 +17,7 @@ impl QTQueryable for Circle {}
 impl QTQueryable for Rect {}
 
 impl QTQueryable for Edge {
+    #[allow(clippy::similar_names)]
     fn collides_with_quadrants(&self, r: &Rect, qs: [&Rect; 4]) -> [bool; 4] {
         debug_assert!(r.quadrants().iter().zip(qs.iter()).all(|(q, r)| *q == **r));
         let e_x_min = self.x_min();
@@ -139,6 +140,7 @@ fn half_intersect<const N: usize>(
     }
 }
 
+#[allow(clippy::inline_always)]
 #[inline(always)]
 // Similar to `edge_intersection`, but in case of an intersection, it returns in which half for both edge the intersection occurs.
 fn edge_intersection_half(e1: &Edge, e2: &Edge) -> Option<(CollisionHalf, CollisionHalf)> {

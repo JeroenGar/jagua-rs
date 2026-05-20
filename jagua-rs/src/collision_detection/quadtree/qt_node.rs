@@ -25,6 +25,7 @@ pub struct QTNode {
 }
 
 impl QTNode {
+    #[must_use]
     pub fn new(level: u8, bbox: Rect, cd_threshold: u8) -> Self {
         QTNode {
             level,
@@ -108,38 +109,35 @@ impl QTNode {
                 QTHazPresence::Entire => Some(&strongest_hazard.entity),
                 QTHazPresence::Partial(_) => {
                     // Condition to perform collision detection now or pass it to children:
-                    match &self.children {
-                        Some(children) => {
-                            //Check if any of the children collide with the entity
-                            let quadrants = [0, 1, 2, 3].map(|idx| &children[idx].bbox);
-                            let colliding_quadrants =
-                                entity.collides_with_quadrants(&self.bbox, quadrants);
+                    if let Some(children) = &self.children {
+                        //Check if any of the children collide with the entity
+                        let quadrants = [0, 1, 2, 3].map(|idx| &children[idx].bbox);
+                        let colliding_quadrants =
+                            entity.collides_with_quadrants(&self.bbox, quadrants);
 
-                            colliding_quadrants
-                                .iter()
-                                .enumerate()
-                                .filter(|(_, collides)| **collides)
-                                .map(|idx| children[idx.0].collides(entity, filter))
-                                .find(|x| x.is_some())
-                                .flatten()
-                        }
-                        None => {
-                            //Check if any of the partially present (and active) hazards collide with the entity
-                            let mut relevant_hazards = self
-                                .hazards
-                                .iter()
-                                .filter(|hz| !filter.is_irrelevant(hz.hkey));
+                        colliding_quadrants
+                            .iter()
+                            .enumerate()
+                            .filter(|(_, collides)| **collides)
+                            .map(|idx| children[idx.0].collides(entity, filter))
+                            .find(Option::is_some)
+                            .flatten()
+                    } else {
+                        //Check if any of the partially present (and active) hazards collide with the entity
+                        let mut relevant_hazards = self
+                            .hazards
+                            .iter()
+                            .filter(|hz| !filter.is_irrelevant(hz.hkey));
 
-                            relevant_hazards
-                                .find(|hz| match &hz.presence {
-                                    QTHazPresence::None => false,
-                                    QTHazPresence::Entire => {
-                                        unreachable!("should have been handled above")
-                                    }
-                                    QTHazPresence::Partial(p_haz) => p_haz.collides_with(entity),
-                                })
-                                .map(|hz| &hz.entity)
-                        }
+                        relevant_hazards
+                            .find(|hz| match &hz.presence {
+                                QTHazPresence::None => false,
+                                QTHazPresence::Entire => {
+                                    unreachable!("should have been handled above")
+                                }
+                                QTHazPresence::Partial(p_haz) => p_haz.collides_with(entity),
+                            })
+                            .map(|hz| &hz.entity)
                     }
                 }
             },

@@ -1,3 +1,5 @@
+#![allow(clippy::inline_always)]
+
 use std::borrow::Borrow;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -14,18 +16,21 @@ pub struct Transformation {
 
 impl Transformation {
     /// Creates a transformation with no effect.
+    #[must_use]
     pub const fn empty() -> Self {
         Self {
             matrix: EMPTY_MATRIX,
         }
     }
 
+    #[must_use]
     pub fn from_translation((tx, ty): (f32, f32)) -> Self {
         Self {
             matrix: transl_m((tx, ty)),
         }
     }
 
+    #[must_use]
     pub fn from_rotation(angle: f32) -> Self {
         Self {
             matrix: rot_m(angle),
@@ -33,53 +38,63 @@ impl Transformation {
     }
 
     /// Applies a rotation to `self`.
+    #[must_use]
     pub fn rotate(mut self, angle: f32) -> Self {
         self.matrix = dot_prod(&rot_m(angle), &self.matrix);
         self
     }
 
     /// Applies a translation to `self`.
+    #[must_use]
     pub fn translate(mut self, (tx, ty): (f32, f32)) -> Self {
         self.matrix = dot_prod(&transl_m((tx, ty)), &self.matrix);
         self
     }
 
     /// Applies a translation followed by a rotation to `self`.
+    #[must_use]
     pub fn rotate_translate(mut self, angle: f32, (tx, ty): (f32, f32)) -> Self {
         self.matrix = dot_prod(&rot_transl_m(angle, (tx, ty)), &self.matrix);
         self
     }
 
     /// Applies a rotation followed by a translation to `self`.
+    #[must_use]
     pub fn translate_rotate(mut self, (tx, ty): (f32, f32), angle: f32) -> Self {
         self.matrix = dot_prod(&transl_rot_m((tx, ty), angle), &self.matrix);
         self
     }
 
     /// Applies `other` to `self`.
+    #[must_use]
     pub fn transform(mut self, other: &Self) -> Self {
         self.matrix = dot_prod(&other.matrix, &self.matrix);
         self
     }
 
+    #[must_use]
     pub fn transform_from_decomposed(self, other: &DTransformation) -> Self {
         self.rotate_translate(other.rotation(), other.translation())
     }
 
     /// Generates the transformation that undoes the effect of `self`.
+    #[must_use]
     pub fn inverse(mut self) -> Self {
         self.matrix = inverse(&self.matrix);
         self
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.matrix == EMPTY_MATRIX
     }
 
+    #[must_use]
     pub fn matrix(&self) -> &[[NotNan<f32>; 3]; 3] {
         &self.matrix
     }
 
+    #[must_use]
     pub fn decompose(&self) -> DTransformation {
         let m = self.matrix();
         let angle = m[1][0].atan2(m[0][0].into_inner());

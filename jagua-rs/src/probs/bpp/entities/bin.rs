@@ -15,6 +15,7 @@ pub struct Bin {
 
 impl Bin {
     /// Creates a new bin with the given id, container, stock, and cost.
+    #[must_use]
     pub fn new(container: Container, stock: usize, cost: u64) -> Self {
         Self {
             id: container.id,

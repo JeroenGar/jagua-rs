@@ -15,7 +15,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Re
             .par_iter()
             .map(|ext_item| {
                 let item = importer.import_item(&ext_item.base)?;
-                let demand = ext_item.demand as usize;
+                let demand = usize::try_from(ext_item.demand).unwrap();
                 Ok((item, demand))
             })
             .collect::<Result<Vec<(Item, usize)>>>()?;
@@ -54,6 +54,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Re
 }
 
 /// Imports a solution into the library.
+#[must_use]
 pub fn import_solution(_instance: &MSPInstance, _ext_solution: &ExtMSPInstance) -> MSPSolution {
     unimplemented!("not yet implemented")
 }

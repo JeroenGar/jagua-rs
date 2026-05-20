@@ -26,6 +26,7 @@ impl Importer {
     /// * `simplify_tolerance` - See [`ShapeModifyConfig`].
     /// * `min_item_separation` - Optional minimum separation distance between items and any other hazard. If enabled, every hazard is inflated/deflated by half this value. See [`ShapeModifyConfig`].
     /// * `narrow_concavity_cutoff` - Optional definition for closing narrow concavities. If enabled, the shapes are modified to close "narrow" concavities. See [`ShapeModifyConfig`].
+    #[must_use]
     pub fn new(
         cde_config: CDEConfig,
         simplify_tolerance: Option<f32>,
@@ -87,7 +88,7 @@ impl Importer {
         };
 
         Item::new(
-            ext_item.id as usize,
+            usize::try_from(ext_item.id).unwrap(),
             original_shape,
             allowed_orientations,
             base_quality,
@@ -150,7 +151,7 @@ impl Importer {
                             width,
                             height,
                         } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)
-                            .map(|r| r.into()),
+                            .map(Into::into),
                         ExtShape::SimplePolygon(esp) => import_simple_polygon(esp),
                         ExtShape::Polygon(_) => {
                             unimplemented!("No support for polygon to simplepolygon conversion yet")
@@ -185,7 +186,7 @@ impl Importer {
             .collect::<Result<Vec<InferiorQualityZone>>>()?;
 
         Container::new(
-            ext_cont.id as usize,
+            usize::try_from(ext_cont.id).unwrap(),
             original_outer,
             quality_zones,
             self.cde_config,
@@ -209,6 +210,7 @@ pub fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {
 }
 
 /// Returns a transformation that translates the shape's centroid to the origin.
+#[must_use]
 pub fn centering_transformation(shape: &SPolygon) -> DTransformation {
     let Point(cx, cy) = shape.centroid();
     DTransformation::new(0.0, (-cx, -cy))
@@ -218,6 +220,7 @@ pub fn centering_transformation(shape: &SPolygon) -> DTransformation {
 ///
 /// * `ext_transf` - The external transformation.
 /// * `pre_transf` - The transformation that was applied to the original shape to derive the internal representation.
+#[must_use]
 pub fn ext_to_int_transformation(
     ext_transf: &DTransformation,
     pre_transf: &DTransformation,

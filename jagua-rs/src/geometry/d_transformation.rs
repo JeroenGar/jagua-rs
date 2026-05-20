@@ -16,6 +16,7 @@ pub struct DTransformation {
 }
 
 impl DTransformation {
+    #[must_use]
     pub fn new(rotation: f32, translation: (f32, f32)) -> Self {
         Self {
             rotation: NotNan::new(rotation).expect("rotation is NaN"),
@@ -26,6 +27,7 @@ impl DTransformation {
         }
     }
 
+    #[must_use]
     pub const fn empty() -> Self {
         const _0: NotNan<f32> = unsafe { NotNan::new_unchecked(0.0) };
         Self {
@@ -34,14 +36,17 @@ impl DTransformation {
         }
     }
 
+    #[must_use]
     pub fn rotation(&self) -> f32 {
         self.rotation.into()
     }
 
+    #[must_use]
     pub fn translation(&self) -> (f32, f32) {
         (self.translation.0.into(), self.translation.1.into())
     }
 
+    #[must_use]
     pub fn compose(&self) -> Transformation {
         self.into()
     }
@@ -69,6 +74,7 @@ impl Display for DTransformation {
 }
 
 /// Normalizes a rotation angle to the range [0, 2π).
+#[must_use]
 pub fn normalize_rotation(r: f32) -> f32 {
     let normalized = r % (2.0 * PI);
     if normalized < 0.0 {

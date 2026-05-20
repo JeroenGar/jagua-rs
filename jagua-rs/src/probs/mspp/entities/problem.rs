@@ -27,6 +27,7 @@ pub struct MSPProblem {
 }
 
 impl MSPProblem {
+    #[must_use]
     pub fn new(instance: MSPInstance) -> Self {
         let item_demand_qtys = instance.items.iter().map(|(_, qty)| *qty).collect_vec();
 
@@ -100,6 +101,7 @@ impl MSPProblem {
     }
 
     /// Creates a snapshot of the current state of the problem as a [`MSPSolution`].
+    #[must_use]
     pub fn save(&self) -> MSPSolution {
         let solution = MSPSolution {
             layout_snapshots: self.layouts.iter().map(|(lk, l)| (lk, l.save())).collect(),
@@ -120,21 +122,18 @@ impl MSPProblem {
 
         //Check which layouts from the problem are also present in the solution.
         //If a layout is present we might be able to do a (partial) restore instead of fully rebuilding everything.
-        for (lk, layout) in self.layouts.iter_mut() {
+        for (lk, layout) in &mut self.layouts {
             match solution.layout_snapshots.get(lk) {
                 Some(ls) => {
                     //The key is present in the solution
-                    match self.strips[lk] == solution.strips[lk] {
-                        true => {
-                            //Strips match, do a simple restore
-                            layout.restore(ls)
-                        }
-                        false => {
-                            //The strip changed, we need to swap the container and then restore
-                            self.strips[lk] = solution.strips[lk];
-                            layout.swap_container(Container::from(self.strips[lk]));
-                            layout.restore(ls)
-                        }
+                    if self.strips[lk] == solution.strips[lk] {
+                        //Strips match, do a simple restore
+                        layout.restore(ls);
+                    } else {
+                        //The strip changed, we need to swap the container and then restore
+                        self.strips[lk] = solution.strips[lk];
+                        layout.swap_container(Container::from(self.strips[lk]));
+                        layout.restore(ls);
                     }
                 }
                 None => {
@@ -152,7 +151,7 @@ impl MSPProblem {
         }
 
         //Create new layouts for all keys present in solution but not in problem
-        for (lk, ls) in solution.layout_snapshots.iter() {
+        for (lk, ls) in &solution.layout_snapshots {
             if !self.layouts.contains_key(lk) {
                 layout_keys_changed = true;
                 let new_lk = self.layouts.insert(Layout::from_snapshot(ls));
@@ -179,8 +178,7 @@ impl MSPProblem {
     pub fn change_strip_width(&mut self, lk: LayKey, new_width: f32) {
         assert!(
             new_width > 0.0,
-            "Strip width must be positive. Got: {}",
-            new_width
+            "Strip width must be positive. Got: {new_width}"
         );
         let strip = &mut self.strips[lk];
         strip.set_width(new_width);
@@ -214,6 +212,7 @@ impl MSPProblem {
     }
 
     /// Computes the density of the problem as the ratio between the total area of placed items and the total area of containers.
+    #[must_use]
     pub fn density(&self) -> f32 {
         let total_container_area = self.all_layouts().map(|l| l.container.area()).sum::<f32>();
 
@@ -238,10 +237,12 @@ impl MSPProblem {
     }
 
     /// Returns the total width of the strips of all the layouts in the problem.
+    #[must_use]
     pub fn total_strip_width(&self) -> f32 {
         self.strips.iter().map(|(_, s)| s.width).sum()
     }
 
+    #[must_use]
     pub fn n_placed_items(&self) -> usize {
         self.layouts.values().map(|l| l.placed_items.len()).sum()
     }

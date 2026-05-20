@@ -43,6 +43,7 @@ impl Rect {
     /// Returns the geometric relation between `self` and another [`Rect`].
     /// Optimized for `GeoRelation::Disjoint`
     #[inline(always)]
+    #[must_use]
     pub fn relation_to(&self, other: Rect) -> GeoRelation {
         if !self.collides_with(&other) {
             return GeoRelation::Disjoint;
@@ -67,6 +68,7 @@ impl Rect {
     /// Returns the [`GeoRelation`] between `self` and another [`Rect`], with a tolerance for floating point precision.
     /// In edge cases, this method will lean towards `Surrounding` and `Enclosed` instead of `Intersecting`.
     #[inline(always)]
+    #[must_use]
     pub fn almost_relation_to(&self, other: Rect) -> GeoRelation {
         if !self.almost_collides_with(&other) {
             return GeoRelation::Disjoint;
@@ -90,6 +92,7 @@ impl Rect {
 
     /// Returns a new rectangle with the same centroid but inflated
     /// to be the minimum square that contains `self`.
+    #[must_use]
     pub fn inflate_to_square(&self) -> Rect {
         let width = self.x_max - self.x_min;
         let height = self.y_max - self.y_min;
@@ -109,6 +112,7 @@ impl Rect {
     }
 
     /// Returns a new rectangle with the same centroid but scaled by `factor`.
+    #[must_use]
     pub fn scale(self, factor: f32) -> Self {
         let dx = (self.x_max - self.x_min) * (factor - 1.0) / 2.0;
         let dy = (self.y_max - self.y_min) * (factor - 1.0) / 2.0;
@@ -117,7 +121,8 @@ impl Rect {
     }
 
     /// Returns a new rectangle with the same centroid as `self` but expanded by `dx` in both x-directions and by `dy` in both y-directions.
-    /// If the new rectangle is invalid (x_min >= x_max or y_min >= y_max), returns None.
+    /// If the new rectangle is invalid (`x_min` >= `x_max` or `y_min` >= `y_max`), returns None.
+    #[must_use]
     pub fn resize_by(mut self, dx: f32, dy: f32) -> Option<Self> {
         self.x_min -= dx;
         self.y_min -= dy;
@@ -138,6 +143,7 @@ impl Rect {
     /// Returns the 4 quadrants of `self`.
     /// Ordered in the same way as quadrants in a cartesian plane:
     /// <https://en.wikipedia.org/wiki/Quadrant_(plane_geometry)>
+    #[must_use]
     pub fn quadrants(&self) -> [Self; 4] {
         let mid = self.centroid();
         let corners = self.corners();
@@ -150,7 +156,8 @@ impl Rect {
         [q1, q2, q3, q4]
     }
 
-    /// Returns the four corners of `self`, in the same order as [Rect::quadrants].
+    /// Returns the four corners of `self`, in the same order as [`Rect::quadrants`].
+    #[must_use]
     pub fn corners(&self) -> [Point; 4] {
         [
             Point(self.x_max, self.y_max),
@@ -160,7 +167,8 @@ impl Rect {
         ]
     }
 
-    /// Returns the four sides that make up `self`, in the same order as [Rect::quadrants].
+    /// Returns the four sides that make up `self`, in the same order as [`Rect::quadrants`].
+    #[must_use]
     pub fn sides(&self) -> [Edge; 4] {
         let c = self.corners();
         [
@@ -183,7 +191,8 @@ impl Rect {
         ]
     }
 
-    /// Returns the four edges that make up `self`, in the same order as [Rect::quadrants].
+    /// Returns the four edges that make up `self`, in the same order as [`Rect::quadrants`].
+    #[must_use]
     pub fn edges(&self) -> [Edge; 4] {
         let c = self.corners();
         [
@@ -205,15 +214,18 @@ impl Rect {
             },
         ]
     }
+    #[must_use]
     pub fn width(&self) -> f32 {
         self.x_max - self.x_min
     }
 
+    #[must_use]
     pub fn height(&self) -> f32 {
         self.y_max - self.y_min
     }
 
     /// Returns the largest rectangle that is contained in both `a` and `b`.
+    #[must_use]
     pub fn intersection(a: Rect, b: Rect) -> Option<Rect> {
         let x_min = f32::max(a.x_min, b.x_min);
         let y_min = f32::max(a.y_min, b.y_min);
@@ -232,6 +244,7 @@ impl Rect {
     }
 
     /// Returns the smallest rectangle that contains both `a` and `b`.
+    #[must_use]
     pub fn bounding_rect(a: Rect, b: Rect) -> Rect {
         let x_min = f32::min(a.x_min, b.x_min);
         let y_min = f32::min(a.y_min, b.y_min);
@@ -245,17 +258,20 @@ impl Rect {
         }
     }
 
+    #[must_use]
     pub fn centroid(&self) -> Point {
         Point(
-            (self.x_min + self.x_max) / 2.0,
-            (self.y_min + self.y_max) / 2.0,
+            f32::midpoint(self.x_min, self.x_max),
+            f32::midpoint(self.y_min, self.y_max),
         )
     }
 
+    #[must_use]
     pub fn area(&self) -> f32 {
         (self.x_max - self.x_min) * (self.y_max - self.y_min)
     }
 
+    #[must_use]
     pub fn diameter(&self) -> f32 {
         let dx = self.x_max - self.x_min;
         let dy = self.y_max - self.y_min;
@@ -300,6 +316,7 @@ impl AlmostCollidesWith<Point> for Rect {
 
 impl CollidesWith<Edge> for Rect {
     #[inline(always)]
+    #[allow(clippy::similar_names)]
     fn collides_with(&self, edge: &Edge) -> bool {
         //inspired by: https://stackoverflow.com/questions/99353/how-to-test-if-a-line-segment-intersects-an-axis-aligned-rectange-in-2d
 
@@ -377,21 +394,20 @@ impl SeparationDistance<Point> for Rect {
 
     #[inline(always)]
     fn sq_separation_distance(&self, point: &Point) -> (GeoPosition, f32) {
-        match self.collides_with(point) {
-            false => (GeoPosition::Exterior, self.sq_distance_to(point)),
-            true => {
-                let Point(x, y) = *point;
-                let min_distance = [
-                    (x - self.x_min).abs(),
-                    (x - self.x_max).abs(),
-                    (y - self.y_min).abs(),
-                    (y - self.y_max).abs(),
-                ]
-                .into_iter()
-                .min_by_key(|&d| OrderedFloat(d))
-                .unwrap();
-                (GeoPosition::Interior, min_distance.powi(2))
-            }
+        if self.collides_with(point) {
+            let Point(x, y) = *point;
+            let min_distance = [
+                (x - self.x_min).abs(),
+                (x - self.x_max).abs(),
+                (y - self.y_min).abs(),
+                (y - self.y_max).abs(),
+            ]
+            .into_iter()
+            .min_by_key(|&d| OrderedFloat(d))
+            .unwrap();
+            (GeoPosition::Interior, min_distance.powi(2))
+        } else {
+            (GeoPosition::Exterior, self.sq_distance_to(point))
         }
     }
 }

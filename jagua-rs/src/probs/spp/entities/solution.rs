@@ -13,9 +13,11 @@ pub struct SPSolution {
 }
 
 impl SPSolution {
+    #[must_use]
     pub fn density(&self, instance: &SPInstance) -> f32 {
         self.layout_snapshot.density(instance)
     }
+    #[must_use]
     pub fn strip_width(&self) -> f32 {
         self.strip.width
     }

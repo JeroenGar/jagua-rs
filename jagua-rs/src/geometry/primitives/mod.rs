@@ -1,3 +1,5 @@
+#![allow(clippy::inline_always)]
+
 mod circle;
 mod edge;
 mod point;

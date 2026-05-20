@@ -41,7 +41,7 @@ pub fn generate_surrogate_poles(
         assert!(
             all_poles.len() < 1000,
             "More than 1000 poles were generated, please check the SPSurrogateConfig"
-        )
+        );
     }
     Ok(all_poles)
 }
@@ -101,18 +101,19 @@ impl POINode {
 
             let distance_to_border = distance_to_edges
                 .chain(distance_to_poles)
-                .fold(f32::MAX, |acc, d| acc.min(d));
+                .fold(f32::MAX, f32::min);
 
             //if the centroid is outside, distance is counted negative
-            match centroid_inside {
-                true => distance_to_border,
-                false => -distance_to_border,
+            if centroid_inside {
+                distance_to_border
+            } else {
+                -distance_to_border
             }
         };
 
         Self {
-            bbox,
             level,
+            bbox,
             radius,
             distance,
         }

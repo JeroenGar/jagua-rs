@@ -47,6 +47,7 @@ impl Item {
         })
     }
 
+    #[must_use]
     pub fn area(&self) -> f32 {
         self.shape_orig.area()
     }

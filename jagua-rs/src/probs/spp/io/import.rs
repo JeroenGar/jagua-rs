@@ -9,6 +9,7 @@ use itertools::Itertools;
 use rayon::prelude::*;
 
 /// Imports an instance into the library
+#[allow(clippy::cast_precision_loss)]
 pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPInstance> {
     let items: Vec<(Item, usize)> = {
         let mut items = ext_instance
@@ -16,7 +17,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Res
             .par_iter()
             .map(|ext_item| {
                 let item = importer.import_item(&ext_item.base)?;
-                let demand = ext_item.demand as usize;
+                let demand = usize::try_from(ext_item.demand).unwrap();
                 Ok((item, demand))
             })
             .collect::<Result<Vec<(Item, usize)>>>()?;
@@ -62,12 +63,13 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Res
 }
 
 /// Imports a solution into the library.
+#[must_use]
 pub fn import_solution(instance: &SPInstance, ext_solution: &ExtSPSolution) -> SPSolution {
     let mut prob = SPProblem::new(instance.clone());
     prob.change_strip_width(ext_solution.strip_width);
 
     for ext_placement in ext_solution.layout.placed_items.iter().cloned() {
-        let item_id = ext_placement.item_id as usize;
+        let item_id = usize::try_from(ext_placement.item_id).unwrap();
         let d_transf = {
             let ext_transf = DTransformation::from(ext_placement.transformation);
             let item = &instance.item(item_id);

@@ -44,18 +44,20 @@ impl SPSurrogate {
             piers::generate_piers(simple_poly, config.n_ff_piers, relevant_poles_for_piers)?;
 
         Ok(Self {
-            convex_hull_indices,
             poles,
             piers,
+            convex_hull_indices,
             convex_hull_area,
             config,
         })
     }
 
+    #[must_use]
     pub fn ff_poles(&self) -> &[Circle] {
         &self.poles[0..self.config.n_ff_poles]
     }
 
+    #[must_use]
     pub fn ff_piers(&self) -> &[Edge] {
         &self.piers
     }
@@ -73,14 +75,14 @@ impl Transformable for SPSurrogate {
         } = self;
 
         //transform poles
-        poles.iter_mut().for_each(|c| {
+        for c in poles.iter_mut() {
             c.transform(t);
-        });
+        }
 
         //transform piers
-        piers.iter_mut().for_each(|p| {
+        for p in piers.iter_mut() {
             p.transform(t);
-        });
+        }
 
         self
     }
@@ -131,6 +133,7 @@ pub struct SPSurrogateConfig {
 }
 
 impl SPSurrogateConfig {
+    #[must_use]
     pub fn none() -> Self {
         Self {
             n_pole_limits: [(0, 0.0); N_POLE_LIMITS],

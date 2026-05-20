@@ -13,6 +13,7 @@ use std::collections::HashSet;
 //Various checks to verify correctness of the state of the system
 //Used in debug_assertion!() blocks
 
+#[must_use]
 pub fn snapshot_matches_layout(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool {
     if layout.container.id != layout_snapshot.container.id {
         return false;
@@ -29,9 +30,10 @@ pub fn snapshot_matches_layout(layout: &Layout, layout_snapshot: &LayoutSnapshot
     true
 }
 
+#[must_use]
 pub fn collision_hazards_sorted_correctly(hazards: &[QTHazard]) -> bool {
     let mut partial_hazard_detected = false;
-    for hazard in hazards.iter() {
+    for hazard in hazards {
         match hazard.presence {
             QTHazPresence::Partial(_) => {
                 partial_hazard_detected = true;
@@ -44,11 +46,12 @@ pub fn collision_hazards_sorted_correctly(hazards: &[QTHazard]) -> bool {
             QTHazPresence::None => {
                 panic!("None hazard should never be collision hazard vec");
             }
-        };
+        }
     }
     true
 }
 
+#[must_use]
 pub fn qt_contains_no_dangling_hazards(cde: &CDEngine) -> bool {
     if let Some(children) = &cde.quadtree.children {
         for child in children.as_ref() {
@@ -88,13 +91,14 @@ fn qt_node_contains_no_dangling_hazards(node: &QTNode, parent: &QTNode) -> bool 
     true
 }
 
+#[must_use]
 pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
     //check if every placed item is correctly represented in the quadtree
 
     //rebuild the quadtree
     let container = &layout.container;
     let mut fresh_cde = container.base_cde.as_ref().clone();
-    for (pk, pi) in layout.placed_items.iter() {
+    for (pk, pi) in &layout.placed_items {
         let hazard = Hazard::new((pk, pi).into(), pi.shape.clone(), true);
         fresh_cde.register_hazard(hazard);
     }
@@ -223,7 +227,8 @@ fn hazards_match<'a>(
     true
 }
 
-/// Checks if the quadrants follow the layout set in [Rect::QUADRANT_NEIGHBOR_LAYOUT]
+/// Checks if the quadrants follow the layout set in [`Rect::QUADRANT_NEIGHBOR_LAYOUT`]
+#[must_use]
 pub fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
     let layout = Rect::QUADRANT_NEIGHBOR_LAYOUT;
     for (idx, q) in quadrants.iter().enumerate() {

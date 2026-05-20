@@ -57,10 +57,12 @@ impl Circle {
         bounding_circle
     }
 
+    #[must_use]
     pub fn area(&self) -> f32 {
         self.radius * self.radius * PI
     }
 
+    #[must_use]
     pub fn bbox(&self) -> Rect {
         let (r, x, y) = (self.radius, self.center.0, self.center.1);
         Rect {
@@ -71,6 +73,7 @@ impl Circle {
         }
     }
 
+    #[must_use]
     pub fn diameter(&self) -> f32 {
         self.radius * 2.0
     }

@@ -21,6 +21,7 @@ pub struct Layout {
 }
 
 impl Layout {
+    #[must_use]
     pub fn new(container: Container) -> Self {
         let cde = container.base_cde.as_ref().clone();
         Layout {
@@ -30,6 +31,7 @@ impl Layout {
         }
     }
 
+    #[must_use]
     pub fn from_snapshot(ls: &LayoutSnapshot) -> Self {
         let mut layout = Layout::new(ls.container.clone());
         layout.restore(ls);
@@ -49,6 +51,7 @@ impl Layout {
     }
 
     /// Saves the current state of the layout to be potentially restored to later.
+    #[must_use]
     pub fn save(&self) -> LayoutSnapshot {
         LayoutSnapshot {
             container: self.container.clone(),
@@ -61,11 +64,11 @@ impl Layout {
     pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
         assert_eq!(self.container.id, layout_snapshot.container.id);
 
-        self.placed_items = layout_snapshot.placed_items.clone();
+        self.placed_items.clone_from(&layout_snapshot.placed_items);
         self.cde.restore(&layout_snapshot.cde_snapshot);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
-        debug_assert!(assertions::snapshot_matches_layout(self, layout_snapshot))
+        debug_assert!(assertions::snapshot_matches_layout(self, layout_snapshot));
     }
 
     /// Places an item in the layout at a specific position by applying a transformation.
@@ -100,6 +103,7 @@ impl Layout {
     }
 
     /// True if no items are placed
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.placed_items.is_empty()
     }
@@ -115,16 +119,18 @@ impl Layout {
         self.placed_items
             .iter()
             .map(|(_, pi)| instance.item(pi.item_id))
-            .map(|item| item.area())
+            .map(Item::area)
             .sum::<f32>()
     }
 
     /// Returns the collision detection engine for this layout
+    #[must_use]
     pub fn cde(&self) -> &CDEngine {
         &self.cde
     }
 
     /// Returns true if all the items are placed without colliding
+    #[must_use]
     pub fn is_feasible(&self) -> bool {
         self.placed_items.iter().all(|(pk, pi)| {
             let hkey = self
@@ -159,7 +165,7 @@ impl LayoutSnapshot {
         self.placed_items
             .iter()
             .map(|(_, pi)| instance.item(pi.item_id))
-            .map(|item| item.area())
+            .map(Item::area)
             .sum::<f32>()
     }
 }

@@ -18,6 +18,7 @@ impl HazKeyFilter {
     }
 
     /// Creates a filter that deems all inferior quality zones above or at a certain quality as irrelevant.
+    #[must_use]
     pub fn from_irrelevant_qzones(
         required_quality: usize,
         haz_map: &SlotMap<HazKey, Hazard>,

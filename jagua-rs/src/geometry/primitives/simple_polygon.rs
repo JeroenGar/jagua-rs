@@ -37,7 +37,7 @@ pub struct SPolygon {
 }
 
 impl SPolygon {
-    /// Create a new simple polygon from a set of points, expensive operations are performed here! Use [Self::clone()] or [Self::transform()] to avoid recomputation.
+    /// Create a new simple polygon from a set of points, expensive operations are performed here! Use [`Self::clone()`] or [`Self::transform()`] to avoid recomputation.
     pub fn new(mut points: Vec<Point>) -> Result<Self> {
         if points.len() < 3 {
             bail!("Simple polygon must have at least 3 points: {points:?}");
@@ -82,10 +82,12 @@ impl SPolygon {
         Ok(())
     }
 
+    #[must_use]
     pub fn vertex(&self, i: usize) -> Point {
         self.vertices[i]
     }
 
+    #[must_use]
     pub fn edge(&self, i: usize) -> Edge {
         assert!(i < self.n_vertices(), "index out of bounds");
         let j = if i == self.n_vertices() - 1 { 0 } else { i + 1 };
@@ -99,14 +101,17 @@ impl SPolygon {
         (0..self.n_vertices()).map(move |i| self.edge(i))
     }
 
+    #[must_use]
     pub fn n_vertices(&self) -> usize {
         self.vertices.len()
     }
 
+    #[must_use]
     pub fn surrogate(&self) -> &SPSurrogate {
         self.surrogate.as_ref().expect("surrogate not generated")
     }
 
+    #[must_use]
     pub fn calculate_diameter(points: Vec<Point>) -> f32 {
         //The two points furthest apart must be part of the convex hull
         let ch = convex_hull_from_points(points);
@@ -122,11 +127,12 @@ impl SPolygon {
         sq_diam.sqrt()
     }
 
+    #[must_use]
     pub fn generate_bounding_box(points: &[Point]) -> Rect {
         let (mut x_min, mut y_min) = (f32::MAX, f32::MAX);
         let (mut x_max, mut y_max) = (f32::MIN, f32::MIN);
 
-        for point in points.iter() {
+        for point in points {
             x_min = x_min.min(point.0);
             y_min = y_min.min(point.1);
             x_max = x_max.max(point.0);
@@ -137,6 +143,7 @@ impl SPolygon {
 
     //https://en.wikipedia.org/wiki/Shoelace_formula
     //counterclockwise = positive area, clockwise = negative area
+    #[must_use]
     pub fn calculate_area(points: &[Point]) -> f32 {
         let mut sigma: f32 = 0.0;
         for i in 0..points.len() {
@@ -146,7 +153,7 @@ impl SPolygon {
             let (x_i, y_i) = points[i].into();
             let (x_j, y_j) = points[j].into();
 
-            sigma += (y_i + y_j) * (x_i - x_j)
+            sigma += (y_i + y_j) * (x_i - x_j);
         }
 
         0.5 * sigma
@@ -173,6 +180,7 @@ impl SPolygon {
         compute_pole(&dummy_sp, &[])
     }
 
+    #[must_use]
     pub fn centroid(&self) -> Point {
         //based on: https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
 
@@ -221,9 +229,9 @@ impl Transformable for SPolygon {
         } = self;
 
         //transform all points of the simple poly
-        points.iter_mut().for_each(|p| {
+        for p in points.iter_mut() {
             p.transform(t);
-        });
+        }
 
         poi.transform(t);
 
@@ -271,38 +279,37 @@ impl TransformableFrom for SPolygon {
 impl CollidesWith<Point> for SPolygon {
     fn collides_with(&self, point: &Point) -> bool {
         //based on the ray casting algorithm: https://en.wikipedia.org/wiki/Point_in_polygon#Ray_casting_algorithm
-        match self.bbox.collides_with(point) {
-            false => false,
-            true => {
-                //horizontal ray shot to the right.
-                //Starting from the point to another point that is certainly outside the shape
-                let point_outside = Point(self.bbox.x_max + self.bbox.width(), point.1);
-                let ray = Edge {
-                    start: *point,
-                    end: point_outside,
-                };
+        if self.bbox.collides_with(point) {
+            //horizontal ray shot to the right.
+            //Starting from the point to another point that is certainly outside the shape
+            let point_outside = Point(self.bbox.x_max + self.bbox.width(), point.1);
+            let ray = Edge {
+                start: *point,
+                end: point_outside,
+            };
 
-                let mut n_intersections = 0;
-                for edge in self.edge_iter() {
-                    //Check if the ray does not go through (or almost through) a vertex
-                    //This can result in funky behaviour, which could incorrect results
-                    //Therefore we handle this case
-                    let (s_x, s_y) = (FPA(edge.start.0), FPA(edge.start.1));
-                    let (e_x, e_y) = (FPA(edge.end.0), FPA(edge.end.1));
-                    let (p_x, p_y) = (FPA(point.0), FPA(point.1));
+            let mut n_intersections = 0;
+            for edge in self.edge_iter() {
+                //Check if the ray does not go through (or almost through) a vertex
+                //This can result in funky behaviour, which could incorrect results
+                //Therefore we handle this case
+                let (s_x, s_y) = (FPA(edge.start.0), FPA(edge.start.1));
+                let (e_x, e_y) = (FPA(edge.end.0), FPA(edge.end.1));
+                let (p_x, p_y) = (FPA(point.0), FPA(point.1));
 
-                    if (s_y == p_y && s_x > p_x) || (e_y == p_y && e_x > p_x) {
-                        //in this case, the ray passes through (or dangerously close to) a vertex
-                        //We handle this case by only counting an intersection if the edge is below the ray
-                        if s_y < p_y || e_y < p_y {
-                            n_intersections += 1;
-                        }
-                    } else if ray.collides_with(&edge) {
+                if (s_y == p_y && s_x > p_x) || (e_y == p_y && e_x > p_x) {
+                    //in this case, the ray passes through (or dangerously close to) a vertex
+                    //We handle this case by only counting an intersection if the edge is below the ray
+                    if s_y < p_y || e_y < p_y {
                         n_intersections += 1;
                     }
+                } else if ray.collides_with(&edge) {
+                    n_intersections += 1;
                 }
-                n_intersections % 2 == 1
             }
+            n_intersections % 2 == 1
+        } else {
+            false
         }
     }
 }
@@ -312,13 +319,13 @@ impl DistanceTo<Point> for SPolygon {
         self.sq_distance_to(point).sqrt()
     }
     fn sq_distance_to(&self, point: &Point) -> f32 {
-        match self.collides_with(point) {
-            true => 0.0,
-            false => self
-                .edge_iter()
+        if self.collides_with(point) {
+            0.0
+        } else {
+            self.edge_iter()
                 .map(|edge| edge.sq_distance_to(point))
                 .min_by(|a, b| a.partial_cmp(b).unwrap())
-                .unwrap(),
+                .unwrap()
         }
     }
 }
@@ -336,9 +343,10 @@ impl SeparationDistance<Point> for SPolygon {
             .min_by_key(|sq_d| OrderedFloat(*sq_d))
             .unwrap();
 
-        match self.collides_with(point) {
-            true => (GeoPosition::Interior, distance_to_closest_edge),
-            false => (GeoPosition::Exterior, distance_to_closest_edge),
+        if self.collides_with(point) {
+            (GeoPosition::Interior, distance_to_closest_edge)
+        } else {
+            (GeoPosition::Exterior, distance_to_closest_edge)
         }
     }
 }

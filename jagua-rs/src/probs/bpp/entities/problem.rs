@@ -24,6 +24,7 @@ pub struct BPProblem {
 }
 
 impl BPProblem {
+    #[must_use]
     pub fn new(instance: BPInstance) -> Self {
         let item_demand_qtys = instance.items.iter().map(|(_, qty)| *qty).collect_vec();
         let bin_stock_qtys = instance.bins.iter().map(|bin| bin.stock).collect_vec();
@@ -77,6 +78,7 @@ impl BPProblem {
     }
 
     /// Creates a snapshot of the current state of the problem as a [`BPSolution`].
+    #[must_use]
     pub fn save(&self) -> BPSolution {
         let layout_snapshots = self
             .layouts
@@ -102,13 +104,12 @@ impl BPProblem {
 
         //Check which layouts from the problem are also present in the solution.
         //If a layout is present we might be able to do a (partial) restore instead of fully rebuilding everything.
-        for (lkey, layout) in self.layouts.iter_mut() {
+        for (lkey, layout) in &mut self.layouts {
             match solution.layout_snapshots.get(lkey) {
-                Some(ls) => match layout.container.id == ls.container.id {
-                    true => layout.restore(ls),
-                    false => layouts_to_remove.push(lkey),
-                },
-                None => {
+                Some(ls) if layout.container.id == ls.container.id => {
+                    layout.restore(ls);
+                }
+                _ => {
                     layouts_to_remove.push(lkey);
                 }
             }
@@ -121,7 +122,7 @@ impl BPProblem {
         }
 
         //Create new layouts for all keys present in solution but not in problem
-        for (lkey, ls) in solution.layout_snapshots.iter() {
+        for (lkey, ls) in &solution.layout_snapshots {
             if !self.layouts.contains_key(lkey) {
                 self.layouts.insert(Layout::from_snapshot(ls));
                 layout_keys_changed = true;
@@ -157,6 +158,7 @@ impl BPProblem {
         layout_keys_changed
     }
 
+    #[must_use]
     pub fn density(&self) -> f32 {
         let total_bin_area = self
             .layouts
@@ -188,6 +190,7 @@ impl BPProblem {
     }
 
     /// Returns the total cost of all bins used in the solution.
+    #[must_use]
     pub fn bin_cost(&self) -> u64 {
         self.bin_used_qtys()
             .enumerate()
@@ -222,13 +225,14 @@ impl BPProblem {
     }
 
     fn open_bin(&mut self, bin_id: usize) {
-        self.bin_stock_qtys[bin_id] -= 1
+        self.bin_stock_qtys[bin_id] -= 1;
     }
 
     fn close_bin(&mut self, bin_id: usize) {
-        self.bin_stock_qtys[bin_id] += 1
+        self.bin_stock_qtys[bin_id] += 1;
     }
 
+    #[must_use]
     pub fn n_placed_items(&self) -> usize {
         self.layouts.values().map(|l| l.placed_items.len()).sum()
     }
@@ -246,6 +250,7 @@ pub struct BPPlacement {
 }
 
 impl BPPlacement {
+    #[must_use]
     pub fn from_placed_item(layout_id: BPLayoutType, placed_item: &PlacedItem) -> Self {
         BPPlacement {
             layout_id,

@@ -5,10 +5,11 @@ use ordered_float::OrderedFloat;
 use anyhow::{Result, bail};
 
 /// Returns the indices of the points in the [`SPolygon`] that form the convex hull
+#[must_use]
 pub fn convex_hull_indices(shape: &SPolygon) -> Vec<usize> {
     let c_hull = convex_hull_from_points(shape.vertices.clone());
     let mut indices = vec![];
-    for p in c_hull.iter() {
+    for p in &c_hull {
         indices.push(shape.vertices.iter().position(|x| x == p).unwrap());
     }
     indices
@@ -28,6 +29,7 @@ pub fn convex_hull_from_surrogate(s: &SPolygon) -> Result<Vec<Point>> {
 }
 
 /// Filters a set of points to only include those that are part of the convex hull
+#[must_use]
 pub fn convex_hull_from_points(mut points: Vec<Point>) -> Vec<Point> {
     //https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
 

@@ -1,3 +1,12 @@
+#![warn(
+    clippy::pedantic,
+    clippy::correctness,
+    clippy::suspicious,
+    clippy::complexity,
+    clippy::perf,
+    clippy::style
+)]
+#![allow(clippy::missing_panics_doc, clippy::missing_errors_doc)]
 //!
 //! A fast and fearless Collision Detection Engine for 2D irregular cutting and packing problems.
 //!

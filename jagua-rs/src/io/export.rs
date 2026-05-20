@@ -31,6 +31,7 @@ pub fn export_layout_snapshot(layout: &LayoutSnapshot, instance: &impl Instance)
 ///
 /// * `int_transf` - The internal transformation.
 /// * `pre_transf` - The transformation that was applied to the original shape to derive the internal representation.
+#[must_use]
 pub fn int_to_ext_transformation(
     int_transf: &DTransformation,
     pre_transf: &DTransformation,

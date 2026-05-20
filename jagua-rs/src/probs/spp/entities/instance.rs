@@ -13,6 +13,7 @@ pub struct SPInstance {
 }
 
 impl SPInstance {
+    #[must_use]
     pub fn new(items: Vec<(Item, usize)>, base_strip: Strip) -> Self {
         assert!(
             assertions::instance_item_ids_correct(&items),
@@ -22,6 +23,8 @@ impl SPInstance {
         Self { items, base_strip }
     }
 
+    #[allow(clippy::cast_precision_loss)]
+    #[must_use]
     pub fn item_area(&self) -> f32 {
         self.items
             .iter()
@@ -29,10 +32,12 @@ impl SPInstance {
             .sum()
     }
 
+    #[must_use]
     pub fn item_qty(&self, id: usize) -> usize {
         self.items[id].1
     }
 
+    #[must_use]
     pub fn total_item_qty(&self) -> usize {
         self.items.iter().map(|(_, qty)| *qty).sum()
     }

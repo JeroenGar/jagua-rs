@@ -59,7 +59,7 @@ impl Container {
             let qz_hazards = quality_zones
                 .iter()
                 .flatten()
-                .flat_map(|qz| qz.to_hazards());
+                .flat_map(InferiorQualityZone::to_hazards);
             hazards.extend(qz_hazards);
             let base_cde = CDEngine::new(outer.bbox.inflate_to_square(), hazards, cde_config);
             Arc::new(base_cde)
@@ -76,7 +76,10 @@ impl Container {
 
     /// The area of the contour of the container, excluding holes
     pub fn area(&self) -> f32 {
-        self.outer_orig.area() - self.quality_zones[0].as_ref().map_or(0.0, |qz| qz.area())
+        self.outer_orig.area()
+            - self.quality_zones[0]
+                .as_ref()
+                .map_or(0.0, InferiorQualityZone::area)
     }
 }
 
@@ -128,6 +131,7 @@ impl InferiorQualityZone {
         })
     }
 
+    #[must_use]
     pub fn area(&self) -> f32 {
         self.shapes_orig.iter().map(|shape| shape.area()).sum()
     }
