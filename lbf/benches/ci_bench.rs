@@ -8,6 +8,7 @@ use jagua_rs::probs::spp::entities::SPPlacement;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
 use rand::SeedableRng;
 use rand::prelude::{IteratorRandom, SmallRng};
+use std::hint::black_box;
 
 criterion_main!(benches);
 criterion_group!(
@@ -68,6 +69,7 @@ fn cde_collect_bench(c: &mut Criterion) {
                     n_detected += collector.len();
                     collector.clear();
                 }
+                black_box(n_detected);
             })
         });
     }
@@ -119,6 +121,7 @@ fn cde_detect_bench(c: &mut Criterion) {
                         }
                     }
                 }
+                black_box(n_detected);
             })
         });
     }
@@ -160,6 +163,7 @@ fn cde_update_bench(c: &mut Criterion) {
 
                     problem.place_item(p_opt);
                 }
+                black_box(&problem);
             })
         });
     }
