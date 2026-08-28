@@ -34,6 +34,7 @@ jobs:
       - name: Run benchmarks
         env:
           RUSTFLAGS: '-C target-cpu=native -Awarnings'
+          CRITERION_HOME: ${{ runner.temp }}/criterion
         run: |
           export RUSTFLAGS=$RUSTFLAGS
           cargo bench --bench ci_bench -- --output-format bencher | tee output.txt
