@@ -11,9 +11,23 @@ pub trait QTQueryable: CollidesWith<Edge> + CollidesWith<Rect> {
         debug_assert!(r.quadrants().iter().zip(qs.iter()).all(|(q, r)| *q == **r));
         qs.map(|q| self.collides_with(q))
     }
+
+    fn quadrant_order(&self, _r: &Rect) -> [usize; 4] {
+        [0, 1, 2, 3]
+    }
 }
 
-impl QTQueryable for Circle {}
+impl QTQueryable for Circle {
+    fn quadrant_order(&self, r: &Rect) -> [usize; 4] {
+        let Point(mid_x, mid_y) = r.centroid();
+        match (self.center.x() >= mid_x, self.center.y() >= mid_y) {
+            (true, true) => [0, 1, 3, 2],
+            (false, true) => [1, 0, 2, 3],
+            (false, false) => [2, 1, 3, 0],
+            (true, false) => [3, 0, 2, 1],
+        }
+    }
+}
 impl QTQueryable for Rect {}
 
 impl QTQueryable for Edge {

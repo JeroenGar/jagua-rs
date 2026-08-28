@@ -115,11 +115,11 @@ impl QTNode {
                         let colliding_quadrants =
                             entity.collides_with_quadrants(&self.bbox, quadrants);
 
-                        colliding_quadrants
-                            .iter()
-                            .enumerate()
-                            .filter(|(_, collides)| **collides)
-                            .map(|idx| children[idx.0].collides(entity, filter))
+                        entity
+                            .quadrant_order(&self.bbox)
+                            .into_iter()
+                            .filter(|&idx| colliding_quadrants[idx])
+                            .map(|idx| children[idx].collides(entity, filter))
                             .find(Option::is_some)
                             .flatten()
                     } else {
