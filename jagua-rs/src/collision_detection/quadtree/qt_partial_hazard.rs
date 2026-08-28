@@ -65,6 +65,8 @@ impl QTHazPartial {
 }
 
 impl<T: QTQueryable> CollidesWith<T> for QTHazPartial {
+    #[allow(clippy::inline_always)]
+    #[inline(always)]
     fn collides_with(&self, entity: &T) -> bool {
         // If the entity does not collide with the bounding box of the hazard, it cannot collide with the hazard
         entity.collides_with(&self.ff_bbox) && self.edges.iter().any(|e| entity.collides_with(e))
