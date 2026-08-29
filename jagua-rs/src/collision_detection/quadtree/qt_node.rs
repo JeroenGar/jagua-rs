@@ -102,6 +102,28 @@ impl QTNode {
         entity: &T,
         filter: &impl HazardFilter,
     ) -> Option<&HazardEntity> {
+        self.collides_with_spatial_order::<T, false>(entity, filter)
+    }
+
+    pub(crate) fn collides_ordered<T: QTQueryable>(
+        &self,
+        entity: &T,
+        filter: &impl HazardFilter,
+    ) -> Option<&HazardEntity> {
+        let collision = self.collides_with_spatial_order::<T, true>(entity, filter);
+        debug_assert_eq!(
+            collision.is_some(),
+            self.collides_with_spatial_order::<T, false>(entity, filter)
+                .is_some()
+        );
+        collision
+    }
+
+    fn collides_with_spatial_order<T: QTQueryable, const SPATIAL_ORDER: bool>(
+        &self,
+        entity: &T,
+        filter: &impl HazardFilter,
+    ) -> Option<&HazardEntity> {
         match self.hazards.strongest(filter) {
             None => None,
             Some(strongest_hazard) => match strongest_hazard.presence {
@@ -115,14 +137,22 @@ impl QTNode {
                         let colliding_quadrants =
                             entity.collides_with_quadrants(&self.bbox, quadrants);
 
-                        entity
-                            .quadrant_order_with_split(
+                        let order = if SPATIAL_ORDER {
+                            entity.quadrant_order_with_split(
                                 &self.bbox,
                                 Point(quadrants[0].x_min, quadrants[0].y_min),
                             )
+                        } else {
+                            [0, 1, 2, 3]
+                        };
+
+                        order
                             .into_iter()
                             .filter(|&idx| colliding_quadrants[idx])
-                            .map(|idx| children[idx].collides(entity, filter))
+                            .map(|idx| {
+                                children[idx]
+                                    .collides_with_spatial_order::<T, SPATIAL_ORDER>(entity, filter)
+                            })
                             .find(Option::is_some)
                             .flatten()
                     } else {
