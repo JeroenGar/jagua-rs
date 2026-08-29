@@ -29,12 +29,27 @@ impl QTQueryable for Circle {
 
     fn quadrant_order_with_split(&self, r: &Rect, Point(mid_x, mid_y): Point) -> [usize; 4] {
         debug_assert_eq!(Point(mid_x, mid_y), r.centroid());
-        match (self.center.x() >= mid_x, self.center.y() >= mid_y) {
-            (true, true) => [0, 1, 3, 2],
-            (false, true) => [1, 0, 2, 3],
-            (false, false) => [2, 1, 3, 0],
-            (true, false) => [3, 0, 2, 1],
-        }
+        let right = self.center.x() >= mid_x;
+        let top = self.center.y() >= mid_y;
+        let row_mask = usize::from(!top) << 1;
+        let containing_quadrant = row_mask | usize::from(right ^ top);
+        let first_adjacent_mask = row_mask | 1;
+        let order = [
+            containing_quadrant,
+            containing_quadrant ^ first_adjacent_mask,
+            containing_quadrant ^ (first_adjacent_mask ^ 2),
+            containing_quadrant ^ 2,
+        ];
+        debug_assert_eq!(
+            order,
+            match (right, top) {
+                (true, true) => [0, 1, 3, 2],
+                (false, true) => [1, 0, 2, 3],
+                (false, false) => [2, 1, 3, 0],
+                (true, false) => [3, 0, 2, 1],
+            }
+        );
+        order
     }
 }
 impl QTQueryable for Rect {}
