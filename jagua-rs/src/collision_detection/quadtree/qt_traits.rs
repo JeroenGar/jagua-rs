@@ -15,11 +15,20 @@ pub trait QTQueryable: CollidesWith<Edge> + CollidesWith<Rect> {
     fn quadrant_order(&self, _r: &Rect) -> [usize; 4] {
         [0, 1, 2, 3]
     }
+
+    fn quadrant_order_with_split(&self, r: &Rect, split: Point) -> [usize; 4] {
+        debug_assert_eq!(split, r.centroid());
+        self.quadrant_order(r)
+    }
 }
 
 impl QTQueryable for Circle {
     fn quadrant_order(&self, r: &Rect) -> [usize; 4] {
-        let Point(mid_x, mid_y) = r.centroid();
+        self.quadrant_order_with_split(r, r.centroid())
+    }
+
+    fn quadrant_order_with_split(&self, r: &Rect, Point(mid_x, mid_y): Point) -> [usize; 4] {
+        debug_assert_eq!(Point(mid_x, mid_y), r.centroid());
         match (self.center.x() >= mid_x, self.center.y() >= mid_y) {
             (true, true) => [0, 1, 3, 2],
             (false, true) => [1, 0, 2, 3],

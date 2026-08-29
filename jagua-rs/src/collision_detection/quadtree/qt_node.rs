@@ -6,7 +6,7 @@ use crate::collision_detection::quadtree::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
-use crate::geometry::primitives::Rect;
+use crate::geometry::primitives::{Point, Rect};
 use slotmap::SlotMap;
 
 /// Quadtree node
@@ -116,7 +116,10 @@ impl QTNode {
                             entity.collides_with_quadrants(&self.bbox, quadrants);
 
                         entity
-                            .quadrant_order(&self.bbox)
+                            .quadrant_order_with_split(
+                                &self.bbox,
+                                Point(quadrants[0].x_min, quadrants[0].y_min),
+                            )
                             .into_iter()
                             .filter(|&idx| colliding_quadrants[idx])
                             .map(|idx| children[idx].collides(entity, filter))
