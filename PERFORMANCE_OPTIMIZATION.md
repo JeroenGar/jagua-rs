@@ -177,6 +177,10 @@ with the same relative layout first. This prevents Instruments or the benchmark
 process from opening interactive file-access permission dialogs during an
 unattended run.
 
+Run `xcrun xctrace` as the current user, without `sudo`, and pass `--no-prompt`.
+Elevated privileges are not required for these templates and do not replace the
+scratch-directory setup needed to avoid macOS file-access prompts.
+
 1. Profile the optimized `ci_bench` workload with symbols and frame pointers.
 2. Inspect inclusive call paths, then leaf arithmetic, branching, allocation,
    cloning, dropping, memory movement, and traversal.
