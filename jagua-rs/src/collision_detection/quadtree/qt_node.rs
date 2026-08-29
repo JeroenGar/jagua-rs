@@ -95,31 +95,9 @@ impl QTNode {
     }
 
     /// Used to detect collisions in a binary fashion: either there is a collision or there isn't.
-    /// Returns `None` if no collision between the entity and any hazard is detected,
-    /// otherwise the first encountered hazard that collides with the entity is returned.
+    /// Returns one colliding hazard, if any. Which hazard is returned is unspecified.
+    /// Use [`Self::collect_collisions`] to report every colliding hazard.
     pub fn collides<T: QTQueryable>(
-        &self,
-        entity: &T,
-        filter: &impl HazardFilter,
-    ) -> Option<&HazardEntity> {
-        self.collides_with_spatial_order::<T, false>(entity, filter)
-    }
-
-    pub(crate) fn collides_ordered<T: QTQueryable>(
-        &self,
-        entity: &T,
-        filter: &impl HazardFilter,
-    ) -> Option<&HazardEntity> {
-        let collision = self.collides_with_spatial_order::<T, true>(entity, filter);
-        debug_assert_eq!(
-            collision.is_some(),
-            self.collides_with_spatial_order::<T, false>(entity, filter)
-                .is_some()
-        );
-        collision
-    }
-
-    fn collides_with_spatial_order<T: QTQueryable, const SPATIAL_ORDER: bool>(
         &self,
         entity: &T,
         filter: &impl HazardFilter,
@@ -137,22 +115,14 @@ impl QTNode {
                         let colliding_quadrants =
                             entity.collides_with_quadrants(&self.bbox, quadrants);
 
-                        let order = if SPATIAL_ORDER {
-                            entity.quadrant_order_with_split(
+                        entity
+                            .quadrant_order_with_split(
                                 &self.bbox,
                                 Point(quadrants[0].x_min, quadrants[0].y_min),
                             )
-                        } else {
-                            [0, 1, 2, 3]
-                        };
-
-                        order
                             .into_iter()
                             .filter(|&idx| colliding_quadrants[idx])
-                            .map(|idx| {
-                                children[idx]
-                                    .collides_with_spatial_order::<T, SPATIAL_ORDER>(entity, filter)
-                            })
+                            .map(|idx| children[idx].collides(entity, filter))
                             .find(Option::is_some)
                             .flatten()
                     } else {

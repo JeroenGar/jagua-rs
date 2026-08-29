@@ -90,8 +90,8 @@ impl Transformable for SPSurrogate {
 
 impl TransformableFrom for SPSurrogate {
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self {
-        debug_assert_eq!(self.poles.len(), reference.poles.len());
-        debug_assert_eq!(self.piers.len(), reference.piers.len());
+        debug_assert!(self.poles.len() == reference.poles.len());
+        debug_assert!(self.piers.len() == reference.piers.len());
 
         //destructuring pattern used to ensure that the code is updated accordingly when the struct changes
         let Self {

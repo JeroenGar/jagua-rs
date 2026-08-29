@@ -144,9 +144,9 @@ impl CDEngine {
             self.register_hazard(hazard);
         }
 
-        debug_assert_eq!(
-            self.hazards_map.values().filter(|h| h.dynamic).count(),
-            snapshot.dynamic_hazards.len()
+        debug_assert!(
+            self.hazards_map.values().filter(|h| h.dynamic).count()
+                == snapshot.dynamic_hazards.len()
         );
     }
 
@@ -166,7 +166,7 @@ impl CDEngine {
 
             // Check for edge intersections with the shape
             for edge in shape.edge_iter() {
-                if v_qt_root.collides_ordered(&edge, filter).is_some() {
+                if v_qt_root.collides(&edge, filter).is_some() {
                     return true;
                 }
             }
@@ -211,13 +211,13 @@ impl CDEngine {
     ) -> bool {
         for pole in base_surrogate.ff_poles() {
             let t_pole = pole.transform_clone(transform);
-            if self.quadtree.collides_ordered(&t_pole, filter).is_some() {
+            if self.quadtree.collides(&t_pole, filter).is_some() {
                 return true;
             }
         }
         for pier in base_surrogate.ff_piers() {
             let t_pier = pier.transform_clone(transform);
-            if self.quadtree.collides_ordered(&t_pier, filter).is_some() {
+            if self.quadtree.collides(&t_pier, filter).is_some() {
                 return true;
             }
         }
