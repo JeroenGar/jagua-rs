@@ -154,64 +154,40 @@ impl QTNode {
         entity: &T,
         collector: &mut impl HazardCollector,
     ) {
-        let stopped = self.collect_collisions_until(entity, collector, &mut |_| false);
-        debug_assert!(!stopped);
-    }
-
-    /// Gathers colliding hazards until `stop_after_insert` requests an early return.
-    ///
-    /// The callback runs after each newly inserted hazard. It may update state derived from the
-    /// collector, but must not add or remove collisions itself. Returning `true` stops traversal
-    /// and leaves the collector with only the collisions found up to that point. Returning `false`
-    /// for every insertion gathers all collisions, like [`Self::collect_collisions`].
-    #[must_use]
-    pub fn collect_collisions_until<T, C, F>(
-        &self,
-        entity: &T,
-        collector: &mut C,
-        stop_after_insert: &mut F,
-    ) -> bool
-    where
-        T: QTQueryable,
-        C: HazardCollector,
-        F: FnMut(&mut C) -> bool,
-    {
         // Condition to perform collision detection now or pass it to children:
         let perform_cd_now = self.hazards.n_active_edges() <= self.cd_threshold as usize;
 
-        if let (Some(children), false) = (self.children.as_ref(), perform_cd_now) {
-            // Collect collisions from all children that collide with the entity
-            let quadrants = [0, 1, 2, 3].map(|idx| &children[idx].bbox);
-            let colliding_quadrants = entity.collides_with_quadrants(&self.bbox, quadrants);
+        match (self.children.as_ref(), perform_cd_now) {
+            (Some(children), false) => {
+                // Collect collisions from all children that collide with the entity
+                let quadrants = [0, 1, 2, 3].map(|idx| &children[idx].bbox);
+                let colliding_quadrants = entity.collides_with_quadrants(&self.bbox, quadrants);
 
-            colliding_quadrants
-                .iter()
-                .enumerate()
-                .filter(|(_, collides)| **collides)
-                .map(|(i, _)| &children[i])
-                .any(|child| child.collect_collisions_until(entity, collector, stop_after_insert))
-        } else {
-            //Check the hazards now
-            for hz in self.hazards.iter() {
-                if !collector.contains_key(hz.hkey) {
-                    let collides = match &hz.presence {
-                        QTHazPresence::None => false,
-                        QTHazPresence::Entire => true,
-                        QTHazPresence::Partial(p_haz) => p_haz.collides_with(entity),
-                    };
-                    if collides {
-                        collector.insert(hz.hkey, hz.entity);
-                        let len = collector.len();
-                        let stop = stop_after_insert(collector);
-                        debug_assert_eq!(collector.len(), len);
-                        debug_assert!(collector.contains_key(hz.hkey));
-                        if stop {
-                            return true;
+                colliding_quadrants
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, collides)| **collides)
+                    .map(|(i, _)| &children[i])
+                    .for_each(|child| {
+                        child.collect_collisions(entity, collector);
+                    });
+            }
+            _ => {
+                //Check the hazards now
+                for hz in self.hazards.iter() {
+                    if !collector.contains_key(hz.hkey) {
+                        match &hz.presence {
+                            QTHazPresence::None => (),
+                            QTHazPresence::Entire => collector.insert(hz.hkey, hz.entity),
+                            QTHazPresence::Partial(p_haz) => {
+                                if p_haz.collides_with(entity) {
+                                    collector.insert(hz.hkey, hz.entity);
+                                }
+                            }
                         }
                     }
                 }
             }
-            false
         }
     }
 }
