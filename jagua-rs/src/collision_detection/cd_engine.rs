@@ -144,9 +144,9 @@ impl CDEngine {
             self.register_hazard(hazard);
         }
 
-        debug_assert!(
-            self.hazards_map.values().filter(|h| h.dynamic).count()
-                == snapshot.dynamic_hazards.len()
+        debug_assert_eq!(
+            self.hazards_map.values().filter(|h| h.dynamic).count(),
+            snapshot.dynamic_hazards.len()
         );
     }
 
