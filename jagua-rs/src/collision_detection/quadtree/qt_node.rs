@@ -154,17 +154,16 @@ impl QTNode {
         entity: &T,
         collector: &mut impl HazardCollector,
     ) {
-        let stopped = self.collect_collisions_until(entity, collector, &mut |_, _| false);
+        let stopped = self.collect_collisions_until(entity, collector, &mut |_| false);
         debug_assert!(!stopped);
     }
 
     /// Gathers colliding hazards until `stop_after_insert` requests an early return.
     ///
-    /// The callback receives the collector and newly inserted hazard entity. It may update state
-    /// derived from the collector, but must not add or remove collisions itself. Returning `true`
-    /// stops traversal and leaves the collector with only the collisions found up to that point.
-    /// Returning `false` for every insertion gathers all collisions, like
-    /// [`Self::collect_collisions`].
+    /// The callback runs after each newly inserted hazard. It may update state derived from the
+    /// collector, but must not add or remove collisions itself. Returning `true` stops traversal
+    /// and leaves the collector with only the collisions found up to that point. Returning `false`
+    /// for every insertion gathers all collisions, like [`Self::collect_collisions`].
     #[must_use]
     pub fn collect_collisions_until<T, C, F>(
         &self,
@@ -175,7 +174,7 @@ impl QTNode {
     where
         T: QTQueryable,
         C: HazardCollector,
-        F: FnMut(&mut C, HazardEntity) -> bool,
+        F: FnMut(&mut C) -> bool,
     {
         // Condition to perform collision detection now or pass it to children:
         let perform_cd_now = self.hazards.n_active_edges() <= self.cd_threshold as usize;
@@ -203,7 +202,7 @@ impl QTNode {
                     if collides {
                         collector.insert(hz.hkey, hz.entity);
                         let len = collector.len();
-                        let stop = stop_after_insert(collector, hz.entity);
+                        let stop = stop_after_insert(collector);
                         debug_assert_eq!(collector.len(), len);
                         debug_assert!(collector.contains_key(hz.hkey));
                         if stop {
