@@ -294,9 +294,9 @@ impl CDEngine {
 
     /// Collects polygon collisions until `stop_after_collision` requests an early return.
     ///
-    /// The callback receives the key and entity of each colliding hazard after it is added to the
-    /// collector for the first time. Returning `true` stops traversal and leaves the collector
-    /// with only the hazards found up to that point. Collision order is unspecified.
+    /// The callback receives each colliding hazard's entity after it is added to the collector for
+    /// the first time. Returning `true` stops traversal and leaves the collector with only the
+    /// hazards found up to that point. Collision order is unspecified.
     #[must_use]
     pub fn collect_poly_collisions_until<C, F>(
         &self,
@@ -306,13 +306,13 @@ impl CDEngine {
     ) -> bool
     where
         C: HazardCollector,
-        F: FnMut(HazKey, HazardEntity) -> bool,
+        F: FnMut(HazardEntity) -> bool,
     {
         if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding
             && !collector.contains_key(self.hkey_exterior)
         {
             collector.insert(self.hkey_exterior, HazardEntity::Exterior);
-            if stop_after_collision(self.hkey_exterior, HazardEntity::Exterior) {
+            if stop_after_collision(HazardEntity::Exterior) {
                 return true;
             }
         }
@@ -364,7 +364,7 @@ impl CDEngine {
                         let h_shape = &self.hazards_map[qt_haz.hkey].shape;
                         if self.detect_containment_collision(shape, h_shape, qt_haz.entity) {
                             collector.insert(qt_haz.hkey, qt_haz.entity);
-                            if stop_after_collision(qt_haz.hkey, qt_haz.entity) {
+                            if stop_after_collision(qt_haz.entity) {
                                 return true;
                             }
                         }

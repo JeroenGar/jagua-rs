@@ -151,7 +151,7 @@ impl QTNode {
         entity: &T,
         collector: &mut impl HazardCollector,
     ) {
-        let _ = self.collect_collisions_until(entity, collector, &mut |_, _| false);
+        let _ = self.collect_collisions_until(entity, collector, &mut |_| false);
     }
 
     /// Gathers colliding hazards until `stop_after_collision` requests an early return.
@@ -170,7 +170,7 @@ impl QTNode {
     where
         T: QTQueryable,
         C: HazardCollector,
-        F: FnMut(HazKey, HazardEntity) -> bool,
+        F: FnMut(HazardEntity) -> bool,
     {
         // Condition to perform collision detection now or pass it to children:
         let perform_cd_now = self.hazards.n_active_edges() <= self.cd_threshold as usize;
@@ -199,7 +199,7 @@ impl QTNode {
                     };
                     if collides {
                         collector.insert(hz.hkey, hz.entity);
-                        if stop_after_collision(hz.hkey, hz.entity) {
+                        if stop_after_collision(hz.entity) {
                             return true;
                         }
                     }
