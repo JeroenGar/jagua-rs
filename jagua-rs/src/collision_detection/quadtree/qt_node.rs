@@ -156,9 +156,10 @@ impl QTNode {
 
     /// Gathers colliding hazards until `stop_after_collision` requests an early return.
     ///
-    /// The callback receives each newly inserted collision. Returning `true` stops traversal and
-    /// leaves the collector with only the collisions found up to that point. Returning `false` for
-    /// every insertion gathers all collisions, like [`Self::collect_collisions`].
+    /// The callback runs after a colliding hazard is added to the collector for the first time.
+    /// Returning `true` stops traversal and leaves the collector with only the hazards found up to
+    /// that point. Returning `false` every time gathers all collisions, like
+    /// [`Self::collect_collisions`].
     #[must_use]
     pub fn collect_collisions_until<T, C, F>(
         &self,

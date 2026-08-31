@@ -294,9 +294,9 @@ impl CDEngine {
 
     /// Collects polygon collisions until `stop_after_collision` requests an early return.
     ///
-    /// The callback receives each newly collected collision. Returning `true` stops traversal and
-    /// leaves the collector with only the collisions found up to that point. Collision order is
-    /// unspecified.
+    /// The callback receives the key and entity of each colliding hazard after it is added to the
+    /// collector for the first time. Returning `true` stops traversal and leaves the collector
+    /// with only the hazards found up to that point. Collision order is unspecified.
     #[must_use]
     pub fn collect_poly_collisions_until<C, F>(
         &self,
