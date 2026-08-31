@@ -30,7 +30,7 @@ const N_SAMPLES_PER_ITER: usize = 1000;
 
 fn edge_sensitivity_bench_no_ff(c: &mut Criterion) {
     let mut config = util::create_base_config();
-    config.cde_config.item_surrogate_config.n_ff_poles = 0;
+    config.cde_config.item_surrogate_config.ff_pole_area_ratio = 0.0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
 
     let group = c.benchmark_group("edge_sensitivity_bench_no_ff");

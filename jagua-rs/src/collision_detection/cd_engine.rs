@@ -14,7 +14,6 @@ use crate::util::assertions;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use slotmap::SlotMap;
-use std::f32::consts::PI;
 
 /// The Collision Detection Engine (CDE).
 /// [`Hazard`]s can be (de)registered and collision queries can be performed.
@@ -336,10 +335,10 @@ impl CDEngine {
     /// Collects collisions found by the surrogate screening pass until
     /// `stop_after_collision` requests an early return.
     ///
-    /// The callback contract matches [`Self::collect_poly_collisions_until`]. The largest poles are
-    /// checked first, stopping once their combined area exceeds half the polygon area. This is not
-    /// a complete polygon collision query; follow it with [`Self::collect_poly_collisions_until`]
-    /// if the callback does not stop the screening pass.
+    /// The callback contract matches [`Self::collect_poly_collisions_until`]. The configured
+    /// fail-fast pole prefix is checked largest-first. This is not a complete polygon collision
+    /// query; follow it with [`Self::collect_poly_collisions_until`] if the callback does not stop
+    /// the screening pass.
     #[must_use]
     pub fn collect_surrogate_collisions_until<C, F>(
         &self,
@@ -354,18 +353,12 @@ impl CDEngine {
         let Some(surrogate) = &shape.surrogate else {
             return false;
         };
-        let area_threshold = shape.area * 0.5 / PI;
-        let mut area_sum = 0.0;
-        for pole in &surrogate.poles {
+        for pole in surrogate.ff_poles() {
             if self
                 .quadtree
                 .collect_collisions_until(pole, collector, &mut stop_after_collision)
             {
                 return true;
-            }
-            area_sum += pole.radius * pole.radius;
-            if area_sum > area_threshold {
-                break;
             }
         }
         false

@@ -8,7 +8,7 @@ use crate::geometry::primitives::SPolygon;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use anyhow::Result;
+use anyhow::{Result, ensure};
 
 #[derive(Clone, Debug)]
 /// Surrogate representation of a [`SPolygon`] - a 'light-weight' representation that
@@ -25,12 +25,18 @@ pub struct SPSurrogate {
     pub convex_hull_area: f32,
     /// The configuration used to generate the surrogate
     pub config: SPSurrogateConfig,
+    /// Length of the pole prefix selected by [`SPSurrogateConfig::ff_pole_area_ratio`].
+    n_ff_poles: usize,
 }
 
 impl SPSurrogate {
     /// Creates a new [`SPSurrogate`] from a [`SPolygon`] and a configuration.
     /// Expensive operations are performed here!
     pub fn new(simple_poly: &SPolygon, config: SPSurrogateConfig) -> Result<Self> {
+        ensure!(
+            (0.0..=1.0).contains(&config.ff_pole_area_ratio),
+            "fail-fast pole area ratio must be between 0.0 and 1.0"
+        );
         let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
         let convex_hull_points = convex_hull_indices
             .iter()
@@ -38,8 +44,20 @@ impl SPSurrogate {
             .collect_vec();
         let convex_hull_area = SPolygon::calculate_area(&convex_hull_points);
         let poles = pole::generate_surrogate_poles(simple_poly, &config.n_pole_limits)?;
-        let n_ff_poles = usize::min(config.n_ff_poles, poles.len());
-        let relevant_poles_for_piers = &poles[0..n_ff_poles]; //poi + all poles that will be checked during fail fast are relevant for piers
+        let n_ff_poles = if config.ff_pole_area_ratio == 0.0 {
+            0
+        } else {
+            let target_area = simple_poly.area * config.ff_pole_area_ratio;
+            let mut covered_area = 0.0;
+            poles
+                .iter()
+                .position(|pole| {
+                    covered_area += pole.area();
+                    covered_area >= target_area
+                })
+                .map_or(poles.len(), |i| i + 1)
+        };
+        let relevant_poles_for_piers = &poles[..n_ff_poles];
         let piers =
             piers::generate_piers(simple_poly, config.n_ff_piers, relevant_poles_for_piers)?;
 
@@ -49,12 +67,14 @@ impl SPSurrogate {
             convex_hull_indices,
             convex_hull_area,
             config,
+            n_ff_poles,
         })
     }
 
+    /// Returns the smallest generated pole prefix that reaches the configured fail-fast coverage.
     #[must_use]
     pub fn ff_poles(&self) -> &[Circle] {
-        &self.poles[0..self.config.n_ff_poles]
+        &self.poles[..self.n_ff_poles]
     }
 
     #[must_use]
@@ -72,6 +92,7 @@ impl Transformable for SPSurrogate {
             piers,
             convex_hull_area: _,
             config: _,
+            n_ff_poles: _,
         } = self;
 
         //transform poles
@@ -100,6 +121,7 @@ impl TransformableFrom for SPSurrogate {
             piers,
             convex_hull_area: _,
             config: _,
+            n_ff_poles: _,
         } = self;
 
         for (pole, ref_pole) in poles.iter_mut().zip(reference.poles.iter()) {
@@ -126,8 +148,12 @@ pub struct SPSurrogateConfig {
     ///If 75% coverage with 20 or more poles the generation will stop.
     ///If 90% coverage with 10 or more poles the generation will stop.
     pub n_pole_limits: [(usize, f32); N_POLE_LIMITS],
-    ///Number of poles to test during fail-fast
-    pub n_ff_poles: usize,
+    /// Fraction of the polygon area that fail-fast poles should cover.
+    ///
+    /// The smallest prefix whose combined non-overlapping area reaches this ratio is selected.
+    /// `0.0` disables pole checks. If the generated poles do not reach the requested coverage, all
+    /// of them are checked.
+    pub ff_pole_area_ratio: f32,
     ///number of piers to test during fail-fast
     pub n_ff_piers: usize,
 }
@@ -137,7 +163,7 @@ impl SPSurrogateConfig {
     pub fn none() -> Self {
         Self {
             n_pole_limits: [(0, 0.0); N_POLE_LIMITS],
-            n_ff_poles: 0,
+            ff_pole_area_ratio: 0.0,
             n_ff_piers: 0,
         }
     }

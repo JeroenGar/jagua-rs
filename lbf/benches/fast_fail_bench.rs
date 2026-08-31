@@ -3,10 +3,7 @@ use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoFilter;
 use jagua_rs::entities::Instance;
-use jagua_rs::geometry::convex_hull;
-use jagua_rs::geometry::fail_fast::{
-    SPSurrogate, SPSurrogateConfig, generate_piers, generate_surrogate_poles,
-};
+use jagua_rs::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::geometry::primitives::SPolygon;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
@@ -18,7 +15,7 @@ criterion_group!(benches, fast_fail_query_bench);
 
 mod util;
 
-const FF_POLES: &[usize] = &[0, 1, 2, 3, 4];
+const FF_POLE_AREA_RATIOS: &[f32] = &[0.0, 0.25, 0.5, 0.75, 1.0];
 const FF_PIERS: &[usize] = &[0, 1, 2, 3, 4];
 
 const ITEMS_ID_TO_TEST: &[usize] = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -31,12 +28,12 @@ const N_SAMPLES_PER_ITER: usize = 1000;
 fn fast_fail_query_bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("fast_fail_query_bench");
 
-    let config_combos = FF_POLES
+    let config_combos = FF_POLE_AREA_RATIOS
         .iter()
-        .flat_map(|n_ff_poles| {
+        .flat_map(|ff_pole_area_ratio| {
             FF_PIERS
                 .iter()
-                .map(|n_ff_piers| (*n_ff_poles, *n_ff_piers))
+                .map(|n_ff_piers| (*ff_pole_area_ratio, *n_ff_piers))
                 .collect_vec()
         })
         .collect_vec();
@@ -69,12 +66,16 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         .collect_vec();
 
     for ff_surr_config in config_combos {
-        let (n_ff_poles, n_ff_piers) = ff_surr_config;
+        let (ff_pole_area_ratio, n_ff_piers) = ff_surr_config;
 
         let custom_surrogates = ITEMS_ID_TO_TEST
             .iter()
             .map(|&item_id| {
-                create_custom_surrogate(&instance.item(item_id).shape_cd, n_ff_poles, n_ff_piers)
+                create_custom_surrogate(
+                    &instance.item(item_id).shape_cd,
+                    ff_pole_area_ratio,
+                    n_ff_piers,
+                )
             })
             .collect_vec();
 
@@ -99,7 +100,9 @@ fn fast_fail_query_bench(c: &mut Criterion) {
             .collect_vec();
 
         group.bench_function(
-            BenchmarkId::from_parameter(format!("{n_ff_poles}_poles_{n_ff_piers}_piers")),
+            BenchmarkId::from_parameter(format!(
+                "{ff_pole_area_ratio}_pole_area_{n_ff_piers}_piers"
+            )),
             |b| {
                 b.iter(|| {
                     let (i, &item_id) = i_cycler.next().unwrap();
@@ -136,34 +139,16 @@ fn fast_fail_query_bench(c: &mut Criterion) {
 
 pub fn create_custom_surrogate(
     simple_poly: &SPolygon,
-    n_poles: usize,
+    ff_pole_area_ratio: f32,
     n_piers: usize,
 ) -> SPSurrogate {
-    let sp_config = SPSurrogateConfig {
-        n_pole_limits: [(n_poles, 0.0); 3],
-        n_ff_poles: n_poles,
-        n_ff_piers: n_piers,
-    };
-
-    let convex_hull_indices = convex_hull::convex_hull_indices(simple_poly);
-    let mut poles = vec![simple_poly.poi];
-    poles.extend(generate_surrogate_poles(simple_poly, &sp_config.n_pole_limits).unwrap());
-
-    let piers = generate_piers(simple_poly, n_piers, &poles).unwrap();
-    let convex_hull_area = SPolygon::new(
-        convex_hull_indices
-            .iter()
-            .map(|&i| simple_poly.vertices[i])
-            .collect(),
+    SPSurrogate::new(
+        simple_poly,
+        SPSurrogateConfig {
+            n_pole_limits: [(100, 0.0), (20, 0.75), (10, 0.90)],
+            ff_pole_area_ratio,
+            n_ff_piers: n_piers,
+        },
     )
     .unwrap()
-    .area;
-
-    SPSurrogate {
-        convex_hull_indices,
-        poles,
-        piers,
-        convex_hull_area,
-        config: sp_config,
-    }
 }

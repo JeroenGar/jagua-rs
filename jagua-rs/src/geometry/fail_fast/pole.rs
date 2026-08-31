@@ -7,8 +7,10 @@ use crate::geometry::primitives::SPolygon;
 
 use anyhow::{Result, anyhow};
 
-///Generates a set of 'poles' for a shape according to specified coverage limits.
-///See [`compute_pole`] for details on what a 'pole' is.
+/// Generates a set of non-overlapping poles for a shape according to specified coverage limits.
+///
+/// Each new pole is the largest one that fits outside the earlier poles, so the returned order is
+/// largest-remaining-first. See [`compute_pole`] for details on what a pole is.
 pub fn generate_surrogate_poles(
     shape: &SPolygon,
     n_pole_limits: &[(usize, f32)],
