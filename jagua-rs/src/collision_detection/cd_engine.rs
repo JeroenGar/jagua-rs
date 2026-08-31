@@ -9,8 +9,7 @@ use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Transformable};
-use crate::geometry::primitives::Rect;
-use crate::geometry::primitives::SPolygon;
+use crate::geometry::primitives::{Rect, SPolygon};
 use crate::util::assertions;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -263,33 +262,7 @@ impl CDEngine {
     /// * `shape` - The shape to be checked for collisions
     /// * `collector` - The collector to which the hazards are reported
     pub fn collect_poly_collisions(&self, shape: &SPolygon, collector: &mut impl HazardCollector) {
-        if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding {
-            collector.insert(self.hkey_exterior, HazardEntity::Exterior);
-        }
-
-        //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
-        let v_quadtree = self.get_virtual_root(shape.bbox);
-
-        //Collect all colliding entities due to edge intersection
-        shape
-            .edge_iter()
-            .for_each(|e| v_quadtree.collect_collisions(&e, collector));
-
-        //Check if there are any other collisions due to containment
-        for qt_haz in v_quadtree.hazards.iter() {
-            match &qt_haz.presence {
-                // No need to check these, guaranteed to be detected by edge intersection
-                QTHazPresence::None | QTHazPresence::Entire => {}
-                QTHazPresence::Partial(_) => {
-                    if !collector.contains_key(qt_haz.hkey) {
-                        let h_shape = &self.hazards_map[qt_haz.hkey].shape;
-                        if self.detect_containment_collision(shape, h_shape, qt_haz.entity) {
-                            collector.insert(qt_haz.hkey, qt_haz.entity);
-                        }
-                    }
-                }
-            }
-        }
+        let _ = self.collect_poly_collisions_until(shape, collector, |_| false);
     }
 
     /// Collects polygon collisions until `stop_after_collision` requests an early return.
@@ -317,38 +290,10 @@ impl CDEngine {
             }
         }
 
-        // Check large interior circles until their combined area reaches half the polygon area.
-        if let Some(surrogate) = &shape.surrogate {
-            let area_threshold = shape.area * 0.5 / PI;
-            let mut area_sum = 0.0;
-            for pole in &surrogate.poles {
-                if self.quadtree.collect_collisions_until(
-                    pole,
-                    collector,
-                    &mut stop_after_collision,
-                ) {
-                    return true;
-                }
-                area_sum += pole.radius * pole.radius;
-                if area_sum > area_threshold {
-                    break;
-                }
-            }
-        }
-
         //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
         let v_quadtree = self.get_virtual_root(shape.bbox);
 
-        // Spread early checks across the polygon instead of walking adjacent edges.
-        let n_edges = shape.n_vertices();
-        let padded_n_edges = n_edges.next_power_of_two();
-        let n_edge_bits = padded_n_edges.trailing_zeros();
-        for i in 0..padded_n_edges {
-            let edge_idx = i.reverse_bits() >> (usize::BITS - n_edge_bits);
-            if edge_idx >= n_edges {
-                continue;
-            }
-            let edge = shape.edge(edge_idx);
+        for edge in shape.edge_iter() {
             if v_quadtree.collect_collisions_until(&edge, collector, &mut stop_after_collision) {
                 return true;
             }
@@ -376,25 +321,54 @@ impl CDEngine {
         false
     }
 
-    /// Collects all hazards with which the surrogate collides and reports them to the collector.
-    /// # Arguments
-    /// * `base_surrogate` - The (untransformed) surrogate to be checked for collisions
-    /// * `transform` - The transformation to be applied to the surrogate (on the fly)
-    /// * `collector` - The collector to which the hazards are reported
+    /// Collects collisions found by the surrogate screening pass.
+    ///
+    /// This checks a prefix of the largest poles, not the complete polygon. Follow it with
+    /// [`Self::collect_poly_collisions`] when every collision must be collected.
     pub fn collect_surrogate_collisions(
         &self,
-        base_surrogate: &SPSurrogate,
-        transform: &Transformation,
+        shape: &SPolygon,
         collector: &mut impl HazardCollector,
     ) {
-        for pole in base_surrogate.ff_poles() {
-            let t_pole = pole.transform_clone(transform);
-            self.quadtree.collect_collisions(&t_pole, collector);
+        let _ = self.collect_surrogate_collisions_until(shape, collector, |_| false);
+    }
+
+    /// Collects collisions found by the surrogate screening pass until
+    /// `stop_after_collision` requests an early return.
+    ///
+    /// The callback contract matches [`Self::collect_poly_collisions_until`]. The largest poles are
+    /// checked first, stopping once their combined area exceeds half the polygon area. This is not
+    /// a complete polygon collision query; follow it with [`Self::collect_poly_collisions_until`]
+    /// if the callback does not stop the screening pass.
+    #[must_use]
+    pub fn collect_surrogate_collisions_until<C, F>(
+        &self,
+        shape: &SPolygon,
+        collector: &mut C,
+        mut stop_after_collision: F,
+    ) -> bool
+    where
+        C: HazardCollector,
+        F: FnMut(HazardEntity) -> bool,
+    {
+        let Some(surrogate) = &shape.surrogate else {
+            return false;
+        };
+        let area_threshold = shape.area * 0.5 / PI;
+        let mut area_sum = 0.0;
+        for pole in &surrogate.poles {
+            if self
+                .quadtree
+                .collect_collisions_until(pole, collector, &mut stop_after_collision)
+            {
+                return true;
+            }
+            area_sum += pole.radius * pole.radius;
+            if area_sum > area_threshold {
+                break;
+            }
         }
-        for pier in base_surrogate.ff_piers() {
-            let t_pier = pier.transform_clone(transform);
-            self.quadtree.collect_collisions(&t_pier, collector);
-        }
+        false
     }
 
     /// Returns the lowest `QTNode` that completely surrounds the given bounding box.
