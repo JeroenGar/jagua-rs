@@ -15,6 +15,7 @@ use crate::util::assertions;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use slotmap::SlotMap;
+use std::f32::consts::PI;
 
 /// The Collision Detection Engine (CDE).
 /// [`Hazard`]s can be (de)registered and collision queries can be performed.
@@ -289,6 +290,90 @@ impl CDEngine {
                 }
             }
         }
+    }
+
+    /// Collects polygon collisions until `stop_after_collision` requests an early return.
+    ///
+    /// The callback receives each newly collected collision. Returning `true` stops traversal and
+    /// leaves the collector with only the collisions found up to that point. Collision order is
+    /// unspecified.
+    #[must_use]
+    pub fn collect_poly_collisions_until<C, F>(
+        &self,
+        shape: &SPolygon,
+        collector: &mut C,
+        mut stop_after_collision: F,
+    ) -> bool
+    where
+        C: HazardCollector,
+        F: FnMut(HazKey, HazardEntity) -> bool,
+    {
+        if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding
+            && !collector.contains_key(self.hkey_exterior)
+        {
+            collector.insert(self.hkey_exterior, HazardEntity::Exterior);
+            if stop_after_collision(self.hkey_exterior, HazardEntity::Exterior) {
+                return true;
+            }
+        }
+
+        // Check large interior circles until their combined area reaches half the polygon area.
+        if let Some(surrogate) = &shape.surrogate {
+            let area_threshold = shape.area * 0.5 / PI;
+            let mut area_sum = 0.0;
+            for pole in &surrogate.poles {
+                if self.quadtree.collect_collisions_until(
+                    pole,
+                    collector,
+                    &mut stop_after_collision,
+                ) {
+                    return true;
+                }
+                area_sum += pole.radius * pole.radius;
+                if area_sum > area_threshold {
+                    break;
+                }
+            }
+        }
+
+        //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
+        let v_quadtree = self.get_virtual_root(shape.bbox);
+
+        // Spread early checks across the polygon instead of walking adjacent edges.
+        let n_edges = shape.n_vertices();
+        let padded_n_edges = n_edges.next_power_of_two();
+        let n_edge_bits = padded_n_edges.trailing_zeros();
+        for i in 0..padded_n_edges {
+            let edge_idx = i.reverse_bits() >> (usize::BITS - n_edge_bits);
+            if edge_idx >= n_edges {
+                continue;
+            }
+            let edge = shape.edge(edge_idx);
+            if v_quadtree.collect_collisions_until(&edge, collector, &mut stop_after_collision) {
+                return true;
+            }
+        }
+
+        //Check if there are any other collisions due to containment
+        for qt_haz in v_quadtree.hazards.iter() {
+            match &qt_haz.presence {
+                // No need to check these, guaranteed to be detected by edge intersection
+                QTHazPresence::None | QTHazPresence::Entire => {}
+                QTHazPresence::Partial(_) => {
+                    if !collector.contains_key(qt_haz.hkey) {
+                        let h_shape = &self.hazards_map[qt_haz.hkey].shape;
+                        if self.detect_containment_collision(shape, h_shape, qt_haz.entity) {
+                            collector.insert(qt_haz.hkey, qt_haz.entity);
+                            if stop_after_collision(qt_haz.hkey, qt_haz.entity) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        false
     }
 
     /// Collects all hazards with which the surrogate collides and reports them to the collector.

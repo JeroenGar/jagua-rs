@@ -151,26 +151,25 @@ impl QTNode {
         entity: &T,
         collector: &mut impl HazardCollector,
     ) {
-        let _ = self.collect_collisions_until(entity, collector, &mut |_| false);
+        let _ = self.collect_collisions_until(entity, collector, &mut |_, _| false);
     }
 
-    /// Gathers colliding hazards until `stop_after_insert` requests an early return.
+    /// Gathers colliding hazards until `stop_after_collision` requests an early return.
     ///
-    /// The callback runs after each newly inserted hazard. It may update state derived from the
-    /// collector, but must not add or remove collisions itself. Returning `true` stops traversal
-    /// and leaves the collector with only the collisions found up to that point. Returning `false`
-    /// for every insertion gathers all collisions, like [`Self::collect_collisions`].
+    /// The callback receives each newly inserted collision. Returning `true` stops traversal and
+    /// leaves the collector with only the collisions found up to that point. Returning `false` for
+    /// every insertion gathers all collisions, like [`Self::collect_collisions`].
     #[must_use]
     pub fn collect_collisions_until<T, C, F>(
         &self,
         entity: &T,
         collector: &mut C,
-        stop_after_insert: &mut F,
+        stop_after_collision: &mut F,
     ) -> bool
     where
         T: QTQueryable,
         C: HazardCollector,
-        F: FnMut(&mut C) -> bool,
+        F: FnMut(HazKey, HazardEntity) -> bool,
     {
         // Condition to perform collision detection now or pass it to children:
         let perform_cd_now = self.hazards.n_active_edges() <= self.cd_threshold as usize;
@@ -185,7 +184,9 @@ impl QTNode {
                 .enumerate()
                 .filter(|(_, collides)| **collides)
                 .map(|(i, _)| &children[i])
-                .any(|child| child.collect_collisions_until(entity, collector, stop_after_insert))
+                .any(|child| {
+                    child.collect_collisions_until(entity, collector, stop_after_collision)
+                })
         } else {
             //Check the hazards now
             for hz in self.hazards.iter() {
@@ -197,11 +198,7 @@ impl QTNode {
                     };
                     if collides {
                         collector.insert(hz.hkey, hz.entity);
-                        let len = collector.len();
-                        let stop = stop_after_insert(collector);
-                        debug_assert_eq!(collector.len(), len);
-                        debug_assert!(collector.contains_key(hz.hkey));
-                        if stop {
+                        if stop_after_collision(hz.hkey, hz.entity) {
                             return true;
                         }
                     }
