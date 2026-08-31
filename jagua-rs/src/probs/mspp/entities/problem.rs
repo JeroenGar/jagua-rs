@@ -70,7 +70,7 @@ impl MSPProblem {
         let fitted_width = item_x_max + self.strips[lk].shape_modify_config.offset.unwrap_or(0.0);
 
         self.change_strip_width(lk, fitted_width);
-        debug_assert!(feasible_before == self.layouts[lk].is_feasible());
+        debug_assert_eq!(feasible_before, self.layouts[lk].is_feasible());
     }
 
     /// Places an item according to the given `MSPPlacement` in the problem.
