@@ -217,7 +217,7 @@ fn qt_node_data(
         (qt_node.children.as_ref(), qt_node.hazards.strongest(filter))
     {
         //not a leaf node, go to children
-        for child in children.as_ref() {
+        for child in children.iter() {
             let data = qt_node_data(child, data_eh, data_ph, data_nh, filter);
             data_eh = data.0;
             data_ph = data.1;

@@ -12,33 +12,15 @@ pub trait QTQueryable: CollidesWith<Edge> + CollidesWith<Rect> {
         qs.map(|q| self.collides_with(q))
     }
 
-    /// Returns the preferred order in which to search the four quadrants of `r`.
-    ///
-    /// This only affects which quadrant an early-exit collision query visits first. The result
-    /// must contain every index in `0..4` exactly once, so ordering cannot change whether a
-    /// collision is detected. The default preserves the quadrants' storage order.
-    fn quadrant_order(&self, _r: &Rect) -> [usize; 4] {
+    /// Returns the preferred order for searching the quadrants around `split`.
+    /// The result must contain every index in `0..4` exactly once.
+    fn quadrant_order(&self, _split: Point) -> [usize; 4] {
         [0, 1, 2, 3]
-    }
-
-    /// Returns the preferred quadrant order while reusing the node's precomputed `split` point.
-    ///
-    /// `split` must equal `r.centroid()`. Accepting it separately avoids recomputing the split in
-    /// the hot traversal path. Implementations must uphold the permutation invariant documented
-    /// by [`Self::quadrant_order`].
-    fn quadrant_order_with_split(&self, r: &Rect, split: Point) -> [usize; 4] {
-        debug_assert_eq!(split, r.centroid());
-        self.quadrant_order(r)
     }
 }
 
 impl QTQueryable for Circle {
-    fn quadrant_order(&self, r: &Rect) -> [usize; 4] {
-        self.quadrant_order_with_split(r, r.centroid())
-    }
-
-    fn quadrant_order_with_split(&self, r: &Rect, Point(mid_x, mid_y): Point) -> [usize; 4] {
-        debug_assert_eq!(Point(mid_x, mid_y), r.centroid());
+    fn quadrant_order(&self, Point(mid_x, mid_y): Point) -> [usize; 4] {
         let right = self.center.x() >= mid_x;
         let top = self.center.y() >= mid_y;
         let row_mask = usize::from(!top) << 1;

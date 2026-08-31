@@ -116,10 +116,7 @@ impl QTNode {
                             entity.collides_with_quadrants(&self.bbox, quadrants);
 
                         entity
-                            .quadrant_order_with_split(
-                                &self.bbox,
-                                Point(quadrants[0].x_min, quadrants[0].y_min),
-                            )
+                            .quadrant_order(Point(quadrants[0].x_min, quadrants[0].y_min))
                             .into_iter()
                             .filter(|&idx| colliding_quadrants[idx])
                             .map(|idx| children[idx].collides(entity, filter))
@@ -154,8 +151,7 @@ impl QTNode {
         entity: &T,
         collector: &mut impl HazardCollector,
     ) {
-        let stopped = self.collect_collisions_until(entity, collector, &mut |_| false);
-        debug_assert!(!stopped);
+        let _ = self.collect_collisions_until(entity, collector, &mut |_| false);
     }
 
     /// Gathers colliding hazards until `stop_after_insert` requests an early return.
