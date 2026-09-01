@@ -160,10 +160,10 @@ The configuration file has the following structure:
 {
   "cde_config": { //Configuration of the collision detection engine
     "quadtree_depth": 5, //Maximum depth of the quadtree is 5
-    "cd_threshold": 16, // Perform collision collection immediately if the #edges in a node <= 16
+    "cd_threshold": 96, // Perform collision collection immediately if the #edges in a node <= 96
     "item_surrogate_config": {
       "n_pole_limits": [[100, 0.0], [20, 0.75], [10, 0.90]], //See docs for details 
-      "n_ff_poles": 2, //Two poles will be used for fail-fast collision detection
+      "ff_pole_area_ratio": 0.5, //Fail-fast poles will cover at least 50% of the polygon area
       "n_ff_piers": 0 //Zero piers will be used for fail-fast collision detection
     }
   },

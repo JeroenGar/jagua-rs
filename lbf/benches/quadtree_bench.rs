@@ -32,7 +32,7 @@ const N_SAMPLES_PER_ITER: usize = 1000;
 fn quadtree_update_bench(c: &mut Criterion) {
     let mut config = create_base_config();
     //disable fail fast surrogates
-    config.cde_config.item_surrogate_config.n_ff_poles = 0;
+    config.cde_config.item_surrogate_config.ff_pole_area_ratio = 0.0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
 
     let mut group = c.benchmark_group("quadtree_update");
@@ -73,7 +73,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
 fn quadtree_query_bench(c: &mut Criterion) {
     let mut config = create_base_config();
     //disable fail fast surrogates
-    config.cde_config.item_surrogate_config.n_ff_poles = 0;
+    config.cde_config.item_surrogate_config.ff_pole_area_ratio = 0.0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
 
     let mut group = c.benchmark_group("quadtree_query");
@@ -126,7 +126,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
 fn quadtree_query_update_1000_1(c: &mut Criterion) {
     let mut config = create_base_config();
     //disable fail fast surrogates
-    config.cde_config.item_surrogate_config.n_ff_poles = 0;
+    config.cde_config.item_surrogate_config.ff_pole_area_ratio = 0.0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
 
     let mut group = c.benchmark_group("quadtree_query_update_1000_1");
@@ -184,7 +184,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
 fn quadtree_collect_query_bench(c: &mut Criterion) {
     let mut config = create_base_config();
     //disable fail fast surrogates
-    config.cde_config.item_surrogate_config.n_ff_poles = 0;
+    config.cde_config.item_surrogate_config.ff_pole_area_ratio = 0.0;
     config.cde_config.item_surrogate_config.n_ff_piers = 0;
 
     let mut group = c.benchmark_group("quadtree_collect_query");

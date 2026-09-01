@@ -6,7 +6,7 @@ use crate::collision_detection::quadtree::QTHazard;
 use crate::collision_detection::quadtree::qt_hazard_vec::QTHazardVec;
 use crate::collision_detection::quadtree::qt_traits::QTQueryable;
 use crate::geometry::geo_traits::CollidesWith;
-use crate::geometry::primitives::Rect;
+use crate::geometry::primitives::{Point, Rect};
 use slotmap::SlotMap;
 
 /// Quadtree node
@@ -95,8 +95,8 @@ impl QTNode {
     }
 
     /// Used to detect collisions in a binary fashion: either there is a collision or there isn't.
-    /// Returns `None` if no collision between the entity and any hazard is detected,
-    /// otherwise the first encountered hazard that collides with the entity is returned.
+    /// Returns one colliding hazard, if any. Which hazard is returned is unspecified.
+    /// Use [`Self::collect_collisions`] to report every colliding hazard.
     pub fn collides<T: QTQueryable>(
         &self,
         entity: &T,
@@ -115,11 +115,11 @@ impl QTNode {
                         let colliding_quadrants =
                             entity.collides_with_quadrants(&self.bbox, quadrants);
 
-                        colliding_quadrants
-                            .iter()
-                            .enumerate()
-                            .filter(|(_, collides)| **collides)
-                            .map(|idx| children[idx.0].collides(entity, filter))
+                        entity
+                            .quadrant_order(Point(quadrants[0].x_min, quadrants[0].y_min))
+                            .into_iter()
+                            .filter(|&idx| colliding_quadrants[idx])
+                            .map(|idx| children[idx].collides(entity, filter))
                             .find(Option::is_some)
                             .flatten()
                     } else {
@@ -151,40 +151,61 @@ impl QTNode {
         entity: &T,
         collector: &mut impl HazardCollector,
     ) {
+        let _ = self.collect_collisions_until(entity, collector, &mut |_| false);
+    }
+
+    /// Gathers colliding hazards until `stop_after_collision` requests an early return.
+    ///
+    /// The callback runs after a colliding hazard is added to the collector for the first time.
+    /// Returning `true` stops traversal and leaves the collector with only the hazards found up to
+    /// that point. Returning `false` every time gathers all collisions, like
+    /// [`Self::collect_collisions`].
+    #[must_use]
+    pub fn collect_collisions_until<T, C, F>(
+        &self,
+        entity: &T,
+        collector: &mut C,
+        stop_after_collision: &mut F,
+    ) -> bool
+    where
+        T: QTQueryable,
+        C: HazardCollector,
+        F: FnMut(HazardEntity) -> bool,
+    {
         // Condition to perform collision detection now or pass it to children:
         let perform_cd_now = self.hazards.n_active_edges() <= self.cd_threshold as usize;
 
-        match (self.children.as_ref(), perform_cd_now) {
-            (Some(children), false) => {
-                // Collect collisions from all children that collide with the entity
-                let quadrants = [0, 1, 2, 3].map(|idx| &children[idx].bbox);
-                let colliding_quadrants = entity.collides_with_quadrants(&self.bbox, quadrants);
+        if let (Some(children), false) = (self.children.as_ref(), perform_cd_now) {
+            // Collect collisions from all children that collide with the entity
+            let quadrants = [0, 1, 2, 3].map(|idx| &children[idx].bbox);
+            let colliding_quadrants = entity.collides_with_quadrants(&self.bbox, quadrants);
 
-                colliding_quadrants
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, collides)| **collides)
-                    .map(|(i, _)| &children[i])
-                    .for_each(|child| {
-                        child.collect_collisions(entity, collector);
-                    });
-            }
-            _ => {
-                //Check the hazards now
-                for hz in self.hazards.iter() {
-                    if !collector.contains_key(hz.hkey) {
-                        match &hz.presence {
-                            QTHazPresence::None => (),
-                            QTHazPresence::Entire => collector.insert(hz.hkey, hz.entity),
-                            QTHazPresence::Partial(p_haz) => {
-                                if p_haz.collides_with(entity) {
-                                    collector.insert(hz.hkey, hz.entity);
-                                }
-                            }
+            colliding_quadrants
+                .iter()
+                .enumerate()
+                .filter(|(_, collides)| **collides)
+                .map(|(i, _)| &children[i])
+                .any(|child| {
+                    child.collect_collisions_until(entity, collector, stop_after_collision)
+                })
+        } else {
+            //Check the hazards now
+            for hz in self.hazards.iter() {
+                if !collector.contains_key(hz.hkey) {
+                    let collides = match &hz.presence {
+                        QTHazPresence::None => false,
+                        QTHazPresence::Entire => true,
+                        QTHazPresence::Partial(p_haz) => p_haz.collides_with(entity),
+                    };
+                    if collides {
+                        collector.insert(hz.hkey, hz.entity);
+                        if stop_after_collision(hz.entity) {
+                            return true;
                         }
                     }
                 }
             }
+            false
         }
     }
 }
