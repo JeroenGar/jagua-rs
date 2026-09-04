@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788432269153,
+  "lastUpdate": 1788555336462,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -5637,6 +5637,84 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k/5",
             "value": 170472,
             "range": "± 4732",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jeroen.gardeyn@hotmail.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "824ab31cf8a58eecf5d87527260c92510626661b",
+          "message": "Make quadtree debug assertion robust to f32 rounding (#87)\n\n* Make quadtree debug assertion robust to f32 rounding\n\n* Release jagua-rs 0.8.1",
+          "timestamp": "2026-09-04T22:52:18+02:00",
+          "tree_id": "65c5ac4649e98b17997a98258fbcc33526805a83",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/824ab31cf8a58eecf5d87527260c92510626661b"
+        },
+        "date": 1788555334442,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 1996834,
+            "range": "± 92893",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 2005412,
+            "range": "± 93410",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 2015842,
+            "range": "± 100810",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 2126212,
+            "range": "± 8520",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 3921885,
+            "range": "± 31134",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 7659307,
+            "range": "± 76372",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 234488,
+            "range": "± 7489",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 184266,
+            "range": "± 4838",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 173959,
+            "range": "± 3773",
             "unit": "ns/iter"
           }
         ]
