@@ -3,6 +3,9 @@ use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::{Circle, Edge, Point};
 use std::cmp::Ordering;
 
+#[cfg(debug_assertions)]
+use super::assertions;
+
 /// Common trait for all geometric primitives that can be directly queried in the quadtree
 /// for collisions with the edges of the registered hazards. These include: [Rect], [Edge] and [Circle].
 pub trait QTQueryable: CollidesWith<Edge> + CollidesWith<Rect> {
@@ -114,25 +117,15 @@ impl QTQueryable for Edge {
             [&mut c_q0, &mut c_q1],
         );
 
-        let [c_q0, c_q1, c_q2, c_q3] = [c_q0, c_q1, c_q2, c_q3].map(|c| c.unwrap_or(false));
+        let classified = [c_q0, c_q1, c_q2, c_q3].map(|collision| collision.unwrap_or(false));
+        #[cfg(debug_assertions)]
         debug_assert!(
-            {
-                // make sure all quadrants which are colliding according to the individual collision check are at least
-                // also caught by the quadrant collision check
-                qs.map(|q| self.collides_with(q))
-                    .iter()
-                    .zip([c_q0, c_q1, c_q2, c_q3].iter())
-                    .all(|(&i_c, &q_c)| !i_c || q_c)
-            },
-            "{:?}, {:?}, {:?}, {:?}, {:?}",
-            self,
-            r,
-            qs,
-            [c_q0, c_q1, c_q2, c_q3],
-            qs.map(|q| self.collides_with(q))
+            assertions::edge_quadrant_classification_is_conservative(self, qs, classified),
+            "edge: {self:?}, node: {r:?}, quadrants: {qs:?}, classified: {classified:?}, f64 oracle: {:?}",
+            assertions::edge_collisions_with_rects_f64(self, qs)
         );
 
-        [c_q0, c_q1, c_q2, c_q3]
+        classified
     }
 }
 
