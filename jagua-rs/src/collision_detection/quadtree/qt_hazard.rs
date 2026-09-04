@@ -8,6 +8,8 @@ use crate::util::assertions;
 use slotmap::SlotMap;
 use std::array;
 
+use super::assertions as qt_assertions;
+
 /// Representation of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
 #[derive(Clone, Debug)]
 pub struct QTHazard {
@@ -110,7 +112,14 @@ impl QTHazard {
                         })
                     });
 
-                    debug_assert!(constricted_hazards.iter().filter(|h| h.is_some()).count() > 0);
+                    debug_assert!(
+                        constricted_hazards.iter().any(Option::is_some)
+                            || qt_assertions::hazard_boundary_misses_quadrants_f64(
+                                haz_shape,
+                                quadrants.each_ref(),
+                            ),
+                        "hazard boundary intersects a quadrant in f64, but constriction retained no edges"
+                    );
 
                     //At this point, we have resolved all quadrants that have edges colliding with them (i.e. `Partial` presence).
                     //What remain are the quadrants without any intersecting edges.

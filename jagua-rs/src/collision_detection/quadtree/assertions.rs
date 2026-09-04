@@ -1,4 +1,15 @@
-use crate::geometry::primitives::{Edge, Rect};
+use crate::geometry::primitives::{Edge, Rect, SPolygon};
+
+pub(super) fn hazard_boundary_misses_quadrants_f64(
+    shape: &SPolygon,
+    quadrants: [&Rect; 4],
+) -> bool {
+    shape.edge_iter().all(|edge| {
+        edge_collisions_with_rects_f64(&edge, quadrants)
+            .into_iter()
+            .all(|collides| !collides)
+    })
+}
 
 pub(super) fn edge_quadrant_classification_is_conservative(
     edge: &Edge,
