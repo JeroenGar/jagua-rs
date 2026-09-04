@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Error"],"struct":["WeightedAliasIndex","WeightedIndex","WeightedTreeIndex"],"trait":["AliasableWeight","Weight"]};

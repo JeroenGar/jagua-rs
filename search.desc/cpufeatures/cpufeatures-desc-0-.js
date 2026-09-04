@@ -1,0 +1,1 @@
+searchState.loadedDescShard("cpufeatures", 0, "RustCrypto: CPU Feature Detection\nCreate module with CPU feature detection code.")

@@ -1,0 +1,1 @@
+searchState.loadedDescShard("float_next_after", 0, "Returns the next representable float value in the …")

@@ -1,0 +1,404 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/geo-0.24.1/src/algorithm/k_nearest_concave_hull.rs`."><title>k_nearest_concave_hull.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="geo" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">geo/algorithm/</div>k_nearest_concave_hull.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use crate</span>::{
+<a href=#2 id=2 data-nosnippet>2</a>    Contains, ConvexHull, Coord, CoordNum, GeoFloat, Intersects, LineString, MultiPoint, Point,
+<a href=#3 id=3 data-nosnippet>3</a>    Polygon,
+<a href=#4 id=4 data-nosnippet>4</a>};
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>num_traits::Float;
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>rstar::RTreeNum;
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>std::cmp::max;
+<a href=#8 id=8 data-nosnippet>8</a>
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">const </span>K_MULTIPLIER: f32 = <span class="number">1.5</span>;
+<a href=#10 id=10 data-nosnippet>10</a>
+<a href=#11 id=11 data-nosnippet>11</a><span class="doccomment">/// Another approach for [concave hull](trait.algorithm.ConcaveHull.html). This algorithm is based
+<a href=#12 id=12 data-nosnippet>12</a>/// on a [k nearest neighbours approach](https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf)
+<a href=#13 id=13 data-nosnippet>13</a>/// by Adriano Moreira and Maribel Santos.
+<a href=#14 id=14 data-nosnippet>14</a>///
+<a href=#15 id=15 data-nosnippet>15</a>/// The idea of the algorithm is simple:
+<a href=#16 id=16 data-nosnippet>16</a>/// 1. Find a point on a future hull (e. g. a point with the smallest Y coordinate).
+<a href=#17 id=17 data-nosnippet>17</a>/// 2. Find K nearest neighbours to the chosen point.
+<a href=#18 id=18 data-nosnippet>18</a>/// 3. As the next point on the hull chose one of the nearest points, that would make the largest
+<a href=#19 id=19 data-nosnippet>19</a>///    left hand turn from the previous segment.
+<a href=#20 id=20 data-nosnippet>20</a>/// 4. Repeat 2-4.
+<a href=#21 id=21 data-nosnippet>21</a>///
+<a href=#22 id=22 data-nosnippet>22</a>/// In cases when the hull cannot be calculated for the given K, a larger value is chosen and
+<a href=#23 id=23 data-nosnippet>23</a>/// calculation starts from the beginning.
+<a href=#24 id=24 data-nosnippet>24</a>///
+<a href=#25 id=25 data-nosnippet>25</a>/// In the worst case scenario, when no K can be found to build a correct hull, the convex hull is
+<a href=#26 id=26 data-nosnippet>26</a>/// returned.
+<a href=#27 id=27 data-nosnippet>27</a>///
+<a href=#28 id=28 data-nosnippet>28</a>/// This algorithm is generally several times slower then the one used in the
+<a href=#29 id=29 data-nosnippet>29</a>/// [ConcaveHull](trait.algorithm.ConcaveHull.html) trait, but gives better results and
+<a href=#30 id=30 data-nosnippet>30</a>/// does not require manual coefficient adjustment.
+<a href=#31 id=31 data-nosnippet>31</a>///
+<a href=#32 id=32 data-nosnippet>32</a>/// The larger K is given to the algorithm, the more "smooth" the hull will generally be, but the
+<a href=#33 id=33 data-nosnippet>33</a>/// longer calculation may take. If performance is not critical, K=3 is a safe value to set
+<a href=#34 id=34 data-nosnippet>34</a>/// (lower values do not make sense for this algorithm). If K is equal or larger than the number of
+<a href=#35 id=35 data-nosnippet>35</a>/// input points, the convex hull will be produced.
+<a href=#36 id=36 data-nosnippet>36</a></span><span class="kw">pub trait </span>KNearestConcaveHull {
+<a href=#37 id=37 data-nosnippet>37</a>    <span class="kw">type </span>Scalar: CoordNum;
+<a href=#38 id=38 data-nosnippet>38</a>    <span class="kw">fn </span>k_nearest_concave_hull(<span class="kw-2">&amp;</span><span class="self">self</span>, k: u32) -&gt; Polygon&lt;<span class="self">Self</span>::Scalar&gt;;
+<a href=#39 id=39 data-nosnippet>39</a>}
+<a href=#40 id=40 data-nosnippet>40</a>
+<a href=#41 id=41 data-nosnippet>41</a><span class="kw">impl</span>&lt;T&gt; KNearestConcaveHull <span class="kw">for </span>Vec&lt;Point&lt;T&gt;&gt;
+<a href=#42 id=42 data-nosnippet>42</a><span class="kw">where
+<a href=#43 id=43 data-nosnippet>43</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#44 id=44 data-nosnippet>44</a>{
+<a href=#45 id=45 data-nosnippet>45</a>    <span class="kw">type </span>Scalar = T;
+<a href=#46 id=46 data-nosnippet>46</a>    <span class="kw">fn </span>k_nearest_concave_hull(<span class="kw-2">&amp;</span><span class="self">self</span>, k: u32) -&gt; Polygon&lt;<span class="self">Self</span>::Scalar&gt; {
+<a href=#47 id=47 data-nosnippet>47</a>        concave_hull(<span class="self">self</span>.iter().map(|point| <span class="kw-2">&amp;</span>point.<span class="number">0</span>), k)
+<a href=#48 id=48 data-nosnippet>48</a>    }
+<a href=#49 id=49 data-nosnippet>49</a>}
+<a href=#50 id=50 data-nosnippet>50</a>
+<a href=#51 id=51 data-nosnippet>51</a><span class="kw">impl</span>&lt;T&gt; KNearestConcaveHull <span class="kw">for </span>[Point&lt;T&gt;]
+<a href=#52 id=52 data-nosnippet>52</a><span class="kw">where
+<a href=#53 id=53 data-nosnippet>53</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#54 id=54 data-nosnippet>54</a>{
+<a href=#55 id=55 data-nosnippet>55</a>    <span class="kw">type </span>Scalar = T;
+<a href=#56 id=56 data-nosnippet>56</a>    <span class="kw">fn </span>k_nearest_concave_hull(<span class="kw-2">&amp;</span><span class="self">self</span>, k: u32) -&gt; Polygon&lt;<span class="self">Self</span>::Scalar&gt; {
+<a href=#57 id=57 data-nosnippet>57</a>        concave_hull(<span class="self">self</span>.iter().map(|point| <span class="kw-2">&amp;</span>point.<span class="number">0</span>), k)
+<a href=#58 id=58 data-nosnippet>58</a>    }
+<a href=#59 id=59 data-nosnippet>59</a>}
+<a href=#60 id=60 data-nosnippet>60</a>
+<a href=#61 id=61 data-nosnippet>61</a><span class="kw">impl</span>&lt;T&gt; KNearestConcaveHull <span class="kw">for </span>Vec&lt;Coord&lt;T&gt;&gt;
+<a href=#62 id=62 data-nosnippet>62</a><span class="kw">where
+<a href=#63 id=63 data-nosnippet>63</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#64 id=64 data-nosnippet>64</a>{
+<a href=#65 id=65 data-nosnippet>65</a>    <span class="kw">type </span>Scalar = T;
+<a href=#66 id=66 data-nosnippet>66</a>    <span class="kw">fn </span>k_nearest_concave_hull(<span class="kw-2">&amp;</span><span class="self">self</span>, k: u32) -&gt; Polygon&lt;<span class="self">Self</span>::Scalar&gt; {
+<a href=#67 id=67 data-nosnippet>67</a>        concave_hull(<span class="self">self</span>.iter(), k)
+<a href=#68 id=68 data-nosnippet>68</a>    }
+<a href=#69 id=69 data-nosnippet>69</a>}
+<a href=#70 id=70 data-nosnippet>70</a>
+<a href=#71 id=71 data-nosnippet>71</a><span class="kw">impl</span>&lt;T&gt; KNearestConcaveHull <span class="kw">for </span>[Coord&lt;T&gt;]
+<a href=#72 id=72 data-nosnippet>72</a><span class="kw">where
+<a href=#73 id=73 data-nosnippet>73</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#74 id=74 data-nosnippet>74</a>{
+<a href=#75 id=75 data-nosnippet>75</a>    <span class="kw">type </span>Scalar = T;
+<a href=#76 id=76 data-nosnippet>76</a>    <span class="kw">fn </span>k_nearest_concave_hull(<span class="kw-2">&amp;</span><span class="self">self</span>, k: u32) -&gt; Polygon&lt;<span class="self">Self</span>::Scalar&gt; {
+<a href=#77 id=77 data-nosnippet>77</a>        concave_hull(<span class="self">self</span>.iter(), k)
+<a href=#78 id=78 data-nosnippet>78</a>    }
+<a href=#79 id=79 data-nosnippet>79</a>}
+<a href=#80 id=80 data-nosnippet>80</a>
+<a href=#81 id=81 data-nosnippet>81</a><span class="kw">impl</span>&lt;T&gt; KNearestConcaveHull <span class="kw">for </span>MultiPoint&lt;T&gt;
+<a href=#82 id=82 data-nosnippet>82</a><span class="kw">where
+<a href=#83 id=83 data-nosnippet>83</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#84 id=84 data-nosnippet>84</a>{
+<a href=#85 id=85 data-nosnippet>85</a>    <span class="kw">type </span>Scalar = T;
+<a href=#86 id=86 data-nosnippet>86</a>    <span class="kw">fn </span>k_nearest_concave_hull(<span class="kw-2">&amp;</span><span class="self">self</span>, k: u32) -&gt; Polygon&lt;<span class="self">Self</span>::Scalar&gt; {
+<a href=#87 id=87 data-nosnippet>87</a>        concave_hull(<span class="self">self</span>.iter().map(|point| <span class="kw-2">&amp;</span>point.<span class="number">0</span>), k)
+<a href=#88 id=88 data-nosnippet>88</a>    }
+<a href=#89 id=89 data-nosnippet>89</a>}
+<a href=#90 id=90 data-nosnippet>90</a>
+<a href=#91 id=91 data-nosnippet>91</a><span class="kw">fn </span>concave_hull&lt;<span class="lifetime">'a</span>, T: <span class="lifetime">'a</span>&gt;(coords: <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Coord&lt;T&gt;&gt;, k: u32) -&gt; Polygon&lt;T&gt;
+<a href=#92 id=92 data-nosnippet>92</a><span class="kw">where
+<a href=#93 id=93 data-nosnippet>93</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#94 id=94 data-nosnippet>94</a>{
+<a href=#95 id=95 data-nosnippet>95</a>    <span class="kw">let </span>dataset = prepare_dataset(coords);
+<a href=#96 id=96 data-nosnippet>96</a>    concave_hull_inner(dataset, k)
+<a href=#97 id=97 data-nosnippet>97</a>}
+<a href=#98 id=98 data-nosnippet>98</a>
+<a href=#99 id=99 data-nosnippet>99</a><span class="kw">const </span>DELTA: f32 = <span class="number">0.000000001</span>;
+<a href=#100 id=100 data-nosnippet>100</a>
+<a href=#101 id=101 data-nosnippet>101</a><span class="doccomment">/// Removes duplicate coords from the dataset.
+<a href=#102 id=102 data-nosnippet>102</a></span><span class="kw">fn </span>prepare_dataset&lt;<span class="lifetime">'a</span>, T: <span class="lifetime">'a</span>&gt;(coords: <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Coord&lt;T&gt;&gt;) -&gt; rstar::RTree&lt;Coord&lt;T&gt;&gt;
+<a href=#103 id=103 data-nosnippet>103</a><span class="kw">where
+<a href=#104 id=104 data-nosnippet>104</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#105 id=105 data-nosnippet>105</a>{
+<a href=#106 id=106 data-nosnippet>106</a>    <span class="kw">let </span><span class="kw-2">mut </span>dataset: rstar::RTree&lt;Coord&lt;T&gt;&gt; = rstar::RTree::new();
+<a href=#107 id=107 data-nosnippet>107</a>    <span class="kw">for </span>coord <span class="kw">in </span>coords {
+<a href=#108 id=108 data-nosnippet>108</a>        <span class="kw">let </span>closest = dataset.nearest_neighbor(coord);
+<a href=#109 id=109 data-nosnippet>109</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(closest) = closest {
+<a href=#110 id=110 data-nosnippet>110</a>            <span class="kw">if </span>coords_are_equal(coord, closest) {
+<a href=#111 id=111 data-nosnippet>111</a>                <span class="kw">continue</span>;
+<a href=#112 id=112 data-nosnippet>112</a>            }
+<a href=#113 id=113 data-nosnippet>113</a>        }
+<a href=#114 id=114 data-nosnippet>114</a>
+<a href=#115 id=115 data-nosnippet>115</a>        dataset.insert(<span class="kw-2">*</span>coord)
+<a href=#116 id=116 data-nosnippet>116</a>    }
+<a href=#117 id=117 data-nosnippet>117</a>
+<a href=#118 id=118 data-nosnippet>118</a>    dataset
+<a href=#119 id=119 data-nosnippet>119</a>}
+<a href=#120 id=120 data-nosnippet>120</a>
+<a href=#121 id=121 data-nosnippet>121</a><span class="doccomment">/// The points are considered equal, if both coordinate values are same with 0.0000001% range
+<a href=#122 id=122 data-nosnippet>122</a>/// (see the value of DELTA constant).
+<a href=#123 id=123 data-nosnippet>123</a></span><span class="kw">fn </span>coords_are_equal&lt;T&gt;(c1: <span class="kw-2">&amp;</span>Coord&lt;T&gt;, c2: <span class="kw-2">&amp;</span>Coord&lt;T&gt;) -&gt; bool
+<a href=#124 id=124 data-nosnippet>124</a><span class="kw">where
+<a href=#125 id=125 data-nosnippet>125</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#126 id=126 data-nosnippet>126</a>{
+<a href=#127 id=127 data-nosnippet>127</a>    float_equal(c1.x, c2.x) &amp;&amp; float_equal(c1.y, c2.y)
+<a href=#128 id=128 data-nosnippet>128</a>}
+<a href=#129 id=129 data-nosnippet>129</a>
+<a href=#130 id=130 data-nosnippet>130</a><span class="kw">fn </span>float_equal&lt;T&gt;(a: T, b: T) -&gt; bool
+<a href=#131 id=131 data-nosnippet>131</a><span class="kw">where
+<a href=#132 id=132 data-nosnippet>132</a>    </span>T: GeoFloat,
+<a href=#133 id=133 data-nosnippet>133</a>{
+<a href=#134 id=134 data-nosnippet>134</a>    <span class="kw">let </span>da = a * T::from(DELTA)
+<a href=#135 id=135 data-nosnippet>135</a>        .expect(<span class="string">"Conversion from constant is always valid."</span>)
+<a href=#136 id=136 data-nosnippet>136</a>        .abs();
+<a href=#137 id=137 data-nosnippet>137</a>    b &gt; (a - da) &amp;&amp; b &lt; (a + da)
+<a href=#138 id=138 data-nosnippet>138</a>}
+<a href=#139 id=139 data-nosnippet>139</a>
+<a href=#140 id=140 data-nosnippet>140</a><span class="kw">fn </span>polygon_from_tree&lt;T&gt;(dataset: <span class="kw-2">&amp;</span>rstar::RTree&lt;Coord&lt;T&gt;&gt;) -&gt; Polygon&lt;T&gt;
+<a href=#141 id=141 data-nosnippet>141</a><span class="kw">where
+<a href=#142 id=142 data-nosnippet>142</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#143 id=143 data-nosnippet>143</a>{
+<a href=#144 id=144 data-nosnippet>144</a>    <span class="macro">assert!</span>(dataset.size() &lt;= <span class="number">3</span>);
+<a href=#145 id=145 data-nosnippet>145</a>
+<a href=#146 id=146 data-nosnippet>146</a>    <span class="kw">let </span><span class="kw-2">mut </span>coords: Vec&lt;Coord&lt;T&gt;&gt; = dataset.iter().cloned().collect();
+<a href=#147 id=147 data-nosnippet>147</a>    <span class="kw">if </span>!coords.is_empty() {
+<a href=#148 id=148 data-nosnippet>148</a>        <span class="comment">// close the linestring provided it's not empty
+<a href=#149 id=149 data-nosnippet>149</a>        </span>coords.push(coords[<span class="number">0</span>]);
+<a href=#150 id=150 data-nosnippet>150</a>    }
+<a href=#151 id=151 data-nosnippet>151</a>
+<a href=#152 id=152 data-nosnippet>152</a>    Polygon::new(LineString::from(coords), <span class="macro">vec!</span>[])
+<a href=#153 id=153 data-nosnippet>153</a>}
+<a href=#154 id=154 data-nosnippet>154</a>
+<a href=#155 id=155 data-nosnippet>155</a><span class="kw">fn </span>concave_hull_inner&lt;T&gt;(original_dataset: rstar::RTree&lt;Coord&lt;T&gt;&gt;, k: u32) -&gt; Polygon&lt;T&gt;
+<a href=#156 id=156 data-nosnippet>156</a><span class="kw">where
+<a href=#157 id=157 data-nosnippet>157</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#158 id=158 data-nosnippet>158</a>{
+<a href=#159 id=159 data-nosnippet>159</a>    <span class="kw">let </span>set_length = original_dataset.size();
+<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">if </span>set_length &lt;= <span class="number">3 </span>{
+<a href=#161 id=161 data-nosnippet>161</a>        <span class="kw">return </span>polygon_from_tree(<span class="kw-2">&amp;</span>original_dataset);
+<a href=#162 id=162 data-nosnippet>162</a>    }
+<a href=#163 id=163 data-nosnippet>163</a>    <span class="kw">if </span>k &gt;= set_length <span class="kw">as </span>u32 {
+<a href=#164 id=164 data-nosnippet>164</a>        <span class="kw">return </span>fall_back_hull(<span class="kw-2">&amp;</span>original_dataset);
+<a href=#165 id=165 data-nosnippet>165</a>    }
+<a href=#166 id=166 data-nosnippet>166</a>
+<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">let </span>k_adjusted = adjust_k(k);
+<a href=#168 id=168 data-nosnippet>168</a>    <span class="kw">let </span><span class="kw-2">mut </span>dataset = original_dataset.clone();
+<a href=#169 id=169 data-nosnippet>169</a>
+<a href=#170 id=170 data-nosnippet>170</a>    <span class="kw">let </span>first_coord = get_first_coord(<span class="kw-2">&amp;</span>dataset);
+<a href=#171 id=171 data-nosnippet>171</a>    <span class="kw">let </span><span class="kw-2">mut </span>hull = <span class="macro">vec!</span>[first_coord];
+<a href=#172 id=172 data-nosnippet>172</a>
+<a href=#173 id=173 data-nosnippet>173</a>    <span class="kw">let </span><span class="kw-2">mut </span>current_coord = first_coord;
+<a href=#174 id=174 data-nosnippet>174</a>    dataset.remove(<span class="kw-2">&amp;</span>first_coord);
+<a href=#175 id=175 data-nosnippet>175</a>
+<a href=#176 id=176 data-nosnippet>176</a>    <span class="kw">let </span><span class="kw-2">mut </span>prev_coord = current_coord;
+<a href=#177 id=177 data-nosnippet>177</a>    <span class="kw">let </span><span class="kw-2">mut </span>curr_step = <span class="number">2</span>;
+<a href=#178 id=178 data-nosnippet>178</a>    <span class="kw">while </span>(current_coord != first_coord || curr_step == <span class="number">2</span>) &amp;&amp; dataset.size() &gt; <span class="number">0 </span>{
+<a href=#179 id=179 data-nosnippet>179</a>        <span class="kw">if </span>curr_step == <span class="number">5 </span>{
+<a href=#180 id=180 data-nosnippet>180</a>            dataset.insert(first_coord);
+<a href=#181 id=181 data-nosnippet>181</a>        }
+<a href=#182 id=182 data-nosnippet>182</a>
+<a href=#183 id=183 data-nosnippet>183</a>        <span class="kw">let </span><span class="kw-2">mut </span>nearest_coords: Vec&lt;<span class="kw">_</span>&gt; =
+<a href=#184 id=184 data-nosnippet>184</a>            get_nearest_coords(<span class="kw-2">&amp;</span>dataset, <span class="kw-2">&amp;</span>current_coord, k_adjusted).collect();
+<a href=#185 id=185 data-nosnippet>185</a>        sort_by_angle(<span class="kw-2">&amp;mut </span>nearest_coords, <span class="kw-2">&amp;</span>current_coord, <span class="kw-2">&amp;</span>prev_coord);
+<a href=#186 id=186 data-nosnippet>186</a>
+<a href=#187 id=187 data-nosnippet>187</a>        <span class="kw">let </span>selected = nearest_coords
+<a href=#188 id=188 data-nosnippet>188</a>            .iter()
+<a href=#189 id=189 data-nosnippet>189</a>            .find(|x| !intersects(<span class="kw-2">&amp;</span>hull, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>current_coord, x]));
+<a href=#190 id=190 data-nosnippet>190</a>
+<a href=#191 id=191 data-nosnippet>191</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(sel) = selected {
+<a href=#192 id=192 data-nosnippet>192</a>            prev_coord = current_coord;
+<a href=#193 id=193 data-nosnippet>193</a>            current_coord = <span class="kw-2">**</span>sel;
+<a href=#194 id=194 data-nosnippet>194</a>            hull.push(current_coord);
+<a href=#195 id=195 data-nosnippet>195</a>            dataset.remove(<span class="kw-2">&amp;</span>current_coord);
+<a href=#196 id=196 data-nosnippet>196</a>
+<a href=#197 id=197 data-nosnippet>197</a>            curr_step += <span class="number">1</span>;
+<a href=#198 id=198 data-nosnippet>198</a>        } <span class="kw">else </span>{
+<a href=#199 id=199 data-nosnippet>199</a>            <span class="kw">return </span>concave_hull_inner(original_dataset, get_next_k(k_adjusted));
+<a href=#200 id=200 data-nosnippet>200</a>        }
+<a href=#201 id=201 data-nosnippet>201</a>    }
+<a href=#202 id=202 data-nosnippet>202</a>
+<a href=#203 id=203 data-nosnippet>203</a>    <span class="kw">let </span>poly = Polygon::new(LineString::from(hull), <span class="macro">vec!</span>[]);
+<a href=#204 id=204 data-nosnippet>204</a>
+<a href=#205 id=205 data-nosnippet>205</a>    <span class="kw">if </span>original_dataset
+<a href=#206 id=206 data-nosnippet>206</a>        .iter()
+<a href=#207 id=207 data-nosnippet>207</a>        .any(|<span class="kw-2">&amp;</span>coord| !coord_inside(<span class="kw-2">&amp;</span>coord, <span class="kw-2">&amp;</span>poly))
+<a href=#208 id=208 data-nosnippet>208</a>    {
+<a href=#209 id=209 data-nosnippet>209</a>        <span class="kw">return </span>concave_hull_inner(original_dataset, get_next_k(k_adjusted));
+<a href=#210 id=210 data-nosnippet>210</a>    }
+<a href=#211 id=211 data-nosnippet>211</a>
+<a href=#212 id=212 data-nosnippet>212</a>    poly
+<a href=#213 id=213 data-nosnippet>213</a>}
+<a href=#214 id=214 data-nosnippet>214</a>
+<a href=#215 id=215 data-nosnippet>215</a><span class="kw">fn </span>fall_back_hull&lt;T&gt;(dataset: <span class="kw-2">&amp;</span>rstar::RTree&lt;Coord&lt;T&gt;&gt;) -&gt; Polygon&lt;T&gt;
+<a href=#216 id=216 data-nosnippet>216</a><span class="kw">where
+<a href=#217 id=217 data-nosnippet>217</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#218 id=218 data-nosnippet>218</a>{
+<a href=#219 id=219 data-nosnippet>219</a>    <span class="kw">let </span>multipoint = MultiPoint::from(dataset.iter().cloned().collect::&lt;Vec&lt;Coord&lt;T&gt;&gt;&gt;());
+<a href=#220 id=220 data-nosnippet>220</a>    multipoint.convex_hull()
+<a href=#221 id=221 data-nosnippet>221</a>}
+<a href=#222 id=222 data-nosnippet>222</a>
+<a href=#223 id=223 data-nosnippet>223</a><span class="kw">fn </span>get_next_k(curr_k: u32) -&gt; u32 {
+<a href=#224 id=224 data-nosnippet>224</a>    max(curr_k + <span class="number">1</span>, ((curr_k <span class="kw">as </span>f32) * K_MULTIPLIER) <span class="kw">as </span>u32)
+<a href=#225 id=225 data-nosnippet>225</a>}
+<a href=#226 id=226 data-nosnippet>226</a>
+<a href=#227 id=227 data-nosnippet>227</a><span class="kw">fn </span>adjust_k(k: u32) -&gt; u32 {
+<a href=#228 id=228 data-nosnippet>228</a>    max(k, <span class="number">3</span>)
+<a href=#229 id=229 data-nosnippet>229</a>}
+<a href=#230 id=230 data-nosnippet>230</a>
+<a href=#231 id=231 data-nosnippet>231</a><span class="kw">fn </span>get_first_coord&lt;T&gt;(coord_set: <span class="kw-2">&amp;</span>rstar::RTree&lt;Coord&lt;T&gt;&gt;) -&gt; Coord&lt;T&gt;
+<a href=#232 id=232 data-nosnippet>232</a><span class="kw">where
+<a href=#233 id=233 data-nosnippet>233</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#234 id=234 data-nosnippet>234</a>{
+<a href=#235 id=235 data-nosnippet>235</a>    <span class="kw">let </span><span class="kw-2">mut </span>min_y = Float::max_value();
+<a href=#236 id=236 data-nosnippet>236</a>    <span class="kw">let </span><span class="kw-2">mut </span>result = coord_set
+<a href=#237 id=237 data-nosnippet>237</a>        .iter()
+<a href=#238 id=238 data-nosnippet>238</a>        .next()
+<a href=#239 id=239 data-nosnippet>239</a>        .expect(<span class="string">"We checked that there are more then 3 coords in the set before."</span>);
+<a href=#240 id=240 data-nosnippet>240</a>
+<a href=#241 id=241 data-nosnippet>241</a>    <span class="kw">for </span>coord <span class="kw">in </span>coord_set.iter() {
+<a href=#242 id=242 data-nosnippet>242</a>        <span class="kw">if </span>coord.y &lt; min_y {
+<a href=#243 id=243 data-nosnippet>243</a>            min_y = coord.y;
+<a href=#244 id=244 data-nosnippet>244</a>            result = coord;
+<a href=#245 id=245 data-nosnippet>245</a>        }
+<a href=#246 id=246 data-nosnippet>246</a>    }
+<a href=#247 id=247 data-nosnippet>247</a>
+<a href=#248 id=248 data-nosnippet>248</a>    <span class="kw-2">*</span>result
+<a href=#249 id=249 data-nosnippet>249</a>}
+<a href=#250 id=250 data-nosnippet>250</a>
+<a href=#251 id=251 data-nosnippet>251</a><span class="kw">fn </span>get_nearest_coords&lt;<span class="lifetime">'a</span>, T&gt;(
+<a href=#252 id=252 data-nosnippet>252</a>    dataset: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>rstar::RTree&lt;Coord&lt;T&gt;&gt;,
+<a href=#253 id=253 data-nosnippet>253</a>    base_coord: <span class="kw-2">&amp;</span>Coord&lt;T&gt;,
+<a href=#254 id=254 data-nosnippet>254</a>    candidate_no: u32,
+<a href=#255 id=255 data-nosnippet>255</a>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Coord&lt;T&gt;&gt;
+<a href=#256 id=256 data-nosnippet>256</a><span class="kw">where
+<a href=#257 id=257 data-nosnippet>257</a>    </span>T: GeoFloat + RTreeNum,
+<a href=#258 id=258 data-nosnippet>258</a>{
+<a href=#259 id=259 data-nosnippet>259</a>    dataset
+<a href=#260 id=260 data-nosnippet>260</a>        .nearest_neighbor_iter(base_coord)
+<a href=#261 id=261 data-nosnippet>261</a>        .take(candidate_no <span class="kw">as </span>usize)
+<a href=#262 id=262 data-nosnippet>262</a>}
+<a href=#263 id=263 data-nosnippet>263</a>
+<a href=#264 id=264 data-nosnippet>264</a><span class="kw">fn </span>sort_by_angle&lt;T&gt;(coords: <span class="kw-2">&amp;mut </span>[<span class="kw-2">&amp;</span>Coord&lt;T&gt;], curr_coord: <span class="kw-2">&amp;</span>Coord&lt;T&gt;, prev_coord: <span class="kw-2">&amp;</span>Coord&lt;T&gt;)
+<a href=#265 id=265 data-nosnippet>265</a><span class="kw">where
+<a href=#266 id=266 data-nosnippet>266</a>    </span>T: GeoFloat,
+<a href=#267 id=267 data-nosnippet>267</a>{
+<a href=#268 id=268 data-nosnippet>268</a>    <span class="kw">let </span>base_angle = pseudo_angle(prev_coord.x - curr_coord.x, prev_coord.y - curr_coord.y);
+<a href=#269 id=269 data-nosnippet>269</a>    coords.sort_by(|a, b| {
+<a href=#270 id=270 data-nosnippet>270</a>        <span class="kw">let </span><span class="kw-2">mut </span>angle_a = pseudo_angle(a.x - curr_coord.x, a.y - curr_coord.y) - base_angle;
+<a href=#271 id=271 data-nosnippet>271</a>        <span class="kw">if </span>angle_a &lt; T::zero() {
+<a href=#272 id=272 data-nosnippet>272</a>            angle_a = angle_a + T::from(<span class="number">4.0</span>).unwrap();
+<a href=#273 id=273 data-nosnippet>273</a>        }
+<a href=#274 id=274 data-nosnippet>274</a>
+<a href=#275 id=275 data-nosnippet>275</a>        <span class="kw">let </span><span class="kw-2">mut </span>angle_b = pseudo_angle(b.x - curr_coord.x, b.y - curr_coord.y) - base_angle;
+<a href=#276 id=276 data-nosnippet>276</a>        <span class="kw">if </span>angle_b &lt; T::zero() {
+<a href=#277 id=277 data-nosnippet>277</a>            angle_b = angle_b + T::from(<span class="number">4.0</span>).unwrap();
+<a href=#278 id=278 data-nosnippet>278</a>        }
+<a href=#279 id=279 data-nosnippet>279</a>
+<a href=#280 id=280 data-nosnippet>280</a>        angle_a.partial_cmp(<span class="kw-2">&amp;</span>angle_b).unwrap().reverse()
+<a href=#281 id=281 data-nosnippet>281</a>    });
+<a href=#282 id=282 data-nosnippet>282</a>}
+<a href=#283 id=283 data-nosnippet>283</a>
+<a href=#284 id=284 data-nosnippet>284</a><span class="kw">fn </span>pseudo_angle&lt;T&gt;(dx: T, dy: T) -&gt; T
+<a href=#285 id=285 data-nosnippet>285</a><span class="kw">where
+<a href=#286 id=286 data-nosnippet>286</a>    </span>T: GeoFloat,
+<a href=#287 id=287 data-nosnippet>287</a>{
+<a href=#288 id=288 data-nosnippet>288</a>    <span class="kw">if </span>dx == T::zero() &amp;&amp; dy == T::zero() {
+<a href=#289 id=289 data-nosnippet>289</a>        <span class="kw">return </span>T::zero();
+<a href=#290 id=290 data-nosnippet>290</a>    }
+<a href=#291 id=291 data-nosnippet>291</a>
+<a href=#292 id=292 data-nosnippet>292</a>    <span class="kw">let </span>p = dx / (dx.abs() + dy.abs());
+<a href=#293 id=293 data-nosnippet>293</a>    <span class="kw">if </span>dy &lt; T::zero() {
+<a href=#294 id=294 data-nosnippet>294</a>        T::from(<span class="number">3.</span>).unwrap() + p
+<a href=#295 id=295 data-nosnippet>295</a>    } <span class="kw">else </span>{
+<a href=#296 id=296 data-nosnippet>296</a>        T::from(<span class="number">1.</span>).unwrap() - p
+<a href=#297 id=297 data-nosnippet>297</a>    }
+<a href=#298 id=298 data-nosnippet>298</a>}
+<a href=#299 id=299 data-nosnippet>299</a>
+<a href=#300 id=300 data-nosnippet>300</a><span class="kw">fn </span>intersects&lt;T&gt;(hull: <span class="kw-2">&amp;</span>[Coord&lt;T&gt;], line: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>Coord&lt;T&gt;; <span class="number">2</span>]) -&gt; bool
+<a href=#301 id=301 data-nosnippet>301</a><span class="kw">where
+<a href=#302 id=302 data-nosnippet>302</a>    </span>T: GeoFloat,
+<a href=#303 id=303 data-nosnippet>303</a>{
+<a href=#304 id=304 data-nosnippet>304</a>    <span class="comment">// This is the case of finishing the contour.
+<a href=#305 id=305 data-nosnippet>305</a>    </span><span class="kw">if </span><span class="kw-2">*</span>line[<span class="number">1</span>] == hull[<span class="number">0</span>] {
+<a href=#306 id=306 data-nosnippet>306</a>        <span class="kw">return </span><span class="bool-val">false</span>;
+<a href=#307 id=307 data-nosnippet>307</a>    }
+<a href=#308 id=308 data-nosnippet>308</a>
+<a href=#309 id=309 data-nosnippet>309</a>    <span class="kw">let </span>coords = hull.iter().take(hull.len() - <span class="number">1</span>).cloned().collect();
+<a href=#310 id=310 data-nosnippet>310</a>    <span class="kw">let </span>linestring = LineString::new(coords);
+<a href=#311 id=311 data-nosnippet>311</a>    <span class="kw">let </span>line = <span class="kw">crate</span>::Line::new(<span class="kw-2">*</span>line[<span class="number">0</span>], <span class="kw-2">*</span>line[<span class="number">1</span>]);
+<a href=#312 id=312 data-nosnippet>312</a>    linestring.intersects(<span class="kw-2">&amp;</span>line)
+<a href=#313 id=313 data-nosnippet>313</a>}
+<a href=#314 id=314 data-nosnippet>314</a>
+<a href=#315 id=315 data-nosnippet>315</a><span class="kw">fn </span>coord_inside&lt;T&gt;(coord: <span class="kw-2">&amp;</span>Coord&lt;T&gt;, poly: <span class="kw-2">&amp;</span>Polygon&lt;T&gt;) -&gt; bool
+<a href=#316 id=316 data-nosnippet>316</a><span class="kw">where
+<a href=#317 id=317 data-nosnippet>317</a>    </span>T: GeoFloat,
+<a href=#318 id=318 data-nosnippet>318</a>{
+<a href=#319 id=319 data-nosnippet>319</a>    poly.contains(coord) || poly.exterior().contains(coord)
+<a href=#320 id=320 data-nosnippet>320</a>}
+<a href=#321 id=321 data-nosnippet>321</a>
+<a href=#322 id=322 data-nosnippet>322</a><span class="attr">#[cfg(test)]
+<a href=#323 id=323 data-nosnippet>323</a></span><span class="kw">mod </span>tests {
+<a href=#324 id=324 data-nosnippet>324</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#325 id=325 data-nosnippet>325</a>    <span class="kw">use </span><span class="kw">crate</span>::coords_iter::CoordsIter;
+<a href=#326 id=326 data-nosnippet>326</a>    <span class="kw">use </span><span class="kw">crate</span>::geo_types::coord;
+<a href=#327 id=327 data-nosnippet>327</a>
+<a href=#328 id=328 data-nosnippet>328</a>    <span class="attr">#[test]
+<a href=#329 id=329 data-nosnippet>329</a>    </span><span class="kw">fn </span>coord_ordering() {
+<a href=#330 id=330 data-nosnippet>330</a>        <span class="kw">let </span>coords = <span class="macro">vec!</span>[
+<a href=#331 id=331 data-nosnippet>331</a>            <span class="macro">coord!</span>(x: <span class="number">1.0</span>, y: <span class="number">1.0</span>),
+<a href=#332 id=332 data-nosnippet>332</a>            <span class="macro">coord!</span>(x: -<span class="number">1.0</span>, y: <span class="number">0.0</span>),
+<a href=#333 id=333 data-nosnippet>333</a>            <span class="macro">coord!</span>(x: <span class="number">0.0</span>, y: <span class="number">1.0</span>),
+<a href=#334 id=334 data-nosnippet>334</a>            <span class="macro">coord!</span>(x: <span class="number">1.0</span>, y: <span class="number">0.0</span>),
+<a href=#335 id=335 data-nosnippet>335</a>        ];
+<a href=#336 id=336 data-nosnippet>336</a>
+<a href=#337 id=337 data-nosnippet>337</a>        <span class="kw">let </span><span class="kw-2">mut </span>coords_mapped: Vec&lt;<span class="kw-2">&amp;</span>Coord&lt;f32&gt;&gt; = coords.iter().collect();
+<a href=#338 id=338 data-nosnippet>338</a>
+<a href=#339 id=339 data-nosnippet>339</a>        <span class="kw">let </span>center = <span class="macro">coord!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>);
+<a href=#340 id=340 data-nosnippet>340</a>        <span class="kw">let </span>prev_coord = <span class="macro">coord!</span>(x: <span class="number">1.0</span>, y: <span class="number">1.0</span>);
+<a href=#341 id=341 data-nosnippet>341</a>
+<a href=#342 id=342 data-nosnippet>342</a>        <span class="kw">let </span>expected = <span class="macro">vec!</span>[<span class="kw-2">&amp;</span>coords[<span class="number">3</span>], <span class="kw-2">&amp;</span>coords[<span class="number">1</span>], <span class="kw-2">&amp;</span>coords[<span class="number">2</span>], <span class="kw-2">&amp;</span>coords[<span class="number">0</span>]];
+<a href=#343 id=343 data-nosnippet>343</a>
+<a href=#344 id=344 data-nosnippet>344</a>        sort_by_angle(<span class="kw-2">&amp;mut </span>coords_mapped, <span class="kw-2">&amp;</span>center, <span class="kw-2">&amp;</span>prev_coord);
+<a href=#345 id=345 data-nosnippet>345</a>        <span class="macro">assert_eq!</span>(coords_mapped, expected);
+<a href=#346 id=346 data-nosnippet>346</a>
+<a href=#347 id=347 data-nosnippet>347</a>        <span class="kw">let </span>expected = <span class="macro">vec!</span>[<span class="kw-2">&amp;</span>coords[<span class="number">1</span>], <span class="kw-2">&amp;</span>coords[<span class="number">2</span>], <span class="kw-2">&amp;</span>coords[<span class="number">0</span>], <span class="kw-2">&amp;</span>coords[<span class="number">3</span>]];
+<a href=#348 id=348 data-nosnippet>348</a>
+<a href=#349 id=349 data-nosnippet>349</a>        <span class="kw">let </span>prev_coord = <span class="macro">coord!</span>(x: <span class="number">1.0</span>, y: -<span class="number">1.0</span>);
+<a href=#350 id=350 data-nosnippet>350</a>        sort_by_angle(<span class="kw-2">&amp;mut </span>coords_mapped, <span class="kw-2">&amp;</span>center, <span class="kw-2">&amp;</span>prev_coord);
+<a href=#351 id=351 data-nosnippet>351</a>        <span class="macro">assert_eq!</span>(coords_mapped, expected);
+<a href=#352 id=352 data-nosnippet>352</a>    }
+<a href=#353 id=353 data-nosnippet>353</a>
+<a href=#354 id=354 data-nosnippet>354</a>    <span class="attr">#[test]
+<a href=#355 id=355 data-nosnippet>355</a>    </span><span class="kw">fn </span>get_first_coord_test() {
+<a href=#356 id=356 data-nosnippet>356</a>        <span class="kw">let </span>coords = <span class="macro">vec!</span>[
+<a href=#357 id=357 data-nosnippet>357</a>            <span class="macro">coord!</span>(x: <span class="number">1.0</span>, y: <span class="number">1.0</span>),
+<a href=#358 id=358 data-nosnippet>358</a>            <span class="macro">coord!</span>(x: -<span class="number">1.0</span>, y: <span class="number">0.0</span>),
+<a href=#359 id=359 data-nosnippet>359</a>            <span class="macro">coord!</span>(x: <span class="number">0.0</span>, y: <span class="number">1.0</span>),
+<a href=#360 id=360 data-nosnippet>360</a>            <span class="macro">coord!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.5</span>),
+<a href=#361 id=361 data-nosnippet>361</a>        ];
+<a href=#362 id=362 data-nosnippet>362</a>        <span class="kw">let </span>tree = rstar::RTree::bulk_load(coords);
+<a href=#363 id=363 data-nosnippet>363</a>        <span class="kw">let </span>first = <span class="macro">coord!</span>(x: -<span class="number">1.0</span>, y: <span class="number">0.0</span>);
+<a href=#364 id=364 data-nosnippet>364</a>
+<a href=#365 id=365 data-nosnippet>365</a>        <span class="macro">assert_eq!</span>(get_first_coord(<span class="kw-2">&amp;</span>tree), first);
+<a href=#366 id=366 data-nosnippet>366</a>    }
+<a href=#367 id=367 data-nosnippet>367</a>
+<a href=#368 id=368 data-nosnippet>368</a>    <span class="attr">#[test]
+<a href=#369 id=369 data-nosnippet>369</a>    </span><span class="kw">fn </span>concave_hull_test() {
+<a href=#370 id=370 data-nosnippet>370</a>        <span class="kw">let </span>coords = <span class="macro">vec!</span>[
+<a href=#371 id=371 data-nosnippet>371</a>            <span class="macro">coord!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>),
+<a href=#372 id=372 data-nosnippet>372</a>            <span class="macro">coord!</span>(x: <span class="number">1.0</span>, y: <span class="number">0.0</span>),
+<a href=#373 id=373 data-nosnippet>373</a>            <span class="macro">coord!</span>(x: <span class="number">2.0</span>, y: <span class="number">0.0</span>),
+<a href=#374 id=374 data-nosnippet>374</a>            <span class="macro">coord!</span>(x: <span class="number">3.0</span>, y: <span class="number">0.0</span>),
+<a href=#375 id=375 data-nosnippet>375</a>            <span class="macro">coord!</span>(x: <span class="number">0.0</span>, y: <span class="number">1.0</span>),
+<a href=#376 id=376 data-nosnippet>376</a>            <span class="macro">coord!</span>(x: <span class="number">1.0</span>, y: <span class="number">1.0</span>),
+<a href=#377 id=377 data-nosnippet>377</a>            <span class="macro">coord!</span>(x: <span class="number">2.0</span>, y: <span class="number">1.0</span>),
+<a href=#378 id=378 data-nosnippet>378</a>            <span class="macro">coord!</span>(x: <span class="number">3.0</span>, y: <span class="number">1.0</span>),
+<a href=#379 id=379 data-nosnippet>379</a>            <span class="macro">coord!</span>(x: <span class="number">0.0</span>, y: <span class="number">2.0</span>),
+<a href=#380 id=380 data-nosnippet>380</a>            <span class="macro">coord!</span>(x: <span class="number">1.0</span>, y: <span class="number">2.5</span>),
+<a href=#381 id=381 data-nosnippet>381</a>            <span class="macro">coord!</span>(x: <span class="number">2.0</span>, y: <span class="number">2.5</span>),
+<a href=#382 id=382 data-nosnippet>382</a>            <span class="macro">coord!</span>(x: <span class="number">3.0</span>, y: <span class="number">2.0</span>),
+<a href=#383 id=383 data-nosnippet>383</a>            <span class="macro">coord!</span>(x: <span class="number">0.0</span>, y: <span class="number">3.0</span>),
+<a href=#384 id=384 data-nosnippet>384</a>            <span class="macro">coord!</span>(x: <span class="number">3.0</span>, y: <span class="number">3.0</span>),
+<a href=#385 id=385 data-nosnippet>385</a>        ];
+<a href=#386 id=386 data-nosnippet>386</a>
+<a href=#387 id=387 data-nosnippet>387</a>        <span class="kw">let </span>poly = concave_hull(coords.iter(), <span class="number">3</span>);
+<a href=#388 id=388 data-nosnippet>388</a>        <span class="macro">assert_eq!</span>(poly.exterior().coords_count(), <span class="number">12</span>);
+<a href=#389 id=389 data-nosnippet>389</a>
+<a href=#390 id=390 data-nosnippet>390</a>        <span class="kw">let </span>must_not_be_in = <span class="macro">vec!</span>[<span class="kw-2">&amp;</span>coords[<span class="number">6</span>]];
+<a href=#391 id=391 data-nosnippet>391</a>        <span class="kw">for </span>coord <span class="kw">in </span>poly.exterior().coords_iter() {
+<a href=#392 id=392 data-nosnippet>392</a>            <span class="kw">for </span>not_coord <span class="kw">in </span>must_not_be_in.iter() {
+<a href=#393 id=393 data-nosnippet>393</a>                <span class="macro">assert_ne!</span>(<span class="kw-2">&amp;</span>coord, <span class="kw-2">*</span>not_coord);
+<a href=#394 id=394 data-nosnippet>394</a>            }
+<a href=#395 id=395 data-nosnippet>395</a>        }
+<a href=#396 id=396 data-nosnippet>396</a>    }
+<a href=#397 id=397 data-nosnippet>397</a>
+<a href=#398 id=398 data-nosnippet>398</a>    <span class="attr">#[test]
+<a href=#399 id=399 data-nosnippet>399</a>    </span><span class="kw">fn </span>empty_hull() {
+<a href=#400 id=400 data-nosnippet>400</a>        <span class="kw">let </span>actual: Polygon&lt;f64&gt; = concave_hull(<span class="macro">vec!</span>[].iter(), <span class="number">3</span>);
+<a href=#401 id=401 data-nosnippet>401</a>        <span class="kw">let </span>expected = Polygon::new(LineString::new(<span class="macro">vec!</span>[]), <span class="macro">vec!</span>[]);
+<a href=#402 id=402 data-nosnippet>402</a>        <span class="macro">assert_eq!</span>(actual, expected);
+<a href=#403 id=403 data-nosnippet>403</a>    }
+<a href=#404 id=404 data-nosnippet>404</a>}</code></pre></div></section></main></body></html>

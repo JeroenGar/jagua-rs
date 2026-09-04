@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="An affine transformation which skews a geometry, sheared by angles along x and y dimensions."><title>Skew in geo::algorithm::skew - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="geo" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt=""></a></nav><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt="logo"></a><h2><a href="../../../geo/index.html">geo</a><span class="version">0.24.1</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Skew</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#performance" title="Performance">Performance</a></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.skew" title="skew">skew</a></li><li><a href="#tymethod.skew_around_point" title="skew_around_point">skew_around_point</a></li><li><a href="#tymethod.skew_around_point_mut" title="skew_around_point_mut">skew_around_point_mut</a></li><li><a href="#tymethod.skew_mut" title="skew_mut">skew_mut</a></li><li><a href="#tymethod.skew_xy" title="skew_xy">skew_xy</a></li><li><a href="#tymethod.skew_xy_mut" title="skew_xy_mut">skew_xy_mut</a></li></ul><h3><a href="#dyn-compatibility">Dyn Compatibility</a></h3><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In geo::<wbr>algorithm::<wbr>skew</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">geo</a>::<wbr><a href="../index.html">algorithm</a>::<wbr><a href="index.html">skew</a></div><h1>Trait <span class="trait">Skew</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/geo/algorithm/skew.rs.html#12-112">Source</a> </span></div><pre class="rust item-decl"><code>pub trait Skew&lt;T: <a class="trait" href="../../trait.CoordNum.html" title="trait geo::CoordNum">CoordNum</a>&gt; {
+    // Required methods
+    fn <a href="#tymethod.skew" class="fn">skew</a>(&amp;self, degrees: T) -&gt; Self;
+<span class="item-spacer"></span>    fn <a href="#tymethod.skew_mut" class="fn">skew_mut</a>(&amp;mut self, degrees: T);
+<span class="item-spacer"></span>    fn <a href="#tymethod.skew_xy" class="fn">skew_xy</a>(&amp;self, degrees_x: T, degrees_y: T) -&gt; Self;
+<span class="item-spacer"></span>    fn <a href="#tymethod.skew_xy_mut" class="fn">skew_xy_mut</a>(&amp;mut self, degrees_x: T, degrees_y: T);
+<span class="item-spacer"></span>    fn <a href="#tymethod.skew_around_point" class="fn">skew_around_point</a>(
+        &amp;self,
+        degrees_x: T,
+        degrees_y: T,
+        origin: impl <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="../../geometry/struct.Coord.html" title="struct geo::geometry::Coord">Coord</a>&lt;T&gt;&gt;,
+    ) -&gt; Self;
+<span class="item-spacer"></span>    fn <a href="#tymethod.skew_around_point_mut" class="fn">skew_around_point_mut</a>(
+        &amp;mut self,
+        degrees_x: T,
+        degrees_y: T,
+        origin: impl <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="../../geometry/struct.Coord.html" title="struct geo::geometry::Coord">Coord</a>&lt;T&gt;&gt;,
+    );
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>An affine transformation which skews a geometry, sheared by angles along x and y dimensions.</p>
+<h3 id="performance"><a class="doc-anchor" href="#performance">§</a>Performance</h3>
+<p>If you will be performing multiple transformations, like <a href="../scale/trait.Scale.html" title="trait geo::algorithm::scale::Scale"><code>Scale</code></a>,
+<a href="trait.Skew.html" title="trait geo::algorithm::skew::Skew"><code>Skew</code></a>, <a href="../translate/trait.Translate.html" title="trait geo::algorithm::translate::Translate"><code>Translate</code></a>, or <a href="../rotate/trait.Rotate.html" title="trait geo::algorithm::rotate::Rotate"><code>Rotate</code></a>, it is more
+efficient to compose the transformations and apply them as a single operation using the
+<a href="../affine_ops/trait.AffineOps.html" title="trait geo::algorithm::affine_ops::AffineOps"><code>AffineOps</code></a> trait.</p>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.skew" class="method"><a class="src rightside" href="../../../src/geo/algorithm/skew.rs.html#40">Source</a><h4 class="code-header">fn <a href="#tymethod.skew" class="fn">skew</a>(&amp;self, degrees: T) -&gt; Self</h4></section></summary><div class="docblock"><p>An affine transformation which skews a geometry, sheared by a uniform angle along the x and
+y dimensions.</p>
+<h5 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::Skew;
+<span class="kw">use </span>geo::{Polygon, polygon};
+
+<span class="kw">let </span>square: Polygon = <span class="macro">polygon!</span>[
+    (x: <span class="number">0.</span>, y: <span class="number">0.</span>),
+    (x: <span class="number">10.</span>, y: <span class="number">0.</span>),
+    (x: <span class="number">10.</span>, y: <span class="number">10.</span>),
+    (x: <span class="number">0.</span>, y: <span class="number">10.</span>)
+];
+
+<span class="kw">let </span>skewed = square.skew(<span class="number">30.</span>);
+
+<span class="kw">let </span>expected_output: Polygon = <span class="macro">polygon!</span>[
+    (x: -<span class="number">2.89</span>, y: -<span class="number">2.89</span>),
+    (x: <span class="number">7.11</span>, y: <span class="number">2.89</span>),
+    (x: <span class="number">12.89</span>, y: <span class="number">12.89</span>),
+    (x: <span class="number">2.89</span>, y: <span class="number">7.11</span>)
+];
+<span class="macro">approx::assert_relative_eq!</span>(skewed, expected_output, epsilon = <span class="number">1e-2</span>);</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.skew_mut" class="method"><a class="src rightside" href="../../../src/geo/algorithm/skew.rs.html#43">Source</a><h4 class="code-header">fn <a href="#tymethod.skew_mut" class="fn">skew_mut</a>(&amp;mut self, degrees: T)</h4></section></summary><div class="docblock"><p>Mutable version of <a href="trait.Skew.html#tymethod.skew"><code>skew</code></a>.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.skew_xy" class="method"><a class="src rightside" href="../../../src/geo/algorithm/skew.rs.html#71">Source</a><h4 class="code-header">fn <a href="#tymethod.skew_xy" class="fn">skew_xy</a>(&amp;self, degrees_x: T, degrees_y: T) -&gt; Self</h4></section></summary><div class="docblock"><p>An affine transformation which skews a geometry, sheared by an angle along the x and y dimensions.</p>
+<h5 id="examples-1"><a class="doc-anchor" href="#examples-1">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::Skew;
+<span class="kw">use </span>geo::{Polygon, polygon};
+
+<span class="kw">let </span>square: Polygon = <span class="macro">polygon!</span>[
+    (x: <span class="number">0.</span>, y: <span class="number">0.</span>),
+    (x: <span class="number">10.</span>, y: <span class="number">0.</span>),
+    (x: <span class="number">10.</span>, y: <span class="number">10.</span>),
+    (x: <span class="number">0.</span>, y: <span class="number">10.</span>)
+];
+
+<span class="kw">let </span>skewed = square.skew_xy(<span class="number">30.</span>, <span class="number">12.</span>);
+
+<span class="kw">let </span>expected_output: Polygon = <span class="macro">polygon!</span>[
+    (x: -<span class="number">2.89</span>, y: -<span class="number">1.06</span>),
+    (x: <span class="number">7.11</span>, y: <span class="number">1.06</span>),
+    (x: <span class="number">12.89</span>, y: <span class="number">11.06</span>),
+    (x: <span class="number">2.89</span>, y: <span class="number">8.94</span>)
+];
+<span class="macro">approx::assert_relative_eq!</span>(skewed, expected_output, epsilon = <span class="number">1e-2</span>);</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.skew_xy_mut" class="method"><a class="src rightside" href="../../../src/geo/algorithm/skew.rs.html#74">Source</a><h4 class="code-header">fn <a href="#tymethod.skew_xy_mut" class="fn">skew_xy_mut</a>(&amp;mut self, degrees_x: T, degrees_y: T)</h4></section></summary><div class="docblock"><p>Mutable version of <a href="trait.Skew.html#tymethod.skew_xy"><code>skew_xy</code></a>.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.skew_around_point" class="method"><a class="src rightside" href="../../../src/geo/algorithm/skew.rs.html#108">Source</a><h4 class="code-header">fn <a href="#tymethod.skew_around_point" class="fn">skew_around_point</a>(
+    &amp;self,
+    degrees_x: T,
+    degrees_y: T,
+    origin: impl <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="../../geometry/struct.Coord.html" title="struct geo::geometry::Coord">Coord</a>&lt;T&gt;&gt;,
+) -&gt; Self</h4></section></summary><div class="docblock"><p>An affine transformation which skews a geometry around a point of <code>origin</code>, sheared by an
+angle along the x and y dimensions.</p>
+<p>The point of origin is <em>usually</em> given as the 2D bounding box centre of the geometry, in
+which case you can just use <a href="trait.Skew.html#tymethod.skew"><code>skew</code></a> or <a href="trait.Skew.html#tymethod.skew_xy"><code>skew_xy</code></a>, but this method allows you
+to specify any point.</p>
+<h5 id="examples-2"><a class="doc-anchor" href="#examples-2">§</a>Examples</h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::Skew;
+<span class="kw">use </span>geo::{Polygon, polygon, point};
+
+<span class="kw">let </span>square: Polygon = <span class="macro">polygon!</span>[
+    (x: <span class="number">0.</span>, y: <span class="number">0.</span>),
+    (x: <span class="number">10.</span>, y: <span class="number">0.</span>),
+    (x: <span class="number">10.</span>, y: <span class="number">10.</span>),
+    (x: <span class="number">0.</span>, y: <span class="number">10.</span>)
+];
+
+<span class="kw">let </span>origin = <span class="macro">point!</span> { x: <span class="number">2.</span>, y: <span class="number">2. </span>};
+<span class="kw">let </span>skewed = square.skew_around_point(<span class="number">45.0</span>, <span class="number">10.0</span>, origin);
+
+<span class="kw">let </span>expected_output: Polygon = <span class="macro">polygon!</span>[
+    (x: -<span class="number">2.</span>, y: -<span class="number">0.353</span>),
+    (x: <span class="number">8.</span>, y: <span class="number">1.410</span>),
+    (x: <span class="number">18.</span>, y: <span class="number">11.41</span>),
+    (x: <span class="number">8.</span>, y: <span class="number">9.647</span>)
+];
+<span class="macro">approx::assert_relative_eq!</span>(skewed, expected_output, epsilon = <span class="number">1e-2</span>);</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.skew_around_point_mut" class="method"><a class="src rightside" href="../../../src/geo/algorithm/skew.rs.html#111">Source</a><h4 class="code-header">fn <a href="#tymethod.skew_around_point_mut" class="fn">skew_around_point_mut</a>(
+    &amp;mut self,
+    degrees_x: T,
+    degrees_y: T,
+    origin: impl <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="../../geometry/struct.Coord.html" title="struct geo::geometry::Coord">Coord</a>&lt;T&gt;&gt;,
+)</h4></section></summary><div class="docblock"><p>Mutable version of <a href="trait.Skew.html#tymethod.skew_around_point"><code>skew_around_point</code></a>.</p>
+</div></details></div><h2 id="dyn-compatibility" class="section-header">Dyn Compatibility<a href="#dyn-compatibility" class="anchor">§</a></h2><div class="dyn-compatibility-info"><p>This trait is <b>not</b> <a href="https://doc.rust-lang.org/1.90.0/reference/items/traits.html#dyn-compatibility">dyn compatible</a>.</p><p><i>In older versions of Rust, dyn compatibility was called "object safety", so this trait is not object safe.</i></p></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-Skew%3CT%3E-for-G" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/skew.rs.html#114-157">Source</a><a href="#impl-Skew%3CT%3E-for-G" class="anchor">§</a><h3 class="code-header">impl&lt;T, IR, G&gt; <a class="trait" href="trait.Skew.html" title="trait geo::algorithm::skew::Skew">Skew</a>&lt;T&gt; for G<div class="where">where
+    T: <a class="trait" href="../../trait.CoordFloat.html" title="trait geo::CoordFloat">CoordFloat</a>,
+    IR: <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.90.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../../geometry/struct.Rect.html" title="struct geo::geometry::Rect">Rect</a>&lt;T&gt;&gt;&gt;,
+    G: <a class="trait" href="https://doc.rust-lang.org/1.90.0/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a> + <a class="trait" href="../affine_ops/trait.AffineOps.html" title="trait geo::algorithm::affine_ops::AffineOps">AffineOps</a>&lt;T&gt; + <a class="trait" href="../bounding_rect/trait.BoundingRect.html" title="trait geo::algorithm::bounding_rect::BoundingRect">BoundingRect</a>&lt;T, Output = IR&gt;,</div></h3></section></div><script src="../../../trait.impl/geo/algorithm/skew/trait.Skew.js" async></script></section></div></main></body></html>
