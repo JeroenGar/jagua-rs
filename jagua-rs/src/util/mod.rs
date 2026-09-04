@@ -2,5 +2,8 @@
 pub mod assertions;
 mod fpa;
 
+#[cfg(test)]
+mod tests;
+
 #[doc(inline)]
 pub use fpa::FPA;

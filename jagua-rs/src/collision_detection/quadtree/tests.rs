@@ -1,5 +1,6 @@
 use super::qt_traits::QTQueryable;
 use super::{QTHazPresence, QTHazard, QTNode};
+use crate::collision_detection::hazards::collector::BasicHazardCollector;
 use crate::collision_detection::hazards::{Hazard, HazardEntity, filter::NoFilter};
 use crate::geometry::Transformation;
 use crate::geometry::geo_traits::Transformable;
@@ -34,7 +35,6 @@ fn constriction_without_boundary_edges_resolves_presence() {
 }
 
 #[test]
-#[ignore = "known query false negative; see issue-86-investigation.md"]
 fn rotated_square_collision_survives_quadtree_subdivision() {
     let root = Rect::try_new(-100.0, 6.1875, 100.0, 206.1875).unwrap();
     let hazard_shape = SPolygon::new(
@@ -65,13 +65,21 @@ fn rotated_square_collision_survives_quadtree_subdivision() {
     ));
 
     for depth in [0, 3] {
-        let mut tree = QTNode::new(depth, root, 16);
+        let mut tree = QTNode::new(depth, root, 0);
         tree.register_hazard(QTHazard::from_root(root, &hazards[key], key), &hazards);
         assert!(
             query
                 .edge_iter()
                 .any(|edge| tree.collides(&edge, &NoFilter).is_some()),
             "missed square collision at depth {depth}"
+        );
+        let mut collector = BasicHazardCollector::new();
+        for edge in query.edge_iter() {
+            tree.collect_collisions(&edge, &mut collector);
+        }
+        assert!(
+            collector.contains_key(key),
+            "missed collection at depth {depth}"
         );
     }
 }

@@ -22,6 +22,14 @@ impl PartialEq<Self> for FPA {
 }
 
 impl PartialOrd<Self> for FPA {
+    fn le(&self, other: &Self) -> bool {
+        self.0 <= other.0 || self.eq(other)
+    }
+
+    fn ge(&self, other: &Self) -> bool {
+        self.0 >= other.0 || self.eq(other)
+    }
+
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.eq(other) {
             Some(Ordering::Equal)

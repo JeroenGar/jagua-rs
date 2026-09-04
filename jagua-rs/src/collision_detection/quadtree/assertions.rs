@@ -1,9 +1,5 @@
-use crate::geometry::primitives::{Edge, Rect};
+use crate::geometry::primitives::{Edge, Rect, SPolygon};
 
-#[cfg(debug_assertions)]
-use crate::geometry::primitives::SPolygon;
-
-#[cfg(debug_assertions)]
 pub(super) fn hazard_boundary_misses_quadrants_f64(
     shape: &SPolygon,
     quadrants: [&Rect; 4],
@@ -15,7 +11,6 @@ pub(super) fn hazard_boundary_misses_quadrants_f64(
     })
 }
 
-#[cfg(debug_assertions)]
 pub(super) fn edge_quadrant_classification_is_conservative(
     edge: &Edge,
     quadrants: [&Rect; 4],

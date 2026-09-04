@@ -8,7 +8,6 @@ use crate::util::assertions;
 use slotmap::SlotMap;
 use std::array;
 
-#[cfg(debug_assertions)]
 use super::assertions as qt_assertions;
 
 /// Representation of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
@@ -113,7 +112,6 @@ impl QTHazard {
                         })
                     });
 
-                    #[cfg(debug_assertions)]
                     debug_assert!(
                         constricted_hazards.iter().any(Option::is_some)
                             || qt_assertions::hazard_boundary_misses_quadrants_f64(
