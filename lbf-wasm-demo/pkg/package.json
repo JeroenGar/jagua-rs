@@ -1,0 +1,32 @@
+{
+  "name": "lbf",
+  "type": "module",
+  "collaborators": [
+    "Jeroen Gardeyn"
+  ],
+  "description": "Left Bottom Fill reference implementation for jagua-rs",
+  "version": "0.0.1",
+  "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JeroenGar/jagua-rs"
+  },
+  "files": [
+    "lbf_bg.wasm",
+    "lbf.js",
+    "lbf.d.ts"
+  ],
+  "main": "lbf.js",
+  "homepage": "https://github.com/JeroenGar/jagua-rs",
+  "types": "lbf.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ],
+  "keywords": [
+    "nesting",
+    "packing",
+    "strip",
+    "bin",
+    "irregular"
+  ]
+}

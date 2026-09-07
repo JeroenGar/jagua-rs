@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Error"],"macro":["coord","line_string","point","polygon","wkt"],"mod":["geometry"],"struct":["InvalidRectCoordinatesError","PointsIter","UseRstar_0_10"],"trait":["CoordFloat","CoordNum","CoordinateType"]};

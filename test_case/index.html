@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Overview"><title>test_case - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="test_case" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-68b7e25d.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../test_case/index.html">test_<wbr>case</a><span class="version">3.3.1</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#overview" title="Overview">Overview</a></li><li><a href="#getting-started" title="Getting Started">Getting Started</a></li><li><a href="#example-usage" title="Example usage:">Example usage:</a><ul><li><a href="#test-matrix" title="Test Matrix">Test Matrix</a></li></ul></li><li><a href="#msrv-policy" title="MSRV Policy">MSRV Policy</a></li><li><a href="#documentation" title="Documentation">Documentation</a></li></ul><h3><a href="#attributes">Crate Items</a></h3><ul class="block"><li><a href="#attributes" title="Attribute Macros">Attribute Macros</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>test_case</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/test_case/lib.rs.html#1-98">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="overview"><a class="doc-anchor" href="#overview">§</a>Overview</h2>
+<p><code>test_case</code> crate provides procedural macro attribute that generates parametrized test instances.</p>
+<h2 id="getting-started"><a class="doc-anchor" href="#getting-started">§</a>Getting Started</h2>
+<p>Crate has to be added as a dependency to <code>Cargo.toml</code>:</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dev-dependencies]
+test-case = &quot;*&quot;</code></pre></div>
+<p>and imported to the scope of a block where it’s being called
+(since attribute name collides with rust’s built-in <code>custom_test_frameworks</code>) via:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>test_case::test_case;</code></pre></div>
+<h2 id="example-usage"><a class="doc-anchor" href="#example-usage">§</a>Example usage:</h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>test_case::test_case;
+
+    <span class="attr">#[test_case(-<span class="number">2</span>, -<span class="number">4 </span>; <span class="string">"when both operands are negative"</span>)]
+    #[test_case(<span class="number">2</span>,  <span class="number">4  </span>; <span class="string">"when both operands are positive"</span>)]
+    #[test_case(<span class="number">4</span>,  <span class="number">2  </span>; <span class="string">"when operands are swapped"</span>)]
+    </span><span class="kw">fn </span>multiplication_tests(x: i8, y: i8) {
+        <span class="kw">let </span>actual = (x * y).abs();
+
+        <span class="macro">assert_eq!</span>(<span class="number">8</span>, actual)
+    }
+}</code></pre></div>
+<p>Output from <code>cargo test</code> for this example:</p>
+<div class="example-wrap"><pre class="language-sh"><code>$ cargo test
+
+running 4 tests
+test tests::multiplication_tests::when_both_operands_are_negative ... ok
+test tests::multiplication_tests::when_both_operands_are_positive ... ok
+test tests::multiplication_tests::when_operands_are_swapped ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out</code></pre></div><h3 id="test-matrix"><a class="doc-anchor" href="#test-matrix">§</a>Test Matrix</h3>
+<p>The <code>#[test_matrix(...)]</code> macro allows generating multiple test cases from the
+Cartesian product of one or more possible values for each test function argument. The
+number of arguments to the <code>test_matrix</code> macro must be the same as the number of arguments to
+the test function. Each macro argument can be:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="number">1. </span>A list <span class="kw">in </span>array (`[x, y, ...]`) or tuple (`(x, y, ...)`) syntax. The values can be any
+   valid [expression](https:<span class="comment">//doc.rust-lang.org/reference/expressions.html).
+</span><span class="number">2. </span>A closed numeric range expression (e.g. `<span class="number">0</span>..<span class="number">100</span>` or `<span class="number">1</span>..=<span class="number">99</span>`), which will generate
+   argument values <span class="kw">for </span>all integers <span class="kw">in </span>the range.
+<span class="number">3. </span>A single expression, which can be used to keep one argument constant <span class="kw">while </span>varying the
+   other test function arguments using a list or range.</code></pre></div>
+<h4 id="example-usage-1"><a class="doc-anchor" href="#example-usage-1">§</a>Example usage:</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>test_case::test_matrix;
+
+    <span class="attr">#[test_matrix(
+        [-<span class="number">2</span>, <span class="number">2</span>]</span>,
+        [-<span class="number">4</span>, <span class="number">4</span>]
+    )]
+    <span class="kw">fn </span>multiplication_tests(x: i8, y: i8) {
+        <span class="kw">let </span>actual = (x * y).abs();
+
+        <span class="macro">assert_eq!</span>(<span class="number">8</span>, actual)
+    }
+}</code></pre></div>
+<h2 id="msrv-policy"><a class="doc-anchor" href="#msrv-policy">§</a>MSRV Policy</h2>
+<p>Starting with version 3.0 and up <code>test-case</code> introduces policy of only supporting latest stable Rust.
+These changes may happen overnight, so if your stack is lagging behind current stable release,
+it may be best to consider locking <code>test-case</code> version with <code>=</code> in your <code>Cargo.toml</code>.</p>
+<h2 id="documentation"><a class="doc-anchor" href="#documentation">§</a>Documentation</h2>
+<p>Most up to date documentation is available in our <a href="https://github.com/frondeus/test-case/wiki">wiki</a>.</p>
+</div></details><h2 id="attributes" class="section-header">Attribute Macros<a href="#attributes" class="anchor">§</a></h2><dl class="item-table"><dt><a class="attr" href="attr.case.html" title="attr test_case::case">case</a></dt><dd>Generates tests for given set of data</dd><dt><a class="attr" href="attr.test_case.html" title="attr test_case::test_case">test_<wbr>case</a></dt><dd>Generates tests for given set of data</dd><dt><a class="attr" href="attr.test_matrix.html" title="attr test_case::test_matrix">test_<wbr>matrix</a></dt><dd>Generates tests for the cartesian product of a given set of data</dd></dl></section></div></main></body></html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Predicates to test the convexity of a  `LineString` . A closed `LineString` is said to be convex if it encloses a convex set. It is said to be strictly convex if in addition, no three consecutive vertices are collinear. It is collinear if all the vertices lie on the same line."><title>IsConvex in geo::algorithm::is_convex - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="geo" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt=""></a></nav><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt="logo"></a><h2><a href="../../../geo/index.html">geo</a><span class="version">0.24.1</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">IsConvex</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#remarks" title="Remarks">Remarks</a></li><li><a href="#edge-cases" title="Edge Cases">Edge Cases</a></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.convex_orientation" title="convex_orientation">convex_orientation</a></li><li><a href="#tymethod.is_collinear" title="is_collinear">is_collinear</a></li></ul><h3><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.is_ccw_convex" title="is_ccw_convex">is_ccw_convex</a></li><li><a href="#method.is_convex" title="is_convex">is_convex</a></li><li><a href="#method.is_cw_convex" title="is_cw_convex">is_cw_convex</a></li><li><a href="#method.is_strictly_ccw_convex" title="is_strictly_ccw_convex">is_strictly_ccw_convex</a></li><li><a href="#method.is_strictly_convex" title="is_strictly_convex">is_strictly_convex</a></li><li><a href="#method.is_strictly_cw_convex" title="is_strictly_cw_convex">is_strictly_cw_convex</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In geo::<wbr>algorithm::<wbr>is_<wbr>convex</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">geo</a>::<wbr><a href="../index.html">algorithm</a>::<wbr><a href="index.html">is_convex</a></div><h1>Trait <span class="trait">IsConvex</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/geo/algorithm/is_convex.rs.html#42-109">Source</a> </span></div><pre class="rust item-decl"><code>pub trait IsConvex {
+    // Required methods
+    fn <a href="#tymethod.convex_orientation" class="fn">convex_orientation</a>(
+        &amp;self,
+        allow_collinear: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a>,
+        specific_orientation: <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../kernels/enum.Orientation.html" title="enum geo::algorithm::kernels::Orientation">Orientation</a>&gt;,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../kernels/enum.Orientation.html" title="enum geo::algorithm::kernels::Orientation">Orientation</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.is_collinear" class="fn">is_collinear</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a>;
+
+    // Provided methods
+    fn <a href="#method.is_convex" class="fn">is_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.is_ccw_convex" class="fn">is_ccw_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.is_cw_convex" class="fn">is_cw_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.is_strictly_convex" class="fn">is_strictly_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.is_strictly_ccw_convex" class="fn">is_strictly_ccw_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.is_strictly_cw_convex" class="fn">is_strictly_cw_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a> { ... }
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Predicates to test the convexity of a <a href="../../geometry/struct.LineString.html" title="struct geo::geometry::LineString"> <code>LineString</code> </a>.
+A closed <code>LineString</code> is said to be <em>convex</em> if it
+encloses a <a href="//en.wikipedia.org/wiki/Convex_set">convex set</a>. It is said to be <em>strictly
+convex</em> if in addition, no three consecutive vertices
+are collinear. It is <em>collinear</em> if all the vertices lie
+on the same line.</p>
+<h2 id="remarks"><a class="doc-anchor" href="#remarks">§</a>Remarks</h2>
+<ul>
+<li>
+<p>Collinearity does not require that the <code>LineString</code>
+be closed, but the rest of the predicates do.</p>
+</li>
+<li>
+<p>This definition is closely related to the notion
+of <a href="//en.wikipedia.org/wiki/Convex_set">convexity of polygons</a>. In particular, a
+<a href="../../geometry/struct.Polygon.html" title="struct geo::geometry::Polygon"><code>Polygon</code></a> is convex, if and only if its <code>exterior</code> is
+convex, and <code>interiors</code> is empty.</p>
+</li>
+<li>
+<p>The <a href="../convex_hull/trait.ConvexHull.html" title="trait geo::algorithm::convex_hull::ConvexHull"><code>ConvexHull</code></a> algorithm always returns a strictly
+convex <code>LineString</code> unless the input is empty or
+collinear. The <a href="../convex_hull/graham/fn.graham_hull.html" title="fn geo::algorithm::convex_hull::graham::graham_hull"><code>graham_hull</code></a> algorithm provides an
+option to include collinear points, producing a
+(possibly non-strict) convex <code>LineString</code>.</p>
+</li>
+</ul>
+<h2 id="edge-cases"><a class="doc-anchor" href="#edge-cases">§</a>Edge Cases</h2>
+<ul>
+<li>
+<p>the convexity, and collinearity of an empty
+<code>LineString</code> is <em>unspecified</em> and must not be relied
+upon.</p>
+</li>
+<li>
+<p>A closed <code>LineString</code> with at most three coordinates
+(including the possibly repeated first coordinate) is
+both convex and collinear. However, the strict convexity
+is <em>unspecified</em> and must not be relied upon.</p>
+</li>
+</ul>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.convex_orientation" class="method"><a class="src rightside" href="../../../src/geo/algorithm/is_convex.rs.html#65-69">Source</a><h4 class="code-header">fn <a href="#tymethod.convex_orientation" class="fn">convex_orientation</a>(
+    &amp;self,
+    allow_collinear: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a>,
+    specific_orientation: <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../kernels/enum.Orientation.html" title="enum geo::algorithm::kernels::Orientation">Orientation</a>&gt;,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="../kernels/enum.Orientation.html" title="enum geo::algorithm::kernels::Orientation">Orientation</a>&gt;</h4></section></summary><div class="docblock"><p>Test and get the orientation if the shape is convex.
+Tests for strict convexity if <code>allow_collinear</code>, and
+only accepts a specific orientation if provided.</p>
+<p>The return value is <code>None</code> if either:</p>
+<ol>
+<li>
+<p>the shape is not convex</p>
+</li>
+<li>
+<p>the shape is not strictly convex, and
+<code>allow_collinear</code> is false</p>
+</li>
+<li>
+<p>an orientation is specified, and some three
+consecutive vertices where neither collinear, nor
+in the specified orientation.</p>
+</li>
+</ol>
+<p>In all other cases, the return value is the
+orientation of the shape, or <code>Orientation::Collinear</code>
+if all the vertices are on the same line.</p>
+<p><strong>Note.</strong> This predicate is not equivalent to
+<code>is_collinear</code> as this requires that the input is
+closed.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.is_collinear" class="method"><a class="src rightside" href="../../../src/geo/algorithm/is_convex.rs.html#108">Source</a><h4 class="code-header">fn <a href="#tymethod.is_collinear" class="fn">is_collinear</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Test if the shape lies on a line.</p>
+</div></details></div><h2 id="provided-methods" class="section-header">Provided Methods<a href="#provided-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="method.is_convex" class="method"><a class="src rightside" href="../../../src/geo/algorithm/is_convex.rs.html#72-74">Source</a><h4 class="code-header">fn <a href="#method.is_convex" class="fn">is_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Test if the shape is convex.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.is_ccw_convex" class="method"><a class="src rightside" href="../../../src/geo/algorithm/is_convex.rs.html#78-81">Source</a><h4 class="code-header">fn <a href="#method.is_ccw_convex" class="fn">is_ccw_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Test if the shape is convex, and oriented
+counter-clockwise.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.is_cw_convex" class="method"><a class="src rightside" href="../../../src/geo/algorithm/is_convex.rs.html#84-87">Source</a><h4 class="code-header">fn <a href="#method.is_cw_convex" class="fn">is_cw_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Test if the shape is convex, and oriented clockwise.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.is_strictly_convex" class="method"><a class="src rightside" href="../../../src/geo/algorithm/is_convex.rs.html#90-92">Source</a><h4 class="code-header">fn <a href="#method.is_strictly_convex" class="fn">is_strictly_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Test if the shape is strictly convex.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.is_strictly_ccw_convex" class="method"><a class="src rightside" href="../../../src/geo/algorithm/is_convex.rs.html#96-99">Source</a><h4 class="code-header">fn <a href="#method.is_strictly_ccw_convex" class="fn">is_strictly_ccw_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Test if the shape is strictly convex, and oriented
+counter-clockwise.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.is_strictly_cw_convex" class="method"><a class="src rightside" href="../../../src/geo/algorithm/is_convex.rs.html#103-105">Source</a><h4 class="code-header">fn <a href="#method.is_strictly_cw_convex" class="fn">is_strictly_cw_convex</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Test if the shape is strictly convex, and oriented
+clockwise.</p>
+</div></details></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-IsConvex-for-LineString%3CT%3E" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/is_convex.rs.html#111-128">Source</a><a href="#impl-IsConvex-for-LineString%3CT%3E" class="anchor">§</a><h3 class="code-header">impl&lt;T: <a class="trait" href="../kernels/trait.HasKernel.html" title="trait geo::algorithm::kernels::HasKernel">HasKernel</a>&gt; <a class="trait" href="trait.IsConvex.html" title="trait geo::algorithm::is_convex::IsConvex">IsConvex</a> for <a class="struct" href="../../geometry/struct.LineString.html" title="struct geo::geometry::LineString">LineString</a>&lt;T&gt;</h3></section></div><script src="../../../trait.impl/geo/algorithm/is_convex/trait.IsConvex.js" data-ignore-extern-crates="geo_types" async></script></section></div></main></body></html>
