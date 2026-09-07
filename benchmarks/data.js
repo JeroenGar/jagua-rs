@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788555336462,
+  "lastUpdate": 1788819047789,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -5715,6 +5715,84 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k/5",
             "value": 173959,
             "range": "± 3773",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jeroen.gardeyn@hotmail.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dea6f8724cab97fd2104440ec8e3fdc22c053806",
+          "message": "Correct transformation operation order in rustdoc (#89)",
+          "timestamp": "2026-09-08T00:07:27+02:00",
+          "tree_id": "af1a0f39bbfe4605c763d827b12220c637d2c297",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/dea6f8724cab97fd2104440ec8e3fdc22c053806"
+        },
+        "date": 1788819046099,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 1580018,
+            "range": "± 101958",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 1571460,
+            "range": "± 68572",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 1652207,
+            "range": "± 94060",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 1640291,
+            "range": "± 8857",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 3132590,
+            "range": "± 94477",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 6084796,
+            "range": "± 269142",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 178860,
+            "range": "± 7664",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 141320,
+            "range": "± 4723",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 127839,
+            "range": "± 2573",
             "unit": "ns/iter"
           }
         ]
