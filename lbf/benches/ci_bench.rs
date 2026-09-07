@@ -35,13 +35,12 @@ fn cde_collect_bench(c: &mut Criterion) {
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        let mut n_detected = 0;
-
         // Configure throughput measurement - this tells Criterion each iteration performs N_SAMPLES_PER_ITER operations
         group.throughput(criterion::Throughput::Elements(N_SAMPLES_PER_ITER as u64));
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
+                let mut n_detected = 0;
                 let search_for = problem
                     .layout
                     .placed_items
@@ -64,6 +63,7 @@ fn cde_collect_bench(c: &mut Criterion) {
                     n_detected += collector.len();
                     collector.clear();
                 }
+                n_detected
             })
         });
     }
@@ -83,13 +83,12 @@ fn cde_detect_bench(c: &mut Criterion) {
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        let mut n_detected = 0;
-
         // Configure throughput measurement - this tells Criterion each iteration performs N_SAMPLES_PER_ITER operations
         group.throughput(criterion::Throughput::Elements(N_SAMPLES_PER_ITER as u64));
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
+                let mut n_detected = 0;
                 let item_to_move = problem
                     .layout
                     .placed_items
@@ -115,6 +114,7 @@ fn cde_detect_bench(c: &mut Criterion) {
                         }
                     }
                 }
+                n_detected
             })
         });
     }

@@ -1,4 +1,3 @@
-#[cfg(any(debug_assertions, test))]
 mod assertions;
 mod qt_hazard;
 mod qt_hazard_vec;
