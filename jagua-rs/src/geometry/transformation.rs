@@ -51,14 +51,14 @@ impl Transformation {
         self
     }
 
-    /// Applies a translation followed by a rotation to `self`.
+    /// Applies a rotation followed by a translation to `self`.
     #[must_use]
     pub fn rotate_translate(mut self, angle: f32, (tx, ty): (f32, f32)) -> Self {
         self.matrix = dot_prod(&rot_transl_m(angle, (tx, ty)), &self.matrix);
         self
     }
 
-    /// Applies a rotation followed by a translation to `self`.
+    /// Applies a translation followed by a rotation to `self`.
     #[must_use]
     pub fn translate_rotate(mut self, (tx, ty): (f32, f32), angle: f32) -> Self {
         self.matrix = dot_prod(&transl_rot_m((tx, ty), angle), &self.matrix);
