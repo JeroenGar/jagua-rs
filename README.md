@@ -64,6 +64,7 @@ irregular C&P problems and boasts a **powerful Collision Detection Engine (CDE)*
 - **Currently supports:**
   - [x] Irregularly shaped items & containers
   - [x] Continuous rotation & translation
+  - [x] Optional reflections across specified local axes ([input format and native API](jagua-rs/src/io/reflections.md), [visual example](jagua-rs/src/io/reflection.svg))
   - [x] Holes and inferior quality zones in containers
   - [x] Minimum separation distance between an item and any hazard
   - [x] WebAssembly target for browser-based applications (see [WASM Demo](lbf/wasm-demo/README.md))

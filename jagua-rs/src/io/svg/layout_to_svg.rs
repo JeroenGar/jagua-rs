@@ -483,5 +483,6 @@ fn transform_to_svg(dt: DTransformation) -> String {
     //operations are effectively applied from right to left
     let (tx, ty) = dt.translation();
     let r = dt.rotation().to_degrees();
-    format!("translate({tx} {ty}), rotate({r})")
+    let reflection = if dt.reflected { ", scale(1 -1)" } else { "" };
+    format!("translate({tx} {ty}), rotate({r}){reflection}")
 }

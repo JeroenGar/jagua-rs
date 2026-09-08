@@ -29,6 +29,7 @@ mod tests {
     #[test_case("../assets/shapes1.json"; "shapes1")]
     #[test_case("../assets/shirts.json"; "shirts")]
     #[test_case("../assets/swim.json"; "swim")]
+    #[test_case("../assets/reflection.json"; "reflection")]
     #[test_case("../assets/trousers.json"; "trousers")]
     fn test_strip_packing(instance_path: &str) -> Result<()> {
         let ext_instance = read_spp_instance(Path::new(instance_path))?;
@@ -284,7 +285,10 @@ mod tests {
         ] {
             let external: ExtSPInstance = serde_json::from_value(input(rotation))?;
             let instance = spp::io::import_instance(&importer(), &external)?;
-            assert_eq!(instance.item(0).allowed_rotation, expected);
+            assert_eq!(
+                instance.item(0).allowed_orientations.rotations(false),
+                Some(&expected)
+            );
             let round_trip: ExtSPInstance =
                 serde_json::from_value(serde_json::to_value(&external)?)?;
             assert_eq!(
@@ -323,7 +327,7 @@ mod tests {
             serde_json::from_value(input(json!({"mode": "stepped", "step": 0.1})))?;
         let instance = spp::io::import_instance(&importer(), &decimal)?;
         assert!(
-            matches!(&instance.item(0).allowed_rotation, RotationRange::Discrete(a) if a.len() == 3600)
+            matches!(instance.item(0).allowed_orientations.rotations(false), Some(RotationRange::Discrete(a)) if a.len() == 3600)
         );
         Ok(())
     }

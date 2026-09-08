@@ -19,8 +19,13 @@ pub struct ExtItem {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct ExtOrientation {
-    /// Permitted rotations of the original item.
+    /// Permitted rotations, applied after optional reflection.
     pub rotation: ExtRotation,
+    /// Optional reflection axes through the original local origin, in degrees.
+    /// 0° negates y; 90° negates x. Missing or empty disables reflection.
+    /// Choose no reflection or one axis; equivalent axes are normalized modulo 180°.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reflection_axes: Vec<f32>,
 }
 
 /// Explicit rotation modes, validated at import.
@@ -159,9 +164,14 @@ pub struct ExtPlacedItem {
     pub transformation: ExtTransformation,
 }
 
-/// Represents a proper rigid transformation defined as a rotation followed by translation
+/// Optional x-axis reflection, followed by rotation and translation.
+/// The canonical x-axis reflection is independent of the item's permitted input axes:
+/// reflecting across axis `a` then rotating by `r` is exported with rotation `r + 2*a`.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ExtTransformation {
+    /// Negate the original local y coordinate before rotation. Defaults to false.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub reflected: bool,
     /// The rotation angle in degrees
     pub rotation: f32,
     /// The translation vector (x, y)
@@ -171,6 +181,7 @@ pub struct ExtTransformation {
 impl From<DTransformation> for ExtTransformation {
     fn from(dt: DTransformation) -> Self {
         ExtTransformation {
+            reflected: dt.reflected,
             rotation: dt.rotation().to_degrees(),
             translation: dt.translation(),
         }
@@ -180,5 +191,6 @@ impl From<DTransformation> for ExtTransformation {
 impl From<ExtTransformation> for DTransformation {
     fn from(ext_dt: ExtTransformation) -> Self {
         DTransformation::new(ext_dt.rotation.to_radians(), ext_dt.translation)
+            .with_reflection(ext_dt.reflected)
     }
 }

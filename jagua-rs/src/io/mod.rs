@@ -1,3 +1,5 @@
+#![doc = include_str!("reflections.md")]
+
 /// External (serializable) representations of the entities within the library.
 pub mod ext_repr;
 

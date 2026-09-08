@@ -22,7 +22,7 @@ use anyhow::{Result, bail};
 /// [read more](https://en.wikipedia.org/wiki/Simple_polygon)
 #[derive(Clone, Debug)]
 pub struct SPolygon {
-    /// Set of points that form the polygon
+    /// Vertices in counterclockwise order, including after reflection.
     pub vertices: Vec<Point>,
     /// Bounding box
     pub bbox: Rect,
@@ -218,6 +218,7 @@ impl SPolygon {
 
 impl Transformable for SPolygon {
     fn transform(&mut self, t: &Transformation) -> &mut Self {
+        let reflected = t.is_reflected();
         //destructuring pattern to ensure that the code is updated when the struct changes
         let SPolygon {
             vertices: points,
@@ -232,12 +233,21 @@ impl Transformable for SPolygon {
         for p in points.iter_mut() {
             p.transform(t);
         }
+        if reflected {
+            points.reverse();
+        }
 
         poi.transform(t);
 
         //transform the surrogate
         if let Some(surrogate) = surrogate.as_mut() {
             surrogate.transform(t);
+            if reflected {
+                surrogate.convex_hull_indices.reverse();
+                for i in &mut surrogate.convex_hull_indices {
+                    *i = points.len() - 1 - *i;
+                }
+            }
         }
 
         //regenerate bounding box
@@ -249,6 +259,8 @@ impl Transformable for SPolygon {
 
 impl TransformableFrom for SPolygon {
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self {
+        let reflected = t.is_reflected();
+        assert_eq!(self.vertices.len(), reference.vertices.len());
         //destructuring pattern to ensure that the code is updated when the struct changes
         let SPolygon {
             vertices: points,
@@ -259,8 +271,14 @@ impl TransformableFrom for SPolygon {
             surrogate,
         } = self;
 
-        for (p, ref_p) in points.iter_mut().zip(&reference.vertices) {
-            p.transform_from(ref_p, t);
+        if reflected {
+            for (p, ref_p) in points.iter_mut().zip(reference.vertices.iter().rev()) {
+                p.transform_from(ref_p, t);
+            }
+        } else {
+            for (p, ref_p) in points.iter_mut().zip(&reference.vertices) {
+                p.transform_from(ref_p, t);
+            }
         }
 
         poi.transform_from(&reference.poi, t);
@@ -268,6 +286,16 @@ impl TransformableFrom for SPolygon {
         //transform the surrogate
         if let Some(surrogate) = surrogate.as_mut() {
             surrogate.transform_from(reference.surrogate(), t);
+            let indices = &mut surrogate.convex_hull_indices;
+            let ref_indices = &reference.surrogate().convex_hull_indices;
+            assert_eq!(indices.len(), ref_indices.len());
+            if reflected {
+                for (i, &ref_i) in indices.iter_mut().zip(ref_indices.iter().rev()) {
+                    *i = points.len() - 1 - ref_i;
+                }
+            } else {
+                indices.copy_from_slice(ref_indices);
+            }
         }
         //regenerate bounding box
         *bbox = SPolygon::generate_bounding_box(points);

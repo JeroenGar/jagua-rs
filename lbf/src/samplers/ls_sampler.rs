@@ -21,6 +21,7 @@ pub struct LSSampler {
     normal_x: Normal<f32>,
     normal_y: Normal<f32>,
     normal_r: NormalRotDistr,
+    reflected: bool,
     sd_transl: f32,
     sd_rot: f32,
     sd_transl_range: (f32, f32),
@@ -46,6 +47,7 @@ impl LSSampler {
             normal_x,
             normal_y,
             normal_r,
+            reflected: ref_transform.reflected,
             sd_transl,
             sd_rot,
             sd_transl_range,
@@ -66,6 +68,7 @@ impl LSSampler {
         self.normal_x = Normal::new(ref_transform.translation().0, self.sd_transl).unwrap();
         self.normal_y = Normal::new(ref_transform.translation().1, self.sd_transl).unwrap();
         self.normal_r.set_mean(ref_transform.rotation());
+        self.reflected = ref_transform.reflected;
     }
 
     /// Sets the standard deviation of the normal distributions.
@@ -102,5 +105,6 @@ impl LSSampler {
             self.normal_r.sample(rng),
             (self.normal_x.sample(rng), self.normal_y.sample(rng)),
         )
+        .with_reflection(self.reflected)
     }
 }

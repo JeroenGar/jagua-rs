@@ -74,7 +74,7 @@ impl Transformation {
 
     #[must_use]
     pub fn transform_from_decomposed(self, other: &DTransformation) -> Self {
-        self.rotate_translate(other.rotation(), other.translation())
+        self.transform(&other.compose())
     }
 
     /// Generates the transformation that undoes the effect of `self`.
@@ -89,6 +89,13 @@ impl Transformation {
         self.matrix == EMPTY_MATRIX
     }
 
+    /// Whether this transformation reverses orientation.
+    #[must_use]
+    pub fn is_reflected(&self) -> bool {
+        let m = &self.matrix;
+        m[0][0] * m[1][1] < m[0][1] * m[1][0]
+    }
+
     #[must_use]
     pub fn matrix(&self) -> &[[NotNan<f32>; 3]; 3] {
         &self.matrix
@@ -99,7 +106,7 @@ impl Transformation {
         let m = self.matrix();
         let angle = m[1][0].atan2(m[0][0].into_inner());
         let (tx, ty) = (m[0][2].into_inner(), m[1][2].into_inner());
-        DTransformation::new(angle, (tx, ty))
+        DTransformation::new(angle, (tx, ty)).with_reflection(self.is_reflected())
     }
 }
 
@@ -108,11 +115,13 @@ where
     T: Borrow<DTransformation>,
 {
     fn from(dt: T) -> Self {
-        let rot = dt.borrow().rotation();
-        let transl = dt.borrow().translation();
-        Self {
-            matrix: rot_transl_m(rot, transl),
+        let dt = dt.borrow();
+        let mut matrix = rot_transl_m(dt.rotation(), dt.translation());
+        if dt.reflected {
+            matrix[0][1] = -matrix[0][1];
+            matrix[1][1] = -matrix[1][1];
         }
+        Self { matrix }
     }
 }
 

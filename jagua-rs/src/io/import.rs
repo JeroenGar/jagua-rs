@@ -1,10 +1,10 @@
 use crate::collision_detection::CDEConfig;
 use crate::entities::Item;
 use crate::entities::{Container, InferiorQualityZone, N_QUALITIES};
-use crate::geometry::OriginalShape;
 use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::primitives::{Point, Rect, SPolygon};
 use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
+use crate::geometry::{AllowedOrientations, OriginalShape};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtContainer, ExtItem, ExtRotation, ExtSPolygon, ExtShape};
 use anyhow::{Result, bail, ensure};
@@ -91,7 +91,9 @@ impl Importer {
 
         let base_quality = ext_item.min_quality;
 
-        let allowed_orientations = import_rotation(&ext_item.orientation.rotation)?;
+        let rotations = import_rotation(&ext_item.orientation.rotation)?;
+        let axes = normalized_radians(&ext_item.orientation.reflection_axes, 180.0)?;
+        let allowed_orientations = AllowedOrientations::new(rotations, axes)?;
 
         Item::new(
             internal_id,
@@ -242,6 +244,22 @@ fn import_rotation(rotation: &ExtRotation) -> Result<RotationRange> {
             angles.into_iter().map(f32::to_radians).collect(),
         ))
     }
+}
+
+// Normalize in the input unit before conversion so equivalent degree values stay identical.
+fn normalized_radians(angles: &[f32], period: f32) -> Result<Vec<f32>> {
+    ensure!(
+        angles.len() <= AllowedOrientations::MAX_ANGLES,
+        "orientation angle list exceeds the count limit"
+    );
+    ensure!(
+        angles.iter().all(|a| a.is_finite()),
+        "orientation angles must be finite"
+    );
+    Ok(angles
+        .iter()
+        .map(|a| (a.rem_euclid(period) % period).to_radians())
+        .collect())
 }
 
 pub fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {

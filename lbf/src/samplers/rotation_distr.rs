@@ -25,12 +25,11 @@ pub enum UniformRotDistr {
 pub enum NormalRotDistr {
     Range(Normal<f32>),
     Discrete(f32),
-    None,
 }
 
 impl UniformRotDistr {
-    pub fn from_item(item: &Item) -> Self {
-        match &item.allowed_rotation {
+    pub fn new(rotations: &RotationRange) -> Self {
+        match rotations {
             RotationRange::None => UniformRotDistr::None,
             RotationRange::Continuous => {
                 UniformRotDistr::Range(Uniform::new(0.0, 2.0 * PI).unwrap())
@@ -50,8 +49,8 @@ impl UniformRotDistr {
 
 impl NormalRotDistr {
     pub fn from_item(item: &Item, r_ref: f32, stddev: f32) -> Self {
-        match &item.allowed_rotation {
-            RotationRange::None => NormalRotDistr::None,
+        match item.allowed_orientations.rotations(false).unwrap() {
+            RotationRange::None => NormalRotDistr::Discrete(r_ref),
             RotationRange::Continuous => NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap()),
             RotationRange::Discrete(_) => NormalRotDistr::Discrete(r_ref),
         }
@@ -62,7 +61,7 @@ impl NormalRotDistr {
             NormalRotDistr::Range(n) => {
                 *n = Normal::new(mean, n.std_dev()).unwrap();
             }
-            NormalRotDistr::Discrete(_) | NormalRotDistr::None => {}
+            NormalRotDistr::Discrete(r) => *r = mean,
         }
     }
 
@@ -71,13 +70,12 @@ impl NormalRotDistr {
             NormalRotDistr::Range(n) => {
                 *n = Normal::new(n.mean(), stddev).unwrap();
             }
-            NormalRotDistr::Discrete(_) | NormalRotDistr::None => {}
+            NormalRotDistr::Discrete(_) => {}
         }
     }
 
     pub fn sample(&self, rng: &mut impl Rng) -> f32 {
         match self {
-            NormalRotDistr::None => 0.0,
             NormalRotDistr::Range(n) => n.sample(rng),
             NormalRotDistr::Discrete(r) => *r,
         }

@@ -1,0 +1,15 @@
+{
+  "name": "fixed-rotation-y-reflection",
+  "strip_height": 12,
+  "items": [
+    {
+      "id": 0,
+      "demand": 4,
+      "orientation": {"rotation": {"mode": "discrete", "angles": [0]}, "reflection_axes": [90]},
+      "shape": {
+        "type": "simple_polygon",
+        "data": [[2, 3], [8, 3], [8, 5], [5, 5], [5, 9], [2, 9]]
+      }
+    }
+  ]
+}
