@@ -8,7 +8,6 @@ use crate::geometry::{DTransformation, Transformation};
 use crate::io::export::int_to_ext_transformation;
 use crate::io::svg::svg_util;
 use crate::io::svg::svg_util::SvgDrawOptions;
-use log::warn;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use svg::Document;
 use svg::node::element::{Definitions, Group, Text, Title, Use};
@@ -407,9 +406,23 @@ pub fn layout_to_svg_group(
                             ));
                         }
                     }
-                    HazardEntity::Hole { idx } => {
+                    HazardEntity::Hole { idx } | HazardEntity::InferiorQualityZone { idx, .. } => {
+                        let quality =
+                            if let HazardEntity::InferiorQualityZone { quality, .. } = haz_entity {
+                                if instance
+                                    .item(pi.item_id)
+                                    .min_quality
+                                    .is_some_and(|required| *quality >= required)
+                                {
+                                    continue;
+                                }
+                                *quality
+                            } else {
+                                0
+                            };
                         let start = pi.shape.poi.center;
-                        let end = container.quality_zones[0].as_ref().unwrap().shapes_cd[*idx]
+                        let end = container.quality_zones[quality].as_ref().unwrap().shapes_cd
+                            [*idx]
                             .poi
                             .center;
                         collision_group = collision_group.add(svg_util::data_to_path(
@@ -433,9 +446,6 @@ pub fn layout_to_svg_group(
                             Some(&*format!("{}", theme.collision_highlight_color)),
                             Some(3.0 * stroke_width),
                         ));
-                    }
-                    _ => {
-                        warn!("unexpected hazard entity");
                     }
                 }
             }
