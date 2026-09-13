@@ -74,12 +74,10 @@ impl Container {
         })
     }
 
-    /// The area of the contour of the container, excluding holes
+    /// Gross area of the original outer contour, without subtracting holes or quality zones.
+    #[must_use]
     pub fn area(&self) -> f32 {
         self.outer_orig.area()
-            - self.quality_zones[0]
-                .as_ref()
-                .map_or(0.0, InferiorQualityZone::area)
     }
 }
 
