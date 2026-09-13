@@ -407,6 +407,26 @@ pub fn layout_to_svg_group(
                             ));
                         }
                     }
+                    HazardEntity::Hole { idx } => {
+                        let start = pi.shape.poi.center;
+                        let end = container.quality_zones[0].as_ref().unwrap().shapes_cd[*idx]
+                            .poi
+                            .center;
+                        collision_group = collision_group.add(svg_util::data_to_path(
+                            svg_util::edge_data(Edge { start, end }),
+                            &[
+                                ("stroke", &*format!("{}", theme.collision_highlight_color)),
+                                ("stroke-opacity", "0.75"),
+                                ("stroke-width", &*format!("{}", stroke_width * 4.0)),
+                                (
+                                    "stroke-dasharray",
+                                    &*format!("{} {}", 4.0 * stroke_width, 8.0 * stroke_width),
+                                ),
+                                ("stroke-linecap", "round"),
+                                ("stroke-linejoin", "round"),
+                            ],
+                        ));
+                    }
                     HazardEntity::Exterior => {
                         collision_group = collision_group.add(svg_util::point(
                             pi.shape.poi.center,
