@@ -2,7 +2,6 @@ use crate::util::{N_ITEMS_REMOVED, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use jagua_rs::collision_detection::hazards::collector::BasicHazardCollector;
 use jagua_rs::collision_detection::hazards::filter::NoFilter;
-use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::probs::spp::entities::SPPlacement;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;

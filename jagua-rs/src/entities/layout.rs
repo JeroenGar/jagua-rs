@@ -1,7 +1,7 @@
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::{CDESnapshot, CDEngine};
+use crate::entities::Container;
 use crate::entities::Item;
-use crate::entities::{Container, Instance};
 use crate::entities::{PItemKey, PlacedItem};
 use crate::geometry::DTransformation;
 use crate::util::assertions;
@@ -110,15 +110,17 @@ impl Layout {
 
     /// The current density of the layout defined as the ratio of the area of the items placed to the area of the container.
     /// Uses the original shapes of items and container to calculate the area.
-    pub fn density(&self, instance: &impl Instance) -> f32 {
-        self.placed_item_area(instance) / self.container.area()
+    /// The lookup resolves internal item IDs from this layout.
+    pub fn density<'a>(&self, item_by_id: impl Fn(usize) -> &'a Item) -> f32 {
+        self.placed_item_area(item_by_id) / self.container.area()
     }
 
     /// The sum of the areas of the items placed in the layout (using the original shapes of the items).
-    pub fn placed_item_area(&self, instance: &impl Instance) -> f32 {
+    /// The lookup must resolve every placed item's internal ID.
+    pub fn placed_item_area<'a>(&self, item_by_id: impl Fn(usize) -> &'a Item) -> f32 {
         self.placed_items
             .iter()
-            .map(|(_, pi)| instance.item(pi.item_id))
+            .map(|(_, pi)| item_by_id(pi.item_id))
             .map(Item::area)
             .sum::<f32>()
     }
@@ -156,15 +158,15 @@ pub struct LayoutSnapshot {
 
 impl LayoutSnapshot {
     /// Equivalent to [`Layout::density`]
-    pub fn density(&self, instance: &impl Instance) -> f32 {
-        self.placed_item_area(instance) / self.container.area()
+    pub fn density<'a>(&self, item_by_id: impl Fn(usize) -> &'a Item) -> f32 {
+        self.placed_item_area(item_by_id) / self.container.area()
     }
 
     /// Equivalent to [`Layout::placed_item_area`]
-    pub fn placed_item_area(&self, instance: &impl Instance) -> f32 {
+    pub fn placed_item_area<'a>(&self, item_by_id: impl Fn(usize) -> &'a Item) -> f32 {
         self.placed_items
             .iter()
-            .map(|(_, pi)| instance.item(pi.item_id))
+            .map(|(_, pi)| item_by_id(pi.item_id))
             .map(Item::area)
             .sum::<f32>()
     }

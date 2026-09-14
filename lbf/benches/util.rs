@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEConfig;
-use jagua_rs::entities::Instance;
 use jagua_rs::io::import::Importer;
 use jagua_rs::probs::spp;
 use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem};

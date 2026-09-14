@@ -1,5 +1,5 @@
 use crate::Instant;
-use crate::entities::{Instance, Layout, PItemKey};
+use crate::entities::{Layout, PItemKey};
 use crate::geometry::DTransformation;
 use crate::probs::spp::entities::strip::Strip;
 use crate::probs::spp::entities::{SPInstance, SPSolution};
@@ -126,7 +126,7 @@ impl SPProblem {
 
     #[must_use]
     pub fn density(&self) -> f32 {
-        self.layout.density(&self.instance)
+        self.layout.density(|id| self.instance.item(id))
     }
 
     #[must_use]

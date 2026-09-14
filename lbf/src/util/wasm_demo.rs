@@ -104,8 +104,12 @@ pub fn run_lbf_bpp_wasm(
     // Convert snapshots to SVG strings
     let mut svgs = vec![];
     for (i, s_layout) in sol.layout_snapshots.values().enumerate() {
-        let svg =
-            jagua_rs::io::svg::s_layout_to_svg(s_layout, &instance, config.svg_draw_options, "");
+        let svg = jagua_rs::io::svg::s_layout_to_svg(
+            s_layout,
+            |id| instance.item(id),
+            config.svg_draw_options,
+            "",
+        );
         let svg_string = svg.to_string();
         svgs.push((format!("sol_input_{}.svg", i), svg_string));
     }
@@ -183,7 +187,7 @@ pub fn run_lbf_spp_wasm(
     let mut svgs = vec![];
     let svg = jagua_rs::io::svg::s_layout_to_svg(
         &sol.layout_snapshot,
-        &instance,
+        |id| instance.item(id),
         config.svg_draw_options,
         "",
     );

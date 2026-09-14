@@ -5,7 +5,7 @@ use crate::samplers::uniform_rect_sampler::UniformRectSampler;
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEngine;
 use jagua_rs::collision_detection::hazards::filter::HazardFilter;
-use jagua_rs::entities::{Instance, Item};
+use jagua_rs::entities::Item;
 use jagua_rs::geometry::DTransformation;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use log::debug;
@@ -105,10 +105,9 @@ pub fn search(
     best
 }
 
-pub fn item_placement_order(instance: &impl Instance) -> Vec<usize> {
+pub fn item_placement_order<'a>(items: impl Iterator<Item = &'a Item>) -> Vec<usize> {
     //sort the items by descending diameter
-    instance
-        .items()
+    items
         .sorted_by_key(|item| Reverse(OrderedFloat(item.shape_cd.diameter)))
         .map(|item| item.id)
         .collect_vec()

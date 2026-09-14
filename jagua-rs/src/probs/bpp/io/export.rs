@@ -11,7 +11,7 @@ pub fn export(instance: &BPInstance, solution: &BPSolution, epoch: Instant) -> E
         layouts: solution
             .layout_snapshots
             .values()
-            .map(|sl| export_layout_snapshot(sl, instance))
+            .map(|sl| export_layout_snapshot(sl, |id| instance.item(id)))
             .collect(),
         run_time_sec: solution.time_stamp.duration_since(epoch).as_secs(),
         density: solution.density(instance),

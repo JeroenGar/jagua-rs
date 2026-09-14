@@ -106,7 +106,12 @@ fn main_spp(
 
     {
         let svg_path = output_folder.join(format!("sol_{input_stem}.svg"));
-        let svg = s_layout_to_svg(&sol.layout_snapshot, &instance, config.svg_draw_options, "");
+        let svg = s_layout_to_svg(
+            &sol.layout_snapshot,
+            |id| instance.item(id),
+            config.svg_draw_options,
+            "",
+        );
 
         io::write_svg(&svg, Path::new(&svg_path))?;
     }
@@ -148,7 +153,12 @@ fn main_bpp(
     {
         for (i, s_layout) in sol.layout_snapshots.values().enumerate() {
             let svg_path = output_folder.join(format!("sol_{input_stem}_{i}.svg"));
-            let svg = s_layout_to_svg(s_layout, &instance, config.svg_draw_options, "");
+            let svg = s_layout_to_svg(
+                s_layout,
+                |id| instance.item(id),
+                config.svg_draw_options,
+                "",
+            );
 
             io::write_svg(&svg, Path::new(&svg_path))?;
         }

@@ -1,5 +1,5 @@
 use crate::Instant;
-use crate::entities::{Container, Instance, Layout, PItemKey};
+use crate::entities::{Container, Layout, PItemKey};
 use crate::geometry::DTransformation;
 use crate::probs::mspp::entities::MSPSolution;
 use crate::probs::mspp::entities::instance::MSPInstance;
@@ -218,7 +218,7 @@ impl MSPProblem {
 
         let total_item_area = self
             .all_layouts()
-            .map(|l| l.placed_item_area(&self.instance))
+            .map(|l| l.placed_item_area(|id| self.instance.item(id)))
             .sum::<f32>();
 
         total_item_area / total_container_area

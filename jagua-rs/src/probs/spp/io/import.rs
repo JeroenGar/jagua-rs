@@ -1,4 +1,4 @@
-use crate::entities::{Instance, Item};
+use crate::entities::Item;
 use crate::geometry::DTransformation;
 use crate::geometry::shape_modification::ShapeModifyConfig;
 use crate::io::import::{Importer, ext_to_int_transformation};

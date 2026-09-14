@@ -1,34 +1,37 @@
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hazards::collector::BasicHazardCollector;
 use crate::collision_detection::hazards::filter::NoFilter;
-use crate::entities::{Instance, Layout, LayoutSnapshot};
+use crate::entities::{Item, Layout, LayoutSnapshot};
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::{Circle, Edge, Rect};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::export::int_to_ext_transformation;
 use crate::io::svg::svg_util;
 use crate::io::svg::svg_util::SvgDrawOptions;
+use itertools::Itertools;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use svg::Document;
 use svg::node::element::{Definitions, Group, Text, Title, Use};
 
-pub fn s_layout_to_svg(
+/// Render a snapshot using a lookup of its placed items by internal ID.
+pub fn s_layout_to_svg<'a>(
     s_layout: &LayoutSnapshot,
-    instance: &impl Instance,
+    item_by_id: impl Fn(usize) -> &'a Item,
     options: SvgDrawOptions,
     title: &str,
 ) -> Document {
     let layout = Layout::from_snapshot(s_layout);
-    layout_to_svg(&layout, instance, options, title)
+    layout_to_svg(&layout, item_by_id, options, title)
 }
 
-pub fn layout_to_svg(
+/// Render a layout using a lookup of its placed items by internal ID.
+pub fn layout_to_svg<'a>(
     layout: &Layout,
-    instance: &impl Instance,
+    item_by_id: impl Fn(usize) -> &'a Item,
     options: SvgDrawOptions,
     title: &str,
 ) -> Document {
-    let (group, bbox) = layout_to_svg_group(layout, instance, options, title);
+    let (group, bbox) = layout_to_svg_group(layout, item_by_id, options, title);
 
     let vbox = bbox.scale(1.1);
     let vbox_svg = format!(
@@ -43,9 +46,10 @@ pub fn layout_to_svg(
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn layout_to_svg_group(
+/// Render only the item definitions used by this layout, resolving them by internal ID.
+pub fn layout_to_svg_group<'a>(
     layout: &Layout,
-    instance: &impl Instance,
+    item_by_id: impl Fn(usize) -> &'a Item,
     options: SvgDrawOptions,
     title: &str,
 ) -> (Group, Rect) {
@@ -73,7 +77,7 @@ pub fn layout_to_svg_group(
             "h: {:.3} | w: {:.3} | d: {:.3}% | {}",
             bbox.height(),
             bbox.width(),
-            layout.density(instance) * 100.0,
+            layout.density(&item_by_id) * 100.0,
             title,
         );
         Text::new(label_content)
@@ -164,7 +168,14 @@ pub fn layout_to_svg_group(
         //define all the items and their surrogates (if enabled)
         let mut item_defs = Definitions::new();
         let mut surrogate_defs = Definitions::new();
-        for item in instance.items() {
+        for item in layout
+            .placed_items
+            .values()
+            .map(|pi| pi.item_id)
+            .sorted()
+            .dedup()
+            .map(&item_by_id)
+        {
             let color = match item.min_quality {
                 None => theme.item_fill,
                 Some(q) => svg_util::blend_colors(theme.item_fill, theme.qz_fill[q]),
@@ -279,7 +290,7 @@ pub fn layout_to_svg_group(
             let dtransf = if options.draw_cd_shapes {
                 pi.d_transf
             } else {
-                let item = instance.item(pi.item_id);
+                let item = item_by_id(pi.item_id);
                 int_to_ext_transformation(&pi.d_transf, &item.shape_orig.pre_transform)
             };
             let title = Title::new(format!("item, id: {}, transf: [{}]", pi.item_id, dtransf));

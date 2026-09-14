@@ -4,7 +4,7 @@ use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
-use jagua_rs::entities::{Instance, Item};
+use jagua_rs::entities::Item;
 use jagua_rs::probs::bpp::entities::{
     BPInstance, BPLayoutType, BPPlacement, BPProblem, BPSolution,
 };
@@ -39,7 +39,9 @@ impl LBFOptimizerBP {
     pub fn solve(&mut self) -> BPSolution {
         let start = Instant::now();
 
-        'outer: for item_id in item_placement_order(&self.instance) {
+        'outer: for item_id in
+            item_placement_order(self.instance.items.iter().map(|(item, _)| item))
+        {
             let item = self.instance.item(item_id);
             //place all items of this type
             'inner: while self.problem.item_demand_qtys[item_id] > 0 {

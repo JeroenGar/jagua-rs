@@ -1,5 +1,4 @@
 use crate::Instant;
-use crate::entities::Instance;
 use crate::entities::Layout;
 use crate::entities::{PItemKey, PlacedItem};
 use crate::geometry::DTransformation;
@@ -169,7 +168,7 @@ impl BPProblem {
         let total_item_area = self
             .layouts
             .values()
-            .map(|l| l.placed_item_area(&self.instance))
+            .map(|l| l.placed_item_area(|id| self.instance.item(id)))
             .sum::<f32>();
 
         total_item_area / total_bin_area

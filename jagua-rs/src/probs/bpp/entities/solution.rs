@@ -25,7 +25,7 @@ impl BPSolution {
         let total_item_area = self
             .layout_snapshots
             .values()
-            .map(|ls| ls.placed_item_area(instance))
+            .map(|ls| ls.placed_item_area(|id| instance.item(id)))
             .sum::<f32>();
 
         total_item_area / total_bin_area

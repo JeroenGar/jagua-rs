@@ -1,7 +1,6 @@
-use crate::entities::{Container, Instance, Item};
+use crate::entities::Item;
 use crate::probs::mspp::entities::strip::Strip;
 use crate::probs::mspp::util::assertions;
-use std::iter;
 
 #[derive(Debug, Clone)]
 /// Instance of the "Multi Strip Packing Problem".
@@ -43,22 +42,10 @@ impl MSPInstance {
     pub fn total_item_qty(&self) -> usize {
         self.items.iter().map(|(_, qty)| *qty).sum()
     }
-}
 
-impl Instance for MSPInstance {
-    fn items(&self) -> impl Iterator<Item = &Item> {
-        self.items.iter().map(|(item, _qty)| item)
-    }
-
-    fn containers(&self) -> impl Iterator<Item = &Container> {
-        iter::empty()
-    }
-
-    fn item(&self, id: usize) -> &Item {
-        &self.items.get(id).unwrap().0
-    }
-
-    fn container(&self, _id: usize) -> &Container {
-        panic!("no predefined containers for strip packing instances")
+    /// Retrieve an item by its internal index.
+    #[must_use]
+    pub fn item(&self, id: usize) -> &Item {
+        &self.items[id].0
     }
 }

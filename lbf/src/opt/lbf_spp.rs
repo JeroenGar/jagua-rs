@@ -5,7 +5,6 @@ use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use crate::util::assertions::strip_width_is_in_check;
 use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
-use jagua_rs::entities::Instance;
 use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution};
 use log::info;
 use rand::prelude::SmallRng;
@@ -37,7 +36,9 @@ impl LBFOptimizerSP {
     pub fn solve(&mut self) -> SPSolution {
         let start = Instant::now();
 
-        'outer: for item_id in item_placement_order(&self.instance) {
+        'outer: for item_id in
+            item_placement_order(self.instance.items.iter().map(|(item, _)| item))
+        {
             let item = self.instance.item(item_id);
             //place all items of this type
             while self.problem.item_demand_qtys[item_id] > 0 {

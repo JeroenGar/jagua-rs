@@ -1,4 +1,3 @@
-use crate::entities::Instance;
 use crate::entities::{Container, Item};
 use crate::probs::bpp::entities::bin::Bin;
 use crate::probs::bpp::util::assertions::instance_item_bin_ids_correct;
@@ -47,22 +46,16 @@ impl BPInstance {
     pub fn total_item_qty(&self) -> usize {
         self.items.iter().map(|(_, qty)| *qty).sum()
     }
-}
 
-impl Instance for BPInstance {
-    fn items(&self) -> impl Iterator<Item = &Item> {
-        self.items.iter().map(|(item, _qty)| item)
+    /// Retrieve an item by its internal index.
+    #[must_use]
+    pub fn item(&self, id: usize) -> &Item {
+        &self.items[id].0
     }
 
-    fn containers(&self) -> impl Iterator<Item = &Container> {
-        self.bins.iter().map(|bin| &bin.container)
-    }
-
-    fn item(&self, id: usize) -> &Item {
-        &self.items.get(id).unwrap().0
-    }
-
-    fn container(&self, id: usize) -> &Container {
+    /// Retrieve a bin's container by its index.
+    #[must_use]
+    pub fn container(&self, id: usize) -> &Container {
         &self.bins[id].container
     }
 }
