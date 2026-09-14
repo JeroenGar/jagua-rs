@@ -1,22 +1,27 @@
-use crate::entities::Instance;
-use crate::entities::{Container, Item};
+use crate::entities::Item;
 use crate::probs::bpp::entities::bin::Bin;
 use crate::probs::bpp::util::assertions::instance_item_bin_ids_correct;
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 /// Instance of the Bin Packing Problem.
 pub struct BPInstance {
     /// The items to be packed and their demands
-    pub items: Vec<(Item, usize)>,
+    pub items: Vec<(Arc<Item>, usize)>,
     /// Set of bins available to pack the items
     pub bins: Vec<Bin>,
 }
 
 impl BPInstance {
     #[must_use]
-    pub fn new(items: Vec<(Item, usize)>, bins: Vec<Bin>) -> Self {
+    pub fn new(items: Vec<(Arc<Item>, usize)>, bins: Vec<Bin>) -> Self {
         assert!(instance_item_bin_ids_correct(&items, &bins));
 
+        assert!(
+            items
+                .windows(2)
+                .all(|w| w[0].0.external_id < w[1].0.external_id)
+        );
         Self { items, bins }
     }
 
@@ -47,22 +52,18 @@ impl BPInstance {
     pub fn total_item_qty(&self) -> usize {
         self.items.iter().map(|(_, qty)| *qty).sum()
     }
-}
 
-impl Instance for BPInstance {
-    fn items(&self) -> impl Iterator<Item = &Item> {
-        self.items.iter().map(|(item, _qty)| item)
+    /// Retrieve an item by its internal index.
+    #[must_use]
+    pub fn item(&self, id: usize) -> &Arc<Item> {
+        &self.items[id].0
     }
 
-    fn containers(&self) -> impl Iterator<Item = &Container> {
-        self.bins.iter().map(|bin| &bin.container)
-    }
-
-    fn item(&self, id: usize) -> &Item {
-        &self.items.get(id).unwrap().0
-    }
-
-    fn container(&self, id: usize) -> &Container {
-        &self.bins[id].container
+    /// Resolve an external item ID, returning None for unknown or zero-demand items.
+    #[must_use]
+    pub fn internal_item_id(&self, id: u64) -> Option<usize> {
+        self.items
+            .binary_search_by_key(&id, |(item, _)| item.external_id)
+            .ok()
     }
 }

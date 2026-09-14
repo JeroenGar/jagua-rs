@@ -1,5 +1,5 @@
 use crate::Instant;
-use crate::entities::{Container, Instance, Layout, PItemKey};
+use crate::entities::{Container, Layout, PItemKey};
 use crate::geometry::DTransformation;
 use crate::probs::mspp::entities::MSPSolution;
 use crate::probs::mspp::entities::instance::MSPInstance;
@@ -91,11 +91,11 @@ impl MSPProblem {
     /// Returns the corresponding `MSPPlacement` to place it back.
     pub fn remove_item(&mut self, lk: LayKey, pk: PItemKey) -> MSPPlacement {
         let pi = self.layouts[lk].remove_item(pk);
-        self.deregister_included_item(pi.item_id);
+        self.deregister_included_item(pi.item.idx);
 
         MSPPlacement {
             lk,
-            item_id: pi.item_id,
+            item_id: pi.item.idx,
             d_transf: pi.d_transf,
         }
     }
@@ -125,16 +125,8 @@ impl MSPProblem {
         for (lk, layout) in &mut self.layouts {
             match solution.layout_snapshots.get(lk) {
                 Some(ls) => {
-                    //The key is present in the solution
-                    if self.strips[lk] == solution.strips[lk] {
-                        //Strips match, do a simple restore
-                        layout.restore(ls);
-                    } else {
-                        //The strip changed, we need to swap the container and then restore
-                        self.strips[lk] = solution.strips[lk];
-                        layout.swap_container(Container::from(self.strips[lk]));
-                        layout.restore(ls);
-                    }
+                    layout.restore(ls);
+                    self.strips[lk] = solution.strips[lk];
                 }
                 None => {
                     //Layout not present in solution, mark for removal
@@ -189,7 +181,7 @@ impl MSPProblem {
         layout
             .placed_items
             .values()
-            .for_each(|pi| self.register_included_item(pi.item_id));
+            .for_each(|pi| self.register_included_item(pi.item.idx));
         self.layouts.insert(layout)
     }
 
@@ -198,7 +190,7 @@ impl MSPProblem {
         layout
             .placed_items
             .values()
-            .for_each(|pi| self.deregister_included_item(pi.item_id));
+            .for_each(|pi| self.deregister_included_item(pi.item.idx));
 
         self.strips.remove(key);
     }
@@ -218,7 +210,7 @@ impl MSPProblem {
 
         let total_item_area = self
             .all_layouts()
-            .map(|l| l.placed_item_area(&self.instance))
+            .map(Layout::placed_item_area)
             .sum::<f32>();
 
         total_item_area / total_container_area

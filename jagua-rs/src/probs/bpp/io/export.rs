@@ -10,10 +10,12 @@ pub fn export(instance: &BPInstance, solution: &BPSolution, epoch: Instant) -> E
         cost: solution.cost(instance),
         layouts: solution
             .layout_snapshots
-            .values()
-            .map(|sl| export_layout_snapshot(sl, instance))
+            .iter()
+            .map(|(key, sl)| {
+                export_layout_snapshot(sl, instance.bins[solution.layout_bins[key]].external_id)
+            })
             .collect(),
         run_time_sec: solution.time_stamp.duration_since(epoch).as_secs(),
-        density: solution.density(instance),
+        density: solution.density(),
     }
 }

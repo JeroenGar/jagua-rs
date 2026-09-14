@@ -1,5 +1,4 @@
 use crate::Instant;
-use crate::entities::Instance;
 use crate::entities::Layout;
 use crate::entities::{PItemKey, PlacedItem};
 use crate::geometry::DTransformation;
@@ -7,7 +6,7 @@ use crate::probs::bpp::entities::BPInstance;
 use crate::probs::bpp::entities::BPSolution;
 use crate::probs::bpp::util::assertions::problem_matches_solution;
 use itertools::Itertools;
-use slotmap::{SlotMap, new_key_type};
+use slotmap::{SecondaryMap, SlotMap, new_key_type};
 
 new_key_type! {
     /// Unique key for each [`Layout`] in a [`BPProblem`] and [`BPSolution`]
@@ -19,6 +18,8 @@ new_key_type! {
 pub struct BPProblem {
     pub instance: BPInstance,
     pub layouts: SlotMap<LayKey, Layout>,
+    /// Source bin index for each open layout.
+    pub layout_bins: SecondaryMap<LayKey, usize>,
     pub item_demand_qtys: Vec<usize>,
     pub bin_stock_qtys: Vec<usize>,
 }
@@ -32,6 +33,7 @@ impl BPProblem {
         Self {
             instance,
             layouts: SlotMap::with_key(),
+            layout_bins: SecondaryMap::new(),
             item_demand_qtys,
             bin_stock_qtys,
         }
@@ -50,7 +52,7 @@ impl BPProblem {
                 //open a new layout
                 let bin = &self.instance.bins[bin_id];
                 let layout = Layout::new(bin.container.clone());
-                self.register_layout(layout)
+                self.register_layout(layout, bin_id)
             }
         };
 
@@ -66,10 +68,10 @@ impl BPProblem {
     /// Removes an item from a layout. If the layout is empty, it will be closed.
     pub fn remove_item(&mut self, lkey: LayKey, pik: PItemKey) -> BPPlacement {
         let pi = self.layouts[lkey].remove_item(pik);
-        self.deregister_included_item(pi.item_id);
+        self.deregister_included_item(pi.item.idx);
         if self.layouts[lkey].is_empty() {
             //if layout is empty, close it
-            let bin_id = self.layouts[lkey].container.id;
+            let bin_id = self.layout_bins[lkey];
             self.deregister_layout(lkey);
             BPPlacement::from_placed_item(BPLayoutType::Closed { bin_id }, &pi)
         } else {
@@ -88,6 +90,7 @@ impl BPProblem {
 
         let solution = BPSolution {
             layout_snapshots,
+            layout_bins: self.layout_bins.clone(),
             time_stamp: Instant::now(),
         };
 
@@ -106,7 +109,8 @@ impl BPProblem {
         //If a layout is present we might be able to do a (partial) restore instead of fully rebuilding everything.
         for (lkey, layout) in &mut self.layouts {
             match solution.layout_snapshots.get(lkey) {
-                Some(ls) if layout.container.id == ls.container.id => {
+                Some(ls) => {
+                    self.layout_bins[lkey] = solution.layout_bins[lkey];
                     layout.restore(ls);
                 }
                 _ => {
@@ -115,16 +119,18 @@ impl BPProblem {
             }
         }
 
-        //Remove all layouts that were not present in the solution (or have a different bin)
+        //Remove all layouts that were not present in the solution
         for lkey in layouts_to_remove {
             layout_keys_changed = true;
             self.layouts.remove(lkey);
+            self.layout_bins.remove(lkey);
         }
 
         //Create new layouts for all keys present in solution but not in problem
         for (lkey, ls) in &solution.layout_snapshots {
             if !self.layouts.contains_key(lkey) {
-                self.layouts.insert(Layout::from_snapshot(ls));
+                let new_key = self.layouts.insert(Layout::from_snapshot(ls));
+                self.layout_bins.insert(new_key, solution.layout_bins[lkey]);
                 layout_keys_changed = true;
             }
         }
@@ -145,12 +151,12 @@ impl BPProblem {
                     *stock = self.instance.bin_qty(id);
                 });
 
-            self.layouts.values().for_each(|layout| {
-                self.bin_stock_qtys[layout.container.id] -= 1;
+            self.layouts.iter().for_each(|(key, layout)| {
+                self.bin_stock_qtys[self.layout_bins[key]] -= 1;
                 layout
                     .placed_items
                     .values()
-                    .for_each(|pi| self.item_demand_qtys[pi.item_id] -= 1);
+                    .for_each(|pi| self.item_demand_qtys[pi.item.idx] -= 1);
             });
         }
 
@@ -169,7 +175,7 @@ impl BPProblem {
         let total_item_area = self
             .layouts
             .values()
-            .map(|l| l.placed_item_area(&self.instance))
+            .map(Layout::placed_item_area)
             .sum::<f32>();
 
         total_item_area / total_bin_area
@@ -198,22 +204,28 @@ impl BPProblem {
             .sum()
     }
 
-    fn register_layout(&mut self, layout: Layout) -> LayKey {
-        self.open_bin(layout.container.id);
+    fn register_layout(&mut self, layout: Layout, bin_idx: usize) -> LayKey {
+        self.open_bin(bin_idx);
         layout
             .placed_items
             .values()
-            .for_each(|pi| self.register_included_item(pi.item_id));
-        self.layouts.insert(layout)
+            .for_each(|pi| self.register_included_item(pi.item.idx));
+        let key = self.layouts.insert(layout);
+        self.layout_bins.insert(key, bin_idx);
+        key
     }
 
     fn deregister_layout(&mut self, key: LayKey) {
         let layout = self.layouts.remove(key).expect("layout key not present");
-        self.close_bin(layout.container.id);
+        let bin_idx = self
+            .layout_bins
+            .remove(key)
+            .expect("layout must have a source bin");
+        self.close_bin(bin_idx);
         layout
             .placed_items
             .values()
-            .for_each(|pi| self.deregister_included_item(pi.item_id));
+            .for_each(|pi| self.deregister_included_item(pi.item.idx));
     }
 
     fn register_included_item(&mut self, item_id: usize) {
@@ -254,7 +266,7 @@ impl BPPlacement {
     pub fn from_placed_item(layout_id: BPLayoutType, placed_item: &PlacedItem) -> Self {
         BPPlacement {
             layout_id,
-            item_id: placed_item.item_id,
+            item_id: placed_item.item.idx,
             d_transf: placed_item.d_transf,
         }
     }

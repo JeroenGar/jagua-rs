@@ -3,7 +3,6 @@ use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::collector::BasicHazardCollector;
 use jagua_rs::collision_detection::hazards::filter::NoFilter;
-use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::probs::spp::entities::SPPlacement;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
@@ -54,7 +53,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
                     .expect("No items in layout");
 
                 let p_opt = SPPlacement {
-                    item_id: pi.item_id,
+                    item_id: pi.item.idx,
                     d_transf: pi.d_transf,
                 };
 
@@ -155,7 +154,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                     .expect("No items in layout");
 
                 let p_opt = SPPlacement {
-                    item_id: pi.item_id,
+                    item_id: pi.item.idx,
                     d_transf: pi.d_transf,
                 };
 

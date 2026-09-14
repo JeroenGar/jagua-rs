@@ -2,7 +2,6 @@ use crate::util::{N_ITEMS_REMOVED, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use jagua_rs::collision_detection::hazards::collector::BasicHazardCollector;
 use jagua_rs::collision_detection::hazards::filter::NoFilter;
-use jagua_rs::entities::Instance;
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::probs::spp::entities::SPPlacement;
 use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
@@ -48,7 +47,7 @@ fn cde_collect_bench(c: &mut Criterion) {
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
-                let item = instance.item(search_for.1.item_id);
+                let item = &search_for.1.item;
                 let cde = &problem.layout.cde();
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
                 let mut collector = BasicHazardCollector::with_capacity(cde.hazards_map.len());
@@ -96,7 +95,7 @@ fn cde_detect_bench(c: &mut Criterion) {
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
-                let item = instance.item(item_to_move.1.item_id);
+                let item = &item_to_move.1.item;
                 let cde = &problem.layout.cde();
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
                 let sampler = UniformRectSampler::new(cde.bbox(), item);
@@ -147,7 +146,7 @@ fn cde_update_bench(c: &mut Criterion) {
                         .expect("No items in layout");
 
                     let p_opt = SPPlacement {
-                        item_id: pi.item_id,
+                        item_id: pi.item.idx,
                         d_transf: pi.d_transf,
                     };
 

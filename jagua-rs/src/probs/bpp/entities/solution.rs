@@ -9,13 +9,15 @@ use slotmap::SecondaryMap;
 pub struct BPSolution {
     /// A map of the layout snapshots, identified by the same keys as in the problem
     pub layout_snapshots: SecondaryMap<LayKey, LayoutSnapshot>,
+    /// Source bin index for each layout.
+    pub layout_bins: SecondaryMap<LayKey, usize>,
     /// Instant the solution was created
     pub time_stamp: Instant,
 }
 
 impl BPSolution {
     #[must_use]
-    pub fn density(&self, instance: &BPInstance) -> f32 {
+    pub fn density(&self) -> f32 {
         let total_bin_area = self
             .layout_snapshots
             .values()
@@ -25,7 +27,7 @@ impl BPSolution {
         let total_item_area = self
             .layout_snapshots
             .values()
-            .map(|ls| ls.placed_item_area(instance))
+            .map(LayoutSnapshot::placed_item_area)
             .sum::<f32>();
 
         total_item_area / total_bin_area
@@ -33,10 +35,9 @@ impl BPSolution {
 
     #[must_use]
     pub fn cost(&self, instance: &BPInstance) -> u64 {
-        self.layout_snapshots
+        self.layout_bins
             .values()
-            .map(|ls| ls.container.id)
-            .map(|id| instance.bins[id].cost)
+            .map(|idx| instance.bins[*idx].cost)
             .sum()
     }
 }

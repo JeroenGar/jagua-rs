@@ -1,6 +1,7 @@
 use crate::entities::Item;
 use crate::probs::mspp::entities::{MSPProblem, MSPSolution};
 use crate::util::assertions::snapshot_matches_layout;
+use std::sync::Arc;
 
 #[must_use]
 pub fn problem_matches_solution(mspp: &MSPProblem, sol: &MSPSolution) -> bool {
@@ -10,7 +11,7 @@ pub fn problem_matches_solution(mspp: &MSPProblem, sol: &MSPSolution) -> bool {
         time_stamp: _,
     } = sol;
 
-    assert!((mspp.density() - sol.density(&mspp.instance)).abs() <= f32::EPSILON);
+    assert!((mspp.density() - sol.density()).abs() <= f32::EPSILON);
     assert_eq!(mspp.layouts.len(), layout_snapshots.len());
     assert_eq!(mspp.strips.len(), strips.len());
 
@@ -32,9 +33,9 @@ pub fn problem_matches_solution(mspp: &MSPProblem, sol: &MSPSolution) -> bool {
 }
 
 #[must_use]
-pub fn instance_item_ids_correct(items: &[(Item, usize)]) -> bool {
+pub fn instance_item_ids_correct(items: &[(Arc<Item>, usize)]) -> bool {
     items
         .iter()
         .enumerate()
-        .all(|(i, (item, _qty))| item.id == i)
+        .all(|(i, (item, _qty))| item.idx == i)
 }

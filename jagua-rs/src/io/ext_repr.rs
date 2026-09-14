@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 /// External representation of an [`Item`](crate::entities::Item).
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ExtItem {
-    /// Unique identifier of the item
+    /// Unique external identifier of the item; need not be consecutive.
     pub id: u64,
     /// List of allowed orientations angles (in degrees).
     /// Continuous rotation if not specified

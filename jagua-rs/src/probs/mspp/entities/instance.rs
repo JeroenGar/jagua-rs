@@ -1,7 +1,7 @@
-use crate::entities::{Container, Instance, Item};
+use crate::entities::Item;
 use crate::probs::mspp::entities::strip::Strip;
 use crate::probs::mspp::util::assertions;
-use std::iter;
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 /// Instance of the "Multi Strip Packing Problem".
@@ -9,19 +9,24 @@ use std::iter;
 /// The strips have a maximum width and multiple strips can be used to pack all items.
 pub struct MSPInstance {
     /// The items to be packed and their demands
-    pub items: Vec<(Item, usize)>,
+    pub items: Vec<(Arc<Item>, usize)>,
     /// The strip in which to pack the items
     pub base_strip: Strip,
 }
 
 impl MSPInstance {
     #[must_use]
-    pub fn new(items: Vec<(Item, usize)>, base_strip: Strip) -> Self {
+    pub fn new(items: Vec<(Arc<Item>, usize)>, base_strip: Strip) -> Self {
         assert!(
             assertions::instance_item_ids_correct(&items),
             "All items should have consecutive IDs starting from 0"
         );
 
+        assert!(
+            items
+                .windows(2)
+                .all(|w| w[0].0.external_id < w[1].0.external_id)
+        );
         Self { items, base_strip }
     }
 
@@ -43,22 +48,18 @@ impl MSPInstance {
     pub fn total_item_qty(&self) -> usize {
         self.items.iter().map(|(_, qty)| *qty).sum()
     }
-}
 
-impl Instance for MSPInstance {
-    fn items(&self) -> impl Iterator<Item = &Item> {
-        self.items.iter().map(|(item, _qty)| item)
+    /// Retrieve an item by its internal index.
+    #[must_use]
+    pub fn item(&self, id: usize) -> &Arc<Item> {
+        &self.items[id].0
     }
 
-    fn containers(&self) -> impl Iterator<Item = &Container> {
-        iter::empty()
-    }
-
-    fn item(&self, id: usize) -> &Item {
-        &self.items.get(id).unwrap().0
-    }
-
-    fn container(&self, _id: usize) -> &Container {
-        panic!("no predefined containers for strip packing instances")
+    /// Resolve an external item ID, returning None for unknown or zero-demand items.
+    #[must_use]
+    pub fn internal_item_id(&self, id: u64) -> Option<usize> {
+        self.items
+            .binary_search_by_key(&id, |(item, _)| item.external_id)
+            .ok()
     }
 }

@@ -1,11 +1,7 @@
 mod container;
-mod instance;
 mod item;
 mod layout;
 mod placed_item;
-
-#[doc(inline)]
-pub use instance::Instance;
 
 #[doc(inline)]
 pub use item::Item;

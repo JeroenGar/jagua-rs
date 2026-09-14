@@ -1,5 +1,5 @@
 use crate::Instant;
-use crate::entities::{Instance, Layout, PItemKey};
+use crate::entities::{Layout, PItemKey};
 use crate::geometry::DTransformation;
 use crate::probs::spp::entities::strip::Strip;
 use crate::probs::spp::entities::{SPInstance, SPSolution};
@@ -68,10 +68,10 @@ impl SPProblem {
     /// Removes a placed item from the strip. Returns the placement of the item.
     pub fn remove_item(&mut self, pkey: PItemKey) -> SPPlacement {
         let pi = self.layout.remove_item(pkey);
-        self.deregister_included_item(pi.item_id);
+        self.deregister_included_item(pi.item.idx);
 
         SPPlacement {
-            item_id: pi.item_id,
+            item_id: pi.item.idx,
             d_transf: pi.d_transf,
         }
     }
@@ -92,14 +92,8 @@ impl SPProblem {
 
     /// Restores the state of the problem to the given [`SPSolution`].
     pub fn restore(&mut self, solution: &SPSolution) {
-        if self.strip == solution.strip {
-            // the strip is the same, restore the layout
-            self.layout.restore(&solution.layout_snapshot);
-        } else {
-            // the strip has changed, rebuild the layout
-            self.layout = Layout::from_snapshot(&solution.layout_snapshot);
-            self.strip = solution.strip;
-        }
+        self.layout.restore(&solution.layout_snapshot);
+        self.strip = solution.strip;
 
         //Restore the item demands
         {
@@ -111,7 +105,7 @@ impl SPProblem {
             self.layout
                 .placed_items
                 .iter()
-                .for_each(|(_, pi)| self.item_demand_qtys[pi.item_id] -= 1);
+                .for_each(|(_, pi)| self.item_demand_qtys[pi.item.idx] -= 1);
         }
         debug_assert!(problem_matches_solution(self, solution));
     }
@@ -126,7 +120,7 @@ impl SPProblem {
 
     #[must_use]
     pub fn density(&self) -> f32 {
-        self.layout.density(&self.instance)
+        self.layout.density()
     }
 
     #[must_use]

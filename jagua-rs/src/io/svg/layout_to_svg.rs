@@ -1,7 +1,7 @@
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hazards::collector::BasicHazardCollector;
 use crate::collision_detection::hazards::filter::NoFilter;
-use crate::entities::{Instance, Layout, LayoutSnapshot};
+use crate::entities::{Layout, LayoutSnapshot};
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::{Circle, Edge, Rect};
 use crate::geometry::{DTransformation, Transformation};
@@ -12,23 +12,21 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use svg::Document;
 use svg::node::element::{Definitions, Group, Text, Title, Use};
 
+/// Render a snapshot using its shared item definitions.
+#[must_use]
 pub fn s_layout_to_svg(
     s_layout: &LayoutSnapshot,
-    instance: &impl Instance,
     options: SvgDrawOptions,
     title: &str,
 ) -> Document {
     let layout = Layout::from_snapshot(s_layout);
-    layout_to_svg(&layout, instance, options, title)
+    layout_to_svg(&layout, options, title)
 }
 
-pub fn layout_to_svg(
-    layout: &Layout,
-    instance: &impl Instance,
-    options: SvgDrawOptions,
-    title: &str,
-) -> Document {
-    let (group, bbox) = layout_to_svg_group(layout, instance, options, title);
+/// Render a layout using its shared item definitions.
+#[must_use]
+pub fn layout_to_svg(layout: &Layout, options: SvgDrawOptions, title: &str) -> Document {
+    let (group, bbox) = layout_to_svg_group(layout, options, title);
 
     let vbox = bbox.scale(1.1);
     let vbox_svg = format!(
@@ -43,12 +41,8 @@ pub fn layout_to_svg(
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn layout_to_svg_group(
-    layout: &Layout,
-    instance: &impl Instance,
-    options: SvgDrawOptions,
-    title: &str,
-) -> (Group, Rect) {
+/// Render only the item definitions used by this layout.
+pub fn layout_to_svg_group(layout: &Layout, options: SvgDrawOptions, title: &str) -> (Group, Rect) {
     let container = &layout.container;
 
     let bbox = container
@@ -73,7 +67,7 @@ pub fn layout_to_svg_group(
             "h: {:.3} | w: {:.3} | d: {:.3}% | {}",
             bbox.height(),
             bbox.width(),
-            layout.density(instance) * 100.0,
+            layout.density() * 100.0,
             title,
         );
         Text::new(label_content)
@@ -102,11 +96,11 @@ pub fn layout_to_svg_group(
 
     //draw container
     let container_group = {
-        let container_group = Group::new().set("id", format!("container_{}", container.id));
+        let container_group = Group::new().set("id", "container");
         let bbox = container.outer_orig.bbox();
         let title = Title::new(format!(
-            "container, id: {}, bbox: [x_min: {:.3}, y_min: {:.3}, x_max: {:.3}, y_max: {:.3}]",
-            container.id, bbox.x_min, bbox.y_min, bbox.x_max, bbox.y_max
+            "container, bbox: [x_min: {:.3}, y_min: {:.3}, x_max: {:.3}, y_max: {:.3}]",
+            bbox.x_min, bbox.y_min, bbox.x_max, bbox.y_max
         ));
 
         //outer
@@ -164,12 +158,13 @@ pub fn layout_to_svg_group(
         //define all the items and their surrogates (if enabled)
         let mut item_defs = Definitions::new();
         let mut surrogate_defs = Definitions::new();
-        for item in instance.items() {
+        for item in layout.items() {
             let color = match item.min_quality {
                 None => theme.item_fill,
                 Some(q) => svg_util::blend_colors(theme.item_fill, theme.qz_fill[q]),
             };
-            item_defs = item_defs.add(Group::new().set("id", format!("item_{}", item.id)).add(
+            let external_id = item.external_id;
+            item_defs = item_defs.add(Group::new().set("id", format!("item_{external_id}")).add(
                 svg_util::data_to_path(
                     svg_util::original_shape_data(
                         &item.shape_orig,
@@ -195,7 +190,8 @@ pub fn layout_to_svg_group(
             };
 
             if options.surrogate {
-                let mut surrogate_group = Group::new().set("id", format!("surrogate_{}", item.id));
+                let mut surrogate_group =
+                    Group::new().set("id", format!("surrogate_{external_id}"));
                 let poi_style = [
                     ("fill", "black"),
                     ("fill-opacity", "0.1"),
@@ -267,7 +263,7 @@ pub fn layout_to_svg_group(
                         ));
                     }
                 }
-                let group = group.set("id", format!("cd_shape_{}", item.id));
+                let group = group.set("id", format!("cd_shape_{external_id}"));
                 item_defs = item_defs.add(group);
             }
         }
@@ -276,16 +272,17 @@ pub fn layout_to_svg_group(
         let mut highlight_cd_shapes_group = Group::new().set("id", "highlight_cd_shapes");
 
         for pi in layout.placed_items.values() {
+            let item = &pi.item;
+            let external_id = item.external_id;
             let dtransf = if options.draw_cd_shapes {
                 pi.d_transf
             } else {
-                let item = instance.item(pi.item_id);
                 int_to_ext_transformation(&pi.d_transf, &item.shape_orig.pre_transform)
             };
-            let title = Title::new(format!("item, id: {}, transf: [{}]", pi.item_id, dtransf));
+            let title = Title::new(format!("item, id: {external_id}, transf: [{dtransf}]"));
             let pi_ref = Use::new()
                 .set("transform", transform_to_svg(dtransf))
-                .set("href", format!("#item_{}", pi.item_id))
+                .set("href", format!("#item_{external_id}"))
                 .add(title);
 
             items_group = items_group.add(pi_ref);
@@ -293,14 +290,14 @@ pub fn layout_to_svg_group(
             if options.surrogate {
                 let pi_surr_ref = Use::new()
                     .set("transform", transform_to_svg(dtransf))
-                    .set("href", format!("#surrogate_{}", pi.item_id));
+                    .set("href", format!("#surrogate_{external_id}"));
 
                 surrogate_group = surrogate_group.add(pi_surr_ref);
             }
             if options.highlight_cd_shapes {
                 let pi_cd_ref = Use::new()
                     .set("transform", transform_to_svg(dtransf))
-                    .set("href", format!("#cd_shape_{}", pi.item_id));
+                    .set("href", format!("#cd_shape_{external_id}"));
                 highlight_cd_shapes_group = highlight_cd_shapes_group.add(pi_cd_ref);
             }
         }
@@ -409,8 +406,8 @@ pub fn layout_to_svg_group(
                     HazardEntity::Hole { idx } | HazardEntity::InferiorQualityZone { idx, .. } => {
                         let quality =
                             if let HazardEntity::InferiorQualityZone { quality, .. } = haz_entity {
-                                if instance
-                                    .item(pi.item_id)
+                                if pi
+                                    .item
                                     .min_quality
                                     .is_some_and(|required| *quality >= required)
                                 {
