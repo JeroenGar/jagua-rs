@@ -10,6 +10,7 @@ use anyhow::Result;
 /// Item to be produced.
 #[derive(Clone, Debug)]
 pub struct Item {
+    /// Dense index in the owning instance's item list.
     pub idx: usize,
     /// Original caller-supplied identifier, preserved on export.
     pub external_id: u64,

@@ -119,7 +119,7 @@ impl BPProblem {
             }
         }
 
-        //Remove all layouts that were not present in the solution (or have a different bin)
+        //Remove all layouts that were not present in the solution
         for lkey in layouts_to_remove {
             layout_keys_changed = true;
             self.layouts.remove(lkey);
