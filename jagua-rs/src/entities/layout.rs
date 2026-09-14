@@ -64,17 +64,11 @@ impl Layout {
         }
     }
 
-    /// Restores placed items and dynamic collision state from a snapshot.
-    ///
-    /// The containers must share the same [`Container::base_cde`] allocation,
-    /// as checked by [`Arc::ptr_eq`]. Cloning a container preserves this identity;
-    /// independently constructing identical geometry does not.
+    /// Restores the layout from a snapshot.
     ///
     /// # Errors
-    /// Returns [`ContainerMismatch`] without modifying the layout
-    /// when the static bases differ. To deliberately replace the container too,
-    /// use [`Layout::from_snapshot`], or explicitly [`Layout::swap_container`]
-    /// with the snapshot's cloned container before restoring.
+    /// Returns [`ContainerMismatch`] if the snapshot uses a different container,
+    /// leaving the layout unchanged.
     pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) -> Result<(), ContainerMismatch> {
         if !Arc::ptr_eq(
             &self.container.base_cde,
