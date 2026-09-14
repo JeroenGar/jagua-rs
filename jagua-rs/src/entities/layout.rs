@@ -69,6 +69,8 @@ impl Layout {
     /// # Errors
     /// Returns [`ContainerMismatch`] if the snapshot uses a different container,
     /// leaving the layout unchanged.
+    /// Use [`Layout::swap_container`] first or [`Layout::from_snapshot`] to
+    /// restore a snapshot with a different container.
     pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) -> Result<(), ContainerMismatch> {
         if !Arc::ptr_eq(
             &self.container.base_cde,
