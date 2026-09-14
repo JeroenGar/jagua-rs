@@ -44,6 +44,7 @@ console_log = { version = "1.0", features = ["color"] }
 web-sys = { workspace = true }
 
 [dev-dependencies]
+jagua-rs = { path = "../jagua-rs", features = ["mspp"] }
 criterion = { workspace = true }
 
 [[bench]]
@@ -67,4 +68,3 @@ wasm-opt = ['-O4', '-g']
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-O4']
-

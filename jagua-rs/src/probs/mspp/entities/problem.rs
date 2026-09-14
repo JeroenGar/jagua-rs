@@ -162,6 +162,13 @@ impl MSPProblem {
                 .for_each(|(idx, demand)| {
                     *demand = self.instance.item_qty(idx);
                 });
+            for pi in self
+                .layouts
+                .values()
+                .flat_map(|layout| layout.placed_items.values())
+            {
+                self.item_demand_qtys[pi.item.idx] -= 1;
+            }
         }
 
         debug_assert!(problem_matches_solution(self, solution));
