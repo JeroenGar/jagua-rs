@@ -138,6 +138,34 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn item_holes_are_rejected_but_container_holes_are_preserved() -> Result<()> {
+        use jagua_rs::io::ext_repr::{ExtContainer, ExtPolygon, ExtSPolygon, ExtShape};
+
+        let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
+        let polygon = ExtPolygon {
+            outer: ExtSPolygon(vec![(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]),
+            inner: vec![ExtSPolygon(vec![(2.0, 2.0), (3.0, 2.0), (2.0, 3.0)])],
+        };
+        input.items[0].base.shape = ExtShape::Polygon(polygon.clone());
+        assert!(spp::io::import_instance(&importer(), &input).is_err());
+        let container = importer().import_container(&ExtContainer {
+            id: 0,
+            shape: ExtShape::Polygon(polygon.clone()),
+            zones: vec![],
+        })?;
+        assert_eq!(
+            container.quality_zones[0].as_ref().unwrap().shapes_cd.len(),
+            1
+        );
+        input.items[0].base.shape = ExtShape::Polygon(ExtPolygon {
+            inner: vec![],
+            ..polygon
+        });
+        assert!(spp::io::import_instance(&importer(), &input).is_ok());
+        Ok(())
+    }
+
     fn config() -> LBFConfig {
         LBFConfig {
             n_samples: 100,

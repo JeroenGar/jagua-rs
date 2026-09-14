@@ -10,7 +10,7 @@ use crate::io::ext_repr::{ExtContainer, ExtItem, ExtSPolygon, ExtShape};
 use anyhow::{Result, bail, ensure};
 use float_cmp::approx_eq;
 use itertools::Itertools;
-use log::{debug, warn};
+use log::debug;
 use rayon::prelude::*;
 
 /// Converts external representations of items and containers into internal ones.
@@ -61,7 +61,11 @@ impl Importer {
                 }
                 ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
                 ExtShape::Polygon(ep) => {
-                    warn!("No native support for polygons yet, ignoring the holes");
+                    ensure!(
+                        ep.inner.is_empty(),
+                        "item {} has unsupported holes",
+                        ext_item.id
+                    );
                     import_simple_polygon(&ep.outer)?
                 }
                 ExtShape::MultiPolygon(_) => {
