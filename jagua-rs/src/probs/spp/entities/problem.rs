@@ -92,14 +92,8 @@ impl SPProblem {
 
     /// Restores the state of the problem to the given [`SPSolution`].
     pub fn restore(&mut self, solution: &SPSolution) {
-        if self.strip == solution.strip {
-            // the strip is the same, restore the layout
-            self.layout.restore(&solution.layout_snapshot);
-        } else {
-            // the strip has changed, rebuild the layout
-            self.layout = Layout::from_snapshot(&solution.layout_snapshot);
-            self.strip = solution.strip;
-        }
+        self.layout.restore(&solution.layout_snapshot);
+        self.strip = solution.strip;
 
         //Restore the item demands
         {

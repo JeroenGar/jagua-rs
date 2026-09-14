@@ -3,9 +3,11 @@ use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtLayout, ExtPlacedItem};
 
 /// Exports a layout to an external representation.
-/// The lookup resolves an internal item ID to its original item and external ID.
+/// The caller supplies the external bin/sheet ID; geometry carries no identity.
+/// The lookup resolves an internal item index to its original item.
 pub fn export_layout_snapshot<'a>(
     layout: &LayoutSnapshot,
+    container_id: u64,
     item_by_id: impl Fn(usize) -> &'a Item,
 ) -> ExtLayout {
     let ext_placed_items = layout
@@ -25,7 +27,7 @@ pub fn export_layout_snapshot<'a>(
         .collect();
 
     ExtLayout {
-        container_id: layout.container.id as u64,
+        container_id,
         placed_items: ext_placed_items,
         density: layout.density(item_by_id),
     }

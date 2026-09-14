@@ -106,11 +106,11 @@ pub fn layout_to_svg_group<'a>(
 
     //draw container
     let container_group = {
-        let container_group = Group::new().set("id", format!("container_{}", container.id));
+        let container_group = Group::new().set("id", "container");
         let bbox = container.outer_orig.bbox();
         let title = Title::new(format!(
-            "container, id: {}, bbox: [x_min: {:.3}, y_min: {:.3}, x_max: {:.3}, y_max: {:.3}]",
-            container.id, bbox.x_min, bbox.y_min, bbox.x_max, bbox.y_max
+            "container, bbox: [x_min: {:.3}, y_min: {:.3}, x_max: {:.3}, y_max: {:.3}]",
+            bbox.x_min, bbox.y_min, bbox.x_max, bbox.y_max
         ));
 
         //outer

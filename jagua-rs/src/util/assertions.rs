@@ -15,7 +15,10 @@ use std::collections::HashSet;
 
 #[must_use]
 pub fn snapshot_matches_layout(layout: &Layout, layout_snapshot: &LayoutSnapshot) -> bool {
-    if layout.container.id != layout_snapshot.container.id {
+    if !std::sync::Arc::ptr_eq(
+        &layout.container.base_cde,
+        &layout_snapshot.container.base_cde,
+    ) {
         return false;
     }
     for placed_item in layout_snapshot.placed_items.values() {
@@ -258,10 +261,7 @@ pub fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
 
 ///Prints code to rebuild a layout. Intended for debugging purposes.
 pub fn print_layout(layout: &Layout) {
-    println!(
-        "let mut layout = Layout::new(0, instance.container({}).clone());",
-        layout.container.id
-    );
+    println!("let mut layout = Layout::new(container.clone());");
     println!();
 
     for pi in layout.placed_items.values() {

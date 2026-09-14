@@ -6,6 +6,7 @@ use crate::entities::{PItemKey, PlacedItem};
 use crate::geometry::DTransformation;
 use crate::util::assertions;
 use slotmap::SlotMap;
+use std::sync::Arc;
 
 /// A [`Layout`] is a dynamic representation of items that have been placed in a container at specific positions.
 /// Items can be placed and removed. The container can be swapped. Snapshots can be taken and restored to.
@@ -62,7 +63,14 @@ impl Layout {
 
     /// Restores the layout to a previous state using a snapshot.
     pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
-        assert_eq!(self.container.id, layout_snapshot.container.id);
+        // Dynamic-only restore is safe only on the same immutable static base.
+        if !Arc::ptr_eq(
+            &self.container.base_cde,
+            &layout_snapshot.container.base_cde,
+        ) {
+            self.cde = layout_snapshot.container.base_cde.as_ref().clone();
+        }
+        self.container.clone_from(&layout_snapshot.container);
 
         self.placed_items.clone_from(&layout_snapshot.placed_items);
         self.cde.restore(&layout_snapshot.cde_snapshot);

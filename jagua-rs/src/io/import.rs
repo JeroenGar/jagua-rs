@@ -192,12 +192,7 @@ impl Importer {
             })
             .collect::<Result<Vec<InferiorQualityZone>>>()?;
 
-        Container::new(
-            usize::try_from(ext_cont.id).unwrap(),
-            original_outer,
-            quality_zones,
-            self.cde_config,
-        )
+        Container::new(original_outer, quality_zones, self.cde_config)
     }
 }
 

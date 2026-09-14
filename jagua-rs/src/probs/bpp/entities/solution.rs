@@ -9,6 +9,8 @@ use slotmap::SecondaryMap;
 pub struct BPSolution {
     /// A map of the layout snapshots, identified by the same keys as in the problem
     pub layout_snapshots: SecondaryMap<LayKey, LayoutSnapshot>,
+    /// Source bin index for each layout.
+    pub layout_bins: SecondaryMap<LayKey, usize>,
     /// Instant the solution was created
     pub time_stamp: Instant,
 }
@@ -33,10 +35,9 @@ impl BPSolution {
 
     #[must_use]
     pub fn cost(&self, instance: &BPInstance) -> u64 {
-        self.layout_snapshots
+        self.layout_bins
             .values()
-            .map(|ls| ls.container.id)
-            .map(|id| instance.bins[id].cost)
+            .map(|idx| instance.bins[*idx].cost)
             .sum()
     }
 }

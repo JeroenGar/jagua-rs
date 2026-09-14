@@ -18,28 +18,27 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtBPInstance) -> Res
     )?;
 
     let bins = {
-        let mut bins: Vec<Bin> = ext_instance
-            .bins
+        let mut entries = ext_instance.bins.iter().collect_vec();
+        entries.sort_by_key(|bin| bin.base.id);
+        ensure!(
+            entries.windows(2).all(|w| w[0].base.id != w[1].base.id),
+            "bin IDs must be unique"
+        );
+        entries.retain(|bin| bin.stock > 0);
+        ensure!(!entries.is_empty(), "instance must have positive bin stock");
+        entries
             .par_iter()
-            .map(|ext_bin| {
-                let container = importer.import_container(&ext_bin.base)?;
-                Ok(Bin::new(container, ext_bin.stock, ext_bin.cost))
+            .enumerate()
+            .map(|(idx, bin)| {
+                Ok(Bin::new(
+                    idx,
+                    bin.base.id,
+                    importer.import_container(&bin.base)?,
+                    bin.stock,
+                    bin.cost,
+                ))
             })
-            .collect::<Result<Vec<Bin>>>()?;
-
-        bins.sort_by_key(|bin| bin.id);
-        bins.retain(|bin| bin.stock > 0);
-        ensure!(
-            bins.iter().enumerate().all(|(i, bin)| bin.id == i),
-            "All bins should have consecutive IDs starting from 0. IDs: {:?}",
-            bins.iter().map(|bin| bin.id).sorted().collect_vec()
-        );
-        ensure!(
-            !bins.is_empty(),
-            "ExtBPInstance must have at least one bin with positive stock"
-        );
-
-        bins
+            .collect::<Result<Vec<_>>>()?
     };
 
     Ok(BPInstance::new(items, bins))

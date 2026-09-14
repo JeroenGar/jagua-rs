@@ -13,8 +13,6 @@ use anyhow::{Result, ensure};
 /// A container in which [`Item`](crate::entities::Item)'s can be placed.
 #[derive(Clone, Debug)]
 pub struct Container {
-    /// Unique identifier of the container
-    pub id: usize,
     /// Original contour of the container as defined in the input
     pub outer_orig: Arc<OriginalShape>,
     /// Contour of the container to be used for collision detection
@@ -27,7 +25,6 @@ pub struct Container {
 
 impl Container {
     pub fn new(
-        id: usize,
         original_outer: OriginalShape,
         quality_zones: Vec<InferiorQualityZone>,
         cde_config: CDEConfig,
@@ -66,7 +63,6 @@ impl Container {
         };
 
         Ok(Self {
-            id,
             outer_cd: outer,
             outer_orig,
             quality_zones,

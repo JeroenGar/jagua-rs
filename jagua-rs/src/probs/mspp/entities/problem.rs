@@ -125,16 +125,8 @@ impl MSPProblem {
         for (lk, layout) in &mut self.layouts {
             match solution.layout_snapshots.get(lk) {
                 Some(ls) => {
-                    //The key is present in the solution
-                    if self.strips[lk] == solution.strips[lk] {
-                        //Strips match, do a simple restore
-                        layout.restore(ls);
-                    } else {
-                        //The strip changed, we need to swap the container and then restore
-                        self.strips[lk] = solution.strips[lk];
-                        layout.swap_container(Container::from(self.strips[lk]));
-                        layout.restore(ls);
-                    }
+                    layout.restore(ls);
+                    self.strips[lk] = solution.strips[lk];
                 }
                 None => {
                     //Layout not present in solution, mark for removal
