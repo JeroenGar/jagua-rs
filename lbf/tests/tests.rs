@@ -145,7 +145,7 @@ mod tests {
             items: Vec<jagua_rs::io::ext_repr::ExtItem>,
         }
 
-        let importer = Importer::new(config().cde_config, None, Some(2.0), None);
+        let importer = Importer::new(config().cde_config, None, None).with_min_item_separation(2.0)?;
         let mut n_items = 0;
         for entry in std::fs::read_dir("../assets")? {
             let path = entry?.path();
@@ -172,6 +172,57 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn item_holes_are_rejected_but_container_holes_are_preserved() -> Result<()> {
+        use jagua_rs::io::ext_repr::{ExtContainer, ExtPolygon, ExtSPolygon, ExtShape};
+
+        let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
+        let polygon = ExtPolygon {
+            outer: ExtSPolygon(vec![(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]),
+            inner: vec![ExtSPolygon(vec![(2.0, 2.0), (3.0, 2.0), (2.0, 3.0)])],
+        };
+        input.items[0].base.shape = ExtShape::Polygon(polygon.clone());
+        assert!(spp::io::import_instance(&importer(), &input).is_err());
+        let container = importer().import_container(&ExtContainer {
+            id: 0,
+            shape: ExtShape::Polygon(polygon.clone()),
+            zones: vec![],
+        })?;
+        assert_eq!(
+            container.quality_zones[0].as_ref().unwrap().shapes_cd.len(),
+            1
+        );
+        input.items[0].base.shape = ExtShape::Polygon(ExtPolygon {
+            inner: vec![],
+            ..polygon
+        });
+        assert!(spp::io::import_instance(&importer(), &input).is_ok());
+        Ok(())
+    }
+
+    #[test]
+    fn instance_separation_controls_item_and_container_geometry() -> Result<()> {
+        let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
+        assert_eq!(input.min_item_separation, 0.0);
+        let plain = spp::io::import_instance(&importer(), &input)?;
+        assert_eq!(plain.item(0).shape_orig.modify_config.offset, None);
+
+        input.min_item_separation = 2.0;
+        let spaced = spp::io::import_instance(&importer(), &input)?;
+        assert_eq!(spaced.item(0).shape_orig.modify_config.offset, Some(1.0));
+        let problem = jagua_rs::probs::spp::entities::SPProblem::new(spaced);
+        assert_eq!(
+            problem.layout.container.outer_orig.modify_config.offset,
+            Some(1.0)
+        );
+
+        for invalid in [-1.0, f32::INFINITY, f32::NAN] {
+            input.min_item_separation = invalid;
+            assert!(spp::io::import_instance(&importer(), &input).is_err());
+        }
+        Ok(())
+    }
+
     fn config() -> LBFConfig {
         LBFConfig {
             n_samples: 100,
@@ -183,7 +234,6 @@ mod tests {
         Importer::new(
             config().cde_config,
             config().poly_simpl_tolerance,
-            config().min_item_separation,
             config().narrow_concavity_cutoff,
         )
     }

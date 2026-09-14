@@ -10,6 +10,7 @@ use rayon::prelude::*;
 /// Imports an instance into the library
 #[allow(clippy::cast_precision_loss)]
 pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPInstance> {
+    let importer = importer.with_min_item_separation(ext_instance.min_item_separation)?;
     ensure!(
         ext_instance
             .items

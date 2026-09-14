@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 #[test]
 fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Result<()> {
-    let importer = Importer::new(LBFConfig::default().cde_config, None, None, None);
+    let importer = Importer::new(LBFConfig::default().cde_config, None, None);
     let rectangle = |width| {
         json!({"type": "rectangle", "data": {
             "x_min": 0, "y_min": 0, "width": width, "height": 10
