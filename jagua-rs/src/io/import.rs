@@ -7,10 +7,11 @@ use crate::geometry::primitives::{Point, Rect, SPolygon};
 use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtContainer, ExtItem, ExtSPolygon, ExtShape};
-use anyhow::{Result, bail};
+use anyhow::{Result, bail, ensure};
 use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::{debug, warn};
+use rayon::prelude::*;
 
 /// Converts external representations of items and containers into internal ones.
 #[derive(Clone, Debug, Copy)]
@@ -43,7 +44,8 @@ impl Importer {
         }
     }
 
-    pub fn import_item(&self, ext_item: &ExtItem) -> Result<Item> {
+    /// Import geometry with a caller-assigned internal index, independent of the external ID.
+    pub fn import_item(&self, ext_item: &ExtItem, internal_id: usize) -> Result<Item> {
         debug!("[IMPORT] starting item {:?}", ext_item.id);
 
         let original_shape = {
@@ -88,7 +90,7 @@ impl Importer {
         };
 
         Item::new(
-            usize::try_from(ext_item.id).unwrap(),
+            internal_id,
             original_shape,
             allowed_orientations,
             base_quality,
@@ -258,4 +260,33 @@ pub fn eliminate_degenerate_vertices(points: &mut Vec<Point>) {
             points.remove(index);
         }
     }
+}
+
+/// Import demanded items in ascending external-ID order, assigning dense internal IDs.
+/// External IDs must be unique, including zero-demand entries. Zero-demand items are omitted.
+#[allow(clippy::type_complexity)]
+pub fn import_demand_items<'a>(
+    importer: &Importer,
+    items: impl Iterator<Item = (&'a ExtItem, u64)>,
+) -> Result<(Vec<(Item, usize)>, Vec<u64>)> {
+    let mut entries = items.collect_vec();
+    entries.sort_by_key(|(item, _)| item.id);
+    ensure!(
+        entries.windows(2).all(|w| w[0].0.id != w[1].0.id),
+        "item IDs must be unique"
+    );
+    entries.retain(|(_, demand)| *demand > 0);
+    ensure!(
+        !entries.is_empty(),
+        "instance must have positive item demand"
+    );
+    let external_ids = entries.iter().map(|(item, _)| item.id).collect();
+    let items = entries
+        .par_iter()
+        .enumerate()
+        .map(|(id, (item, demand))| {
+            Ok((importer.import_item(item, id)?, usize::try_from(*demand)?))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok((items, external_ids))
 }

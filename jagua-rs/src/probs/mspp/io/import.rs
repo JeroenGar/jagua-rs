@@ -1,40 +1,18 @@
-use crate::entities::Item;
 use crate::geometry::shape_modification::ShapeModifyConfig;
-use crate::io::import::Importer;
+use crate::io::import::{Importer, import_demand_items};
 use crate::probs::mspp::entities::{MSPInstance, MSPSolution, Strip};
 use crate::probs::mspp::io::ext_repr::ExtMSPInstance;
-use anyhow::{Result, ensure};
-use itertools::Itertools;
-use rayon::prelude::*;
+use anyhow::Result;
 
 /// Imports an instance into the library
 pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPInstance> {
-    let items: Vec<(Item, usize)> = {
-        let mut items = ext_instance
+    let (items, external_ids) = import_demand_items(
+        importer,
+        ext_instance
             .items
-            .par_iter()
-            .map(|ext_item| {
-                let item = importer.import_item(&ext_item.base)?;
-                let demand = usize::try_from(ext_item.demand).unwrap();
-                Ok((item, demand))
-            })
-            .collect::<Result<Vec<(Item, usize)>>>()?;
-
-        items.sort_by_key(|(item, _)| item.id);
-        items.retain(|(_, demand)| *demand > 0);
-
-        ensure!(
-            items.iter().enumerate().all(|(i, (item, _))| item.id == i),
-            "All items should have consecutive IDs starting from 0. IDs: {:?}",
-            items.iter().map(|(item, _)| item.id).sorted().collect_vec()
-        );
-        ensure!(
-            !items.is_empty(),
-            "ExtSPInstance must have at least one item with positive demand"
-        );
-
-        items
-    };
+            .iter()
+            .map(|item| (&item.base, item.demand)),
+    )?;
 
     let ext_strip = &ext_instance.strips;
 
@@ -50,7 +28,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Re
         ext_strip.max_width,
     )?;
 
-    Ok(MSPInstance::new(items, base_strip))
+    Ok(MSPInstance::new(items, base_strip, external_ids))
 }
 
 /// Imports a solution into the library.

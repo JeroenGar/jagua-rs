@@ -8,7 +8,9 @@ use crate::probs::spp::io::ext_repr::ExtSPSolution;
 pub fn export(instance: &SPInstance, solution: &SPSolution, epoch: Instant) -> ExtSPSolution {
     ExtSPSolution {
         strip_width: solution.strip.width,
-        layout: export_layout_snapshot(&solution.layout_snapshot, |id| instance.item(id)),
+        layout: export_layout_snapshot(&solution.layout_snapshot, |id| {
+            (instance.item(id), instance.external_item_id(id))
+        }),
         density: solution.density(instance),
         run_time_sec: solution.time_stamp.duration_since(epoch).as_secs(),
     }

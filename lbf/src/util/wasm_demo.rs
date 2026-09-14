@@ -106,7 +106,7 @@ pub fn run_lbf_bpp_wasm(
     for (i, s_layout) in sol.layout_snapshots.values().enumerate() {
         let svg = jagua_rs::io::svg::s_layout_to_svg(
             s_layout,
-            |id| instance.item(id),
+            |id| (instance.item(id), instance.external_item_id(id)),
             config.svg_draw_options,
             "",
         );
@@ -187,7 +187,7 @@ pub fn run_lbf_spp_wasm(
     let mut svgs = vec![];
     let svg = jagua_rs::io::svg::s_layout_to_svg(
         &sol.layout_snapshot,
-        |id| instance.item(id),
+        |id| (instance.item(id), instance.external_item_id(id)),
         config.svg_draw_options,
         "",
     );

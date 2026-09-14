@@ -14,7 +14,9 @@ pub fn export(instance: &MSPInstance, solution: &MSPSolution, epoch: Instant) ->
         layouts: solution
             .layout_snapshots
             .values()
-            .map(|ls| export_layout_snapshot(ls, |id| instance.item(id)))
+            .map(|ls| {
+                export_layout_snapshot(ls, |id| (instance.item(id), instance.external_item_id(id)))
+            })
             .collect(),
         density: solution.density(instance),
         containers: solution
