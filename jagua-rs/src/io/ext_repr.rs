@@ -2,19 +2,82 @@ use crate::geometry::DTransformation;
 use serde::{Deserialize, Serialize};
 
 /// External representation of an [`Item`](crate::entities::Item).
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Clone)]
 pub struct ExtItem {
     /// Unique external identifier of the item; need not be consecutive.
     pub id: u64,
-    /// List of allowed orientations angles (in degrees).
-    /// Continuous rotation if not specified
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub allowed_orientations: Option<Vec<f32>>,
+    /// Required orientation permissions in original item coordinates.
+    pub orientation: ExtOrientation,
     /// Shape of the item. Polygons with holes and multipolygons are not supported.
     pub shape: ExtShape,
     /// The minimum required quality of the item.
     /// Maximum quality required if not specified.
     pub min_quality: Option<usize>,
+}
+
+/// Orientation permissions in degrees. Both this object and its rotation field are required.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ExtOrientation {
+    /// Permitted rotations of the original item.
+    pub rotation: ExtRotation,
+}
+
+/// Explicit rotation modes, validated at import.
+/// Lists and stepped expansions are limited to 65,536 angles.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(tag = "mode", rename_all = "snake_case", deny_unknown_fields)]
+pub enum ExtRotation {
+    /// A nonempty list of finite angles in degrees. Zero is not implicit.
+    /// Equivalent angles are normalized modulo 360 and deduplicated.
+    Discrete { angles: Vec<f32> },
+    /// Zero-based increments covering one turn, excluding the duplicate endpoint.
+    /// The finite step must be in (0, 360]. In f64 arithmetic, round `360 / step`
+    /// to a count and require `abs(count * step - 360) <= 360 * f32::EPSILON`.
+    /// Expand by index as `i * 360 / count`, avoiding accumulated rounding error.
+    Stepped { step: f32 },
+    /// Any rotation angle. No null or empty-list sentinel is used.
+    Continuous {},
+}
+
+impl<'de> Deserialize<'de> for ExtItem {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        // Reject obsolete permissions even in flattened demand items, while allowing
+        // unrelated metadata such as source filenames.
+        #[derive(Deserialize)]
+        struct Input {
+            id: u64,
+            orientation: ExtOrientation,
+            shape: ExtShape,
+            min_quality: Option<usize>,
+            #[serde(
+                default,
+                rename = "allowed_orientations",
+                alias = "allowed_rotations",
+                alias = "allowed_reflection_axes",
+                deserialize_with = "reject_legacy"
+            )]
+            legacy: (),
+        }
+        fn reject_legacy<'de, D: serde::Deserializer<'de>>(_: D) -> Result<(), D::Error> {
+            Err(serde::de::Error::custom(
+                "legacy orientation fields are not supported; use orientation.rotation",
+            ))
+        }
+        let Input {
+            id,
+            orientation,
+            shape,
+            min_quality,
+            legacy: (),
+        } = Input::deserialize(deserializer)?;
+        Ok(Self {
+            id,
+            orientation,
+            shape,
+            min_quality,
+        })
+    }
 }
 
 /// External representation of a [`Container`](crate::entities::Container).

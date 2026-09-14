@@ -678,10 +678,7 @@
           ]
         ]
       },
-      "allowed_orientations": [
-        0.0,
-        180.0
-      ]
+      "orientation": {"rotation": {"mode":"discrete","angles":[0,180]}}
     }
   ]
 }

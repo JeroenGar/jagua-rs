@@ -6,6 +6,8 @@
 
 `jagua-rs` is designed to be used as a backend by optimization algorithms solving 2D nesting problems.
 
+Upgrading to 0.9? See the [migration guide](https://github.com/JeroenGar/jagua-rs/blob/main/notes/v0.9-migration.md) for input and Rust API changes.
+
 This library is the implementation of the paper: ["_Decoupling Geometry from Optimization in 2D Irregular Cutting and Packing Problems: an Open-Source Collision Detection Engine_"](https://doi.org/10.1287/ijoc.2024.1025) published in _INFORMS Journal on Computing_.
 The author accepted manuscript of this paper is [freely available on arXiv](https://arxiv.org/abs/2508.08341).
 

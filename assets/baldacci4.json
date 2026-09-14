@@ -4,6 +4,7 @@
     {
       "id": 0,
       "demand": 4,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_0.dxf",
       "zones": [],
       "shape": {
@@ -95,6 +96,7 @@
     {
       "id": 1,
       "demand": 8,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_1.dxf",
       "zones": [],
       "shape": {
@@ -246,6 +248,7 @@
     {
       "id": 2,
       "demand": 2,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_2.dxf",
       "zones": [],
       "shape": {
@@ -633,6 +636,7 @@
     {
       "id": 3,
       "demand": 2,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_3.dxf",
       "zones": [],
       "shape": {
@@ -844,6 +848,7 @@
     {
       "id": 4,
       "demand": 2,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_4.dxf",
       "zones": [],
       "shape": {
@@ -1419,6 +1424,7 @@
     {
       "id": 5,
       "demand": 4,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_5.dxf",
       "zones": [],
       "shape": {
@@ -1690,6 +1696,7 @@
     {
       "id": 6,
       "demand": 2,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_6.dxf",
       "zones": [],
       "shape": {
@@ -1849,6 +1856,7 @@
     {
       "id": 7,
       "demand": 2,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_7.dxf",
       "zones": [],
       "shape": {
@@ -2004,6 +2012,7 @@
     {
       "id": 8,
       "demand": 2,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_8.dxf",
       "zones": [],
       "shape": {
@@ -2147,6 +2156,7 @@
     {
       "id": 9,
       "demand": 3,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_9.dxf",
       "zones": [],
       "shape": {
@@ -2178,6 +2188,7 @@
     {
       "id": 10,
       "demand": 3,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_10.dxf",
       "zones": [],
       "shape": {
@@ -2217,6 +2228,7 @@
     {
       "id": 11,
       "demand": 3,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_11.dxf",
       "zones": [],
       "shape": {
@@ -2248,6 +2260,7 @@
     {
       "id": 12,
       "demand": 3,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_12.dxf",
       "zones": [],
       "shape": {
@@ -2279,6 +2292,7 @@
     {
       "id": 13,
       "demand": 2,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_13.dxf",
       "zones": [],
       "shape": {
