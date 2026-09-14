@@ -8,7 +8,7 @@ use anyhow::{Result, ensure};
 
 /// Imports an instance into the library
 pub fn import_instance(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPInstance> {
-    let (items, external_ids) = import_demand_items(
+    let items = import_demand_items(
         importer,
         ext_instance
             .items
@@ -41,7 +41,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtBPInstance) -> Res
         bins
     };
 
-    Ok(BPInstance::new(items, bins, external_ids))
+    Ok(BPInstance::new(items, bins))
 }
 
 /// Imports a solution into the library.

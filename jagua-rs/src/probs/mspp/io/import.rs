@@ -6,7 +6,7 @@ use anyhow::Result;
 
 /// Imports an instance into the library
 pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPInstance> {
-    let (items, external_ids) = import_demand_items(
+    let items = import_demand_items(
         importer,
         ext_instance
             .items
@@ -28,7 +28,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Re
         ext_strip.max_width,
     )?;
 
-    Ok(MSPInstance::new(items, base_strip, external_ids))
+    Ok(MSPInstance::new(items, base_strip))
 }
 
 /// Imports a solution into the library.

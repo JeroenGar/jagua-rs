@@ -91,6 +91,7 @@ impl Importer {
 
         Item::new(
             internal_id,
+            ext_item.id,
             original_shape,
             allowed_orientations,
             base_quality,
@@ -264,11 +265,10 @@ pub fn eliminate_degenerate_vertices(points: &mut Vec<Point>) {
 
 /// Import demanded items in ascending external-ID order, assigning dense internal IDs.
 /// External IDs must be unique, including zero-demand entries. Zero-demand items are omitted.
-#[allow(clippy::type_complexity)]
 pub fn import_demand_items<'a>(
     importer: &Importer,
     items: impl Iterator<Item = (&'a ExtItem, u64)>,
-) -> Result<(Vec<(Item, usize)>, Vec<u64>)> {
+) -> Result<Vec<(Item, usize)>> {
     let mut entries = items.collect_vec();
     entries.sort_by_key(|(item, _)| item.id);
     ensure!(
@@ -280,7 +280,6 @@ pub fn import_demand_items<'a>(
         !entries.is_empty(),
         "instance must have positive item demand"
     );
-    let external_ids = entries.iter().map(|(item, _)| item.id).collect();
     let items = entries
         .par_iter()
         .enumerate()
@@ -288,5 +287,5 @@ pub fn import_demand_items<'a>(
             Ok((importer.import_item(item, id)?, usize::try_from(*demand)?))
         })
         .collect::<Result<Vec<_>>>()?;
-    Ok((items, external_ids))
+    Ok(items)
 }

@@ -24,6 +24,6 @@ pub fn problem_matches_solution(bpp: &BPProblem, sol: &BPSolution) -> bool {
 
 #[must_use]
 pub fn instance_item_bin_ids_correct(items: &[(Item, usize)], bins: &[Bin]) -> bool {
-    items.iter().enumerate().all(|(i, (item, _))| item.id == i)
+    items.iter().enumerate().all(|(i, (item, _))| item.idx == i)
         && bins.iter().enumerate().all(|(i, bin)| bin.id == i)
 }

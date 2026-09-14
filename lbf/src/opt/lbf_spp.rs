@@ -69,14 +69,14 @@ impl LBFOptimizerSP {
                 match placement {
                     Some((d_transf, _)) => {
                         self.problem.place_item(SPPlacement {
-                            item_id: item.id,
+                            item_id: item.idx,
                             d_transf,
                         });
                         info!(
                             "[LBF] placing item {}/{} with id {} at [{}]",
                             self.problem.layout.placed_items.len(),
                             self.instance.total_item_qty(),
-                            item.id,
+                            item.idx,
                             d_transf,
                         );
                         #[allow(clippy::absurd_extreme_comparisons)]

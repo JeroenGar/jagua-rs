@@ -133,7 +133,7 @@ fn search_layouts(
         if let Some((d_transf, _)) = placement {
             return Some(BPPlacement {
                 layout_id,
-                item_id: item.id,
+                item_id: item.idx,
                 d_transf,
             });
         }

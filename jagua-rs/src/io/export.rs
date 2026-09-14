@@ -6,19 +6,19 @@ use crate::io::ext_repr::{ExtLayout, ExtPlacedItem};
 /// The lookup resolves an internal item ID to its original item and external ID.
 pub fn export_layout_snapshot<'a>(
     layout: &LayoutSnapshot,
-    item_by_id: impl Fn(usize) -> (&'a Item, u64),
+    item_by_id: impl Fn(usize) -> &'a Item,
 ) -> ExtLayout {
     let ext_placed_items = layout
         .placed_items
         .values()
         .map(|pi| {
-            let (item, external_id) = item_by_id(pi.item_id);
+            let item = item_by_id(pi.item_id);
 
             let abs_transf =
                 int_to_ext_transformation(&pi.d_transf, &item.shape_orig.pre_transform);
 
             ExtPlacedItem {
-                item_id: external_id,
+                item_id: item.external_id,
                 transformation: abs_transf.into(),
             }
         })
@@ -27,7 +27,7 @@ pub fn export_layout_snapshot<'a>(
     ExtLayout {
         container_id: layout.container.id as u64,
         placed_items: ext_placed_items,
-        density: layout.density(|id| item_by_id(id).0),
+        density: layout.density(item_by_id),
     }
 }
 

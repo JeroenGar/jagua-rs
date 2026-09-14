@@ -13,10 +13,10 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use svg::Document;
 use svg::node::element::{Definitions, Group, Text, Title, Use};
 
-/// Render a snapshot using a lookup from internal IDs to items and their external IDs.
+/// Render a snapshot using a lookup from internal IDs to items.
 pub fn s_layout_to_svg<'a>(
     s_layout: &LayoutSnapshot,
-    item_by_id: impl Fn(usize) -> (&'a Item, u64),
+    item_by_id: impl Fn(usize) -> &'a Item,
     options: SvgDrawOptions,
     title: &str,
 ) -> Document {
@@ -24,10 +24,10 @@ pub fn s_layout_to_svg<'a>(
     layout_to_svg(&layout, item_by_id, options, title)
 }
 
-/// Render a layout using a lookup from internal IDs to items and their external IDs.
+/// Render a layout using a lookup from internal IDs to items.
 pub fn layout_to_svg<'a>(
     layout: &Layout,
-    item_by_id: impl Fn(usize) -> (&'a Item, u64),
+    item_by_id: impl Fn(usize) -> &'a Item,
     options: SvgDrawOptions,
     title: &str,
 ) -> Document {
@@ -46,10 +46,10 @@ pub fn layout_to_svg<'a>(
 }
 
 #[allow(clippy::too_many_lines)]
-/// Render only the item definitions used by this layout, resolving internal IDs to items and external IDs.
+/// Render only the item definitions used by this layout, resolving internal IDs to items.
 pub fn layout_to_svg_group<'a>(
     layout: &Layout,
-    item_by_id: impl Fn(usize) -> (&'a Item, u64),
+    item_by_id: impl Fn(usize) -> &'a Item,
     options: SvgDrawOptions,
     title: &str,
 ) -> (Group, Rect) {
@@ -77,7 +77,7 @@ pub fn layout_to_svg_group<'a>(
             "h: {:.3} | w: {:.3} | d: {:.3}% | {}",
             bbox.height(),
             bbox.width(),
-            layout.density(|id| item_by_id(id).0) * 100.0,
+            layout.density(&item_by_id) * 100.0,
             title,
         );
         Text::new(label_content)
@@ -168,7 +168,7 @@ pub fn layout_to_svg_group<'a>(
         //define all the items and their surrogates (if enabled)
         let mut item_defs = Definitions::new();
         let mut surrogate_defs = Definitions::new();
-        for (item, external_id) in layout
+        for item in layout
             .placed_items
             .values()
             .map(|pi| pi.item_id)
@@ -180,6 +180,7 @@ pub fn layout_to_svg_group<'a>(
                 None => theme.item_fill,
                 Some(q) => svg_util::blend_colors(theme.item_fill, theme.qz_fill[q]),
             };
+            let external_id = item.external_id;
             item_defs = item_defs.add(Group::new().set("id", format!("item_{external_id}")).add(
                 svg_util::data_to_path(
                     svg_util::original_shape_data(
@@ -288,7 +289,8 @@ pub fn layout_to_svg_group<'a>(
         let mut highlight_cd_shapes_group = Group::new().set("id", "highlight_cd_shapes");
 
         for pi in layout.placed_items.values() {
-            let (item, external_id) = item_by_id(pi.item_id);
+            let item = item_by_id(pi.item_id);
+            let external_id = item.external_id;
             let dtransf = if options.draw_cd_shapes {
                 pi.d_transf
             } else {
@@ -422,7 +424,6 @@ pub fn layout_to_svg_group<'a>(
                         let quality =
                             if let HazardEntity::InferiorQualityZone { quality, .. } = haz_entity {
                                 if item_by_id(pi.item_id)
-                                    .0
                                     .min_quality
                                     .is_some_and(|required| *quality >= required)
                                 {

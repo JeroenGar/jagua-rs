@@ -31,7 +31,7 @@ impl PlacedItem {
         let shape = item.shape_cd.transform_clone(&transf);
 
         PlacedItem {
-            item_id: item.id,
+            item_id: item.idx,
             d_transf,
             shape: Arc::new(shape),
         }

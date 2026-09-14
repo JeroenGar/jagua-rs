@@ -8,7 +8,7 @@ use anyhow::{Result, anyhow};
 /// Imports an instance into the library
 #[allow(clippy::cast_precision_loss)]
 pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPInstance> {
-    let (items, external_ids) = import_demand_items(
+    let items = import_demand_items(
         importer,
         ext_instance
             .items
@@ -37,7 +37,7 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Res
         width,
     )?;
 
-    Ok(SPInstance::new(items, base_strip, external_ids))
+    Ok(SPInstance::new(items, base_strip))
 }
 
 /// Imports a solution into the library.

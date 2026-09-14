@@ -22,5 +22,5 @@ pub fn instance_item_ids_correct(items: &[(Item, usize)]) -> bool {
     items
         .iter()
         .enumerate()
-        .all(|(i, (item, _qty))| item.id == i)
+        .all(|(i, (item, _qty))| item.idx == i)
 }

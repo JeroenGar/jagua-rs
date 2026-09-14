@@ -9,22 +9,19 @@ pub struct BPInstance {
     pub items: Vec<(Item, usize)>,
     /// Set of bins available to pack the items
     pub bins: Vec<Bin>,
-    /// Sorted external IDs indexed by internal item ID; not serialized separately.
-    external_item_ids: Vec<u64>,
 }
 
 impl BPInstance {
     #[must_use]
-    pub fn new(items: Vec<(Item, usize)>, bins: Vec<Bin>, external_item_ids: Vec<u64>) -> Self {
+    pub fn new(items: Vec<(Item, usize)>, bins: Vec<Bin>) -> Self {
         assert!(instance_item_bin_ids_correct(&items, &bins));
 
-        assert_eq!(items.len(), external_item_ids.len());
-        assert!(external_item_ids.windows(2).all(|w| w[0] < w[1]));
-        Self {
-            items,
-            bins,
-            external_item_ids,
-        }
+        assert!(
+            items
+                .windows(2)
+                .all(|w| w[0].0.external_id < w[1].0.external_id)
+        );
+        Self { items, bins }
     }
 
     #[allow(clippy::cast_precision_loss)]
@@ -67,15 +64,11 @@ impl BPInstance {
         &self.bins[id].container
     }
 
-    /// Resolve an internal item index to the caller's original ID.
-    #[must_use]
-    pub fn external_item_id(&self, id: usize) -> u64 {
-        self.external_item_ids[id]
-    }
-
     /// Resolve an external item ID, returning None for unknown or zero-demand items.
     #[must_use]
     pub fn internal_item_id(&self, id: u64) -> Option<usize> {
-        self.external_item_ids.binary_search(&id).ok()
+        self.items
+            .binary_search_by_key(&id, |(item, _)| item.external_id)
+            .ok()
     }
 }

@@ -109,6 +109,6 @@ pub fn item_placement_order<'a>(items: impl Iterator<Item = &'a Item>) -> Vec<us
     //sort the items by descending diameter
     items
         .sorted_by_key(|item| Reverse(OrderedFloat(item.shape_cd.diameter)))
-        .map(|item| item.id)
+        .map(|item| item.idx)
         .collect_vec()
 }
