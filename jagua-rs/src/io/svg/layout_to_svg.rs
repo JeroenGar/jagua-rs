@@ -420,8 +420,7 @@ pub fn layout_to_svg_group<'a>(
                     HazardEntity::Hole { idx } | HazardEntity::InferiorQualityZone { idx, .. } => {
                         let quality =
                             if let HazardEntity::InferiorQualityZone { quality, .. } = haz_entity {
-                                if instance
-                                    .item(pi.item_id)
+                                if item_by_id(pi.item_id)
                                     .min_quality
                                     .is_some_and(|required| *quality >= required)
                                 {
