@@ -57,10 +57,10 @@ impl BPProblem {
         };
 
         let layout = &mut self.layouts[lkey];
-        let item = self.instance.item(placement.item_id);
+        let item = self.instance.item(placement.item_idx);
         let pik = layout.place_item(item, placement.d_transf);
 
-        self.register_included_item(placement.item_id);
+        self.register_included_item(placement.item_idx);
 
         (lkey, pik)
     }
@@ -143,8 +143,8 @@ impl BPProblem {
             self.item_demand_qtys
                 .iter_mut()
                 .enumerate()
-                .for_each(|(id, demand)| {
-                    *demand = self.instance.item_qty(id);
+                .for_each(|(idx, demand)| {
+                    *demand = self.instance.item_qty(idx);
                 });
 
             self.bin_stock_qtys
@@ -231,12 +231,12 @@ impl BPProblem {
             .for_each(|pi| self.deregister_included_item(pi.item.idx));
     }
 
-    fn register_included_item(&mut self, item_id: usize) {
-        self.item_demand_qtys[item_id] -= 1;
+    fn register_included_item(&mut self, item_idx: usize) {
+        self.item_demand_qtys[item_idx] -= 1;
     }
 
-    fn deregister_included_item(&mut self, item_id: usize) {
-        self.item_demand_qtys[item_id] += 1;
+    fn deregister_included_item(&mut self, item_idx: usize) {
+        self.item_demand_qtys[item_idx] += 1;
     }
 
     fn open_bin(&mut self, bin_id: usize) {
@@ -258,8 +258,8 @@ impl BPProblem {
 pub struct BPPlacement {
     /// Which [`Layout`] to place the item in
     pub layout_id: BPLayoutType,
-    /// The id of the [`Item`](crate::entities::Item) to be placed
-    pub item_id: usize,
+    /// The index of the [`Item`](crate::entities::Item) to be placed
+    pub item_idx: usize,
     /// The transformation to apply to the item when placing it
     pub d_transf: DTransformation,
 }
@@ -269,7 +269,7 @@ impl BPPlacement {
     pub fn from_placed_item(layout_id: BPLayoutType, placed_item: &PlacedItem) -> Self {
         BPPlacement {
             layout_id,
-            item_id: placed_item.item.idx,
+            item_idx: placed_item.item.idx,
             d_transf: placed_item.d_transf,
         }
     }

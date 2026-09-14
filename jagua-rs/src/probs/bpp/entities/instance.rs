@@ -32,8 +32,8 @@ impl BPInstance {
     }
 
     #[must_use]
-    pub fn item_qty(&self, id: usize) -> usize {
-        self.items[id].1
+    pub fn item_qty(&self, idx: usize) -> usize {
+        self.items[idx].1
     }
 
     pub fn bins(&self) -> impl Iterator<Item = &Bin> {
@@ -52,8 +52,8 @@ impl BPInstance {
 
     /// Retrieve an item by its internal index.
     #[must_use]
-    pub fn item(&self, id: usize) -> &Arc<Item> {
-        &self.items[id].0
+    pub fn item(&self, idx: usize) -> &Arc<Item> {
+        &self.items[idx].0
     }
 
     /// Resolve an external item ID, returning None for unknown or zero-demand items.

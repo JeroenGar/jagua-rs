@@ -48,19 +48,19 @@ pub fn create_lbf_problem(
         .map(|k| {
             let pi = &problem.layout.placed_items[*k];
             SPPlacement {
-                item_id: pi.item.idx,
+                item_idx: pi.item.idx,
                 d_transf: pi.d_transf,
             }
         })
         .collect_vec();
 
     for pkey in placed_items_to_remove {
-        let item_id = problem.layout.placed_items[pkey].item.idx;
+        let item_idx = problem.layout.placed_items[pkey].item.idx;
         problem.remove_item(pkey);
         info!(
             "Removed item: {} with {} edges",
-            item_id,
-            lbf_optimizer.instance.item(item_id).shape_cd.n_vertices()
+            item_idx,
+            lbf_optimizer.instance.item(item_idx).shape_cd.n_vertices()
         );
     }
 

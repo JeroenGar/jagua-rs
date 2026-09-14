@@ -146,11 +146,11 @@ fn cde_update_bench(c: &mut Criterion) {
                         .expect("No items in layout");
 
                     let p_opt = SPPlacement {
-                        item_id: pi.item.idx,
+                        item_idx: pi.item.idx,
                         d_transf: pi.d_transf,
                     };
 
-                    //println!("Removing item with id: {}\n", pi_uid.item_id);
+                    //println!("Removing item with idx: {}\n", pi_uid.item_idx);
                     problem.remove_item(pkey);
 
                     problem.place_item(p_opt);

@@ -59,8 +59,8 @@ impl SPProblem {
 
     /// Places an item according to the given `SPPlacement` in the problem.
     pub fn place_item(&mut self, placement: SPPlacement) -> PItemKey {
-        self.register_included_item(placement.item_id);
-        let item = self.instance.item(placement.item_id);
+        self.register_included_item(placement.item_idx);
+        let item = self.instance.item(placement.item_idx);
 
         self.layout.place_item(item, placement.d_transf)
     }
@@ -71,7 +71,7 @@ impl SPProblem {
         self.deregister_included_item(pi.item.idx);
 
         SPPlacement {
-            item_id: pi.item.idx,
+            item_idx: pi.item.idx,
             d_transf: pi.d_transf,
         }
     }
@@ -103,7 +103,7 @@ impl SPProblem {
             self.item_demand_qtys
                 .iter_mut()
                 .enumerate()
-                .for_each(|(id, qty)| *qty = self.instance.item_qty(id));
+                .for_each(|(idx, qty)| *qty = self.instance.item_qty(idx));
 
             self.layout
                 .placed_items
@@ -113,12 +113,12 @@ impl SPProblem {
         debug_assert!(problem_matches_solution(self, solution));
     }
 
-    fn register_included_item(&mut self, item_id: usize) {
-        self.item_demand_qtys[item_id] -= 1;
+    fn register_included_item(&mut self, item_idx: usize) {
+        self.item_demand_qtys[item_idx] -= 1;
     }
 
-    fn deregister_included_item(&mut self, item_id: usize) {
-        self.item_demand_qtys[item_id] += 1;
+    fn deregister_included_item(&mut self, item_idx: usize) {
+        self.item_demand_qtys[item_idx] += 1;
     }
 
     #[must_use]
@@ -140,6 +140,6 @@ impl SPProblem {
 /// Represents a placement of an item in the strip packing problem.
 #[derive(Debug, Clone, Copy)]
 pub struct SPPlacement {
-    pub item_id: usize,
+    pub item_idx: usize,
     pub d_transf: DTransformation,
 }

@@ -82,7 +82,7 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
     for bin_id in 0..2 {
         placements.push(problem.place_item(BPPlacement {
             layout_id: BPLayoutType::Closed { bin_id },
-            item_id: 0,
+            item_idx: 0,
             d_transf: DTransformation::new(0.0, (5.0, 5.0)),
         }));
     }

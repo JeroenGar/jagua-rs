@@ -64,15 +64,15 @@ pub fn import_solution(instance: &SPInstance, ext_solution: &ExtSPSolution) -> R
     prob.change_strip_width(ext_solution.strip_width);
 
     for ext_placement in ext_solution.layout.placed_items.iter().cloned() {
-        let item_id = instance
+        let item_idx = instance
             .item_idx(ext_placement.item_id)
             .ok_or_else(|| anyhow!("unknown item ID {}", ext_placement.item_id))?;
         let d_transf = {
             let ext_transf = DTransformation::from(ext_placement.transformation);
-            let item = &instance.item(item_id);
+            let item = &instance.item(item_idx);
             ext_to_int_transformation(&ext_transf, &item.shape_orig.pre_transform)
         };
-        prob.place_item(SPPlacement { item_id, d_transf });
+        prob.place_item(SPPlacement { item_idx, d_transf });
     }
 
     Ok(prob.save())

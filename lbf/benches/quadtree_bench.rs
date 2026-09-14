@@ -53,11 +53,11 @@ fn quadtree_update_bench(c: &mut Criterion) {
                     .expect("No items in layout");
 
                 let p_opt = SPPlacement {
-                    item_id: pi.item.idx,
+                    item_idx: pi.item.idx,
                     d_transf: pi.d_transf,
                 };
 
-                //println!("Removing item with id: {}\n", pi_uid.item_id);
+                //println!("Removing item with idx: {}\n", pi_uid.item_idx);
                 problem.remove_item(pkey);
 
                 problem.place_item(p_opt);
@@ -95,12 +95,12 @@ fn quadtree_query_bench(c: &mut Criterion) {
         let mut n_invalid: i64 = 0;
         let mut n_valid: i64 = 0;
 
-        let mut item_id_cycler = selected_pi_uids.iter().map(|pi_uid| pi_uid.item_id).cycle();
+        let mut item_idx_cycler = selected_pi_uids.iter().map(|pi_uid| pi_uid.item_idx).cycle();
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
-                let item_id = item_id_cycler.next().unwrap();
-                let item = instance.item(item_id);
+                let item_idx = item_idx_cycler.next().unwrap();
+                let item = instance.item(item_idx);
                 let layout = &problem.layout;
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
@@ -154,14 +154,14 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                     .expect("No items in layout");
 
                 let p_opt = SPPlacement {
-                    item_id: pi.item.idx,
+                    item_idx: pi.item.idx,
                     d_transf: pi.d_transf,
                 };
 
                 problem.remove_item(pkey);
 
-                let item_id = p_opt.item_id;
-                let item = instance.item(item_id);
+                let item_idx = p_opt.item_idx;
+                let item = instance.item(item_idx);
                 let layout = &problem.layout;
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
@@ -207,12 +207,12 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
         let mut n_valid: i64 = 0;
         let mut n_detected: i64 = 0;
 
-        let mut item_id_cycler = selected_pi_uids.iter().map(|pi_uid| pi_uid.item_id).cycle();
+        let mut item_idx_cycler = selected_pi_uids.iter().map(|pi_uid| pi_uid.item_idx).cycle();
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
-                let item_id = item_id_cycler.next().unwrap();
-                let item = instance.item(item_id);
+                let item_idx = item_idx_cycler.next().unwrap();
+                let item = instance.item(item_idx);
                 let layout = &problem.layout;
                 let mut buffer_shape = item.shape_cd.as_ref().clone();
                 let mut collector =

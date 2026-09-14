@@ -36,12 +36,12 @@ impl LBFOptimizerSP {
     pub fn solve(&mut self) -> SPSolution {
         let start = Instant::now();
 
-        'outer: for item_id in
+        'outer: for item_idx in
             item_placement_order(self.instance.items.iter().map(|(item, _)| item.as_ref()))
         {
-            let item = self.instance.item(item_id);
+            let item = self.instance.item(item_idx);
             //place all items of this type
-            while self.problem.item_demand_qtys[item_id] > 0 {
+            while self.problem.item_demand_qtys[item_idx] > 0 {
                 let cde = self.problem.layout.cde();
                 let placement = match &item.min_quality {
                     None => search(
@@ -69,7 +69,7 @@ impl LBFOptimizerSP {
                 match placement {
                     Some((d_transf, _)) => {
                         self.problem.place_item(SPPlacement {
-                            item_id: item.idx,
+                            item_idx: item.idx,
                             d_transf,
                         });
                         info!(

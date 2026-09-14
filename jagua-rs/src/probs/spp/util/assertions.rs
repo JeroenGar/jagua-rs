@@ -19,7 +19,7 @@ pub fn problem_matches_solution(spp: &SPProblem, sol: &SPSolution) -> bool {
 }
 
 #[must_use]
-pub fn instance_item_ids_correct(items: &[(Arc<Item>, usize)]) -> bool {
+pub fn instance_item_indices_correct(items: &[(Arc<Item>, usize)]) -> bool {
     items
         .iter()
         .enumerate()

@@ -79,10 +79,10 @@ impl MSPProblem {
         let lk = placement.lk;
 
         let layout = &mut self.layouts[lk];
-        let item = self.instance.item(placement.item_id);
+        let item = self.instance.item(placement.item_idx);
         let pik = layout.place_item(item, placement.d_transf);
 
-        self.register_included_item(placement.item_id);
+        self.register_included_item(placement.item_idx);
 
         (lk, pik)
     }
@@ -95,7 +95,7 @@ impl MSPProblem {
 
         MSPPlacement {
             lk,
-            item_id: pi.item.idx,
+            item_idx: pi.item.idx,
             d_transf: pi.d_transf,
         }
     }
@@ -159,8 +159,8 @@ impl MSPProblem {
             self.item_demand_qtys
                 .iter_mut()
                 .enumerate()
-                .for_each(|(id, demand)| {
-                    *demand = self.instance.item_qty(id);
+                .for_each(|(idx, demand)| {
+                    *demand = self.instance.item_qty(idx);
                 });
         }
 
@@ -198,12 +198,12 @@ impl MSPProblem {
         self.strips.remove(key);
     }
 
-    fn register_included_item(&mut self, item_id: usize) {
-        self.item_demand_qtys[item_id] -= 1;
+    fn register_included_item(&mut self, item_idx: usize) {
+        self.item_demand_qtys[item_idx] -= 1;
     }
 
-    fn deregister_included_item(&mut self, item_id: usize) {
-        self.item_demand_qtys[item_id] += 1;
+    fn deregister_included_item(&mut self, item_idx: usize) {
+        self.item_demand_qtys[item_idx] += 1;
     }
 
     /// Computes the density of the problem as the ratio between the total area of placed items and the total area of containers.
@@ -248,8 +248,8 @@ impl MSPProblem {
 pub struct MSPPlacement {
     /// Which [`Layout`] to place the item in
     pub lk: LayKey,
-    /// The id of the [`Item`](crate::entities::Item) to be placed
-    pub item_id: usize,
+    /// The index of the [`Item`](crate::entities::Item) to be placed
+    pub item_idx: usize,
     /// The transformation to apply to the item when placing it
     pub d_transf: DTransformation,
 }

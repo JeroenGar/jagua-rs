@@ -39,12 +39,12 @@ impl LBFOptimizerBP {
     pub fn solve(&mut self) -> BPSolution {
         let start = Instant::now();
 
-        'outer: for item_id in
+        'outer: for item_idx in
             item_placement_order(self.instance.items.iter().map(|(item, _)| item.as_ref()))
         {
-            let item = self.instance.item(item_id);
+            let item = self.instance.item(item_idx);
             //place all items of this type
-            'inner: while self.problem.item_demand_qtys[item_id] > 0 {
+            'inner: while self.problem.item_demand_qtys[item_idx] > 0 {
                 //find a position and insert it
                 let placement = search_layouts(
                     &self.problem,
@@ -61,7 +61,7 @@ impl LBFOptimizerBP {
                             "[LBF] placing item {}/{} with id {} at [{}] in Layout {:?}",
                             self.problem.item_placed_qtys().sum::<usize>(),
                             self.instance.total_item_qty(),
-                            i_opt.item_id,
+                            i_opt.item_idx,
                             i_opt.d_transf,
                             l_index
                         );
@@ -135,7 +135,7 @@ fn search_layouts(
         if let Some((d_transf, _)) = placement {
             return Some(BPPlacement {
                 layout_id,
-                item_id: item.idx,
+                item_idx: item.idx,
                 d_transf,
             });
         }

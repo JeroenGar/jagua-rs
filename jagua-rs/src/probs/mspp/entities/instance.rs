@@ -19,8 +19,8 @@ impl MSPInstance {
     #[must_use]
     pub fn new(items: Vec<(Arc<Item>, usize)>, base_strip: Strip) -> Self {
         assert!(
-            assertions::instance_item_ids_correct(&items),
-            "All items should have consecutive IDs starting from 0"
+            assertions::instance_item_indices_correct(&items),
+            "Item indices should match their positions"
         );
 
         assert!(items.iter().map(|(item, _)| item.external_id).all_unique());
@@ -37,8 +37,8 @@ impl MSPInstance {
     }
 
     #[must_use]
-    pub fn item_qty(&self, id: usize) -> usize {
-        self.items[id].1
+    pub fn item_qty(&self, idx: usize) -> usize {
+        self.items[idx].1
     }
 
     #[must_use]
@@ -48,8 +48,8 @@ impl MSPInstance {
 
     /// Retrieve an item by its internal index.
     #[must_use]
-    pub fn item(&self, id: usize) -> &Arc<Item> {
-        &self.items[id].0
+    pub fn item(&self, idx: usize) -> &Arc<Item> {
+        &self.items[idx].0
     }
 
     /// Resolve an external item ID, returning None for unknown or zero-demand items.
