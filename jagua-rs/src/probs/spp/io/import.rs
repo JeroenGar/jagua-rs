@@ -5,6 +5,7 @@ use crate::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution
 use crate::probs::spp::io::ext_repr::{ExtSPInstance, ExtSPSolution};
 use anyhow::{Result, anyhow, ensure};
 use itertools::Itertools;
+use rayon::prelude::*;
 
 /// Imports an instance into the library
 #[allow(clippy::cast_precision_loss)]
@@ -21,6 +22,8 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Res
         .items
         .iter()
         .filter(|item| item.demand > 0)
+        .collect_vec()
+        .into_par_iter()
         .enumerate()
         .map(|(idx, item)| {
             Ok((

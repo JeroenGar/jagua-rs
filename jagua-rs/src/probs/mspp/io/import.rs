@@ -4,6 +4,7 @@ use crate::probs::mspp::entities::{MSPInstance, MSPSolution, Strip};
 use crate::probs::mspp::io::ext_repr::ExtMSPInstance;
 use anyhow::{Result, ensure};
 use itertools::Itertools;
+use rayon::prelude::*;
 
 /// Imports an instance into the library
 pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPInstance> {
@@ -19,6 +20,8 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Re
         .items
         .iter()
         .filter(|item| item.demand > 0)
+        .collect_vec()
+        .into_par_iter()
         .enumerate()
         .map(|(idx, item)| {
             Ok((

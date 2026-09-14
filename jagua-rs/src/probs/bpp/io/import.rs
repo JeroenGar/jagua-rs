@@ -20,6 +20,8 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtBPInstance) -> Res
         .items
         .iter()
         .filter(|item| item.demand > 0)
+        .collect_vec()
+        .into_par_iter()
         .enumerate()
         .map(|(idx, item)| {
             Ok((
