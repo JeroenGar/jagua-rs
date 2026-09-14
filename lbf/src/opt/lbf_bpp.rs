@@ -119,7 +119,9 @@ fn search_layouts(
         debug!("searching in layout {layout_id:?}");
         let cde = match layout_id {
             BPLayoutType::Open(lkey) => problem.layouts[lkey].cde(),
-            BPLayoutType::Closed { bin_id } => problem.instance.container(bin_id).base_cde.as_ref(),
+            BPLayoutType::Closed { bin_id } => {
+                problem.instance.bins[bin_id].container.base_cde.as_ref()
+            }
         };
 
         let placement = match &item.min_quality {

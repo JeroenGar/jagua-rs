@@ -1,4 +1,4 @@
-use crate::entities::{Container, Item};
+use crate::entities::Item;
 use crate::probs::bpp::entities::bin::Bin;
 use crate::probs::bpp::util::assertions::instance_item_bin_ids_correct;
 
@@ -56,12 +56,6 @@ impl BPInstance {
     #[must_use]
     pub fn item(&self, id: usize) -> &Item {
         &self.items[id].0
-    }
-
-    /// Retrieve a bin's container by its index.
-    #[must_use]
-    pub fn container(&self, id: usize) -> &Container {
-        &self.bins[id].container
     }
 
     /// Resolve an external item ID, returning None for unknown or zero-demand items.
