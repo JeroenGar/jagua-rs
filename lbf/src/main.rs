@@ -82,7 +82,6 @@ fn main_spp(
     let importer = Importer::new(
         config.cde_config,
         config.poly_simpl_tolerance,
-        config.min_item_separation,
         config.narrow_concavity_cutoff,
     );
     let rng = match config.prng_seed {
@@ -128,7 +127,6 @@ fn main_bpp(
     let importer = Importer::new(
         config.cde_config,
         config.poly_simpl_tolerance,
-        config.min_item_separation,
         config.narrow_concavity_cutoff,
     );
     let rng = match config.prng_seed {

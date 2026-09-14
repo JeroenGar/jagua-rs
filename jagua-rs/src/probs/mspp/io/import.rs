@@ -6,8 +6,9 @@ use anyhow::Result;
 
 /// Imports an instance into the library
 pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPInstance> {
+    let importer = importer.with_min_item_separation(ext_instance.min_item_separation)?;
     let items = import_demand_items(
-        importer,
+        &importer,
         ext_instance
             .items
             .iter()

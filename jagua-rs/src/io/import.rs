@@ -25,23 +25,32 @@ impl Importer {
     ///
     /// * `cde_config` - Configuration for the CDE (Collision Detection Engine).
     /// * `simplify_tolerance` - See [`ShapeModifyConfig`].
-    /// * `min_item_separation` - Optional minimum separation distance between items and any other hazard. If enabled, every hazard is inflated/deflated by half this value. See [`ShapeModifyConfig`].
     /// * `narrow_concavity_cutoff` - Optional definition for closing narrow concavities. If enabled, the shapes are modified to close "narrow" concavities. See [`ShapeModifyConfig`].
     #[must_use]
     pub fn new(
         cde_config: CDEConfig,
         simplify_tolerance: Option<f32>,
-        min_item_separation: Option<f32>,
         narrow_concavity_cutoff: Option<(f32, f32)>,
     ) -> Importer {
         Importer {
             shape_modify_config: ShapeModifyConfig {
-                offset: min_item_separation.map(|f| f / 2.0),
+                offset: None,
                 simplify_tolerance,
                 narrow_concavity_cutoff,
             },
             cde_config,
         }
+    }
+
+    /// Set the minimum distance between items and other hazards.
+    /// Items are inflated and containers deflated by half this finite, nonnegative distance.
+    pub fn with_min_item_separation(mut self, separation: f32) -> Result<Self> {
+        ensure!(
+            separation.is_finite() && separation >= 0.0,
+            "min_item_separation must be finite and nonnegative"
+        );
+        self.shape_modify_config.offset = (separation > 0.0).then_some(separation / 2.0);
+        Ok(self)
     }
 
     /// Import geometry with a caller-assigned internal index, independent of the external ID.

@@ -19,12 +19,7 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
         "name": "sparse IDs", "strip_height": 10,
         "items": [item(u64::MAX, 1), item(4, 0), item(42, 1)]
     }))?;
-    let importer = Importer::new(
-        lbf::config::LBFConfig::default().cde_config,
-        None,
-        None,
-        None,
-    );
+    let importer = Importer::new(lbf::config::LBFConfig::default().cde_config, None, None);
     let instance = import_instance(&importer, &input)?;
     assert_eq!(instance.item(0).idx, 0);
     assert_eq!(instance.item(0).external_id, 42);

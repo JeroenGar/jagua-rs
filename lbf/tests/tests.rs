@@ -166,6 +166,29 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn instance_separation_controls_item_and_container_geometry() -> Result<()> {
+        let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
+        assert_eq!(input.min_item_separation, 0.0);
+        let plain = spp::io::import_instance(&importer(), &input)?;
+        assert_eq!(plain.item(0).shape_orig.modify_config.offset, None);
+
+        input.min_item_separation = 2.0;
+        let spaced = spp::io::import_instance(&importer(), &input)?;
+        assert_eq!(spaced.item(0).shape_orig.modify_config.offset, Some(1.0));
+        let problem = jagua_rs::probs::spp::entities::SPProblem::new(spaced);
+        assert_eq!(
+            problem.layout.container.outer_orig.modify_config.offset,
+            Some(1.0)
+        );
+
+        for invalid in [-1.0, f32::INFINITY, f32::NAN] {
+            input.min_item_separation = invalid;
+            assert!(spp::io::import_instance(&importer(), &input).is_err());
+        }
+        Ok(())
+    }
+
     fn config() -> LBFConfig {
         LBFConfig {
             n_samples: 100,
@@ -177,7 +200,6 @@ mod tests {
         Importer::new(
             config().cde_config,
             config().poly_simpl_tolerance,
-            config().min_item_separation,
             config().narrow_concavity_cutoff,
         )
     }
