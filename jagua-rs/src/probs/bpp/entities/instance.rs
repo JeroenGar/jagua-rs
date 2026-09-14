@@ -1,6 +1,7 @@
 use crate::entities::Item;
 use crate::probs::bpp::entities::bin::Bin;
 use crate::probs::bpp::util::assertions::instance_item_bin_ids_correct;
+use itertools::Itertools;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
@@ -17,11 +18,7 @@ impl BPInstance {
     pub fn new(items: Vec<(Arc<Item>, usize)>, bins: Vec<Bin>) -> Self {
         assert!(instance_item_bin_ids_correct(&items, &bins));
 
-        assert!(
-            items
-                .windows(2)
-                .all(|w| w[0].0.external_id < w[1].0.external_id)
-        );
+        assert!(items.iter().map(|(item, _)| item.external_id).all_unique());
         Self { items, bins }
     }
 
@@ -63,7 +60,8 @@ impl BPInstance {
     #[must_use]
     pub fn internal_item_id(&self, id: u64) -> Option<usize> {
         self.items
-            .binary_search_by_key(&id, |(item, _)| item.external_id)
-            .ok()
+            .iter()
+            .find(|(item, _)| item.external_id == id)
+            .map(|(item, _)| item.idx)
     }
 }

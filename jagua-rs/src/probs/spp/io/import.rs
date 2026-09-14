@@ -1,20 +1,35 @@
 use crate::geometry::DTransformation;
 use crate::geometry::shape_modification::ShapeModifyConfig;
-use crate::io::import::{Importer, ext_to_int_transformation, import_demand_items};
+use crate::io::import::{Importer, ext_to_int_transformation};
 use crate::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution, Strip};
 use crate::probs::spp::io::ext_repr::{ExtSPInstance, ExtSPSolution};
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, ensure};
+use itertools::Itertools;
 
 /// Imports an instance into the library
 #[allow(clippy::cast_precision_loss)]
 pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPInstance> {
-    let items = import_demand_items(
-        importer,
+    ensure!(
         ext_instance
             .items
             .iter()
-            .map(|item| (&item.base, item.demand)),
-    )?;
+            .map(|item| item.base.id)
+            .all_unique(),
+        "item IDs must be unique"
+    );
+    let items = ext_instance
+        .items
+        .iter()
+        .filter(|item| item.demand > 0)
+        .enumerate()
+        .map(|(idx, item)| {
+            Ok((
+                importer.import_item(&item.base, idx)?,
+                usize::try_from(item.demand)?,
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    ensure!(!items.is_empty(), "instance must have positive item demand");
 
     let total_item_area = items
         .iter()

@@ -27,8 +27,8 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
     );
     let instance = import_instance(&importer, &input)?;
     assert_eq!(instance.item(0).idx, 0);
-    assert_eq!(instance.item(0).external_id, 42);
-    assert_eq!(instance.item(1).external_id, u64::MAX);
+    assert_eq!(instance.item(0).external_id, u64::MAX);
+    assert_eq!(instance.item(1).external_id, 42);
     assert_eq!(instance.internal_item_id(4), None);
 
     let placement = |id, x| {

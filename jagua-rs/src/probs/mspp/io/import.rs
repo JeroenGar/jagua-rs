@@ -1,18 +1,33 @@
 use crate::geometry::shape_modification::ShapeModifyConfig;
-use crate::io::import::{Importer, import_demand_items};
+use crate::io::import::Importer;
 use crate::probs::mspp::entities::{MSPInstance, MSPSolution, Strip};
 use crate::probs::mspp::io::ext_repr::ExtMSPInstance;
-use anyhow::Result;
+use anyhow::{Result, ensure};
+use itertools::Itertools;
 
 /// Imports an instance into the library
 pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPInstance> {
-    let items = import_demand_items(
-        importer,
+    ensure!(
         ext_instance
             .items
             .iter()
-            .map(|item| (&item.base, item.demand)),
-    )?;
+            .map(|item| item.base.id)
+            .all_unique(),
+        "item IDs must be unique"
+    );
+    let items = ext_instance
+        .items
+        .iter()
+        .filter(|item| item.demand > 0)
+        .enumerate()
+        .map(|(idx, item)| {
+            Ok((
+                importer.import_item(&item.base, idx)?,
+                usize::try_from(item.demand)?,
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    ensure!(!items.is_empty(), "instance must have positive item demand");
 
     let ext_strip = &ext_instance.strips;
 

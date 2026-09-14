@@ -11,7 +11,6 @@ use anyhow::{Result, bail, ensure};
 use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::{debug, warn};
-use rayon::prelude::*;
 use std::sync::Arc;
 
 /// Converts external representations of items and containers into internal ones.
@@ -258,31 +257,4 @@ pub fn eliminate_degenerate_vertices(points: &mut Vec<Point>) {
             points.remove(index);
         }
     }
-}
-
-/// Import demanded items in ascending external-ID order, assigning dense internal IDs.
-/// External IDs must be unique, including zero-demand entries. Zero-demand items are omitted.
-pub fn import_demand_items<'a>(
-    importer: &Importer,
-    items: impl Iterator<Item = (&'a ExtItem, u64)>,
-) -> Result<Vec<(Arc<Item>, usize)>> {
-    let mut entries = items.collect_vec();
-    entries.sort_by_key(|(item, _)| item.id);
-    ensure!(
-        entries.windows(2).all(|w| w[0].0.id != w[1].0.id),
-        "item IDs must be unique"
-    );
-    entries.retain(|(_, demand)| *demand > 0);
-    ensure!(
-        !entries.is_empty(),
-        "instance must have positive item demand"
-    );
-    let items = entries
-        .par_iter()
-        .enumerate()
-        .map(|(id, (item, demand))| {
-            Ok((importer.import_item(item, id)?, usize::try_from(*demand)?))
-        })
-        .collect::<Result<Vec<_>>>()?;
-    Ok(items)
 }

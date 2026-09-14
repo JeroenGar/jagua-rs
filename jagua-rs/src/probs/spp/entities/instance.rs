@@ -1,6 +1,7 @@
 use crate::entities::Item;
 use crate::probs::spp::entities::Strip;
 use crate::probs::spp::util::assertions;
+use itertools::Itertools;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
@@ -20,11 +21,7 @@ impl SPInstance {
             "All items should have consecutive IDs starting from 0"
         );
 
-        assert!(
-            items
-                .windows(2)
-                .all(|w| w[0].0.external_id < w[1].0.external_id)
-        );
+        assert!(items.iter().map(|(item, _)| item.external_id).all_unique());
         Self { items, base_strip }
     }
 
@@ -57,7 +54,8 @@ impl SPInstance {
     #[must_use]
     pub fn internal_item_id(&self, id: u64) -> Option<usize> {
         self.items
-            .binary_search_by_key(&id, |(item, _)| item.external_id)
-            .ok()
+            .iter()
+            .find(|(item, _)| item.external_id == id)
+            .map(|(item, _)| item.idx)
     }
 }

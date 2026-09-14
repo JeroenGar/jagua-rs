@@ -1,4 +1,4 @@
-use crate::io::import::{Importer, import_demand_items};
+use crate::io::import::Importer;
 use crate::probs::bpp::entities::{BPInstance, BPSolution, Bin};
 use crate::probs::bpp::io::ext_repr::ExtBPInstance;
 use itertools::Itertools;
@@ -8,13 +8,27 @@ use anyhow::{Result, ensure};
 
 /// Imports an instance into the library
 pub fn import_instance(importer: &Importer, ext_instance: &ExtBPInstance) -> Result<BPInstance> {
-    let items = import_demand_items(
-        importer,
+    ensure!(
         ext_instance
             .items
             .iter()
-            .map(|item| (&item.base, item.demand)),
-    )?;
+            .map(|item| item.base.id)
+            .all_unique(),
+        "item IDs must be unique"
+    );
+    let items = ext_instance
+        .items
+        .iter()
+        .filter(|item| item.demand > 0)
+        .enumerate()
+        .map(|(idx, item)| {
+            Ok((
+                importer.import_item(&item.base, idx)?,
+                usize::try_from(item.demand)?,
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    ensure!(!items.is_empty(), "instance must have positive item demand");
 
     let bins = {
         let mut entries = ext_instance.bins.iter().collect_vec();
