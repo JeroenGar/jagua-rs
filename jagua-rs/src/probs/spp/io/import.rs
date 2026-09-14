@@ -62,7 +62,7 @@ pub fn import_solution(instance: &SPInstance, ext_solution: &ExtSPSolution) -> R
 
     for ext_placement in ext_solution.layout.placed_items.iter().cloned() {
         let item_id = instance
-            .internal_item_id(ext_placement.item_id)
+            .item_idx(ext_placement.item_id)
             .ok_or_else(|| anyhow!("unknown item ID {}", ext_placement.item_id))?;
         let d_transf = {
             let ext_transf = DTransformation::from(ext_placement.transformation);

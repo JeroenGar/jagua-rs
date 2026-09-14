@@ -54,10 +54,10 @@ impl MSPInstance {
 
     /// Resolve an external item ID, returning None for unknown or zero-demand items.
     #[must_use]
-    pub fn internal_item_id(&self, id: u64) -> Option<usize> {
+    pub fn item_idx(&self, external_id: u64) -> Option<usize> {
         self.items
             .iter()
-            .find(|(item, _)| item.external_id == id)
+            .find(|(item, _)| item.external_id == external_id)
             .map(|(item, _)| item.idx)
     }
 }
