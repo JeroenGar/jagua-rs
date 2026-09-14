@@ -111,7 +111,10 @@ impl BPProblem {
             match solution.layout_snapshots.get(lkey) {
                 Some(ls) => {
                     self.layout_bins[lkey] = solution.layout_bins[lkey];
-                    layout.restore(ls);
+                    // A saved layout may refer to a different bin.
+                    if layout.restore(ls).is_err() {
+                        *layout = Layout::from_snapshot(ls);
+                    }
                 }
                 _ => {
                     layouts_to_remove.push(lkey);

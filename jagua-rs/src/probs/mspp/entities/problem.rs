@@ -125,7 +125,10 @@ impl MSPProblem {
         for (lk, layout) in &mut self.layouts {
             match solution.layout_snapshots.get(lk) {
                 Some(ls) => {
-                    layout.restore(ls);
+                    // A saved strip may have a different width.
+                    if layout.restore(ls).is_err() {
+                        *layout = Layout::from_snapshot(ls);
+                    }
                     self.strips[lk] = solution.strips[lk];
                 }
                 None => {

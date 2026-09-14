@@ -92,7 +92,10 @@ impl SPProblem {
 
     /// Restores the state of the problem to the given [`SPSolution`].
     pub fn restore(&mut self, solution: &SPSolution) {
-        self.layout.restore(&solution.layout_snapshot);
+        // A saved solution may use a different strip width.
+        if self.layout.restore(&solution.layout_snapshot).is_err() {
+            self.layout = Layout::from_snapshot(&solution.layout_snapshot);
+        }
         self.strip = solution.strip;
 
         //Restore the item demands

@@ -1,5 +1,5 @@
 use jagua_rs::Instant;
-use jagua_rs::entities::Layout;
+use jagua_rs::entities::{ContainerMismatch, Layout};
 use jagua_rs::geometry::DTransformation;
 use jagua_rs::io::ext_repr::{ExtContainer, ExtItem};
 use jagua_rs::io::import::Importer;
@@ -33,6 +33,7 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
     let saved = layout.save();
     assert!(layout.is_feasible());
     for changed in [
+        json!({"id": 0, "shape": rectangle(10)}),
         json!({"id": 0, "shape": rectangle(3)}),
         json!({"id": 0, "shape": rectangle(10), "zones": [{
             "quality": 0, "shape": {"type": "rectangle", "data": {
@@ -41,14 +42,29 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
         }]}),
     ] {
         layout.swap_container(importer.import_container(&serde_json::from_value(changed)?)?);
-        assert!(!layout.is_feasible());
-        layout.restore(&saved);
+        let before = layout.save();
+        let feasible_before = layout.is_feasible();
+        assert_eq!(layout.restore(&saved), Err(ContainerMismatch));
+        assert!(Arc::ptr_eq(
+            &layout.container.base_cde,
+            &before.container.base_cde
+        ));
+        assert_eq!(layout.is_feasible(), feasible_before);
+        assert!(jagua_rs::util::assertions::snapshot_matches_layout(
+            &layout, &before
+        ));
+        assert!(jagua_rs::util::assertions::layout_qt_matches_fresh_qt(
+            &layout
+        ));
+
+        layout.swap_container(saved.container.clone());
+        layout.restore(&saved)?;
         assert!(layout.is_feasible());
         assert!(Arc::ptr_eq(
             &layout.container.base_cde,
             &saved.container.base_cde
         ));
-        layout.restore(&saved);
+        layout.restore(&saved)?;
         assert!(layout.is_feasible());
     }
 

@@ -36,7 +36,9 @@ impl Layout {
     #[must_use]
     pub fn from_snapshot(ls: &LayoutSnapshot) -> Self {
         let mut layout = Layout::new(ls.container.clone());
-        layout.restore(ls);
+        layout
+            .restore(ls)
+            .expect("snapshot shares the container's static base");
         layout
     }
 
@@ -62,14 +64,23 @@ impl Layout {
         }
     }
 
-    /// Restores the layout to a previous state using a snapshot.
-    pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
-        // Dynamic-only restore is safe only on the same immutable static base.
+    /// Restores placed items and dynamic collision state from a snapshot.
+    ///
+    /// The containers must share the same [`Container::base_cde`] allocation,
+    /// as checked by [`Arc::ptr_eq`]. Cloning a container preserves this identity;
+    /// independently constructing identical geometry does not.
+    ///
+    /// # Errors
+    /// Returns [`ContainerMismatch`] without modifying the layout
+    /// when the static bases differ. To deliberately replace the container too,
+    /// use [`Layout::from_snapshot`], or explicitly [`Layout::swap_container`]
+    /// with the snapshot's cloned container before restoring.
+    pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) -> Result<(), ContainerMismatch> {
         if !Arc::ptr_eq(
             &self.container.base_cde,
             &layout_snapshot.container.base_cde,
         ) {
-            self.cde = layout_snapshot.container.base_cde.as_ref().clone();
+            return Err(ContainerMismatch);
         }
         self.container.clone_from(&layout_snapshot.container);
 
@@ -78,6 +89,7 @@ impl Layout {
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
         debug_assert!(assertions::snapshot_matches_layout(self, layout_snapshot));
+        Ok(())
     }
 
     /// Places an item in the layout at a specific position by applying a transformation.
@@ -159,6 +171,18 @@ impl Layout {
         })
     }
 }
+
+/// The layout and snapshot do not share the same static collision base.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ContainerMismatch;
+
+impl std::fmt::Display for ContainerMismatch {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("layout and snapshot have different static collision bases")
+    }
+}
+
+impl std::error::Error for ContainerMismatch {}
 
 /// Immutable and compact representation of a [`Layout`].
 /// Can be used to restore a [`Layout`] back to a previous state.

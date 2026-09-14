@@ -9,6 +9,7 @@ pub use item::Item;
 #[doc(inline)]
 pub use layout::Layout;
 
+pub use layout::ContainerMismatch;
 #[doc(inline)]
 pub use layout::LayoutSnapshot;
 
