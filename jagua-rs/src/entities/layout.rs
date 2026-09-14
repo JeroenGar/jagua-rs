@@ -169,16 +169,9 @@ impl Layout {
 }
 
 /// The layout and snapshot do not share the same static collision base.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+#[error("layout and snapshot have different static collision bases")]
 pub struct ContainerMismatch;
-
-impl std::fmt::Display for ContainerMismatch {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("layout and snapshot have different static collision bases")
-    }
-}
-
-impl std::error::Error for ContainerMismatch {}
 
 /// Immutable and compact representation of a [`Layout`].
 /// Can be used to restore a [`Layout`] back to a previous state.
