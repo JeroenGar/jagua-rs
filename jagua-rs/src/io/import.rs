@@ -7,10 +7,11 @@ use crate::geometry::primitives::{Point, Rect, SPolygon};
 use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtContainer, ExtItem, ExtSPolygon, ExtShape};
-use anyhow::{Result, bail};
+use anyhow::{Result, bail, ensure};
 use float_cmp::approx_eq;
 use itertools::Itertools;
 use log::{debug, warn};
+use std::sync::Arc;
 
 /// Converts external representations of items and containers into internal ones.
 #[derive(Clone, Debug, Copy)]
@@ -43,7 +44,8 @@ impl Importer {
         }
     }
 
-    pub fn import_item(&self, ext_item: &ExtItem) -> Result<Item> {
+    /// Import geometry with a caller-assigned internal index, independent of the external ID.
+    pub fn import_item(&self, ext_item: &ExtItem, internal_id: usize) -> Result<Arc<Item>> {
         debug!("[IMPORT] starting item {:?}", ext_item.id);
 
         let original_shape = {
@@ -88,12 +90,14 @@ impl Importer {
         };
 
         Item::new(
-            usize::try_from(ext_item.id).unwrap(),
+            internal_id,
+            ext_item.id,
             original_shape,
             allowed_orientations,
             base_quality,
             self.cde_config.item_surrogate_config,
         )
+        .map(Arc::new)
     }
 
     pub fn import_container(&self, ext_cont: &ExtContainer) -> Result<Container> {
@@ -185,12 +189,7 @@ impl Importer {
             })
             .collect::<Result<Vec<InferiorQualityZone>>>()?;
 
-        Container::new(
-            usize::try_from(ext_cont.id).unwrap(),
-            original_outer,
-            quality_zones,
-            self.cde_config,
-        )
+        Container::new(original_outer, quality_zones, self.cde_config)
     }
 }
 

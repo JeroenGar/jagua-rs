@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEConfig;
-use jagua_rs::entities::Instance;
 use jagua_rs::io::import::Importer;
 use jagua_rs::probs::spp;
 use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem};
@@ -49,19 +48,19 @@ pub fn create_lbf_problem(
         .map(|k| {
             let pi = &problem.layout.placed_items[*k];
             SPPlacement {
-                item_id: pi.item_id,
+                item_idx: pi.item.idx,
                 d_transf: pi.d_transf,
             }
         })
         .collect_vec();
 
     for pkey in placed_items_to_remove {
-        let item_id = problem.layout.placed_items[pkey].item_id;
+        let item_idx = problem.layout.placed_items[pkey].item.idx;
         problem.remove_item(pkey);
         info!(
             "Removed item: {} with {} edges",
-            item_id,
-            lbf_optimizer.instance.item(item_id).shape_cd.n_vertices()
+            item_idx,
+            lbf_optimizer.instance.item(item_idx).shape_cd.n_vertices()
         );
     }
 

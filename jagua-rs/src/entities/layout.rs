@@ -1,11 +1,13 @@
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::{CDESnapshot, CDEngine};
+use crate::entities::Container;
 use crate::entities::Item;
-use crate::entities::{Container, Instance};
 use crate::entities::{PItemKey, PlacedItem};
 use crate::geometry::DTransformation;
 use crate::util::assertions;
+use itertools::Itertools;
 use slotmap::SlotMap;
+use std::sync::Arc;
 
 /// A [`Layout`] is a dynamic representation of items that have been placed in a container at specific positions.
 /// Items can be placed and removed. The container can be swapped. Snapshots can be taken and restored to.
@@ -34,7 +36,9 @@ impl Layout {
     #[must_use]
     pub fn from_snapshot(ls: &LayoutSnapshot) -> Self {
         let mut layout = Layout::new(ls.container.clone());
-        layout.restore(ls);
+        layout
+            .restore(ls)
+            .expect("snapshot shares the container's static base");
         layout
     }
 
@@ -60,20 +64,33 @@ impl Layout {
         }
     }
 
-    /// Restores the layout to a previous state using a snapshot.
-    pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) {
-        assert_eq!(self.container.id, layout_snapshot.container.id);
+    /// Restores the layout from a snapshot.
+    ///
+    /// # Errors
+    /// Returns [`ContainerMismatch`] if the snapshot uses a different container,
+    /// leaving the layout unchanged.
+    /// Use [`Layout::swap_container`] first or [`Layout::from_snapshot`] to
+    /// restore a snapshot with a different container.
+    pub fn restore(&mut self, layout_snapshot: &LayoutSnapshot) -> Result<(), ContainerMismatch> {
+        if !Arc::ptr_eq(
+            &self.container.base_cde,
+            &layout_snapshot.container.base_cde,
+        ) {
+            return Err(ContainerMismatch);
+        }
+        self.container.clone_from(&layout_snapshot.container);
 
         self.placed_items.clone_from(&layout_snapshot.placed_items);
         self.cde.restore(&layout_snapshot.cde_snapshot);
 
         debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
         debug_assert!(assertions::snapshot_matches_layout(self, layout_snapshot));
+        Ok(())
     }
 
     /// Places an item in the layout at a specific position by applying a transformation.
     /// Returns the unique key for the placed item.
-    pub fn place_item(&mut self, item: &Item, d_transformation: DTransformation) -> PItemKey {
+    pub fn place_item(&mut self, item: &Arc<Item>, d_transformation: DTransformation) -> PItemKey {
         let pk = self
             .placed_items
             .insert(PlacedItem::new(item, d_transformation));
@@ -110,17 +127,26 @@ impl Layout {
 
     /// The current density of the layout defined as the ratio of the area of the items placed to the area of the container.
     /// Uses the original shapes of items and container to calculate the area.
-    pub fn density(&self, instance: &impl Instance) -> f32 {
-        self.placed_item_area(instance) / self.container.area()
+    #[must_use]
+    pub fn density(&self) -> f32 {
+        self.placed_item_area() / self.container.area()
     }
 
     /// The sum of the areas of the items placed in the layout (using the original shapes of the items).
-    pub fn placed_item_area(&self, instance: &impl Instance) -> f32 {
+    #[must_use]
+    pub fn placed_item_area(&self) -> f32 {
         self.placed_items
-            .iter()
-            .map(|(_, pi)| instance.item(pi.item_id))
-            .map(Item::area)
+            .values()
+            .map(|pi| pi.item.area())
             .sum::<f32>()
+    }
+
+    /// Distinct item types present in this layout.
+    pub fn items(&self) -> impl Iterator<Item = &Item> {
+        self.placed_items
+            .values()
+            .map(|pi| pi.item.as_ref())
+            .unique_by(|item| item.idx)
     }
 
     /// Returns the collision detection engine for this layout
@@ -142,6 +168,11 @@ impl Layout {
     }
 }
 
+/// The layout and snapshot do not share the same static collision base.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+#[error("layout and snapshot have different static collision bases")]
+pub struct ContainerMismatch;
+
 /// Immutable and compact representation of a [`Layout`].
 /// Can be used to restore a [`Layout`] back to a previous state.
 #[derive(Clone, Debug)]
@@ -156,16 +187,17 @@ pub struct LayoutSnapshot {
 
 impl LayoutSnapshot {
     /// Equivalent to [`Layout::density`]
-    pub fn density(&self, instance: &impl Instance) -> f32 {
-        self.placed_item_area(instance) / self.container.area()
+    #[must_use]
+    pub fn density(&self) -> f32 {
+        self.placed_item_area() / self.container.area()
     }
 
     /// Equivalent to [`Layout::placed_item_area`]
-    pub fn placed_item_area(&self, instance: &impl Instance) -> f32 {
+    #[must_use]
+    pub fn placed_item_area(&self) -> f32 {
         self.placed_items
-            .iter()
-            .map(|(_, pi)| instance.item(pi.item_id))
-            .map(Item::area)
+            .values()
+            .map(|pi| pi.item.area())
             .sum::<f32>()
     }
 }

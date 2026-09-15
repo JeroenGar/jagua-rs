@@ -2,7 +2,6 @@ use crate::util::{N_ITEMS_REMOVED, create_base_config};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use itertools::Itertools;
 use jagua_rs::collision_detection::hazards::filter::NoFilter;
-use jagua_rs::entities::Instance;
 use jagua_rs::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use jagua_rs::geometry::geo_traits::TransformableFrom;
 use jagua_rs::geometry::primitives::SPolygon;
@@ -48,7 +47,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         "avg number of edges per item: {}",
         ITEMS_ID_TO_TEST
             .iter()
-            .map(|&item_id| instance.item(item_id).shape_cd.n_vertices())
+            .map(|&item_idx| instance.item(item_idx).shape_cd.n_vertices())
             .sum::<usize>() as f32
             / ITEMS_ID_TO_TEST.len() as f32
     );
@@ -57,8 +56,8 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     let layout = &problem.layout;
     let samples = ITEMS_ID_TO_TEST
         .iter()
-        .map(|&item_id| {
-            let sampler = UniformRectSampler::new(layout.cde().bbox(), instance.item(item_id));
+        .map(|&item_idx| {
+            let sampler = UniformRectSampler::new(layout.cde().bbox(), instance.item(item_idx));
             (0..N_TOTAL_SAMPLES)
                 .map(|_| sampler.sample(&mut rng))
                 .collect_vec()
@@ -70,9 +69,9 @@ fn fast_fail_query_bench(c: &mut Criterion) {
 
         let custom_surrogates = ITEMS_ID_TO_TEST
             .iter()
-            .map(|&item_id| {
+            .map(|&item_idx| {
                 create_custom_surrogate(
-                    &instance.item(item_id).shape_cd,
+                    &instance.item(item_idx).shape_cd,
                     ff_pole_area_ratio,
                     n_ff_piers,
                 )
@@ -91,7 +90,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
 
         let mut buffer_shapes = ITEMS_ID_TO_TEST
             .iter()
-            .map(|&item_id| instance.item(item_id))
+            .map(|&item_idx| instance.item(item_idx))
             .map(|item| {
                 let mut buffer = (*item.shape_cd).clone();
                 buffer.surrogate = None; //strip the surrogate for faster transforms, we don't need it for the buffer shape
@@ -105,8 +104,8 @@ fn fast_fail_query_bench(c: &mut Criterion) {
             )),
             |b| {
                 b.iter(|| {
-                    let (i, &item_id) = i_cycler.next().unwrap();
-                    let item = instance.item(item_id);
+                    let (i, &item_idx) = i_cycler.next().unwrap();
+                    let item = instance.item(item_idx);
                     let surrogate = &custom_surrogates[i];
                     let buffer_shape = &mut buffer_shapes[i];
                     for dtransf in samples_cyclers[i].next().unwrap() {

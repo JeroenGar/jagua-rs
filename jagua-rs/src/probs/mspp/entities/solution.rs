@@ -1,6 +1,5 @@
 use crate::Instant;
 use crate::entities::LayoutSnapshot;
-use crate::probs::mspp::entities::instance::MSPInstance;
 use crate::probs::mspp::entities::problem::LayKey;
 use crate::probs::mspp::entities::strip::Strip;
 use slotmap::SecondaryMap;
@@ -20,7 +19,7 @@ pub struct MSPSolution {
 impl MSPSolution {
     /// Computes the density of the solution as the ratio between the total area of placed items and the total area of the containers.
     #[must_use]
-    pub fn density(&self, instance: &MSPInstance) -> f32 {
+    pub fn density(&self) -> f32 {
         let total_container_area = self
             .strips
             .values()
@@ -30,7 +29,7 @@ impl MSPSolution {
         let total_item_area = self
             .layout_snapshots
             .values()
-            .map(|ls| ls.placed_item_area(instance))
+            .map(LayoutSnapshot::placed_item_area)
             .sum::<f32>();
 
         total_item_area / total_container_area

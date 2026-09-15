@@ -1,5 +1,5 @@
 use crate::Instant;
-use crate::entities::{Container, Instance, Layout, PItemKey};
+use crate::entities::{Container, Layout, PItemKey};
 use crate::geometry::DTransformation;
 use crate::probs::mspp::entities::MSPSolution;
 use crate::probs::mspp::entities::instance::MSPInstance;
@@ -79,10 +79,10 @@ impl MSPProblem {
         let lk = placement.lk;
 
         let layout = &mut self.layouts[lk];
-        let item = self.instance.item(placement.item_id);
+        let item = self.instance.item(placement.item_idx);
         let pik = layout.place_item(item, placement.d_transf);
 
-        self.register_included_item(placement.item_id);
+        self.register_included_item(placement.item_idx);
 
         (lk, pik)
     }
@@ -91,11 +91,11 @@ impl MSPProblem {
     /// Returns the corresponding `MSPPlacement` to place it back.
     pub fn remove_item(&mut self, lk: LayKey, pk: PItemKey) -> MSPPlacement {
         let pi = self.layouts[lk].remove_item(pk);
-        self.deregister_included_item(pi.item_id);
+        self.deregister_included_item(pi.item.idx);
 
         MSPPlacement {
             lk,
-            item_id: pi.item_id,
+            item_idx: pi.item.idx,
             d_transf: pi.d_transf,
         }
     }
@@ -125,16 +125,11 @@ impl MSPProblem {
         for (lk, layout) in &mut self.layouts {
             match solution.layout_snapshots.get(lk) {
                 Some(ls) => {
-                    //The key is present in the solution
-                    if self.strips[lk] == solution.strips[lk] {
-                        //Strips match, do a simple restore
-                        layout.restore(ls);
-                    } else {
-                        //The strip changed, we need to swap the container and then restore
-                        self.strips[lk] = solution.strips[lk];
-                        layout.swap_container(Container::from(self.strips[lk]));
-                        layout.restore(ls);
+                    // A saved strip may have a different width.
+                    if layout.restore(ls).is_err() {
+                        *layout = Layout::from_snapshot(ls);
                     }
+                    self.strips[lk] = solution.strips[lk];
                 }
                 None => {
                     //Layout not present in solution, mark for removal
@@ -164,9 +159,16 @@ impl MSPProblem {
             self.item_demand_qtys
                 .iter_mut()
                 .enumerate()
-                .for_each(|(id, demand)| {
-                    *demand = self.instance.item_qty(id);
+                .for_each(|(idx, demand)| {
+                    *demand = self.instance.item_qty(idx);
                 });
+            for pi in self
+                .layouts
+                .values()
+                .flat_map(|layout| layout.placed_items.values())
+            {
+                self.item_demand_qtys[pi.item.idx] -= 1;
+            }
         }
 
         debug_assert!(problem_matches_solution(self, solution));
@@ -189,7 +191,7 @@ impl MSPProblem {
         layout
             .placed_items
             .values()
-            .for_each(|pi| self.register_included_item(pi.item_id));
+            .for_each(|pi| self.register_included_item(pi.item.idx));
         self.layouts.insert(layout)
     }
 
@@ -198,17 +200,17 @@ impl MSPProblem {
         layout
             .placed_items
             .values()
-            .for_each(|pi| self.deregister_included_item(pi.item_id));
+            .for_each(|pi| self.deregister_included_item(pi.item.idx));
 
         self.strips.remove(key);
     }
 
-    fn register_included_item(&mut self, item_id: usize) {
-        self.item_demand_qtys[item_id] -= 1;
+    fn register_included_item(&mut self, item_idx: usize) {
+        self.item_demand_qtys[item_idx] -= 1;
     }
 
-    fn deregister_included_item(&mut self, item_id: usize) {
-        self.item_demand_qtys[item_id] += 1;
+    fn deregister_included_item(&mut self, item_idx: usize) {
+        self.item_demand_qtys[item_idx] += 1;
     }
 
     /// Computes the density of the problem as the ratio between the total area of placed items and the total area of containers.
@@ -218,7 +220,7 @@ impl MSPProblem {
 
         let total_item_area = self
             .all_layouts()
-            .map(|l| l.placed_item_area(&self.instance))
+            .map(Layout::placed_item_area)
             .sum::<f32>();
 
         total_item_area / total_container_area
@@ -253,8 +255,8 @@ impl MSPProblem {
 pub struct MSPPlacement {
     /// Which [`Layout`] to place the item in
     pub lk: LayKey,
-    /// The id of the [`Item`](crate::entities::Item) to be placed
-    pub item_id: usize,
+    /// The index of the [`Item`](crate::entities::Item) to be placed
+    pub item_idx: usize,
     /// The transformation to apply to the item when placing it
     pub d_transf: DTransformation,
 }

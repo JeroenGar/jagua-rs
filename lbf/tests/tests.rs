@@ -160,8 +160,8 @@ mod tests {
             }
             let dataset: Dataset = serde_json::from_reader(std::fs::File::open(&path)?)
                 .with_context(|| path.display().to_string())?;
-            for item in dataset.items {
-                importer.import_item(&item).with_context(|| {
+            for (idx, item) in dataset.items.into_iter().enumerate() {
+                importer.import_item(&item, idx).with_context(|| {
                     format!("{}: failed to inflate item {}", path.display(), item.id)
                 })?;
                 n_items += 1;

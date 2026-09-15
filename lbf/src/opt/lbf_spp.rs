@@ -5,7 +5,6 @@ use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use crate::util::assertions::strip_width_is_in_check;
 use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
-use jagua_rs::entities::Instance;
 use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution};
 use log::info;
 use rand::prelude::SmallRng;
@@ -37,10 +36,12 @@ impl LBFOptimizerSP {
     pub fn solve(&mut self) -> SPSolution {
         let start = Instant::now();
 
-        'outer: for item_id in item_placement_order(&self.instance) {
-            let item = self.instance.item(item_id);
+        'outer: for item_idx in
+            item_placement_order(self.instance.items.iter().map(|(item, _)| item.as_ref()))
+        {
+            let item = self.instance.item(item_idx);
             //place all items of this type
-            while self.problem.item_demand_qtys[item_id] > 0 {
+            while self.problem.item_demand_qtys[item_idx] > 0 {
                 let cde = self.problem.layout.cde();
                 let placement = match &item.min_quality {
                     None => search(
@@ -68,14 +69,14 @@ impl LBFOptimizerSP {
                 match placement {
                     Some((d_transf, _)) => {
                         self.problem.place_item(SPPlacement {
-                            item_id: item.id,
+                            item_idx: item.idx,
                             d_transf,
                         });
                         info!(
                             "[LBF] placing item {}/{} with id {} at [{}]",
                             self.problem.layout.placed_items.len(),
                             self.instance.total_item_qty(),
-                            item.id,
+                            item.idx,
                             d_transf,
                         );
                         #[allow(clippy::absurd_extreme_comparisons)]
@@ -117,7 +118,7 @@ impl LBFOptimizerSP {
         info!(
             "[LBF] solution contains {} items with a density of {:.3}%",
             solution.layout_snapshot.placed_items.len(),
-            solution.density(&self.instance) * 100.0
+            solution.density() * 100.0
         );
         solution
     }

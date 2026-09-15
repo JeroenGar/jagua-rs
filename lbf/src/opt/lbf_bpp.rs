@@ -4,7 +4,7 @@ use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
-use jagua_rs::entities::{Instance, Item};
+use jagua_rs::entities::Item;
 use jagua_rs::probs::bpp::entities::{
     BPInstance, BPLayoutType, BPPlacement, BPProblem, BPSolution,
 };
@@ -39,10 +39,12 @@ impl LBFOptimizerBP {
     pub fn solve(&mut self) -> BPSolution {
         let start = Instant::now();
 
-        'outer: for item_id in item_placement_order(&self.instance) {
-            let item = self.instance.item(item_id);
+        'outer: for item_idx in
+            item_placement_order(self.instance.items.iter().map(|(item, _)| item.as_ref()))
+        {
+            let item = self.instance.item(item_idx);
             //place all items of this type
-            'inner: while self.problem.item_demand_qtys[item_id] > 0 {
+            'inner: while self.problem.item_demand_qtys[item_idx] > 0 {
                 //find a position and insert it
                 let placement = search_layouts(
                     &self.problem,
@@ -59,7 +61,7 @@ impl LBFOptimizerBP {
                             "[LBF] placing item {}/{} with id {} at [{}] in Layout {:?}",
                             self.problem.item_placed_qtys().sum::<usize>(),
                             self.instance.total_item_qty(),
-                            i_opt.item_id,
+                            i_opt.item_idx,
                             i_opt.d_transf,
                             l_index
                         );
@@ -88,7 +90,7 @@ impl LBFOptimizerBP {
                 .values()
                 .map(|ls| ls.placed_items.len())
                 .sum::<usize>(),
-            solution.density(&self.instance) * 100.0
+            solution.density() * 100.0
         );
         solution
     }
@@ -117,7 +119,9 @@ fn search_layouts(
         debug!("searching in layout {layout_id:?}");
         let cde = match layout_id {
             BPLayoutType::Open(lkey) => problem.layouts[lkey].cde(),
-            BPLayoutType::Closed { bin_id } => problem.instance.container(bin_id).base_cde.as_ref(),
+            BPLayoutType::Closed { bin_id } => {
+                problem.instance.bins[bin_id].container.base_cde.as_ref()
+            }
         };
 
         let placement = match &item.min_quality {
@@ -131,7 +135,7 @@ fn search_layouts(
         if let Some((d_transf, _)) = placement {
             return Some(BPPlacement {
                 layout_id,
-                item_id: item.id,
+                item_idx: item.idx,
                 d_transf,
             });
         }

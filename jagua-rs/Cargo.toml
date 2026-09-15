@@ -21,6 +21,7 @@ float-cmp = {workspace = true}
 itertools = {workspace = true}
 svg = {workspace = true}
 anyhow = {workspace = true}
+thiserror = {workspace = true}
 document-features = {workspace = true}
 rayon = { workspace = true }
 geo-types = { workspace = true }
