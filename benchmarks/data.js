@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789479551953,
+  "lastUpdate": 1789479898131,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -6027,6 +6027,84 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k/5",
             "value": 171719,
             "range": "± 3497",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "34694161+JeroenGar@users.noreply.github.com",
+            "name": "JeroenGar",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "34694161+JeroenGar@users.noreply.github.com",
+            "name": "JeroenGar",
+            "username": "JeroenGar"
+          },
+          "distinct": true,
+          "id": "a037426a7123ab2f4e610d455b098b00b26cb6cd",
+          "message": "Remove redundant package homepages",
+          "timestamp": "2026-09-15T15:41:39+02:00",
+          "tree_id": "01556cf3f832a475798da4e0400ee7d72ff533db",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/a037426a7123ab2f4e610d455b098b00b26cb6cd"
+        },
+        "date": 1789479896171,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 1845211,
+            "range": "± 81713",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 1851730,
+            "range": "± 83186",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 1862796,
+            "range": "± 86563",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 2013426,
+            "range": "± 16640",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 3928552,
+            "range": "± 20921",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 7436162,
+            "range": "± 87594",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 216652,
+            "range": "± 8878",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 169733,
+            "range": "± 6754",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 151575,
+            "range": "± 4862",
             "unit": "ns/iter"
           }
         ]
