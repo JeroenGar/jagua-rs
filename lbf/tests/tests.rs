@@ -208,7 +208,9 @@ mod tests {
             serde_json::from_value(serde_json::json!({
                 "name": "small separated items", "strip_height": 2.0,
                 "min_item_separation": 0.5,
-                "items": [{"id": 0, "demand": 2, "shape": {"type": "rectangle",
+                "items": [{"id": 0, "demand": 2,
+                    "orientation": {"rotation": {"mode": "continuous"}},
+                    "shape": {"type": "rectangle",
                     "data": {"x_min": 0, "y_min": 0, "width": 0.1, "height": 0.1}}}]
             }))?;
         let small_instance = spp::io::import_instance(&importer(), &small)?;
@@ -291,7 +293,8 @@ mod tests {
             );
             let epoch = jagua_rs::Instant::now();
             let solution =
-                LBFOptimizerSP::new(instance.clone(), config(), SmallRng::seed_from_u64(0)).solve();
+                LBFOptimizerSP::new(instance.clone(), config(), SmallRng::seed_from_u64(0))?
+                    .solve()?;
             let exported = spp::io::export(&solution, epoch);
             let restored = spp::io::import_solution(&instance, &exported)?;
             assert_eq!(restored.layout_snapshot.placed_items.len(), 2);
