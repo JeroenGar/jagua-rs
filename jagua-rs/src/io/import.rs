@@ -10,7 +10,7 @@ use crate::io::ext_repr::{ExtContainer, ExtItem, ExtSPolygon, ExtShape};
 use anyhow::{Result, bail, ensure};
 use float_cmp::approx_eq;
 use itertools::Itertools;
-use log::{debug, warn};
+use log::debug;
 use std::sync::Arc;
 
 /// Converts external representations of items and containers into internal ones.
@@ -25,23 +25,32 @@ impl Importer {
     ///
     /// * `cde_config` - Configuration for the CDE (Collision Detection Engine).
     /// * `simplify_tolerance` - See [`ShapeModifyConfig`].
-    /// * `min_item_separation` - Optional minimum separation distance between items and any other hazard. If enabled, every hazard is inflated/deflated by half this value. See [`ShapeModifyConfig`].
     /// * `narrow_concavity_cutoff` - Optional definition for closing narrow concavities. If enabled, the shapes are modified to close "narrow" concavities. See [`ShapeModifyConfig`].
     #[must_use]
     pub fn new(
         cde_config: CDEConfig,
         simplify_tolerance: Option<f32>,
-        min_item_separation: Option<f32>,
         narrow_concavity_cutoff: Option<(f32, f32)>,
     ) -> Importer {
         Importer {
             shape_modify_config: ShapeModifyConfig {
-                offset: min_item_separation.map(|f| f / 2.0),
+                offset: None,
                 simplify_tolerance,
                 narrow_concavity_cutoff,
             },
             cde_config,
         }
+    }
+
+    /// Set the minimum distance between items and other hazards.
+    /// Items are inflated and containers deflated by half this finite, nonnegative distance.
+    pub fn with_min_item_separation(mut self, separation: f32) -> Result<Self> {
+        ensure!(
+            separation.is_finite() && separation >= 0.0,
+            "min_item_separation must be finite and nonnegative"
+        );
+        self.shape_modify_config.offset = (separation > 0.0).then_some(separation / 2.0);
+        Ok(self)
     }
 
     /// Import geometry with a caller-assigned internal index, independent of the external ID.
@@ -61,7 +70,11 @@ impl Importer {
                 }
                 ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
                 ExtShape::Polygon(ep) => {
-                    warn!("No native support for polygons yet, ignoring the holes");
+                    ensure!(
+                        ep.inner.is_empty(),
+                        "item {} has unsupported holes",
+                        ext_item.id
+                    );
                     import_simple_polygon(&ep.outer)?
                 }
                 ExtShape::MultiPolygon(_) => {

@@ -10,6 +10,7 @@ use rayon::prelude::*;
 /// Imports an instance into the library
 #[allow(clippy::cast_precision_loss)]
 pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Result<SPInstance> {
+    let importer = importer.with_min_item_separation(ext_instance.min_item_separation)?;
     ensure!(
         ext_instance
             .items
@@ -41,8 +42,14 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Res
 
     let fixed_height = ext_instance.strip_height;
 
-    // Initialize the base width for 100% density
-    let width = total_item_area / fixed_height;
+    let separation = ext_instance.min_item_separation;
+    let usable_height = fixed_height - separation;
+    ensure!(
+        usable_height > 0.0,
+        "separation leaves no usable strip height"
+    );
+    // Initialize the usable area for 100% density.
+    let width = separation + total_item_area / usable_height;
 
     let base_strip = Strip::new(
         fixed_height,
@@ -60,8 +67,8 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Res
 
 /// Imports a solution into the library.
 pub fn import_solution(instance: &SPInstance, ext_solution: &ExtSPSolution) -> Result<SPSolution> {
-    let mut prob = SPProblem::new(instance.clone());
-    prob.change_strip_width(ext_solution.strip_width);
+    let mut prob = SPProblem::new(instance.clone())?;
+    prob.change_strip_width(ext_solution.strip_width)?;
 
     for ext_placement in ext_solution.layout.placed_items.iter().cloned() {
         let item_idx = instance

@@ -5,6 +5,7 @@ use crate::probs::mspp::entities::MSPSolution;
 use crate::probs::mspp::entities::instance::MSPInstance;
 use crate::probs::mspp::entities::strip::Strip;
 use crate::probs::mspp::util::assertions::problem_matches_solution;
+use anyhow::{Result, ensure};
 use itertools::Itertools;
 use slotmap::{SecondaryMap, SlotMap, new_key_type};
 
@@ -41,11 +42,12 @@ impl MSPProblem {
 
     /// Adds a new layout to the problem based on the given strip.
     /// Returns the key of the newly added layout.
-    pub fn add_layout_from_strip(&mut self, strip: Strip) -> LayKey {
-        let layout = Layout::new(Container::from(strip));
+    /// Returns an error if the strip cannot form a container.
+    pub fn add_layout_from_strip(&mut self, strip: Strip) -> Result<LayKey> {
+        let layout = Layout::new(Container::try_from(strip)?);
         let lk = self.register_layout(layout);
         self.strips.insert(lk, strip);
-        lk
+        Ok(lk)
     }
 
     /// Removes a layout from the problem. All items placed inside it will be deregistered.
@@ -54,7 +56,7 @@ impl MSPProblem {
     }
 
     /// Modifies a layout by shrinking its strip to the smallest width that can still contain all placed items.
-    pub fn fit_strip(&mut self, lk: LayKey) {
+    pub fn fit_strip(&mut self, lk: LayKey) -> Result<()> {
         let feasible_before = self.layouts[lk].is_feasible();
 
         //Find the rightmost item in the strip and add some tolerance (avoiding false collision positives)
@@ -69,8 +71,9 @@ impl MSPProblem {
         // add the shape offset if any, the strip needs to be at least `offset` wider than the items
         let fitted_width = item_x_max + self.strips[lk].shape_modify_config.offset.unwrap_or(0.0);
 
-        self.change_strip_width(lk, fitted_width);
+        self.change_strip_width(lk, fitted_width)?;
         debug_assert_eq!(feasible_before, self.layouts[lk].is_feasible());
+        Ok(())
     }
 
     /// Places an item according to the given `MSPPlacement` in the problem.
@@ -176,15 +179,17 @@ impl MSPProblem {
     }
 
     /// Modifies the width of the strip of the layout.
-    /// If the width is non-positive, the layout is removed.
-    pub fn change_strip_width(&mut self, lk: LayKey, new_width: f32) {
-        assert!(
-            new_width > 0.0,
-            "Strip width must be positive. Got: {new_width}"
+    /// Leaves the layout unchanged if container construction fails.
+    pub fn change_strip_width(&mut self, lk: LayKey, new_width: f32) -> Result<()> {
+        let mut strip = self.strips[lk];
+        ensure!(
+            new_width > 0.0 && new_width <= strip.max_width,
+            "strip width is out of bounds"
         );
-        let strip = &mut self.strips[lk];
         strip.set_width(new_width);
-        self.layouts[lk].swap_container(Container::from(*strip));
+        self.layouts[lk].swap_container(Container::try_from(strip)?);
+        self.strips[lk] = strip;
+        Ok(())
     }
 
     fn register_layout(&mut self, layout: Layout) -> LayKey {

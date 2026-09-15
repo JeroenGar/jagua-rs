@@ -1,3 +1,4 @@
+use anyhow::Result;
 use jagua_rs::Instant;
 
 use crate::ITEM_LIMIT;
@@ -21,19 +22,19 @@ pub struct LBFOptimizerSP {
 }
 
 impl LBFOptimizerSP {
-    pub fn new(instance: SPInstance, config: LBFConfig, rng: SmallRng) -> Self {
+    pub fn new(instance: SPInstance, config: LBFConfig, rng: SmallRng) -> Result<Self> {
         assert!(config.n_samples > 0);
-        let problem = SPProblem::new(instance.clone());
-        Self {
+        let problem = SPProblem::new(instance.clone())?;
+        Ok(Self {
             instance,
             problem,
             config,
             rng,
             sample_counter: 0,
-        }
+        })
     }
 
-    pub fn solve(&mut self) -> SPSolution {
+    pub fn solve(&mut self) -> Result<SPSolution> {
         let start = Instant::now();
 
         'outer: for item_idx in
@@ -87,7 +88,7 @@ impl LBFOptimizerSP {
                     None => {
                         // item does not fit anywhere, increase the strip width
                         self.problem
-                            .change_strip_width(self.problem.strip.width * 1.1);
+                            .change_strip_width(self.problem.strip.width * 1.1)?;
                         info!(
                             "[LBF] no placement found, extended strip by 10% to {:.3}",
                             self.problem.strip.width
@@ -101,7 +102,7 @@ impl LBFOptimizerSP {
             }
         }
 
-        self.problem.fit_strip();
+        self.problem.fit_strip()?;
         info!(
             "[LBF] fitted strip width to {:.3}",
             self.problem.strip.width
@@ -120,6 +121,6 @@ impl LBFOptimizerSP {
             solution.layout_snapshot.placed_items.len(),
             solution.density() * 100.0
         );
-        solution
+        Ok(solution)
     }
 }

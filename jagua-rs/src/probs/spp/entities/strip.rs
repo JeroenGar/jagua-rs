@@ -37,11 +37,13 @@ impl Strip {
     }
 }
 
-impl From<Strip> for Container {
-    fn from(s: Strip) -> Container {
+impl TryFrom<Strip> for Container {
+    type Error = anyhow::Error;
+
+    fn try_from(s: Strip) -> Result<Container> {
         Container::new(
             OriginalShape {
-                shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.width, s.fixed_height).unwrap()),
+                shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.width, s.fixed_height)?),
                 pre_transform: DTransformation::empty(),
                 modify_mode: ShapeModifyMode::Deflate,
                 modify_config: s.shape_modify_config,
@@ -49,6 +51,5 @@ impl From<Strip> for Container {
             vec![],
             s.cde_config,
         )
-        .unwrap()
     }
 }

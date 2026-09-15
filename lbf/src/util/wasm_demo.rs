@@ -76,7 +76,6 @@ pub fn run_lbf_bpp_wasm(
     let importer = Importer::new(
         config.cde_config,
         config.poly_simpl_tolerance,
-        config.min_item_separation,
         config.narrow_concavity_cutoff,
     );
 
@@ -154,7 +153,6 @@ pub fn run_lbf_spp_wasm(
     let importer = Importer::new(
         config.cde_config,
         config.poly_simpl_tolerance,
-        config.min_item_separation,
         config.narrow_concavity_cutoff,
     );
 
@@ -169,7 +167,9 @@ pub fn run_lbf_spp_wasm(
 
     // Solve
     let start_time = Instant::now();
-    let sol = LBFOptimizerSP::new(instance.clone(), config, rng).solve();
+    let sol = LBFOptimizerSP::new(instance.clone(), config, rng)
+        .and_then(|mut optimizer| optimizer.solve())
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
     let solve_time_ms = start_time.elapsed().as_millis();
 
     // Export solution
