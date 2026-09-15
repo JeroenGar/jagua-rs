@@ -20,7 +20,7 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
     };
     let item_json = json!({
         "id": 42, "demand": 2,
-        "allowed_orientations": [0],
+        "orientation": {"rotation": {"mode": "discrete", "angles": [0]}},
         "shape": {"type": "rectangle", "data": {
             "x_min": 0, "y_min": 0, "width": 2, "height": 2
         }}

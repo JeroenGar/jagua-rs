@@ -208,7 +208,9 @@ mod tests {
             serde_json::from_value(serde_json::json!({
                 "name": "small separated items", "strip_height": 2.0,
                 "min_item_separation": 0.5,
-                "items": [{"id": 0, "demand": 2, "shape": {"type": "rectangle",
+                "items": [{"id": 0, "demand": 2,
+                    "orientation": {"rotation": {"mode": "continuous"}},
+                    "shape": {"type": "rectangle",
                     "data": {"x_min": 0, "y_min": 0, "width": 0.1, "height": 0.1}}}]
             }))?;
         let small_instance = spp::io::import_instance(&importer(), &small)?;
@@ -248,6 +250,81 @@ mod tests {
             input.min_item_separation = invalid;
             assert!(spp::io::import_instance(&importer(), &input).is_err());
         }
+        Ok(())
+    }
+
+    #[test]
+    fn explicit_rotations_import_solve_and_round_trip() -> Result<()> {
+        use jagua_rs::geometry::geo_enums::RotationRange;
+        use jagua_rs::probs::spp::io::ext_repr::ExtSPInstance;
+        use serde_json::json;
+
+        let input = |rotation| {
+            json!({
+                "name": "rotations", "strip_height": 10,
+                "items": [{
+                    "id": 42, "demand": 2, "orientation": {"rotation": rotation},
+                    "shape": {"type": "rectangle", "data": {
+                        "x_min": 0, "y_min": 0, "width": 2, "height": 3
+                    }}
+                }]
+            })
+        };
+        for (rotation, expected) in [
+            (
+                json!({"mode": "discrete", "angles": [360, 0, -180, 180]}),
+                RotationRange::Discrete(vec![0.0, std::f32::consts::PI]),
+            ),
+            (
+                json!({"mode": "stepped", "step": 180}),
+                RotationRange::Discrete(vec![0.0, std::f32::consts::PI]),
+            ),
+            (json!({"mode": "stepped", "step": 360}), RotationRange::None),
+            (json!({"mode": "continuous"}), RotationRange::Continuous),
+        ] {
+            let external: ExtSPInstance = serde_json::from_value(input(rotation))?;
+            let instance = spp::io::import_instance(&importer(), &external)?;
+            assert_eq!(instance.item(0).allowed_rotation, expected);
+            let round_trip: ExtSPInstance =
+                serde_json::from_value(serde_json::to_value(&external)?)?;
+            assert_eq!(
+                round_trip.items[0].base.orientation,
+                external.items[0].base.orientation
+            );
+            let epoch = jagua_rs::Instant::now();
+            let solution =
+                LBFOptimizerSP::new(instance.clone(), config(), SmallRng::seed_from_u64(0))?
+                    .solve()?;
+            let exported = spp::io::export(&solution, epoch);
+            let restored = spp::io::import_solution(&instance, &exported)?;
+            assert_eq!(restored.layout_snapshot.placed_items.len(), 2);
+        }
+        for rotation in [
+            json!(null),
+            json!({"mode": "discrete", "angles": []}),
+            json!({"mode": "stepped", "step": 0}),
+            json!({"mode": "stepped", "step": 7}),
+            json!({"mode": "stepped", "step": 0.0001}),
+            json!({"mode": "continuous", "angles": [0]}),
+        ] {
+            let parsed = serde_json::from_value::<ExtSPInstance>(input(rotation));
+            assert!(parsed.is_err() || spp::io::import_instance(&importer(), &parsed?).is_err());
+        }
+        let mut legacy = input(json!({"mode": "continuous"}));
+        legacy["items"][0]["allowed_orientations"] = json!(null);
+        assert!(serde_json::from_value::<ExtSPInstance>(legacy).is_err());
+        let mut missing = input(json!({"mode": "continuous"}));
+        missing["items"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("orientation");
+        assert!(serde_json::from_value::<ExtSPInstance>(missing).is_err());
+        let decimal: ExtSPInstance =
+            serde_json::from_value(input(json!({"mode": "stepped", "step": 0.1})))?;
+        let instance = spp::io::import_instance(&importer(), &decimal)?;
+        assert!(
+            matches!(&instance.item(0).allowed_rotation, RotationRange::Discrete(a) if a.len() == 3600)
+        );
         Ok(())
     }
 
