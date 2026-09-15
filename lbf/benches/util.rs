@@ -29,8 +29,8 @@ pub fn create_lbf_problem(
     n_items_removed: usize,
 ) -> (SPProblem, Vec<SPPlacement>) {
     let mut lbf_optimizer =
-        LBFOptimizerSP::new(instance.clone(), config, SmallRng::seed_from_u64(0));
-    lbf_optimizer.solve();
+        LBFOptimizerSP::new(instance.clone(), config, SmallRng::seed_from_u64(0)).unwrap();
+    lbf_optimizer.solve().unwrap();
 
     let mut problem = lbf_optimizer.problem;
 

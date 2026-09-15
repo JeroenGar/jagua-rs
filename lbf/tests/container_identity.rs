@@ -107,7 +107,7 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
     let mut problem = jagua_rs::probs::mspp::entities::MSPProblem::new(instance);
     let mut keys = vec![];
     for _ in 0..2 {
-        let lk = problem.add_layout_from_strip(strip);
+        let lk = problem.add_layout_from_strip(strip)?;
         problem.place_item(jagua_rs::probs::mspp::entities::MSPPlacement {
             lk,
             item_idx: 0,

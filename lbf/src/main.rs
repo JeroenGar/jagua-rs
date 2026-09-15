@@ -89,7 +89,7 @@ fn main_spp(
         None => rand::make_rng(),
     };
     let instance = spp::io::import_instance(&importer, &ext_instance)?;
-    let sol = LBFOptimizerSP::new(instance.clone(), config, rng).solve();
+    let sol = LBFOptimizerSP::new(instance.clone(), config, rng)?.solve()?;
 
     {
         let output = SPOutput {

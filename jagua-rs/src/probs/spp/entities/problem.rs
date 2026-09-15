@@ -5,6 +5,7 @@ use crate::probs::spp::entities::strip::Strip;
 use crate::probs::spp::entities::{SPInstance, SPSolution};
 use crate::probs::spp::util::assertions::problem_matches_solution;
 use itertools::Itertools;
+use anyhow::{Result, ensure};
 
 /// Modifiable counterpart of [`SPInstance`]: items can be placed and removed, strip can be extended or fitted.
 #[derive(Clone)]
@@ -16,28 +17,34 @@ pub struct SPProblem {
 }
 
 impl SPProblem {
-    #[must_use]
-    pub fn new(instance: SPInstance) -> Self {
+    /// Creates a problem, returning an error if its strip cannot form a container.
+    pub fn new(instance: SPInstance) -> Result<Self> {
         let item_demand_qtys = instance.items.iter().map(|(_, qty)| *qty).collect_vec();
         let strip = instance.base_strip;
-        let layout = Layout::new(strip.into());
+        let layout = Layout::new(strip.try_into()?);
 
-        Self {
+        Ok(Self {
             instance,
             strip,
             layout,
             item_demand_qtys,
-        }
+        })
     }
 
     /// Modifies the width of the strip in the back, keeping the front fixed.
-    pub fn change_strip_width(&mut self, new_width: f32) {
-        self.strip.set_width(new_width);
-        self.layout.swap_container(self.strip.into());
+    /// Returns an error without changing the problem if the new container is invalid.
+    pub fn change_strip_width(&mut self, new_width: f32) -> Result<()> {
+        ensure!(new_width > 0.0, "strip width must be positive");
+        let mut strip = self.strip;
+        strip.set_width(new_width);
+        let container = strip.try_into()?;
+        self.layout.swap_container(container);
+        self.strip = strip;
+        Ok(())
     }
 
     /// Shrinks the strip to the minimum width that fits all items.
-    pub fn fit_strip(&mut self) {
+    pub fn fit_strip(&mut self) -> Result<()> {
         let feasible_before = self.layout.is_feasible();
 
         //Find the rightmost item in the strip and add some tolerance (avoiding false collision positives)
@@ -53,8 +60,9 @@ impl SPProblem {
         // add the shape offset if any, the strip needs to be at least `offset` wider than the items
         let fitted_width = item_x_max + self.strip.shape_modify_config.offset.unwrap_or(0.0);
 
-        self.change_strip_width(fitted_width);
+        self.change_strip_width(fitted_width)?;
         debug_assert_eq!(feasible_before, self.layout.is_feasible());
+        Ok(())
     }
 
     /// Places an item according to the given `SPPlacement` in the problem.

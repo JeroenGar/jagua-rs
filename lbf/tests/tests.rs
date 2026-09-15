@@ -38,12 +38,12 @@ mod tests {
             let mut config = config();
             config.cde_config.quadtree_depth = qt_depth;
 
-            let mut opt = LBFOptimizerSP::new(instance.clone(), config, SmallRng::seed_from_u64(0));
+            let mut opt = LBFOptimizerSP::new(instance.clone(), config, SmallRng::seed_from_u64(0))?;
 
             let mut rng = SmallRng::seed_from_u64(0);
 
             // a first lbf run
-            opt.solve();
+            opt.solve()?;
             {
                 // remove some items
                 let problem = &mut opt.problem;
@@ -67,11 +67,11 @@ mod tests {
 
                 let solution = opt.problem.save();
                 // second optimization run
-                opt.solve();
+                opt.solve()?;
                 // restore the solution
                 opt.problem.restore(&solution);
                 // third optimization run
-                opt.solve();
+                opt.solve()?;
             }
         }
         Ok(())
@@ -202,6 +202,28 @@ mod tests {
 
     #[test]
     fn instance_separation_controls_item_and_container_geometry() -> Result<()> {
+        let mut small: spp::io::ext_repr::ExtSPInstance = serde_json::from_value(serde_json::json!({
+            "name": "small separated items", "strip_height": 2.0,
+            "min_item_separation": 0.5,
+            "items": [{"id": 0, "demand": 2, "shape": {"type": "rectangle",
+                "data": {"x_min": 0, "y_min": 0, "width": 0.1, "height": 0.1}}}]
+        }))?;
+        let small_instance = spp::io::import_instance(&importer(), &small)?;
+        let mut small_problem = spp::entities::SPProblem::new(small_instance)?;
+        let before = small_problem.save();
+        assert!(small_problem.change_strip_width(0.02).is_err());
+        assert_eq!(small_problem.strip, before.strip);
+        assert!(jagua_rs::util::assertions::snapshot_matches_layout(
+            &small_problem.layout, &before.layout_snapshot
+        ));
+        let mut optimizer = LBFOptimizerSP::new(
+            small_problem.instance.clone(), config(), SmallRng::seed_from_u64(0)
+        )?;
+        optimizer.solve()?;
+        assert!(optimizer.problem.layout.is_feasible());
+        small.min_item_separation = 2.0;
+        assert!(spp::io::import_instance(&importer(), &small).is_err());
+
         let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
         assert_eq!(input.min_item_separation, 0.0);
         let plain = spp::io::import_instance(&importer(), &input)?;
@@ -210,7 +232,7 @@ mod tests {
         input.min_item_separation = 2.0;
         let spaced = spp::io::import_instance(&importer(), &input)?;
         assert_eq!(spaced.item(0).shape_orig.modify_config.offset, Some(1.0));
-        let problem = jagua_rs::probs::spp::entities::SPProblem::new(spaced);
+        let problem = jagua_rs::probs::spp::entities::SPProblem::new(spaced)?;
         assert_eq!(
             problem.layout.container.outer_orig.modify_config.offset,
             Some(1.0)
