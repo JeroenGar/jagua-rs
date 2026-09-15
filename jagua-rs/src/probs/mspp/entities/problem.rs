@@ -5,8 +5,8 @@ use crate::probs::mspp::entities::MSPSolution;
 use crate::probs::mspp::entities::instance::MSPInstance;
 use crate::probs::mspp::entities::strip::Strip;
 use crate::probs::mspp::util::assertions::problem_matches_solution;
-use itertools::Itertools;
 use anyhow::{Result, ensure};
+use itertools::Itertools;
 use slotmap::{SecondaryMap, SlotMap, new_key_type};
 
 new_key_type! {
@@ -182,7 +182,10 @@ impl MSPProblem {
     /// Leaves the layout unchanged if container construction fails.
     pub fn change_strip_width(&mut self, lk: LayKey, new_width: f32) -> Result<()> {
         let mut strip = self.strips[lk];
-        ensure!(new_width > 0.0 && new_width <= strip.max_width, "strip width is out of bounds");
+        ensure!(
+            new_width > 0.0 && new_width <= strip.max_width,
+            "strip width is out of bounds"
+        );
         strip.set_width(new_width);
         self.layouts[lk].swap_container(Container::try_from(strip)?);
         self.strips[lk] = strip;

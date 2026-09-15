@@ -95,7 +95,10 @@ fn quadtree_query_bench(c: &mut Criterion) {
         let mut n_invalid: i64 = 0;
         let mut n_valid: i64 = 0;
 
-        let mut item_idx_cycler = selected_pi_uids.iter().map(|pi_uid| pi_uid.item_idx).cycle();
+        let mut item_idx_cycler = selected_pi_uids
+            .iter()
+            .map(|pi_uid| pi_uid.item_idx)
+            .cycle();
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
@@ -207,7 +210,10 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
         let mut n_valid: i64 = 0;
         let mut n_detected: i64 = 0;
 
-        let mut item_idx_cycler = selected_pi_uids.iter().map(|pi_uid| pi_uid.item_idx).cycle();
+        let mut item_idx_cycler = selected_pi_uids
+            .iter()
+            .map(|pi_uid| pi_uid.item_idx)
+            .cycle();
 
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {

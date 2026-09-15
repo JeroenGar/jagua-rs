@@ -1,5 +1,5 @@
-use jagua_rs::Instant;
 use anyhow::Result;
+use jagua_rs::Instant;
 
 use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;

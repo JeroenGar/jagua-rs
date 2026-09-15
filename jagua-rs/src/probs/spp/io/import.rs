@@ -44,7 +44,10 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtSPInstance) -> Res
 
     let separation = ext_instance.min_item_separation;
     let usable_height = fixed_height - separation;
-    ensure!(usable_height > 0.0, "separation leaves no usable strip height");
+    ensure!(
+        usable_height > 0.0,
+        "separation leaves no usable strip height"
+    );
     // Initialize the usable area for 100% density.
     let width = separation + total_item_area / usable_height;
 
