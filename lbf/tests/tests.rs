@@ -146,7 +146,8 @@ mod tests {
             items: Vec<jagua_rs::io::ext_repr::ExtItem>,
         }
 
-        let importer = Importer::new(config().cde_config, None, None).with_min_item_separation(2.0)?;
+        let importer =
+            Importer::new(config().cde_config, None, None).with_min_item_separation(2.0)?;
         let mut n_items = 0;
         for entry in std::fs::read_dir("../assets")? {
             let path = entry?.path();
