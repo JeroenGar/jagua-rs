@@ -40,17 +40,17 @@ impl SPolygon {
     /// Create a new simple polygon from a set of points, expensive operations are performed here! Use [`Self::clone()`] or [`Self::transform()`] to avoid recomputation.
     pub fn new(mut points: Vec<Point>) -> Result<Self> {
         if points.len() < 3 {
-            bail!("Simple polygon must have at least 3 points: {points:?}");
+            bail!("Simple polygon must have at least 3 points");
         }
         if points.iter().unique().count() != points.len() {
-            bail!("Simple polygon should not contain duplicate points: {points:?}");
+            bail!("Simple polygon should not contain duplicate points");
         }
         if let Some((e1_idx, e2_idx)) = SPolygon::find_self_intersection(&points) {
-            bail!("Simple polygon contains intersecting edges {e1_idx} and {e2_idx}: {points:?}");
+            bail!("Simple polygon contains intersecting edges {e1_idx} and {e2_idx}");
         }
 
         let area = match SPolygon::calculate_area(&points) {
-            0.0 => bail!("Simple polygon has no area: {points:?}"),
+            0.0 => bail!("Simple polygon has no area"),
             area if area < 0.0 => {
                 //edges should always be ordered counterclockwise (positive area)
                 points.reverse();

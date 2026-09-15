@@ -1,3 +1,5 @@
+use geo::Buffer;
+use geo::algorithm::buffer::{BufferStyle, LineJoin};
 use itertools::Itertools;
 use log::{debug, error, info, warn};
 use ordered_float::OrderedFloat;
@@ -336,7 +338,7 @@ impl CornerType {
 }
 
 /// Offsets a [`SPolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
-/// Relies on the [`geo_offset`](https://crates.io/crates/geo_offset) crate.
+/// Uses [`geo::Buffer`] to resolve intersections in the offset boundary.
 pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Result<SPolygon> {
     let offset = match mode {
         ShapeModifyMode::Deflate => -distance,
@@ -353,7 +355,9 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
     );
 
     // Create the offset polygon
-    let geo_poly_offsets = geo_buffer::buffer_polygon_rounded(&geo_poly, f64::from(offset)).0;
+    // Preserve the previous buffer's 0.1-radian round-join resolution.
+    let style = BufferStyle::new(f64::from(offset)).line_join(LineJoin::Round(0.1));
+    let geo_poly_offsets = geo_poly.buffer_with_style(style).0;
 
     let geo_poly_offset = match geo_poly_offsets.len() {
         0 => bail!("Offset resulted in an empty polygon"),

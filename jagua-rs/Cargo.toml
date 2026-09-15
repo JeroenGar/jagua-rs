@@ -25,7 +25,7 @@ anyhow = {workspace = true}
 document-features = {workspace = true}
 rayon = { workspace = true }
 geo-types = { workspace = true }
-geo-buffer = { workspace = true }
+geo = { workspace = true }
 web-time = { workspace = true }
 
 [features]
@@ -39,3 +39,6 @@ mspp = []
 [package.metadata.docs.rs]
 all-features = true
 # rustdoc-args = ["--cfg", "docsrs"]
+
+[dev-dependencies]
+serde_json = { workspace = true }
