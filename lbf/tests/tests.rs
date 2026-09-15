@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use anyhow::Result;
+    use anyhow::{Context, Result};
     use jagua_rs::io::import::Importer;
     use jagua_rs::probs::{bpp, spp};
     use lbf::config::LBFConfig;
@@ -135,6 +135,40 @@ mod tests {
         let ext_instance = read_spp_instance(Path::new("../assets/self_intersecting.json"))?;
 
         assert!(spp::io::import_instance(&importer(), &ext_instance).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_inflate_all_dataset_items() -> Result<()> {
+        #[derive(serde::Deserialize)]
+        struct Dataset {
+            items: Vec<jagua_rs::io::ext_repr::ExtItem>,
+        }
+
+        let importer = Importer::new(config().cde_config, None, Some(2.0), None);
+        let mut n_items = 0;
+        for entry in std::fs::read_dir("../assets")? {
+            let path = entry?.path();
+            if path.extension().is_none_or(|ext| ext != "json")
+                || matches!(
+                    path.file_name().and_then(|name| name.to_str()),
+                    Some("config_lbf.json" | "self_intersecting.json")
+                )
+            {
+                // Configuration and the intentional invalid-input fixture aren't datasets.
+                continue;
+            }
+            let dataset: Dataset = serde_json::from_reader(std::fs::File::open(&path)?)
+                .with_context(|| path.display().to_string())?;
+            for item in dataset.items {
+                importer.import_item(&item).with_context(|| {
+                    format!("{}: failed to inflate item {}", path.display(), item.id)
+                })?;
+                n_items += 1;
+            }
+        }
+        assert!(n_items > 0);
+        println!("Inflated and imported {n_items} dataset items");
         Ok(())
     }
 

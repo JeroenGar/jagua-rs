@@ -32,6 +32,3 @@ pub use original_shape::OriginalShape;
 
 #[doc(inline)]
 pub use d_transformation::normalize_rotation;
-
-#[cfg(test)]
-mod tests;
