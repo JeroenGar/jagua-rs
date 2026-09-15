@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["ContourSimplifier"],"trait":["SimpleContour","SimpleShape","SimpleShapes","Simplify"]};

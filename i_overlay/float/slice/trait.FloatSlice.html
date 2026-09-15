@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The `FloatSlice` trait provides methods to slice geometric shapes using a given path or set of paths, allowing for boolean operations based on the specified build rule."><title>FloatSlice in i_overlay::float::slice - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="i_overlay" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../i_overlay/index.html">i_<wbr>overlay</a><span class="version">4.5.2</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Float<wbr>Slice</a></h2><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.slice_by" title="slice_by">slice_by</a></li><li><a href="#tymethod.slice_by_fixed_scale" title="slice_by_fixed_scale">slice_by_fixed_scale</a></li><li><a href="#tymethod.slice_custom_by" title="slice_custom_by">slice_custom_by</a></li><li><a href="#tymethod.slice_custom_by_fixed_scale" title="slice_custom_by_fixed_scale">slice_custom_by_fixed_scale</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In i_<wbr>overlay::<wbr>float::<wbr>slice</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">i_overlay</a>::<wbr><a href="../index.html">float</a>::<wbr><a href="index.html">slice</a></div><h1>Trait <span class="trait">FloatSlice</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/i_overlay/float/slice.rs.html#14-97">Source</a> </span></div><pre class="rust item-decl"><code>pub trait FloatSlice&lt;R, P, T&gt;<div class="where">where
+    R: <a class="trait" href="../../../i_shape/source/resource/trait.ShapeResource.html" title="trait i_shape::source::resource::ShapeResource">ShapeResource</a>&lt;P, T&gt;,
+    P: <a class="trait" href="../../../i_float/float/compatible/trait.FloatPointCompatible.html" title="trait i_float::float::compatible::FloatPointCompatible">FloatPointCompatible</a>&lt;T&gt;,
+    T: <a class="trait" href="../../../i_float/float/number/trait.FloatNumber.html" title="trait i_float::float::number::FloatNumber">FloatNumber</a>,</div>{
+    // Required methods
+    fn <a href="#tymethod.slice_by" class="fn">slice_by</a>(&amp;self, resource: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.reference.html">&amp;R</a>, fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>) -&gt; <a class="type" href="../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.slice_by_fixed_scale" class="fn">slice_by_fixed_scale</a>(
+        &amp;self,
+        resource: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.reference.html">&amp;R</a>,
+        fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+        scale: T,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;, <a class="enum" href="../scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.slice_custom_by" class="fn">slice_custom_by</a>(
+        &amp;self,
+        resource: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.reference.html">&amp;R</a>,
+        fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+        options: <a class="struct" href="../overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+        solver: <a class="struct" href="../../core/solver/struct.Solver.html" title="struct i_overlay::core::solver::Solver">Solver</a>,
+    ) -&gt; <a class="type" href="../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.slice_custom_by_fixed_scale" class="fn">slice_custom_by_fixed_scale</a>(
+        &amp;self,
+        resource: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.reference.html">&amp;R</a>,
+        fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+        options: <a class="struct" href="../overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+        solver: <a class="struct" href="../../core/solver/struct.Solver.html" title="struct i_overlay::core::solver::Solver">Solver</a>,
+        scale: T,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;, <a class="enum" href="../scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;;
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The <code>FloatSlice</code> trait provides methods to slice geometric shapes using a given path or set of paths,
+allowing for boolean operations based on the specified build rule.</p>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.slice_by" class="method"><a class="src rightside" href="../../../src/i_overlay/float/slice.rs.html#32">Source</a><h4 class="code-header">fn <a href="#tymethod.slice_by" class="fn">slice_by</a>(&amp;self, resource: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.reference.html">&amp;R</a>, fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>) -&gt; <a class="type" href="../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;</h4></section></summary><div class="docblock"><p>Slices the current shapes by string lines.</p>
+<ul>
+<li><code>resource</code>: A string lines.
+<code>ShapeResource</code> can be one of the following:
+<ul>
+<li><code>Path</code>: A path representing a string line.</li>
+<li><code>Paths</code>: A collection of paths, each representing a string line.</li>
+<li><code>Vec&lt;Paths&gt;</code>: A collection of grouped paths, where each group may consist of multiple paths.</li>
+</ul>
+</li>
+<li><code>fill_rule</code>: Fill rule to determine filled areas (non-zero, even-odd, positive, negative).</li>
+</ul>
+<p>Returns a <code>Shapes&lt;P&gt;</code> collection representing the sliced geometry.</p>
+<p>Note: Outer boundary paths have a counterclockwise order, and holes have a clockwise order.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.slice_by_fixed_scale" class="method"><a class="src rightside" href="../../../src/i_overlay/float/slice.rs.html#47-52">Source</a><h4 class="code-header">fn <a href="#tymethod.slice_by_fixed_scale" class="fn">slice_by_fixed_scale</a>(
+    &amp;self,
+    resource: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.reference.html">&amp;R</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    scale: T,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;, <a class="enum" href="../scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;</h4></section></summary><div class="docblock"><p>Slices the current shapes by string lines with a fixed float-to-integer scale.</p>
+<ul>
+<li><code>resource</code>: A string lines.
+<code>ShapeResource</code> can be one of the following:
+<ul>
+<li><code>Path</code>: A path representing a string line.</li>
+<li><code>Paths</code>: A collection of paths, each representing a string line.</li>
+<li><code>Vec&lt;Paths&gt;</code>: A collection of grouped paths, where each group may consist of multiple paths.</li>
+</ul>
+</li>
+<li><code>fill_rule</code>: Fill rule to determine filled areas (non-zero, even-odd, positive, negative).</li>
+<li><code>scale</code>: Fixed float-to-integer scale. Use <code>scale = 1.0 / grid_size</code> if you prefer grid size semantics.</li>
+</ul>
+<p>Returns a <code>Shapes&lt;P&gt;</code> collection representing the sliced geometry.</p>
+<p>Note: Outer boundary paths have a counterclockwise order, and holes have a clockwise order.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.slice_custom_by" class="method"><a class="src rightside" href="../../../src/i_overlay/float/slice.rs.html#67-73">Source</a><h4 class="code-header">fn <a href="#tymethod.slice_custom_by" class="fn">slice_custom_by</a>(
+    &amp;self,
+    resource: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.reference.html">&amp;R</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    options: <a class="struct" href="../overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+    solver: <a class="struct" href="../../core/solver/struct.Solver.html" title="struct i_overlay::core::solver::Solver">Solver</a>,
+) -&gt; <a class="type" href="../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;</h4></section></summary><div class="docblock"><p>Slices the current shapes by string lines.</p>
+<ul>
+<li><code>resource</code>: A string lines.
+<code>ShapeResource</code> can be one of the following:
+<ul>
+<li><code>Path</code>: A path representing a string line.</li>
+<li><code>Paths</code>: A collection of paths, each representing a string line.</li>
+<li><code>Vec&lt;Paths&gt;</code>: A collection of grouped paths, where each group may consist of multiple paths.</li>
+</ul>
+</li>
+<li><code>fill_rule</code>: Fill rule to determine filled areas (non-zero, even-odd, positive, negative).</li>
+<li><code>options</code>: Adjust custom behavior.</li>
+<li><code>solver</code>: Type of solver to use.</li>
+<li>Returns a <code>Shapes&lt;P&gt;</code> collection representing the sliced geometry.</li>
+</ul>
+<p>Note: Outer boundary paths have a <strong>main_direction</strong> order, and holes have an opposite to <strong>main_direction</strong> order.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.slice_custom_by_fixed_scale" class="method"><a class="src rightside" href="../../../src/i_overlay/float/slice.rs.html#89-96">Source</a><h4 class="code-header">fn <a href="#tymethod.slice_custom_by_fixed_scale" class="fn">slice_custom_by_fixed_scale</a>(
+    &amp;self,
+    resource: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.reference.html">&amp;R</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    options: <a class="struct" href="../overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+    solver: <a class="struct" href="../../core/solver/struct.Solver.html" title="struct i_overlay::core::solver::Solver">Solver</a>,
+    scale: T,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;, <a class="enum" href="../scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;</h4></section></summary><div class="docblock"><p>Slices the current shapes by string lines with a fixed float-to-integer scale.</p>
+<ul>
+<li><code>resource</code>: A string lines.
+<code>ShapeResource</code> can be one of the following:
+<ul>
+<li><code>Path</code>: A path representing a string line.</li>
+<li><code>Paths</code>: A collection of paths, each representing a string line.</li>
+<li><code>Vec&lt;Paths&gt;</code>: A collection of grouped paths, where each group may consist of multiple paths.</li>
+</ul>
+</li>
+<li><code>fill_rule</code>: Fill rule to determine filled areas (non-zero, even-odd, positive, negative).</li>
+<li><code>options</code>: Adjust custom behavior.</li>
+<li><code>solver</code>: Type of solver to use.</li>
+<li><code>scale</code>: Fixed float-to-integer scale. Use <code>scale = 1.0 / grid_size</code> if you prefer grid size semantics.</li>
+<li>Returns a <code>Shapes&lt;P&gt;</code> collection representing the sliced geometry.</li>
+</ul>
+<p>Note: Outer boundary paths have a <strong>main_direction</strong> order, and holes have an opposite to <strong>main_direction</strong> order.</p>
+</div></details></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-FloatSlice%3CR0,+P,+T%3E-for-R1" class="impl"><a class="src rightside" href="../../../src/i_overlay/float/slice.rs.html#99-159">Source</a><a href="#impl-FloatSlice%3CR0,+P,+T%3E-for-R1" class="anchor">§</a><h3 class="code-header">impl&lt;R0, R1, P, T&gt; <a class="trait" href="trait.FloatSlice.html" title="trait i_overlay::float::slice::FloatSlice">FloatSlice</a>&lt;R0, P, T&gt; for R1<div class="where">where
+    R0: <a class="trait" href="../../../i_shape/source/resource/trait.ShapeResource.html" title="trait i_shape::source::resource::ShapeResource">ShapeResource</a>&lt;P, T&gt;,
+    R1: <a class="trait" href="../../../i_shape/source/resource/trait.ShapeResource.html" title="trait i_shape::source::resource::ShapeResource">ShapeResource</a>&lt;P, T&gt;,
+    P: <a class="trait" href="../../../i_float/float/compatible/trait.FloatPointCompatible.html" title="trait i_float::float::compatible::FloatPointCompatible">FloatPointCompatible</a>&lt;T&gt;,
+    T: <a class="trait" href="../../../i_float/float/number/trait.FloatNumber.html" title="trait i_float::float::number::FloatNumber">FloatNumber</a>,</div></h3></section></div><script src="../../../trait.impl/i_overlay/float/slice/trait.FloatSlice.js" async></script></section></div></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CoordPos"],"fn":["coord_pos_relative_to_ring"],"trait":["CoordinatePosition"]};

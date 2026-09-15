@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CLIP_LEFT","CLIP_RIGHT","SUBJ_LEFT","SUBJ_RIGHT"],"struct":["VectorEdge"],"trait":["Reverse","ToPath"],"type":["SideFill","VectorPath","VectorShape"]};

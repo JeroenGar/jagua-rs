@@ -1,0 +1,55 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Fern supports logging most things by default, except for one kind of struct: structs which make log calls to the global logger from within their `Display` or `Debug` implementations."><title>fern::meta - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="fern" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-68b7e25d.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../fern/index.html">fern</a><span class="version">0.7.1</span></h2></div><div class="sidebar-elems"><div id="rustdoc-modnav"><h2 class="in-crate"><a href="../index.html">In crate fern</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">fern</a></div><h1>Module <span>meta</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/fern/meta.rs.html#1-79">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Fern supports logging most things by default, except for one kind of struct: structs which make log
+calls to the global logger from within their <code>Display</code> or <code>Debug</code> implementations.</p>
+<p>Here’s an example of such a structure:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">struct </span>Thing&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str);
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; fmt::Display <span class="kw">for </span>Thing&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        <span class="macro">debug!</span>(<span class="string">"just displayed a Thing wrapping {}"</span>, <span class="self">self</span>.<span class="number">0</span>);
+        f.write_str(<span class="self">self</span>.<span class="number">0</span>)
+    }
+}
+</code></pre></div>
+<p>This structure, and this structure alone, will cause some problems when logging in fern. There are
+mitigations, but since it’s a fairly niche use case, they are disabled by default.</p>
+<p>The problems are, depending on which backend you use:</p>
+<ul>
+<li>stdout/stderr: logging will ‘stutter’, with the logs output inside the <code>Display</code> implementation
+cutting other log lines down the center</li>
+<li>file: thread will deadlock, and all future logs will also deadlock</li>
+</ul>
+<p>There are two mitigations you can make, both completely fix this error.</p>
+<p>The simplest mitigation to this is to enable the <code>meta-logging-in-format</code> feature of <code>fern</code>. The
+disadvantage is that this means fern makes an additional allocation per log call per affected
+backend. Not a huge cost, but enough to mean it’s disabled by default. To enable this, use the
+following in your <code>Cargo.toml</code>:</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+# ...
+fern = { version = &quot;0.7&quot;, features = [&quot;meta-logging-in-format&quot;] }</code></pre></div>
+<p>The second mitigation is one you can make inside a formatting closure. This means extra code
+complexity, but it also means you can enable it per-logger: the fix isn’t global. This fix is also
+redundant if you’ve already enable the above feature. To add the second mitigation, replacec
+<code>format_args!()</code> with <code>format!()</code> as displayed below:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code>fern::Dispatch::new()
+    ...
+    <span class="comment">// instead of doing this:
+    </span>.format(<span class="kw">move </span>|out, message, record| {
+        out.finish(<span class="macro">format_args!</span>(<span class="string">"[{}] {}"</span>, record.level(), message))
+    })
+    <span class="comment">// do this:
+    </span>.format(<span class="kw">move </span>|out, message, record| {
+        <span class="kw">let </span>formatted = <span class="macro">format!</span>(<span class="string">"[{}] {}"</span>, record.level(), message);
+
+        out.finish(<span class="macro">format_args!</span>(<span class="string">"{}"</span>, formatted))
+    })</code></pre></div>
+<p>This second mitigation works by forcing the <code>Display</code> implementation to run before any text has
+started to log to the backend. There’s an additional allocation per log, but it no longer deadlocks!</p>
+<p>This mitigation also has the advantage of ensuring there’s only one call to <code>Display::fmt</code>. If youc
+use <code>meta-logging-in-format</code> and have multiple backends, <code>Display::fmt</code> will still be called once
+per backend. With this, it will only be called once.</p>
+<hr />
+<p>If you’ve never experienced this problem, there’s no need to fix it - <code>Display::fmt</code> and
+<code>Debug::fmt</code> are normally implemented as “pure” functions with no side effects.</p>
+</div></details></section></div></main></body></html>

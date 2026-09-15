@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["monotone_subdivision"],"struct":["MonoPoly","MonotonicPolygons"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":["BufferToFloat","BufferToInt","PathToFloat","PathToInt","ShapeToFloat","ShapeToInt","ShapesToFloat","ShapesToInt"]};

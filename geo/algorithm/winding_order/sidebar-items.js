@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["WindingOrder"],"fn":["triangle_winding_order"],"struct":["Points"],"trait":["Winding"]};

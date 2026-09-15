@@ -1,0 +1,178 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="iOverlay"><title>i_overlay - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="i_overlay" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-68b7e25d.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../i_overlay/index.html">i_<wbr>overlay</a><span class="version">4.5.2</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#ioverlay" title="iOverlay">iOverlay</a><ul><li><a href="#features" title="Features">Features</a></li><li><a href="#simple-example" title="Simple Example">Simple Example</a></li><li><a href="#using-a-custom-point-type" title="Using a Custom Point Type">Using a Custom Point Type</a></li><li><a href="#slicing-a-polygon-with-a-polyline" title="Slicing a Polygon with a Polyline">Slicing a Polygon with a Polyline</a></li><li><a href="#clipping-a-polyline-by-a-polygon" title="Clipping a Polyline by a Polygon">Clipping a Polyline by a Polygon</a></li></ul></li></ul><h3><a href="#reexports">Crate Items</a></h3><ul class="block"><li><a href="#reexports" title="Re-exports">Re-exports</a></li><li><a href="#modules" title="Modules">Modules</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>i_overlay</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/i_overlay/lib.rs.html#1-207">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="ioverlay"><a class="doc-anchor" href="#ioverlay">§</a>iOverlay</h2>
+<p>The <code>iOverlay</code> library provides high-performance boolean operations on polygons, including union, intersection, difference, and xor. It is designed for applications that require precise polygon operations, such as computer graphics, CAD systems, and geographical information systems (GIS). By supporting both integer (i32) and floating-point (f32, f64) APIs, iOverlay offers flexibility and precision across diverse use cases.</p>
+<h3 id="features"><a class="doc-anchor" href="#features">§</a>Features</h3>
+<ul>
+<li><strong>Boolean Operations</strong>: union, intersection, difference, and exclusion.</li>
+<li><strong>String Line Operations</strong>: clip and slice.</li>
+<li><strong>Polygons</strong>: with holes, self-intersections, and multiple contours.</li>
+<li><strong>Simplification</strong>: removes degenerate vertices and merges collinear edges.</li>
+<li><strong>Fill Rules</strong>: even-odd, non-zero, positive and negative.</li>
+<li><strong>Data Types</strong>: Supports i32, f32, and f64 APIs.</li>
+</ul>
+<h3 id="simple-example"><a class="doc-anchor" href="#simple-example">§</a>Simple Example</h3>
+<p><img src="https://raw.githubusercontent.com/iShape-Rust/iOverlay/main/readme/example_union.svg" alt="Simple Example" />
+Here’s an example of performing a union operation between two polygons:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>i_overlay::core::fill_rule::FillRule;
+<span class="kw">use </span>i_overlay::core::overlay_rule::OverlayRule;
+<span class="kw">use </span>i_overlay::float::single::SingleFloatOverlay;
+
+<span class="comment">// Define the subject "O"
+</span><span class="kw">let </span>subj = [
+   <span class="comment">// main contour
+   </span><span class="macro">vec!</span>[
+        [<span class="number">1.0</span>, <span class="number">0.0</span>],
+        [<span class="number">4.0</span>, <span class="number">0.0</span>],
+        [<span class="number">4.0</span>, <span class="number">5.0</span>],
+        [<span class="number">1.0</span>, <span class="number">5.0</span>], <span class="comment">// the contour is auto closed!
+   </span>],
+   <span class="comment">// hole contour
+   </span><span class="macro">vec!</span>[
+        [<span class="number">2.0</span>, <span class="number">1.0</span>],
+        [<span class="number">2.0</span>, <span class="number">4.0</span>],
+        [<span class="number">3.0</span>, <span class="number">4.0</span>],
+        [<span class="number">3.0</span>, <span class="number">1.0</span>], <span class="comment">// the contour is auto closed!
+   </span>],
+];
+
+<span class="comment">// Define the clip "-"
+</span><span class="kw">let </span>clip = [
+   <span class="comment">// main contour
+   </span>[<span class="number">0.0</span>, <span class="number">2.0</span>],
+   [<span class="number">5.0</span>, <span class="number">2.0</span>],
+   [<span class="number">5.0</span>, <span class="number">3.0</span>],
+   [<span class="number">0.0</span>, <span class="number">3.0</span>], <span class="comment">// the contour is auto closed!
+</span>];
+
+<span class="kw">let </span>result = subj.overlay(<span class="kw-2">&amp;</span>clip, OverlayRule::Union, FillRule::EvenOdd);
+
+<span class="macro">println!</span>(<span class="string">"result: {:?}"</span>, result);</code></pre></div>
+<p>The result is a vec of shapes:</p>
+<div class="example-wrap"><pre class="language-text"><code>[
+    // first shape
+    [
+        // main contour (counterclockwise order)
+        [
+            [0.0, 3.0], [0.0, 2.0], [1.0, 2.0], [1.0, 0.0], [4.0, 0.0], [4.0, 2.0], [5.0, 2.0], [5.0, 3.0], [4.0, 3.0], [4.0, 5.0], [1.0, 5.0], [1.0, 3.0]
+        ],
+        // first hole (clockwise order)
+        [
+            [2.0, 1.0], [2.0, 2.0], [3.0, 2.0], [3.0, 1.0]
+        ],
+        // second hole (clockwise order)
+        [
+            [2.0, 3.0], [2.0, 4.0], [3.0, 4.0], [3.0, 3.0]
+        ]
+    ]
+    // ... other shapes if present
+]</code></pre></div>
+<p>The <code>overlay</code> function returns a <code>Vec&lt;Shapes&gt;</code>:</p>
+<ul>
+<li><code>Vec&lt;Shape&gt;</code>: A collection of shapes.</li>
+<li><code>Shape</code>: Represents a shape made up of:
+<ul>
+<li><code>Vec&lt;Contour&gt;</code>: A list of contours.</li>
+<li>The first contour is the outer boundary (counterclockwise), and subsequent contours represent holes (clockwise).</li>
+</ul>
+</li>
+<li><code>Contour</code>: A sequence of points (<code>Vec&lt;P: FloatPointCompatible&gt;</code>) forming a closed contour.</li>
+</ul>
+<p><strong>Note</strong>: By default, outer boundaries are <strong>counterclockwise</strong> and holes are <strong>clockwise</strong>—unless <code>main_direction</code> is set. <a href="https://ishape-rust.github.io/iShape-js/overlay/contours/contours.html">More information</a> about contours.</p>
+<h3 id="using-a-custom-point-type"><a class="doc-anchor" href="#using-a-custom-point-type">§</a>Using a Custom Point Type</h3>
+<p><code>iOverlay</code> allows users to define custom point types, as long as they implement the <code>FloatPointCompatible</code> trait.</p>
+<p>Here’s an example:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code> <span class="kw">use </span>i_float::float::compatible::FloatPointCompatible;
+ <span class="kw">use </span>i_overlay::core::fill_rule::FillRule;
+ <span class="kw">use </span>i_overlay::core::overlay_rule::OverlayRule;
+ <span class="kw">use </span>i_overlay::float::single::SingleFloatOverlay;
+
+ <span class="attr">#[derive(Clone, Copy, Debug)]
+ </span><span class="kw">struct </span>CustomPoint {
+     x: f32,
+     y: f32,
+ }
+
+ <span class="comment">// Implement the `FloatPointCompatible` trait for CustomPoint
+ </span><span class="kw">impl </span>FloatPointCompatible&lt;f32&gt; <span class="kw">for </span>CustomPoint {
+     <span class="kw">fn </span>from_xy(x: f32, y: f32) -&gt; <span class="self">Self </span>{
+         <span class="self">Self </span>{ x, y }
+     }
+
+     <span class="kw">fn </span>x(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
+         <span class="self">self</span>.x
+     }
+
+     <span class="kw">fn </span>y(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
+         <span class="self">self</span>.y
+     }
+ }
+
+ <span class="kw">let </span>subj = [
+     CustomPoint { x: <span class="number">0.0</span>, y: <span class="number">0.0 </span>},
+     CustomPoint { x: <span class="number">0.0</span>, y: <span class="number">3.0 </span>},
+     CustomPoint { x: <span class="number">3.0</span>, y: <span class="number">3.0 </span>},
+     CustomPoint { x: <span class="number">3.0</span>, y: <span class="number">0.0 </span>},
+ ];
+
+ <span class="kw">let </span>clip = [
+     CustomPoint { x: <span class="number">1.0</span>, y: <span class="number">1.0 </span>},
+     CustomPoint { x: <span class="number">1.0</span>, y: <span class="number">2.0 </span>},
+     CustomPoint { x: <span class="number">2.0</span>, y: <span class="number">2.0 </span>},
+     CustomPoint { x: <span class="number">2.0</span>, y: <span class="number">1.0 </span>},
+ ];
+
+ <span class="kw">let </span>result = subj.overlay(<span class="kw-2">&amp;</span>clip, OverlayRule::Difference, FillRule::EvenOdd);
+
+ <span class="macro">println!</span>(<span class="string">"result: {:?}"</span>, result);</code></pre></div>
+<h3 id="slicing-a-polygon-with-a-polyline"><a class="doc-anchor" href="#slicing-a-polygon-with-a-polyline">§</a>Slicing a Polygon with a Polyline</h3>
+<p><img src="https://raw.githubusercontent.com/iShape-Rust/iOverlay/main/readme/example_slice.svg" alt="Slicing Example" /></p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code> <span class="kw">use </span>i_overlay::core::fill_rule::FillRule;
+ <span class="kw">use </span>i_overlay::float::single::SingleFloatOverlay;
+ <span class="kw">use </span>i_overlay::float::slice::FloatSlice;
+
+ <span class="kw">let </span>polygon = [
+     [<span class="number">1.0</span>, <span class="number">1.0</span>],
+     [<span class="number">1.0</span>, <span class="number">4.0</span>],
+     [<span class="number">4.0</span>, <span class="number">4.0</span>],
+     [<span class="number">4.0</span>, <span class="number">1.0</span>],
+ ];
+
+ <span class="kw">let </span>polyline = [
+     [<span class="number">3.0</span>, <span class="number">5.0</span>],
+     [<span class="number">2.0</span>, <span class="number">2.0</span>],
+     [<span class="number">3.0</span>, <span class="number">3.0</span>],
+     [<span class="number">2.0</span>, <span class="number">0.0</span>],
+ ];
+
+ <span class="kw">let </span>result = polygon.slice_by(<span class="kw-2">&amp;</span>polyline, FillRule::NonZero);
+
+ <span class="macro">println!</span>(<span class="string">"result: {:?}"</span>, result);</code></pre></div>
+<h3 id="clipping-a-polyline-by-a-polygon"><a class="doc-anchor" href="#clipping-a-polyline-by-a-polygon">§</a>Clipping a Polyline by a Polygon</h3>
+<p><img src="https://raw.githubusercontent.com/iShape-Rust/iOverlay/main/readme/example_clip.svg" alt="Clip Example" /></p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code> <span class="kw">use </span>i_overlay::core::fill_rule::FillRule;
+ <span class="kw">use </span>i_overlay::float::clip::FloatClip;
+ <span class="kw">use </span>i_overlay::float::single::SingleFloatOverlay;
+ <span class="kw">use </span>i_overlay::string::clip::ClipRule;
+
+ <span class="kw">let </span>polyline = [
+     [<span class="number">3.0</span>, <span class="number">5.0</span>],
+     [<span class="number">2.0</span>, <span class="number">2.0</span>],
+     [<span class="number">3.0</span>, <span class="number">3.0</span>],
+     [<span class="number">2.0</span>, <span class="number">0.0</span>],
+ ];
+
+ <span class="kw">let </span>polygon = [
+     [<span class="number">1.0</span>, <span class="number">1.0</span>],
+     [<span class="number">1.0</span>, <span class="number">4.0</span>],
+     [<span class="number">4.0</span>, <span class="number">4.0</span>],
+     [<span class="number">4.0</span>, <span class="number">1.0</span>],
+ ];
+
+ <span class="kw">let </span>clip_rule = ClipRule { invert: <span class="bool-val">false</span>, boundary_included: <span class="bool-val">false </span>};
+ <span class="kw">let </span>result = polyline.clip_by(<span class="kw-2">&amp;</span>polygon, FillRule::NonZero, clip_rule);
+
+ <span class="macro">println!</span>(<span class="string">"result: {:?}"</span>, result);</code></pre></div>
+</div></details><h2 id="reexports" class="section-header">Re-exports<a href="#reexports" class="anchor">§</a></h2><dl class="item-table reexports"><dt id="reexport.i_float"><code>pub use <a class="mod" href="../i_float/index.html" title="mod i_float">i_float</a>;</code></dt><dt id="reexport.i_shape"><code>pub use <a class="mod" href="../i_shape/index.html" title="mod i_shape">i_shape</a>;</code></dt></dl><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="build/index.html" title="mod i_overlay::build">build</a></dt><dt><a class="mod" href="core/index.html" title="mod i_overlay::core">core</a></dt><dt><a class="mod" href="float/index.html" title="mod i_overlay::float">float</a></dt><dt><a class="mod" href="mesh/index.html" title="mod i_overlay::mesh">mesh</a></dt><dt><a class="mod" href="segm/index.html" title="mod i_overlay::segm">segm</a></dt><dt><a class="mod" href="string/index.html" title="mod i_overlay::string">string</a></dt><dt><a class="mod" href="vector/index.html" title="mod i_overlay::vector">vector</a></dt></dl></section></div></main></body></html>

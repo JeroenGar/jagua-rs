@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Nearest-neighbour queries on point sets using a ball tree. A ball tree is a binary space-partitioning index over a set of points. Each internal node stores the minimum enclosing ball of its descendants, so nearest-neighbour, k-nearest-neighbour, and fixed-radius queries can prune whole subtrees using the triangle inequality instead of examining every point. Construction is O(n log n) and query time is typically O(log n) on well-distributed data, degrading towards O(n) for adversarial inputs."><title>geo::algorithm::ball_tree - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="geo" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt=""></a></nav><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt="logo"></a><h2><a href="../../../geo/index.html">geo</a><span class="version">0.33.1</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module ball_<wbr>tree</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#construction" title="Construction">Construction</a></li><li><a href="#queries" title="Queries">Queries</a></li></ul><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#traits" title="Traits">Traits</a></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In geo::<wbr>algorithm</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">geo</a>::<wbr><a href="../index.html">algorithm</a></div><h1>Module <span>ball_tree</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/geo/algorithm/ball_tree.rs.html#1-1262">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Nearest-neighbour queries on point sets using a ball tree.
+A <a href="https://en.wikipedia.org/wiki/Ball_tree">ball tree</a> is a binary space-partitioning index over a set of points.
+Each internal node stores the minimum enclosing ball of its descendants, so
+nearest-neighbour, k-nearest-neighbour, and fixed-radius queries can prune
+whole subtrees using the triangle inequality instead of examining every
+point. Construction is O(n log n) and query time is typically O(log n) on
+well-distributed data, degrading towards O(n) for adversarial inputs.</p>
+<p>Compared to the alternatives: an r-tree indexes rectangles and handles
+arbitrary geometries, while a ball tree only indexes points but tends to
+prune more aggressively for non-axis-aligned point clusters. It is also a
+natural fit for density-based clustering algorithms such as HDBSCAN, which
+rely on repeated k-NN and radius queries.</p>
+<p>This implementation is currently 2-D and uses Euclidean distance.</p>
+<h2 id="construction"><a class="doc-anchor" href="#construction">§</a>Construction</h2>
+<p>Build a tree from any collection of point-like values via <a href="struct.BallTree.html#method.new" title="associated function geo::algorithm::ball_tree::BallTree::new"><code>BallTree::new</code></a>.
+Bare <a href="../../geometry/struct.Point.html" title="struct geo::geometry::Point"><code>Point</code></a>s, <a href="../../geometry/struct.Coord.html" title="struct geo::geometry::Coord"><code>Coord</code></a>s, and <a href="../../geometry/struct.MultiPoint.html" title="struct geo::geometry::MultiPoint"><code>MultiPoint</code></a>s are all
+accepted directly; to attach per-point data (labels, identifiers, etc.),
+wrap each point in a <a href="struct.PointWithData.html" title="struct geo::algorithm::ball_tree::PointWithData"><code>PointWithData</code></a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::point;
+<span class="kw">use </span>geo::algorithm::ball_tree::BallTree;
+
+<span class="kw">let </span>tree = BallTree::new(<span class="macro">vec!</span>[
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">1.0</span>, y: <span class="number">1.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">2.0</span>, y: <span class="number">2.0</span>),
+]);
+<span class="kw">let </span>nearest = tree.nearest_neighbour(<span class="kw-2">&amp;</span><span class="macro">point!</span>(x: <span class="number">0.1</span>, y: <span class="number">0.1</span>)).unwrap();
+<span class="macro">assert_eq!</span>(nearest.point, <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>));</code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::point;
+<span class="kw">use </span>geo::algorithm::ball_tree::{BallTree, PointWithData};
+
+<span class="kw">let </span>tree = BallTree::new(<span class="macro">vec!</span>[
+    PointWithData::new(<span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>), <span class="string">"origin"</span>),
+    PointWithData::new(<span class="macro">point!</span>(x: <span class="number">1.0</span>, y: <span class="number">1.0</span>), <span class="string">"middle"</span>),
+    PointWithData::new(<span class="macro">point!</span>(x: <span class="number">2.0</span>, y: <span class="number">2.0</span>), <span class="string">"far"</span>),
+]);
+<span class="kw">let </span>nearest = tree.nearest_neighbour(<span class="kw-2">&amp;</span><span class="macro">point!</span>(x: <span class="number">0.1</span>, y: <span class="number">0.1</span>)).unwrap();
+<span class="macro">assert_eq!</span>(<span class="kw-2">*</span>nearest.data, <span class="string">"origin"</span>);</code></pre></div>
+<p>To tune the leaf size, use <a href="struct.BallTreeBuilder.html" title="struct geo::algorithm::ball_tree::BallTreeBuilder"><code>BallTreeBuilder</code></a>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::point;
+<span class="kw">use </span>geo::algorithm::ball_tree::BallTreeBuilder;
+
+<span class="kw">let </span>tree = BallTreeBuilder::with_leaf_size(<span class="number">16</span>).build(<span class="macro">vec!</span>[
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">1.0</span>, y: <span class="number">1.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">2.0</span>, y: <span class="number">2.0</span>),
+]);</code></pre></div>
+<h2 id="queries"><a class="doc-anchor" href="#queries">§</a>Queries</h2>
+<ul>
+<li><a href="struct.BallTree.html#method.nearest_neighbour" title="method geo::algorithm::ball_tree::BallTree::nearest_neighbour"><code>BallTree::nearest_neighbour</code></a> – single nearest neighbour</li>
+<li><a href="struct.BallTree.html#method.nearest_neighbours" title="method geo::algorithm::ball_tree::BallTree::nearest_neighbours"><code>BallTree::nearest_neighbours</code></a> – k nearest neighbours, sorted by distance</li>
+<li><a href="struct.BallTree.html#method.within_radius" title="method geo::algorithm::ball_tree::BallTree::within_radius"><code>BallTree::within_radius</code></a> – all points within a given radius</li>
+</ul>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.BallTree.html" title="struct geo::algorithm::ball_tree::BallTree">Ball<wbr>Tree</a></dt><dd>An immutable ball tree built from a set of points, supporting repeated
+queries without mutation. Points can carry associated data of type <code>D</code>
+(defaulting to <code>()</code>).</dd><dt><a class="struct" href="struct.BallTreeBuilder.html" title="struct geo::algorithm::ball_tree::BallTreeBuilder">Ball<wbr>Tree<wbr>Builder</a></dt><dd>A builder for constructing a <a href="struct.BallTree.html" title="struct geo::algorithm::ball_tree::BallTree"><code>BallTree</code></a> with configurable parameters.</dd><dt><a class="struct" href="struct.NearestNeighbour.html" title="struct geo::algorithm::ball_tree::NearestNeighbour">Nearest<wbr>Neighbour</a></dt><dd>Result type for nearest-neighbour queries.</dd><dt><a class="struct" href="struct.PointWithData.html" title="struct geo::algorithm::ball_tree::PointWithData">Point<wbr>With<wbr>Data</a></dt><dd>A <a href="../../geometry/struct.Point.html" title="struct geo::geometry::Point"><code>Point</code></a> paired with an associated data payload, for indexing in a
+<a href="struct.BallTree.html" title="struct geo::algorithm::ball_tree::BallTree"><code>BallTree</code></a>.</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.BallTreePoint.html" title="trait geo::algorithm::ball_tree::BallTreePoint">Ball<wbr>Tree<wbr>Point</a></dt><dd>A point-like value that can be indexed in a <a href="struct.BallTree.html" title="struct geo::algorithm::ball_tree::BallTree"><code>BallTree</code></a>.</dd></dl></section></div></main></body></html>

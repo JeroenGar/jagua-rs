@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MonotoneChainGeometry"],"struct":["MonotoneChain","MonotoneChainLineString","MonotoneChainMultiLineString","MonotoneChainMultiPolygon","MonotoneChainPolygon"],"trait":["MonotoneChains"]};

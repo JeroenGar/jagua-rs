@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Dimensions"],"trait":["HasDimensions"]};

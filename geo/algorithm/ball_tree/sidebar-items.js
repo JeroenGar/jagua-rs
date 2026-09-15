@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["BallTree","BallTreeBuilder","NearestNeighbour","PointWithData"],"trait":["BallTreePoint"]};

@@ -1,0 +1,100 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Perform DBSCAN (Density-Based Spatial Clustering of Applications with Noise) clustering on a set of points."><title>Dbscan in geo::algorithm::dbscan - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="geo" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt=""></a></nav><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt="logo"></a><h2><a href="../../../geo/index.html">geo</a><span class="version">0.33.1</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Dbscan</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#parameters" title="Parameters">Parameters</a></li><li><a href="#returns" title="Returns">Returns</a></li><li><a href="#algorithm" title="Algorithm">Algorithm</a></li><li><a href="#notes" title="Notes">Notes</a></li><li><a href="#examples" title="Examples">Examples</a><ul><li><a href="#basic-clustering-with-multipoint" title="Basic clustering with MultiPoint">Basic clustering with MultiPoint</a></li><li><a href="#detecting-noise-points" title="Detecting noise points">Detecting noise points</a></li><li><a href="#using-with-a-vec-of-points" title="Using with a Vec of Points">Using with a Vec of Points</a></li></ul></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.dbscan" title="dbscan">dbscan</a></li></ul><h3><a href="#foreign-impls">Implementations on Foreign Types</a></h3><ul class="block"><li><a href="#impl-Dbscan%3CT%3E-for-%5BPoint%3CT%3E%5D" title="[Point&#60;T&#62;]">[Point&#60;T&#62;]</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In geo::<wbr>algorithm::<wbr>dbscan</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">geo</a>::<wbr><a href="../index.html">algorithm</a>::<wbr><a href="index.html">dbscan</a></div><h1>Trait <span class="trait">Dbscan</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/geo/algorithm/dbscan.rs.html#113-121">Source</a> </span></div><pre class="rust item-decl"><code>pub trait Dbscan&lt;T&gt;<div class="where">where
+    T: <a class="trait" href="../../trait.GeoFloat.html" title="trait geo::GeoFloat">GeoFloat</a>,</div>{
+    // Required method
+    fn <a href="#tymethod.dbscan" class="fn">dbscan</a>(&amp;self, epsilson: T, min_samples: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.usize.html">usize</a>) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.90.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.usize.html">usize</a>&gt;&gt;;
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Perform <a href="https://en.wikipedia.org/wiki/DBSCAN">DBSCAN</a> (Density-Based Spatial Clustering of Applications with Noise) clustering on a set of points.</p>
+<p>Based on: Ester, M., Kriegel, H., Sander, J., &amp; Xu, X. (1996). <a href="https://dl.acm.org/doi/10.5555/3001460.3001507"><em>A density-based algorithm for discovering clusters in large spatial
+databases with noise.</em></a> In Proceedings of the Second International Conference on Knowledge Discovery and Data Mining (KDD-96), pp 226-231.</p>
+<p>DBSCAN is a density-based clustering algorithm that groups together points that are closely packed together (points with many nearby neighbours),
+marking as outliers points that lie alone in low-density regions.</p>
+<h2 id="parameters"><a class="doc-anchor" href="#parameters">§</a>Parameters</h2>
+<ul>
+<li><code>epsilon</code>: The maximum distance between two points for one to be considered as in the neighbourhood of the other.
+This is <strong>not</strong> a maximum bound on the distances of points within a cluster. This is the most important DBSCAN parameter to choose appropriately for your dataset</li>
+<li><code>min_samples</code>: The number of points (or total weight) in a neighbourhood for a point to be considered as a core point.
+This includes the point itself. Larger values lead to more conservative clusters.</li>
+</ul>
+<h2 id="returns"><a class="doc-anchor" href="#returns">§</a>Returns</h2>
+<p>A vector of cluster labels, one for each input point, in the same order as the input points:</p>
+<ul>
+<li><code>Some(cluster_id)</code>: The point belongs to cluster with ID <code>cluster_id</code> (starting from 0)</li>
+<li><code>None</code>: The point is considered noise (doesn’t belong to any cluster)</li>
+</ul>
+<h2 id="algorithm"><a class="doc-anchor" href="#algorithm">§</a>Algorithm</h2>
+<p>The algorithm works as follows:</p>
+<ol>
+<li>For each unvisited point, find all points within distance <code>epsilon</code> (the point’s neighbourhood)</li>
+<li>If the neighbourhood contains at least <code>min_samples</code> points (including the point itself), start a new cluster:
+<ul>
+<li>Add all points in the neighbourhood to the cluster</li>
+<li>For each newly added point, if it’s also a core point (has &gt;= <code>min_samples</code> neighbours), add its neighbours to the cluster (expansion)</li>
+</ul>
+</li>
+<li>If the neighbourhood contains fewer than <code>min_samples</code> points, mark the point as noise (it may be reassigned later if it’s in another point’s neighbourhood)</li>
+<li>Repeat until all points have been visited</li>
+</ol>
+<h2 id="notes"><a class="doc-anchor" href="#notes">§</a>Notes</h2>
+<p>This implementation uses an R-tree spatial index for efficient neighbourhood queries, and should be O(n log n)
+for typical cases.</p>
+<h2 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h2><h3 id="basic-clustering-with-multipoint"><a class="doc-anchor" href="#basic-clustering-with-multipoint">§</a>Basic clustering with MultiPoint</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::{Dbscan, MultiPoint, point};
+
+<span class="kw">let </span>points = MultiPoint::new(<span class="macro">vec!</span>[
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">1.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">1.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">10.0</span>, y: <span class="number">10.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">11.0</span>, y: <span class="number">10.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">10.0</span>, y: <span class="number">11.0</span>),
+]);
+
+<span class="kw">let </span>labels = points.dbscan(<span class="number">2.0</span>, <span class="number">2</span>);
+
+<span class="comment">// Points 0, 1, 2 form one cluster
+</span><span class="macro">assert_eq!</span>(labels[<span class="number">0</span>], <span class="prelude-val">Some</span>(<span class="number">0</span>));
+<span class="macro">assert_eq!</span>(labels[<span class="number">1</span>], <span class="prelude-val">Some</span>(<span class="number">0</span>));
+<span class="macro">assert_eq!</span>(labels[<span class="number">2</span>], <span class="prelude-val">Some</span>(<span class="number">0</span>));
+
+<span class="comment">// Points 3, 4, 5 form another cluster
+</span><span class="macro">assert_eq!</span>(labels[<span class="number">3</span>], <span class="prelude-val">Some</span>(<span class="number">1</span>));
+<span class="macro">assert_eq!</span>(labels[<span class="number">4</span>], <span class="prelude-val">Some</span>(<span class="number">1</span>));
+<span class="macro">assert_eq!</span>(labels[<span class="number">5</span>], <span class="prelude-val">Some</span>(<span class="number">1</span>));</code></pre></div>
+<h3 id="detecting-noise-points"><a class="doc-anchor" href="#detecting-noise-points">§</a>Detecting noise points</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::{Dbscan, point, Point};
+
+<span class="kw">let </span>points = <span class="macro">vec!</span>[
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">1.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">1.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">100.0</span>, y: <span class="number">100.0</span>), <span class="comment">// outlier
+</span>];
+
+<span class="kw">let </span>labels = points.dbscan(<span class="number">2.0</span>, <span class="number">2</span>);
+
+<span class="comment">// First three points form a cluster
+</span><span class="macro">assert_eq!</span>(labels[<span class="number">0</span>], <span class="prelude-val">Some</span>(<span class="number">0</span>));
+<span class="macro">assert_eq!</span>(labels[<span class="number">1</span>], <span class="prelude-val">Some</span>(<span class="number">0</span>));
+<span class="macro">assert_eq!</span>(labels[<span class="number">2</span>], <span class="prelude-val">Some</span>(<span class="number">0</span>));
+
+<span class="comment">// Last point is noise
+</span><span class="macro">assert_eq!</span>(labels[<span class="number">3</span>], <span class="prelude-val">None</span>);</code></pre></div>
+<h3 id="using-with-a-vec-of-points"><a class="doc-anchor" href="#using-with-a-vec-of-points">§</a>Using with a Vec of Points</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::{Dbscan, point};
+
+<span class="kw">let </span>points = <span class="macro">vec!</span>[
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">1.0</span>, y: <span class="number">1.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">1.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">1.0</span>),
+];
+
+<span class="kw">let </span>labels = points.dbscan(<span class="number">1.5</span>, <span class="number">3</span>);
+
+<span class="comment">// All points form a single cluster
+</span><span class="macro">assert!</span>(labels.iter().all(|<span class="kw-2">&amp;</span>label| label == <span class="prelude-val">Some</span>(<span class="number">0</span>)));</code></pre></div>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.dbscan" class="method"><a class="src rightside" href="../../../src/geo/algorithm/dbscan.rs.html#120">Source</a><h4 class="code-header">fn <a href="#tymethod.dbscan" class="fn">dbscan</a>(&amp;self, epsilson: T, min_samples: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.usize.html">usize</a>) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.90.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.usize.html">usize</a>&gt;&gt;</h4></section></summary><div class="docblock"><p>Perform DBSCAN clustering on the points.</p>
+<p>See the <a href="index.html" title="mod geo::algorithm::dbscan">module-level documentation</a> for details on the algorithm and parameters.</p>
+</div></details></div><h2 id="foreign-impls" class="section-header">Implementations on Foreign Types<a href="#foreign-impls" class="anchor">§</a></h2><details class="toggle implementors-toggle"><summary><section id="impl-Dbscan%3CT%3E-for-%5BPoint%3CT%3E%5D" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/dbscan.rs.html#262-269">Source</a><a href="#impl-Dbscan%3CT%3E-for-%5BPoint%3CT%3E%5D" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; <a class="trait" href="trait.Dbscan.html" title="trait geo::algorithm::dbscan::Dbscan">Dbscan</a>&lt;T&gt; for [<a class="struct" href="../../geometry/struct.Point.html" title="struct geo::geometry::Point">Point</a>&lt;T&gt;]<div class="where">where
+    T: <a class="trait" href="../../trait.GeoFloat.html" title="trait geo::GeoFloat">GeoFloat</a>,</div></h3></section></summary><div class="impl-items"><section id="method.dbscan" class="method trait-impl"><a class="src rightside" href="../../../src/geo/algorithm/dbscan.rs.html#266-268">Source</a><a href="#method.dbscan" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.dbscan" class="fn">dbscan</a>(&amp;self, epsilon: T, min_samples: <a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.usize.html">usize</a>) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.90.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/std/primitive.usize.html">usize</a>&gt;&gt;</h4></section></div></details><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-Dbscan%3CT%3E-for-%26MultiPoint%3CT%3E" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/dbscan.rs.html#253-260">Source</a><a href="#impl-Dbscan%3CT%3E-for-%26MultiPoint%3CT%3E" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; <a class="trait" href="trait.Dbscan.html" title="trait geo::algorithm::dbscan::Dbscan">Dbscan</a>&lt;T&gt; for &amp;<a class="struct" href="../../geometry/struct.MultiPoint.html" title="struct geo::geometry::MultiPoint">MultiPoint</a>&lt;T&gt;<div class="where">where
+    T: <a class="trait" href="../../trait.GeoFloat.html" title="trait geo::GeoFloat">GeoFloat</a>,</div></h3></section><section id="impl-Dbscan%3CT%3E-for-MultiPoint%3CT%3E" class="impl"><a class="src rightside" href="../../../src/geo/algorithm/dbscan.rs.html#244-251">Source</a><a href="#impl-Dbscan%3CT%3E-for-MultiPoint%3CT%3E" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; <a class="trait" href="trait.Dbscan.html" title="trait geo::algorithm::dbscan::Dbscan">Dbscan</a>&lt;T&gt; for <a class="struct" href="../../geometry/struct.MultiPoint.html" title="struct geo::geometry::MultiPoint">MultiPoint</a>&lt;T&gt;<div class="where">where
+    T: <a class="trait" href="../../trait.GeoFloat.html" title="trait geo::GeoFloat">GeoFloat</a>,</div></h3></section></div><script src="../../../trait.impl/geo/algorithm/dbscan/trait.Dbscan.js" data-ignore-extern-crates="geo_types,std" async></script></section></div></main></body></html>

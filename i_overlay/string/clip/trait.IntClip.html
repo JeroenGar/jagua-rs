@@ -1,0 +1,139 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `IntClip` trait in crate `i_overlay`."><title>IntClip in i_overlay::string::clip - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="i_overlay" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../i_overlay/index.html">i_<wbr>overlay</a><span class="version">4.5.2</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">IntClip</a></h2><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.clip_line" title="clip_line">clip_line</a></li><li><a href="#tymethod.clip_lines" title="clip_lines">clip_lines</a></li><li><a href="#tymethod.clip_path" title="clip_path">clip_path</a></li><li><a href="#tymethod.clip_paths" title="clip_paths">clip_paths</a></li></ul><h3><a href="#foreign-impls">Implementations on Foreign Types</a></h3><ul class="block"><li><a href="#impl-IntClip-for-Vec%3CVec%3CIntPoint%3E%3E" title="IntShape">IntShape</a></li><li><a href="#impl-IntClip-for-Vec%3CVec%3CVec%3CIntPoint%3E%3E%3E" title="IntShapes">IntShapes</a></li><li><a href="#impl-IntClip-for-%5BIntPoint%5D" title="[IntPoint]">[IntPoint]</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In i_<wbr>overlay::<wbr>string::<wbr>clip</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">i_overlay</a>::<wbr><a href="../index.html">string</a>::<wbr><a href="index.html">clip</a></div><h1>Trait <span class="trait">IntClip</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/i_overlay/string/clip.rs.html#122-158">Source</a> </span></div><pre class="rust item-decl"><code>pub trait IntClip {
+    // Required methods
+    fn <a href="#tymethod.clip_line" class="fn">clip_line</a>(
+        &amp;self,
+        line: <a class="type" href="../line/type.IntLine.html" title="type i_overlay::string::line::IntLine">IntLine</a>,
+        fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+        clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.clip_lines" class="fn">clip_lines</a>(
+        &amp;self,
+        lines: &amp;[<a class="type" href="../line/type.IntLine.html" title="type i_overlay::string::line::IntLine">IntLine</a>],
+        fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+        clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.clip_path" class="fn">clip_path</a>(
+        &amp;self,
+        path: &amp;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>,
+        fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+        clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.clip_paths" class="fn">clip_paths</a>(
+        &amp;self,
+        paths: &amp;[<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>],
+        fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+        clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;;
+}</code></pre><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.clip_line" class="method"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#130">Source</a><h4 class="code-header">fn <a href="#tymethod.clip_line" class="fn">clip_line</a>(
+    &amp;self,
+    line: <a class="type" href="../line/type.IntLine.html" title="type i_overlay::string::line::IntLine">IntLine</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section></summary><div class="docblock"><p>Clips a single line according to the specified build and clip rules.</p>
+<ul>
+<li><code>line</code>: The line to be clipped, represented by two points.</li>
+<li><code>fill_rule</code>: Specifies the rule determining the filled areas, influencing the inclusion of line segments.</li>
+<li><code>clip_rule</code>: The rule for clipping, determining how the boundary and inversion settings affect the result.</li>
+</ul>
+<h5 id="returns"><a class="doc-anchor" href="#returns">§</a>Returns</h5>
+<p>A vector of <code>IntPath</code> instances representing the clipped sections of the input line.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.clip_lines" class="method"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#139">Source</a><h4 class="code-header">fn <a href="#tymethod.clip_lines" class="fn">clip_lines</a>(
+    &amp;self,
+    lines: &amp;[<a class="type" href="../line/type.IntLine.html" title="type i_overlay::string::line::IntLine">IntLine</a>],
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section></summary><div class="docblock"><p>Clips multiple lines according to the specified build and clip rules.</p>
+<ul>
+<li><code>lines</code>: A slice of <code>IntLine</code> instances representing lines to be clipped.</li>
+<li><code>fill_rule</code>: Specifies the rule determining the filled areas, influencing the inclusion of line segments.</li>
+<li><code>clip_rule</code>: The rule for clipping, determining how boundary and inversion settings affect the results.</li>
+</ul>
+<h5 id="returns-1"><a class="doc-anchor" href="#returns-1">§</a>Returns</h5>
+<p>A vector of <code>IntPath</code> instances containing the clipped portions of the input lines.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.clip_path" class="method"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#148">Source</a><h4 class="code-header">fn <a href="#tymethod.clip_path" class="fn">clip_path</a>(
+    &amp;self,
+    path: &amp;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section></summary><div class="docblock"><p>Clips a single path according to the specified build and clip rules.</p>
+<ul>
+<li><code>path</code>: A reference to an <code>IntPath</code>, which is a sequence of points representing the path to be clipped.</li>
+<li><code>fill_rule</code>: Specifies the rule determining the filled areas, influencing the inclusion of path segments.</li>
+<li><code>clip_rule</code>: The rule for clipping, determining how boundary and inversion settings affect the result.</li>
+</ul>
+<h5 id="returns-2"><a class="doc-anchor" href="#returns-2">§</a>Returns</h5>
+<p>A vector of <code>IntPath</code> instances representing the clipped sections of the path.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.clip_paths" class="method"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#157">Source</a><h4 class="code-header">fn <a href="#tymethod.clip_paths" class="fn">clip_paths</a>(
+    &amp;self,
+    paths: &amp;[<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>],
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section></summary><div class="docblock"><p>Clips multiple paths according to the specified build and clip rules.</p>
+<ul>
+<li><code>paths</code>: A slice of <code>IntPath</code> instances, each representing a path to be clipped.</li>
+<li><code>fill_rule</code>: Specifies the rule determining the filled areas, influencing the inclusion of path segments.</li>
+<li><code>clip_rule</code>: The rule for clipping, determining how boundary and inversion settings affect the result.</li>
+</ul>
+<h5 id="returns-3"><a class="doc-anchor" href="#returns-3">§</a>Returns</h5>
+<p>A vector of <code>IntPath</code> instances containing the clipped portions of the input paths.</p>
+</div></details></div><h2 id="foreign-impls" class="section-header">Implementations on Foreign Types<a href="#foreign-impls" class="anchor">§</a></h2><details class="toggle implementors-toggle"><summary><section id="impl-IntClip-for-Vec%3CVec%3CIntPoint%3E%3E" class="impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#190-218">Source</a><a href="#impl-IntClip-for-Vec%3CVec%3CIntPoint%3E%3E" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.IntClip.html" title="trait i_overlay::string::clip::IntClip">IntClip</a> for <a class="type" href="../../../i_shape/int/shape/type.IntShape.html" title="type i_shape::int::shape::IntShape">IntShape</a></h3></section></summary><div class="impl-items"><section id="method.clip_line" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#192-196">Source</a><a href="#method.clip_line" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_line" class="fn">clip_line</a>(
+    &amp;self,
+    line: <a class="type" href="../line/type.IntLine.html" title="type i_overlay::string::line::IntLine">IntLine</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section><section id="method.clip_lines" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#199-203">Source</a><a href="#method.clip_lines" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_lines" class="fn">clip_lines</a>(
+    &amp;self,
+    lines: &amp;[<a class="type" href="../line/type.IntLine.html" title="type i_overlay::string::line::IntLine">IntLine</a>],
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section><section id="method.clip_path" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#206-210">Source</a><a href="#method.clip_path" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_path" class="fn">clip_path</a>(
+    &amp;self,
+    path: &amp;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section><section id="method.clip_paths" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#213-217">Source</a><a href="#method.clip_paths" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_paths" class="fn">clip_paths</a>(
+    &amp;self,
+    paths: &amp;[<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>],
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section></div></details><details class="toggle implementors-toggle"><summary><section id="impl-IntClip-for-Vec%3CVec%3CVec%3CIntPoint%3E%3E%3E" class="impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#160-188">Source</a><a href="#impl-IntClip-for-Vec%3CVec%3CVec%3CIntPoint%3E%3E%3E" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.IntClip.html" title="trait i_overlay::string::clip::IntClip">IntClip</a> for <a class="type" href="../../../i_shape/int/shape/type.IntShapes.html" title="type i_shape::int::shape::IntShapes">IntShapes</a></h3></section></summary><div class="impl-items"><section id="method.clip_line-1" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#162-166">Source</a><a href="#method.clip_line-1" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_line" class="fn">clip_line</a>(
+    &amp;self,
+    line: <a class="type" href="../line/type.IntLine.html" title="type i_overlay::string::line::IntLine">IntLine</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section><section id="method.clip_lines-1" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#169-173">Source</a><a href="#method.clip_lines-1" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_lines" class="fn">clip_lines</a>(
+    &amp;self,
+    lines: &amp;[<a class="type" href="../line/type.IntLine.html" title="type i_overlay::string::line::IntLine">IntLine</a>],
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section><section id="method.clip_path-1" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#176-180">Source</a><a href="#method.clip_path-1" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_path" class="fn">clip_path</a>(
+    &amp;self,
+    path: &amp;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section><section id="method.clip_paths-1" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#183-187">Source</a><a href="#method.clip_paths-1" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_paths" class="fn">clip_paths</a>(
+    &amp;self,
+    paths: &amp;[<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>],
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section></div></details><details class="toggle implementors-toggle"><summary><section id="impl-IntClip-for-%5BIntPoint%5D" class="impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#220-248">Source</a><a href="#impl-IntClip-for-%5BIntPoint%5D" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.IntClip.html" title="trait i_overlay::string::clip::IntClip">IntClip</a> for [<a class="struct" href="../../../i_float/int/point/struct.IntPoint.html" title="struct i_float::int::point::IntPoint">IntPoint</a>]</h3></section></summary><div class="impl-items"><section id="method.clip_line-2" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#222-226">Source</a><a href="#method.clip_line-2" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_line" class="fn">clip_line</a>(
+    &amp;self,
+    line: <a class="type" href="../line/type.IntLine.html" title="type i_overlay::string::line::IntLine">IntLine</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section><section id="method.clip_lines-2" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#229-233">Source</a><a href="#method.clip_lines-2" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_lines" class="fn">clip_lines</a>(
+    &amp;self,
+    lines: &amp;[<a class="type" href="../line/type.IntLine.html" title="type i_overlay::string::line::IntLine">IntLine</a>],
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section><section id="method.clip_path-2" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#236-240">Source</a><a href="#method.clip_path-2" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_path" class="fn">clip_path</a>(
+    &amp;self,
+    path: &amp;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>,
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section><section id="method.clip_paths-2" class="method trait-impl"><a class="src rightside" href="../../../src/i_overlay/string/clip.rs.html#243-247">Source</a><a href="#method.clip_paths-2" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clip_paths" class="fn">clip_paths</a>(
+    &amp;self,
+    paths: &amp;[<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>],
+    fill_rule: <a class="enum" href="../../core/fill_rule/enum.FillRule.html" title="enum i_overlay::core::fill_rule::FillRule">FillRule</a>,
+    clip_rule: <a class="struct" href="struct.ClipRule.html" title="struct i_overlay::string::clip::ClipRule">ClipRule</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.90.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="type" href="../../../i_shape/int/path/type.IntPath.html" title="type i_shape::int::path::IntPath">IntPath</a>&gt;</h4></section></div></details><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"></div><script src="../../../trait.impl/i_overlay/string/clip/trait.IntClip.js" data-ignore-extern-crates="i_shape,core" async></script></section></div></main></body></html>

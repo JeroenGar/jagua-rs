@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["divide","extract","fill_rule","graph","overlay","overlay_rule","predicate","relate","simplify","solver"]};

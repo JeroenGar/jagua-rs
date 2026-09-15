@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"type":["Contour","Path","Paths","Shape","Shapes"]};

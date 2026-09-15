@@ -1,0 +1,136 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `OutlineOffset` trait in crate `i_overlay`."><title>OutlineOffset in i_overlay::mesh::outline::offset - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="i_overlay" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../../static.files/storage-68b7e25d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../../i_overlay/index.html">i_<wbr>overlay</a><span class="version">4.5.2</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Outline<wbr>Offset</a></h2><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.outline" title="outline">outline</a></li><li><a href="#tymethod.outline_custom" title="outline_custom">outline_custom</a></li><li><a href="#tymethod.outline_custom_fixed_scale" title="outline_custom_fixed_scale">outline_custom_fixed_scale</a></li><li><a href="#tymethod.outline_custom_fixed_scale_into" title="outline_custom_fixed_scale_into">outline_custom_fixed_scale_into</a></li><li><a href="#tymethod.outline_custom_into" title="outline_custom_into">outline_custom_into</a></li><li><a href="#tymethod.outline_fixed_scale" title="outline_fixed_scale">outline_fixed_scale</a></li><li><a href="#tymethod.outline_fixed_scale_into" title="outline_fixed_scale_into">outline_fixed_scale_into</a></li><li><a href="#tymethod.outline_into" title="outline_into">outline_into</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In i_<wbr>overlay::<wbr>mesh::<wbr>outline::<wbr>offset</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../../index.html">i_overlay</a>::<wbr><a href="../../index.html">mesh</a>::<wbr><a href="../index.html">outline</a>::<wbr><a href="index.html">offset</a></div><h1>Trait <span class="trait">OutlineOffset</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../../src/i_overlay/mesh/outline/offset.rs.html#25-118">Source</a> </span></div><pre class="rust item-decl"><code>pub trait OutlineOffset&lt;P: <a class="trait" href="../../../../i_float/float/compatible/trait.FloatPointCompatible.html" title="trait i_float::float::compatible::FloatPointCompatible">FloatPointCompatible</a>&lt;T&gt;, T: <a class="trait" href="../../../../i_float/float/number/trait.FloatNumber.html" title="trait i_float::float::number::FloatNumber">FloatNumber</a>&gt; {
+    // Required methods
+    fn <a href="#tymethod.outline" class="fn">outline</a>(&amp;self, style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;) -&gt; <a class="type" href="../../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.outline_into" class="fn">outline_into</a>(
+        &amp;self,
+        style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+        output: &amp;mut <a class="struct" href="../../../../i_shape/flat/float/struct.FloatFlatContoursBuffer.html" title="struct i_shape::flat::float::FloatFlatContoursBuffer">FloatFlatContoursBuffer</a>&lt;P&gt;,
+    );
+<span class="item-spacer"></span>    fn <a href="#tymethod.outline_custom" class="fn">outline_custom</a>(
+        &amp;self,
+        style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+        options: <a class="struct" href="../../../float/overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+    ) -&gt; <a class="type" href="../../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.outline_custom_into" class="fn">outline_custom_into</a>(
+        &amp;self,
+        style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+        options: <a class="struct" href="../../../float/overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+        output: &amp;mut <a class="struct" href="../../../../i_shape/flat/float/struct.FloatFlatContoursBuffer.html" title="struct i_shape::flat::float::FloatFlatContoursBuffer">FloatFlatContoursBuffer</a>&lt;P&gt;,
+    );
+<span class="item-spacer"></span>    fn <a href="#tymethod.outline_fixed_scale" class="fn">outline_fixed_scale</a>(
+        &amp;self,
+        style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+        scale: T,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;, <a class="enum" href="../../../float/scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.outline_fixed_scale_into" class="fn">outline_fixed_scale_into</a>(
+        &amp;self,
+        style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+        scale: T,
+        output: &amp;mut <a class="struct" href="../../../../i_shape/flat/float/struct.FloatFlatContoursBuffer.html" title="struct i_shape::flat::float::FloatFlatContoursBuffer">FloatFlatContoursBuffer</a>&lt;P&gt;,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.unit.html">()</a>, <a class="enum" href="../../../float/scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.outline_custom_fixed_scale" class="fn">outline_custom_fixed_scale</a>(
+        &amp;self,
+        style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+        options: <a class="struct" href="../../../float/overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+        scale: T,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;, <a class="enum" href="../../../float/scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.outline_custom_fixed_scale_into" class="fn">outline_custom_fixed_scale_into</a>(
+        &amp;self,
+        style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+        options: <a class="struct" href="../../../float/overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+        scale: T,
+        output: &amp;mut <a class="struct" href="../../../../i_shape/flat/float/struct.FloatFlatContoursBuffer.html" title="struct i_shape::flat::float::FloatFlatContoursBuffer">FloatFlatContoursBuffer</a>&lt;P&gt;,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.unit.html">()</a>, <a class="enum" href="../../../float/scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;;
+}</code></pre><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.outline" class="method"><a class="src rightside" href="../../../../src/i_overlay/mesh/outline/offset.rs.html#33">Source</a><h4 class="code-header">fn <a href="#tymethod.outline" class="fn">outline</a>(&amp;self, style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;) -&gt; <a class="type" href="../../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;</h4></section></summary><div class="docblock"><p>Generates an outline shapes for contours, or shapes.</p>
+<ul>
+<li><code>style</code>: Defines the outline properties, including offset, and joins.</li>
+</ul>
+<h5 id="returns"><a class="doc-anchor" href="#returns">§</a>Returns</h5>
+<p>A collection of <code>Shapes&lt;P&gt;</code> representing the outline geometry.
+Note: Outer boundary paths have a counterclockwise order, and holes have a clockwise order.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.outline_into" class="method"><a class="src rightside" href="../../../../src/i_overlay/mesh/outline/offset.rs.html#39">Source</a><h4 class="code-header">fn <a href="#tymethod.outline_into" class="fn">outline_into</a>(
+    &amp;self,
+    style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+    output: &amp;mut <a class="struct" href="../../../../i_shape/flat/float/struct.FloatFlatContoursBuffer.html" title="struct i_shape::flat::float::FloatFlatContoursBuffer">FloatFlatContoursBuffer</a>&lt;P&gt;,
+)</h4></section></summary><div class="docblock"><p>Generates outline contours directly into a flat buffer.</p>
+<ul>
+<li><code>style</code>: Defines the outline properties, including offset, and joins.</li>
+<li><code>output</code>: Destination buffer that receives resulting contours. Existing contents are replaced.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.outline_custom" class="method"><a class="src rightside" href="../../../../src/i_overlay/mesh/outline/offset.rs.html#49">Source</a><h4 class="code-header">fn <a href="#tymethod.outline_custom" class="fn">outline_custom</a>(
+    &amp;self,
+    style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+    options: <a class="struct" href="../../../float/overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+) -&gt; <a class="type" href="../../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;</h4></section></summary><div class="docblock"><p>Generates an outline shapes for contours, or shapes with optional filtering.</p>
+<ul>
+<li><code>style</code>: Defines the outline properties, including offset, and joins.</li>
+<li><code>options</code>: Adjust custom behavior.</li>
+</ul>
+<h5 id="returns-1"><a class="doc-anchor" href="#returns-1">§</a>Returns</h5>
+<p>A collection of <code>Shapes&lt;P&gt;</code> representing the outline geometry.
+Note: Outer boundary paths have a <strong>main_direction</strong> order, and holes have an opposite to <strong>main_direction</strong> order.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.outline_custom_into" class="method"><a class="src rightside" href="../../../../src/i_overlay/mesh/outline/offset.rs.html#56-61">Source</a><h4 class="code-header">fn <a href="#tymethod.outline_custom_into" class="fn">outline_custom_into</a>(
+    &amp;self,
+    style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+    options: <a class="struct" href="../../../float/overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+    output: &amp;mut <a class="struct" href="../../../../i_shape/flat/float/struct.FloatFlatContoursBuffer.html" title="struct i_shape::flat::float::FloatFlatContoursBuffer">FloatFlatContoursBuffer</a>&lt;P&gt;,
+)</h4></section></summary><div class="docblock"><p>Generates outline contours directly into a flat buffer with optional filtering.</p>
+<ul>
+<li><code>style</code>: Defines the outline properties, including offset, and joins.</li>
+<li><code>options</code>: Adjust custom behavior.</li>
+<li><code>output</code>: Destination buffer that receives resulting contours. Existing contents are replaced.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.outline_fixed_scale" class="method"><a class="src rightside" href="../../../../src/i_overlay/mesh/outline/offset.rs.html#71-75">Source</a><h4 class="code-header">fn <a href="#tymethod.outline_fixed_scale" class="fn">outline_fixed_scale</a>(
+    &amp;self,
+    style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+    scale: T,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;, <a class="enum" href="../../../float/scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;</h4></section></summary><div class="docblock"><p>Generates an outline shapes for contours, or shapes with a fixed float-to-integer scale.</p>
+<ul>
+<li><code>style</code>: Defines the outline properties, including offset, and joins.</li>
+<li><code>scale</code>: Fixed float-to-integer scale. Use <code>scale = 1.0 / grid_size</code> if you prefer grid size semantics.</li>
+</ul>
+<h5 id="returns-2"><a class="doc-anchor" href="#returns-2">§</a>Returns</h5>
+<p>A collection of <code>Shapes&lt;P&gt;</code> representing the outline geometry.
+Note: Outer boundary paths have a counterclockwise order, and holes have a clockwise order.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.outline_fixed_scale_into" class="method"><a class="src rightside" href="../../../../src/i_overlay/mesh/outline/offset.rs.html#82-87">Source</a><h4 class="code-header">fn <a href="#tymethod.outline_fixed_scale_into" class="fn">outline_fixed_scale_into</a>(
+    &amp;self,
+    style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+    scale: T,
+    output: &amp;mut <a class="struct" href="../../../../i_shape/flat/float/struct.FloatFlatContoursBuffer.html" title="struct i_shape::flat::float::FloatFlatContoursBuffer">FloatFlatContoursBuffer</a>&lt;P&gt;,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.unit.html">()</a>, <a class="enum" href="../../../float/scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;</h4></section></summary><div class="docblock"><p>Generates outline contours directly into a flat buffer with fixed float-to-integer scale.</p>
+<ul>
+<li><code>style</code>: Defines the outline properties, including offset, and joins.</li>
+<li><code>scale</code>: Fixed float-to-integer scale. Use <code>scale = 1.0 / grid_size</code> if you prefer grid size semantics.</li>
+<li><code>output</code>: Destination buffer that receives resulting contours. Existing contents are replaced on success.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.outline_custom_fixed_scale" class="method"><a class="src rightside" href="../../../../src/i_overlay/mesh/outline/offset.rs.html#98-103">Source</a><h4 class="code-header">fn <a href="#tymethod.outline_custom_fixed_scale" class="fn">outline_custom_fixed_scale</a>(
+    &amp;self,
+    style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+    options: <a class="struct" href="../../../float/overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+    scale: T,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../../i_shape/base/data/type.Shapes.html" title="type i_shape::base::data::Shapes">Shapes</a>&lt;P&gt;, <a class="enum" href="../../../float/scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;</h4></section></summary><div class="docblock"><p>Generates an outline shapes for contours, or shapes with optional filtering and fixed scaling.</p>
+<ul>
+<li><code>style</code>: Defines the outline properties, including offset, and joins.</li>
+<li><code>options</code>: Adjust custom behavior.</li>
+<li><code>scale</code>: Fixed float-to-integer scale. Use <code>scale = 1.0 / grid_size</code> if you prefer grid size semantics.</li>
+</ul>
+<h5 id="returns-3"><a class="doc-anchor" href="#returns-3">§</a>Returns</h5>
+<p>A collection of <code>Shapes&lt;P&gt;</code> representing the outline geometry.
+Note: Outer boundary paths have a <strong>main_direction</strong> order, and holes have an opposite to <strong>main_direction</strong> order.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.outline_custom_fixed_scale_into" class="method"><a class="src rightside" href="../../../../src/i_overlay/mesh/outline/offset.rs.html#111-117">Source</a><h4 class="code-header">fn <a href="#tymethod.outline_custom_fixed_scale_into" class="fn">outline_custom_fixed_scale_into</a>(
+    &amp;self,
+    style: &amp;<a class="struct" href="../../style/struct.OutlineStyle.html" title="struct i_overlay::mesh::style::OutlineStyle">OutlineStyle</a>&lt;T&gt;,
+    options: <a class="struct" href="../../../float/overlay/struct.OverlayOptions.html" title="struct i_overlay::float::overlay::OverlayOptions">OverlayOptions</a>&lt;T&gt;,
+    scale: T,
+    output: &amp;mut <a class="struct" href="../../../../i_shape/flat/float/struct.FloatFlatContoursBuffer.html" title="struct i_shape::flat::float::FloatFlatContoursBuffer">FloatFlatContoursBuffer</a>&lt;P&gt;,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.90.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.90.0/core/primitive.unit.html">()</a>, <a class="enum" href="../../../float/scale/enum.FixedScaleOverlayError.html" title="enum i_overlay::float::scale::FixedScaleOverlayError">FixedScaleOverlayError</a>&gt;</h4></section></summary><div class="docblock"><p>Generates outline contours directly into a flat buffer with optional filtering and fixed scaling.</p>
+<ul>
+<li><code>style</code>: Defines the outline properties, including offset, and joins.</li>
+<li><code>options</code>: Adjust custom behavior.</li>
+<li><code>scale</code>: Fixed float-to-integer scale. Use <code>scale = 1.0 / grid_size</code> if you prefer grid size semantics.</li>
+<li><code>output</code>: Destination buffer that receives resulting contours. Existing contents are replaced on success.</li>
+</ul>
+</div></details></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-OutlineOffset%3CP,+T%3E-for-S" class="impl"><a class="src rightside" href="../../../../src/i_overlay/mesh/outline/offset.rs.html#120-204">Source</a><a href="#impl-OutlineOffset%3CP,+T%3E-for-S" class="anchor">§</a><h3 class="code-header">impl&lt;S, P, T&gt; <a class="trait" href="trait.OutlineOffset.html" title="trait i_overlay::mesh::outline::offset::OutlineOffset">OutlineOffset</a>&lt;P, T&gt; for S<div class="where">where
+    S: <a class="trait" href="../../../../i_shape/source/resource/trait.ShapeResource.html" title="trait i_shape::source::resource::ShapeResource">ShapeResource</a>&lt;P, T&gt;,
+    P: <a class="trait" href="../../../../i_float/float/compatible/trait.FloatPointCompatible.html" title="trait i_float::float::compatible::FloatPointCompatible">FloatPointCompatible</a>&lt;T&gt; + 'static,
+    T: <a class="trait" href="../../../../i_float/float/number/trait.FloatNumber.html" title="trait i_float::float::number::FloatNumber">FloatNumber</a> + 'static,</div></h3></section></div><script src="../../../../trait.impl/i_overlay/mesh/outline/offset/trait.OutlineOffset.js" async></script></section></div></main></body></html>

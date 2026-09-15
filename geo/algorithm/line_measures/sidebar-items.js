@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["metric_spaces"],"trait":["Bearing","Densifiable","Densify","Destination","Distance","FrechetDistance","InterpolatableLine","InterpolateLine","InterpolatePoint","Length","LengthMeasurable"]};

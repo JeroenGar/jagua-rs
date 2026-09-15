@@ -1,0 +1,115 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Cluster points using k-means clustering"><title>geo::algorithm::kmeans - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="geo" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt=""></a></nav><nav class="sidebar"><div class="sidebar-crate"><a class="logo-container" href="../../../geo/index.html"><img src="https://raw.githubusercontent.com/georust/meta/master/logo/logo.png" alt="logo"></a><h2><a href="../../../geo/index.html">geo</a><span class="version">0.33.1</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module kmeans</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#hamerlys-algorithm" title="Hamerly’s Algorithm">Hamerly’s Algorithm</a></li><li><a href="#parameters" title="Parameters">Parameters</a></li><li><a href="#returns" title="Returns">Returns</a></li><li><a href="#algorithm" title="Algorithm">Algorithm</a></li><li><a href="#notes" title="Notes">Notes</a><ul><li><a href="#local-minima" title="Local Minima">Local Minima</a></li><li><a href="#empty-clusters" title="Empty Clusters">Empty Clusters</a></li><li><a href="#complexity" title="Complexity">Complexity</a></li></ul></li><li><a href="#examples" title="Examples">Examples</a><ul><li><a href="#basic-clustering-with-multipoint" title="Basic clustering with MultiPoint">Basic clustering with MultiPoint</a></li><li><a href="#using-with-a-vec-of-points" title="Using with a Vec of Points">Using with a Vec of Points</a></li></ul></li><li><a href="#errors" title="Errors">Errors</a></li></ul><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#traits" title="Traits">Traits</a></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In geo::<wbr>algorithm</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">geo</a>::<wbr><a href="../index.html">algorithm</a></div><h1>Module <span>kmeans</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/geo/algorithm/kmeans/mod.rs.html#1-1397">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Cluster points using <a href="https://en.wikipedia.org/wiki/K-means_clustering">k-means clustering</a></p>
+<p><em>k</em>-means clustering partitions <code>n</code> observations into <em>k</em> clusters in which each observation belongs
+to the cluster with the nearest mean (centroid). Unlike DBSCAN, <em>k</em>-means requires specifying the
+number of clusters in advance.</p>
+<p>Uses Lloyd’s algorithm with <code>k-means++</code> initialisation for improved cluster quality, accelerated
+using <a href="https://cs.baylor.edu/~hamerly/papers/2014_pca_chapter_hamerly_drake.pdf">Hamerly’s triangle inequality bounds (2010)</a>. This implementation is optimised for
+2D points with moderate cluster counts (k=2-50).</p>
+<h3 id="hamerlys-algorithm"><a class="doc-anchor" href="#hamerlys-algorithm">§</a>Hamerly’s Algorithm</h3>
+<p>This implementation uses Hamerly’s triangle inequality bounds to skip unnecessary distance
+calculations. The acceleration is most effective under the following conditions:</p>
+<ul>
+<li><strong>Well-separated clusters</strong>: Greater separation → tighter bounds → more pruning</li>
+<li><strong>More iterations</strong>: Bounds tighten progressively, so longer convergence provides more savings</li>
+<li><strong>Moderate k</strong>: Provides pruning opportunities whilst keeping O(k²) centroid distance overhead manageable</li>
+</ul>
+<p>For larger <em>k</em> (&gt; 50), the O(k²) centroid-to-centroid distance computation can dominate.</p>
+<h2 id="parameters"><a class="doc-anchor" href="#parameters">§</a>Parameters</h2>
+<ul>
+<li><code>k</code>: The number of clusters to form. Must be &gt; 0 and &lt;= number of points. <strong>NB</strong>: More than <code>k</code> clusters may be returned if <code>max_radius</code> is specified.</li>
+<li><code>max_radius</code> (optional): Maximum radius for clusters. If specified, clusters exceeding this radius will be subdivided,
+potentially resulting in more than <code>k</code> clusters.</li>
+<li><code>max_iter</code> (optional): Maximum number of iterations. Default: 300.</li>
+<li><code>tolerance</code> (optional): Absolute tolerance for convergence based on centroid movement (in coordinate units). Default: 0.0001.</li>
+</ul>
+<h2 id="returns"><a class="doc-anchor" href="#returns">§</a>Returns</h2>
+<p>Returns <code>Result&lt;Vec&lt;usize&gt;, KMeansError&lt;T&gt;&gt;</code>:</p>
+<ul>
+<li><code>Ok(labels)</code>: A vector of cluster labels (0-based indices), one for each input point</li>
+<li><code>Err(KMeansError::InvalidK)</code>: If <code>k</code> is 0 or greater than the number of points</li>
+<li><code>Err(KMeansError::EmptyCluster)</code>: If an empty cluster cannot be recovered during iteration</li>
+<li><code>Err(KMeansError::InitializationFailed)</code>: If k-means++ initialisation fails due to degenerate data (e.g., all points at same location, NaN/infinite coordinates)</li>
+<li><code>Err(KMeansError::MaxIterationsReached)</code>: If max_iter is reached before convergence. The error contains the partial result with convergence metadata.</li>
+</ul>
+<h2 id="algorithm"><a class="doc-anchor" href="#algorithm">§</a>Algorithm</h2>
+<p>The algorithm works as follows:</p>
+<ol>
+<li><strong>Initialisation</strong>: Uses <a href="https://theory.stanford.edu/~sergei/papers/kMeansPP-soda.pdf">k-means++</a> for better initial centroids</li>
+<li><strong>Assignment</strong>: Assign each point to the cluster with the nearest centroid using Hamerly’s triangle inequality bounds
+<ul>
+<li>Maintains upper and lower bounds on distances to avoid redundant calculations</li>
+<li>Only computes actual distances when bounds don’t rule out assignment changes</li>
+</ul>
+</li>
+<li><strong>Update</strong>: Recalculate centroids as the mean of all points in each cluster</li>
+<li><strong>Bounds update</strong>: Update distance bounds based on centroid movement using triangle inequality</li>
+<li><strong>Convergence check</strong>: Stop if:
+<ul>
+<li>Centroids have moved less than the tolerance threshold, OR</li>
+<li>No points have changed cluster assignment, OR</li>
+<li>Maximum iterations reached</li>
+</ul>
+</li>
+<li>Repeat steps 2-5 until convergence</li>
+<li><strong>max_radius constraint</strong> (if specified): Split any clusters with radius exceeding max_radius</li>
+</ol>
+<h2 id="notes"><a class="doc-anchor" href="#notes">§</a>Notes</h2><h3 id="local-minima"><a class="doc-anchor" href="#local-minima">§</a>Local Minima</h3>
+<p><em>k</em>-means converges to a local minimum, not necessarily the global optimum. The final clustering
+depends on the initial centroid placement. Although <em>k</em>-means++ provides good initialisation,
+it can still occasionally place multiple initial centroids within the same “natural” cluster,
+leading to suboptimal results. For critical applications, consider running <em>k</em>-means multiple
+times with different seeds and selecting the result with lowest inertia (sum of squared
+distances to centroids).</p>
+<h3 id="empty-clusters"><a class="doc-anchor" href="#empty-clusters">§</a>Empty Clusters</h3>
+<p>Empty clusters may rarely occur during iteration if all points are reassigned away from a centroid.
+When this happens, the algorithm attempts to recover by reassigning the farthest point from its
+current centroid to the empty cluster (following scikit-learn’s approach). If recovery fails,
+the function returns an error.</p>
+<h3 id="complexity"><a class="doc-anchor" href="#complexity">§</a>Complexity</h3>
+<ul>
+<li><strong>Initialization (k-means++)</strong>: O(n·k²)</li>
+<li><strong>Per iteration</strong>: O(k²) centroid distances + O(n) for point assignments with Hamerly pruning</li>
+<li><strong>Overall</strong>: Effectively O(i·n) for moderate k, where i is iterations to convergence</li>
+</ul>
+<p>For large datasets with <em>k</em> &gt; 50, consider hierarchical or density-based clustering (DBSCAN).</p>
+<h2 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h2><h3 id="basic-clustering-with-multipoint"><a class="doc-anchor" href="#basic-clustering-with-multipoint">§</a>Basic clustering with MultiPoint</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::{KMeans, MultiPoint, point};
+
+<span class="kw">let </span>points = MultiPoint::new(<span class="macro">vec!</span>[
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">1.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">1.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">10.0</span>, y: <span class="number">10.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">11.0</span>, y: <span class="number">10.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">10.0</span>, y: <span class="number">11.0</span>),
+]);
+
+<span class="kw">let </span>labels = points.kmeans(<span class="number">2</span>).unwrap();
+
+<span class="comment">// Two clusters should be found
+</span><span class="kw">let </span>cluster_0_count = labels.iter().filter(|<span class="kw-2">&amp;</span>l| <span class="kw-2">*</span>l == <span class="number">0</span>).count();
+<span class="kw">let </span>cluster_1_count = labels.iter().filter(|<span class="kw-2">&amp;</span>l| <span class="kw-2">*</span>l == <span class="number">1</span>).count();
+<span class="macro">assert_eq!</span>(cluster_0_count + cluster_1_count, <span class="number">6</span>);</code></pre></div>
+<h3 id="using-with-a-vec-of-points"><a class="doc-anchor" href="#using-with-a-vec-of-points">§</a>Using with a Vec of Points</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>geo::{KMeans, point};
+
+<span class="kw">let </span>points = <span class="macro">vec!</span>[
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">1.0</span>, y: <span class="number">1.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">1.0</span>, y: <span class="number">0.0</span>),
+    <span class="macro">point!</span>(x: <span class="number">0.0</span>, y: <span class="number">1.0</span>),
+];
+
+<span class="kw">let </span>labels = points.kmeans(<span class="number">2</span>).unwrap();
+
+<span class="comment">// All points should be assigned to one of two clusters
+</span><span class="macro">assert_eq!</span>(labels.len(), <span class="number">4</span>);</code></pre></div>
+<h2 id="errors"><a class="doc-anchor" href="#errors">§</a>Errors</h2>
+<p>Returns <code>KMeansError&lt;T&gt;</code> if:</p>
+<ul>
+<li><code>k</code> is 0 or greater than the number of points (<code>InvalidK</code>)</li>
+<li>An empty cluster cannot be recovered during iteration (<code>EmptyCluster</code>)</li>
+<li>Initialisation fails due to degenerate data (<code>InitializationFailed</code>)</li>
+<li>Maximum iterations reached before convergence (<code>MaxIterationsReached</code>)</li>
+</ul>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.KMeansParams.html" title="struct geo::algorithm::kmeans::KMeansParams">KMeans<wbr>Params</a></dt><dd>Parameters for k-means clustering with builder pattern.</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.KMeansError.html" title="enum geo::algorithm::kmeans::KMeansError">KMeans<wbr>Error</a></dt><dd>Errors that can occur during k-means clustering</dd><dt><a class="enum" href="enum.KMeansInitError.html" title="enum geo::algorithm::kmeans::KMeansInitError">KMeans<wbr>Init<wbr>Error</a></dt><dd>Errors that can occur during k-means++ initialisation</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.KMeans.html" title="trait geo::algorithm::kmeans::KMeans">KMeans</a></dt></dl></section></div></main></body></html>

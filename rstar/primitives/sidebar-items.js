@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["CachedEnvelope","GeomWithData","Line","ObjectRef","PointWithData","Rectangle"]};

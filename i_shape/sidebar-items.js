@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"macro":["int_path","int_shape","int_shapes","path","paths"],"mod":["base","fix","flat","float","int","source","util"]};

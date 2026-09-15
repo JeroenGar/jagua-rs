@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="i_key_sort"><title>i_key_sort - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="i_key_sort" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-68b7e25d.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../i_key_sort/index.html">i_<wbr>key_<wbr>sort</a><span class="version">0.10.3</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#i_key_sort" title="i_key_sort">i_key_sort</a><ul><li><a href="#what-this-crate-provides" title="What this crate provides">What this crate provides</a></li><li><a href="#when-it-shines" title="When it shines">When it shines</a></li><li><a href="#crate-features" title="Crate features">Crate features</a></li><li><a href="#complexity-high-level" title="Complexity (high level)">Complexity (high level)</a></li><li><a href="#safety--preconditions" title="Safety &#38; preconditions">Safety &amp; preconditions</a></li><li><a href="#examples" title="Examples">Examples</a></li><li><a href="#no_std-notes" title="no_std notes">no_std notes</a></li><li><a href="#license" title="License">License</a></li><li><a href="#mit" title="MIT">MIT</a></li></ul></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>i_key_sort</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/i_key_sort/lib.rs.html#1-102">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="i_key_sort"><a class="doc-anchor" href="#i_key_sort">§</a>i_key_sort</h2>
+<p>Cache-friendly, allocation-aware bin/counting style sort with optional parallel
+pre-spread. Designed for integer-like keys (u8…u64, i8…i64, usize) and for
+workloads where keys are <strong>bounded</strong> and often <strong>repeat</strong> (so bins help).</p>
+<h3 id="what-this-crate-provides"><a class="doc-anchor" href="#what-this-crate-provides">§</a>What this crate provides</h3>
+<ul>
+<li><strong>Stable API, unsafe-free at the call site</strong>: internals use <code>unsafe</code> for speed, public APIs are safe.</li>
+<li><strong>no_std by default</strong>: works with <code>alloc</code>. Enable <code>std</code>/parallel via features.</li>
+<li><strong>Single-pass bin pre-spread</strong> + <strong>in-bin sort</strong> (key-only, key+cmp, two keys, two keys+cmp).</li>
+<li><strong>Optional parallel pre-spread</strong> using Rayon (feature-gated).</li>
+<li><strong>Reusable buffer</strong> variants to avoid repeated allocations.</li>
+</ul>
+<h3 id="when-it-shines"><a class="doc-anchor" href="#when-it-shines">§</a>When it shines</h3>
+<ul>
+<li>Keys are integers (or mapped to them) with a relatively small range.</li>
+<li>Many equal keys (histogram is spiky).</li>
+<li>Large inputs benefit from linear pre-spread and cache-friendly copying.</li>
+</ul>
+<h3 id="crate-features"><a class="doc-anchor" href="#crate-features">§</a>Crate features</h3>
+<ul>
+<li><code>std</code> — opt in to the Rust standard library (still <code>no_std</code> by default).</li>
+<li><code>allow_multithreading</code> — enables parallel pre-spread via Rayon and exposes <code>parallel: bool</code> paths.
+<ul>
+<li>When this feature is <strong>off</strong>, the <code>parallel</code> argument is accepted but <strong>ignored</strong>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="complexity-high-level"><a class="doc-anchor" href="#complexity-high-level">§</a>Complexity (high level)</h3>
+<ul>
+<li>Pre-spread: <code>O(n)</code> with one pass over the input.</li>
+<li>In-bin sort: small bins use <code>sort_unstable</code> (fast for tiny slices).
+Worst-case behaves like <code>O(n log n)</code> if all items fall into one large bin,
+but typical cases approach linear time when bins distribute well.</li>
+</ul>
+<h3 id="safety--preconditions"><a class="doc-anchor" href="#safety--preconditions">§</a>Safety &amp; preconditions</h3>
+<ul>
+<li>Public APIs are safe; internal <code>unsafe</code> is encapsulated and documented.</li>
+<li>Your key functions must be <strong>total</strong> and <strong>consistent</strong> (same input → same key).</li>
+<li>For signed keys, the internal arithmetic assumes <code>value &gt;= min_key</code> during binning;
+this is enforced in debug builds and maintained by construction.</li>
+</ul>
+<h3 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h3><h4 id="1-sort-by-a-single-key"><a class="doc-anchor" href="#1-sort-by-a-single-key">§</a>1) Sort by a single key</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>i_key_sort::sort::one_key::OneKeySort;
+
+<span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[<span class="number">5</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">1</span>, <span class="number">3</span>, <span class="number">2</span>];
+<span class="comment">// `parallel` is ignored unless feature `allow_multithreading` is enabled.
+</span>v.sort_by_one_key(<span class="comment">/* parallel: */ </span><span class="bool-val">true</span>, |<span class="kw-2">&amp;</span>x| x);
+
+<span class="macro">assert_eq!</span>(v, [<span class="number">1</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]);</code></pre></div>
+<h4 id="2-sort-by-a-key-then-by-a-comparator"><a class="doc-anchor" href="#2-sort-by-a-key-then-by-a-comparator">§</a>2) Sort by a key, then by a comparator</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>i_key_sort::sort::one_key_cmp::OneKeyAndCmpSort;
+
+<span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[(<span class="string">"b"</span>, <span class="number">2</span>), (<span class="string">"a"</span>, <span class="number">3</span>), (<span class="string">"a"</span>, <span class="number">1</span>)];
+v.sort_by_one_key_then_by(<span class="bool-val">true</span>, |x| x.<span class="number">0</span>.as_bytes()[<span class="number">0</span>], |a, b| a.<span class="number">1</span>.cmp(<span class="kw-2">&amp;</span>b.<span class="number">1</span>));
+
+<span class="macro">assert_eq!</span>(v, [(<span class="string">"a"</span>, <span class="number">1</span>), (<span class="string">"a"</span>, <span class="number">3</span>), (<span class="string">"b"</span>, <span class="number">2</span>)]);</code></pre></div>
+<h4 id="3-sort-by-two-keys-lexicographic"><a class="doc-anchor" href="#3-sort-by-two-keys-lexicographic">§</a>3) Sort by two keys (lexicographic)</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>i_key_sort::sort::two_keys::TwoKeysSort;
+
+<span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[(<span class="number">2</span>, <span class="number">1</span>), (<span class="number">1</span>, <span class="number">2</span>), (<span class="number">1</span>, <span class="number">0</span>)];
+v.sort_by_two_keys(<span class="bool-val">true</span>, |x| x.<span class="number">0</span>, |x| x.<span class="number">1</span>);
+
+<span class="macro">assert_eq!</span>(v, [(<span class="number">1</span>, <span class="number">0</span>), (<span class="number">1</span>, <span class="number">2</span>), (<span class="number">2</span>, <span class="number">1</span>)]);</code></pre></div>
+<h4 id="4-two-keys-then-comparator-three-way"><a class="doc-anchor" href="#4-two-keys-then-comparator-three-way">§</a>4) Two keys, then comparator (three-way)</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>i_key_sort::sort::two_keys_cmp::TwoKeysAndCmpSort;
+
+<span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[(<span class="number">1u32</span>, <span class="number">0i32</span>, <span class="number">9i32</span>), (<span class="number">1</span>, <span class="number">0</span>, <span class="number">3</span>), (<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>)];
+v.sort_by_two_keys_then_by(<span class="bool-val">true</span>, |x| x.<span class="number">0</span>, |x| x.<span class="number">1</span>, |a, b| a.<span class="number">2</span>.cmp(<span class="kw-2">&amp;</span>b.<span class="number">2</span>));
+
+<span class="macro">assert_eq!</span>(v, [(<span class="number">1</span>, <span class="number">0</span>, <span class="number">3</span>), (<span class="number">1</span>, <span class="number">0</span>, <span class="number">9</span>), (<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>)]);</code></pre></div>
+<h4 id="5-reusing-a-buffer-to-avoid-allocations"><a class="doc-anchor" href="#5-reusing-a-buffer-to-avoid-allocations">§</a>5) Reusing a buffer to avoid allocations</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>i_key_sort::sort::one_key::OneKeySort;
+
+<span class="kw">let </span><span class="kw-2">mut </span>buf = Vec::new();
+<span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[<span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>];
+
+v.sort_by_one_key_and_buffer(<span class="bool-val">true</span>, <span class="kw-2">&amp;mut </span>buf, |<span class="kw-2">&amp;</span>x| x);
+
+<span class="macro">assert_eq!</span>(v, [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);</code></pre></div>
+<h3 id="no_std-notes"><a class="doc-anchor" href="#no_std-notes">§</a>no_std notes</h3>
+<p>The crate is <code>no_std</code> by default and pulls <code>alloc</code>. Enable the <code>std</code> feature
+(or <code>allow_multithreading</code>, which implies <code>std</code>) if you need threading or
+want to use Rayon-powered paths.</p>
+<h3 id="license"><a class="doc-anchor" href="#license">§</a>License</h3><h3 id="mit"><a class="doc-anchor" href="#mit">§</a>MIT</h3></div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="sort/index.html" title="mod i_key_sort::sort">sort</a></dt></dl></section></div></main></body></html>

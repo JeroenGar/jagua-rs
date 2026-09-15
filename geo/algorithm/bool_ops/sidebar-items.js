@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["FillRule","OpType"],"fn":["unary_union"],"trait":["BoolOpsNum","BooleanOps"]};

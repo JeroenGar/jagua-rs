@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["Haversine"],"static":["Geodesic"],"struct":["Euclidean","GeodesicMeasure","HaversineMeasure","Rhumb"]};

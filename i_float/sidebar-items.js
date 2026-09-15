@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"macro":["int_pnt"],"mod":["adapter","fix_angle","fix_float","fix_vec","float","int","integration","triangle","u128"]};

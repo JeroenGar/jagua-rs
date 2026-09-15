@@ -1,0 +1,1 @@
+searchState.loadedDescShard("i_key_sort", 0, "i_key_sort\nSort a slice by a single integer‐like key function.\nSort a slice by a primary integer‐like key, then by a …\nSort a slice lexicographically by two integer‐like keys.\nSort a slice lexicographically by two integer‐like keys, …")
