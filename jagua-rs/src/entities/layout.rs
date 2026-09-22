@@ -87,6 +87,15 @@ impl Layout {
         pk
     }
 
+    /// Registers a hazard that is not a placed item — a hole in the container,
+    /// a keep-out region, a fixed obstacle. Marked `dynamic` it survives a
+    /// [`Layout::swap_container`] and travels in a [`LayoutSnapshot`], which is
+    /// what lets an optimizer that rebuilds its layout from snapshots keep it.
+    pub fn register_hazard(&mut self, hazard: Hazard) {
+        self.cde.register_hazard(hazard);
+        debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
+    }
+
     /// Removes an item from the layout by its unique key and returns the removed [`PlacedItem`].
     pub fn remove_item(&mut self, pk: PItemKey) -> PlacedItem {
         let pi = self
