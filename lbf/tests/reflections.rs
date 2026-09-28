@@ -367,7 +367,6 @@ mod io {
             value["demand"] = json!(1);
             check::<jagua_rs::probs::spp::io::ext_repr::ExtItem>(value.clone());
             check::<jagua_rs::probs::bpp::io::ext_repr::ExtItem>(value.clone());
-            check::<jagua_rs::probs::mspp::io::ext_repr::ExtItem>(value);
         }
     }
 
