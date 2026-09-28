@@ -17,11 +17,11 @@ new_key_type! {
 #[derive(Clone, Debug)]
 pub struct PlacedItem {
     /// Shared immutable item definition, retained by layouts and snapshots.
-    pub item: Arc<Item>,
+    pub(crate) item: Arc<Item>,
     /// The transformation that was applied to the `Item` before it was placed
-    pub d_transf: DTransformation,
+    pub(crate) d_transf: DTransformation,
     /// The shape of the `Item` after it has been transformed and placed in a `Layout`
-    pub shape: Arc<SPolygon>,
+    pub(crate) shape: Arc<SPolygon>,
 }
 
 impl PlacedItem {
@@ -35,5 +35,23 @@ impl PlacedItem {
             d_transf,
             shape: Arc::new(shape),
         }
+    }
+
+    /// Shared immutable item definition, retained by layouts and snapshots.
+    #[must_use]
+    pub fn item(&self) -> &Arc<Item> {
+        &self.item
+    }
+
+    /// The transformation that was applied to the `Item` before it was placed
+    #[must_use]
+    pub fn d_transf(&self) -> DTransformation {
+        self.d_transf
+    }
+
+    /// The shape of the `Item` after it has been transformed and placed in a `Layout`
+    #[must_use]
+    pub fn shape(&self) -> &Arc<SPolygon> {
+        &self.shape
     }
 }

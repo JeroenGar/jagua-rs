@@ -12,12 +12,19 @@ use std::sync::Arc;
 /// A [`Layout`] is a dynamic representation of items that have been placed in a container at specific positions.
 /// Items can be placed and removed. The container can be swapped. Snapshots can be taken and restored to.
 /// Each layout maintains a [`CDEngine`], which can be used to check for collisions before placing items.
+/// Read access does not permit bypassing the layout's mutation methods:
+/// ```compile_fail
+/// # use jagua_rs::entities::Layout;
+/// fn clear(layout: &mut Layout) {
+///     layout.placed_items().clear();
+/// }
+/// ```
 #[derive(Clone)]
 pub struct Layout {
     /// The container used for this layout
-    pub container: Container,
+    pub(crate) container: Container,
     /// All the items that have been placed in this layout, indexed by a unique key
-    pub placed_items: SlotMap<PItemKey, PlacedItem>,
+    pub(crate) placed_items: SlotMap<PItemKey, PlacedItem>,
     /// The collision detection engine for this layout
     cde: CDEngine,
 }
@@ -165,6 +172,18 @@ impl Layout {
                 .expect("all placed items should be registered in the CDE");
             !self.cde.detect_poly_collision(&pi.shape, &hkey)
         })
+    }
+
+    /// The container used for this layout
+    #[must_use]
+    pub fn container(&self) -> &Container {
+        &self.container
+    }
+
+    /// All the items that have been placed in this layout, indexed by a unique key
+    #[must_use]
+    pub fn placed_items(&self) -> &SlotMap<PItemKey, PlacedItem> {
+        &self.placed_items
     }
 }
 

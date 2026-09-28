@@ -22,11 +22,11 @@ pub fn search(
     sample_counter: &mut usize,
     filter: &impl HazardFilter,
 ) -> Option<(DTransformation, LBFLoss)> {
-    let surrogate = item.shape_cd.surrogate();
+    let surrogate = item.shape_cd().surrogate();
     //create a clone of the shape which will we can use to apply the transformations
     let mut buffer = {
-        let mut buffer = (*item.shape_cd).clone();
-        buffer.surrogate = None; //remove the surrogate for faster transforms, we don't need it for the buffer shape
+        let mut buffer = item.shape_cd().as_ref().clone();
+        buffer.remove_surrogate(); //remove the surrogate for faster transforms, we don't need it for the buffer shape
         buffer
     };
 
@@ -43,7 +43,7 @@ pub fn search(
         let transf = d_transf.compose();
         if !cde.detect_surrogate_collision(surrogate, &transf, filter) {
             //if no collision is detected on the surrogate, apply the transformation
-            buffer.transform_from(&item.shape_cd, &transf);
+            buffer.transform_from(item.shape_cd(), &transf);
             let cost = LBFLoss::from_shape(&buffer);
 
             //only validate the sample if it possibly can replace the current best
@@ -83,7 +83,7 @@ pub fn search(
         let d_transf = ls_sampler.sample(rng);
         let transf = d_transf.compose();
         if !cde.detect_surrogate_collision(surrogate, &transf, filter) {
-            buffer.transform_from(&item.shape_cd, &transf);
+            buffer.transform_from(item.shape_cd(), &transf);
             let cost = LBFLoss::from_shape(&buffer);
 
             //only validate the sample if it possibly can replace the current best
@@ -108,7 +108,7 @@ pub fn search(
 pub fn item_placement_order<'a>(items: impl Iterator<Item = &'a Item>) -> Vec<usize> {
     //sort the items by descending diameter
     items
-        .sorted_by_key(|item| Reverse(OrderedFloat(item.shape_cd.diameter)))
-        .map(|item| item.idx)
+        .sorted_by_key(|item| Reverse(OrderedFloat(item.shape_cd().diameter())))
+        .map(|item| item.idx())
         .collect_vec()
 }

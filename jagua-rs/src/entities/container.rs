@@ -14,13 +14,13 @@ use anyhow::{Result, ensure};
 #[derive(Clone, Debug)]
 pub struct Container {
     /// Original contour of the container as defined in the input
-    pub outer_orig: Arc<OriginalShape>,
+    pub(crate) outer_orig: Arc<OriginalShape>,
     /// Contour of the container to be used for collision detection
-    pub outer_cd: Arc<SPolygon>,
+    pub(crate) outer_cd: Arc<SPolygon>,
     /// Zones of different qualities in the container, stored per quality.
-    pub quality_zones: [Option<InferiorQualityZone>; N_QUALITIES],
+    pub(crate) quality_zones: [Option<InferiorQualityZone>; N_QUALITIES],
     /// The initial state of the `CDEngine` for this container. (equivalent to an empty layout using this container)
-    pub base_cde: Arc<CDEngine>,
+    pub(crate) base_cde: Arc<CDEngine>,
 }
 
 impl Container {
@@ -75,6 +75,30 @@ impl Container {
     pub fn area(&self) -> f32 {
         self.outer_orig.area()
     }
+
+    /// Original contour of the container as defined in the input
+    #[must_use]
+    pub fn outer_orig(&self) -> &Arc<OriginalShape> {
+        &self.outer_orig
+    }
+
+    /// Contour of the container to be used for collision detection
+    #[must_use]
+    pub fn outer_cd(&self) -> &Arc<SPolygon> {
+        &self.outer_cd
+    }
+
+    /// Zones of different qualities in the container, stored per quality.
+    #[must_use]
+    pub fn quality_zones(&self) -> &[Option<InferiorQualityZone>; N_QUALITIES] {
+        &self.quality_zones
+    }
+
+    /// The initial state of the `CDEngine` for this container. (equivalent to an empty layout using this container)
+    #[must_use]
+    pub fn base_cde(&self) -> &Arc<CDEngine> {
+        &self.base_cde
+    }
 }
 
 /// Maximum number of qualities that can be used for quality zones in a container.
@@ -84,11 +108,11 @@ pub const N_QUALITIES: usize = 10;
 #[derive(Clone, Debug)]
 pub struct InferiorQualityZone {
     /// Quality of this zone. Higher qualities are superior. A zone with quality 0 is treated as a hole.
-    pub quality: usize,
+    pub(crate) quality: usize,
     /// Contours of this quality-zone as defined in the input file
-    pub shapes_orig: Vec<Arc<OriginalShape>>,
+    pub(crate) shapes_orig: Vec<Arc<OriginalShape>>,
     /// Contours of this quality-zone to be used for collision detection
-    pub shapes_cd: Vec<Arc<SPolygon>>,
+    pub(crate) shapes_cd: Vec<Arc<SPolygon>>,
 }
 
 impl InferiorQualityZone {
@@ -128,5 +152,23 @@ impl InferiorQualityZone {
     #[must_use]
     pub fn area(&self) -> f32 {
         self.shapes_orig.iter().map(|shape| shape.area()).sum()
+    }
+
+    /// Quality of this zone. Higher qualities are superior. A zone with quality 0 is treated as a hole.
+    #[must_use]
+    pub fn quality(&self) -> usize {
+        self.quality
+    }
+
+    /// Contours of this quality-zone as defined in the input file
+    #[must_use]
+    pub fn shapes_orig(&self) -> &[Arc<OriginalShape>] {
+        &self.shapes_orig
+    }
+
+    /// Contours of this quality-zone to be used for collision detection
+    #[must_use]
+    pub fn shapes_cd(&self) -> &[Arc<SPolygon>] {
+        &self.shapes_cd
     }
 }

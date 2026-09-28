@@ -20,20 +20,27 @@ use anyhow::{Result, bail};
 /// A Simple Polygon is a polygon that does not intersect itself and contains no holes.
 /// It is a closed shape with a finite number of vertices and edges.
 /// [read more](https://en.wikipedia.org/wiki/Simple_polygon)
+/// Vertices are read-only; use transformation methods to keep cached geometry consistent.
+/// ```compile_fail
+/// # use jagua_rs::geometry::primitives::SPolygon;
+/// fn edit(polygon: &mut SPolygon) {
+///     polygon.vertices()[0].0 = 0.0;
+/// }
+/// ```
 #[derive(Clone, Debug)]
 pub struct SPolygon {
     /// Vertices in counterclockwise order, including after reflection.
-    pub vertices: Vec<Point>,
+    pub(crate) vertices: Vec<Point>,
     /// Bounding box
-    pub bbox: Rect,
+    pub(crate) bbox: Rect,
     /// Area of its interior
-    pub area: f32,
+    pub(crate) area: f32,
     /// Maximum distance between any two points in the polygon
-    pub diameter: f32,
+    pub(crate) diameter: f32,
     /// [Pole of inaccessibility](https://en.wikipedia.org/wiki/Pole_of_inaccessibility) represented as a circle
-    pub poi: Circle,
+    pub(crate) poi: Circle,
     /// Optional surrogate representation of the polygon (subset of the original)
-    pub surrogate: Option<SPSurrogate>,
+    pub(crate) surrogate: Option<SPSurrogate>,
 }
 
 impl SPolygon {
@@ -80,6 +87,11 @@ impl SPolygon {
             _ => self.surrogate = Some(SPSurrogate::new(self, config)?),
         }
         Ok(())
+    }
+
+    /// Removes the optional surrogate without changing the polygon.
+    pub fn remove_surrogate(&mut self) {
+        self.surrogate = None;
     }
 
     #[must_use]
@@ -213,6 +225,36 @@ impl SPolygon {
             let (i, j) = (pair[0], pair[1]);
             (!are_neighboring_edges(i, j) && edge(i).collides_with(&edge(j))).then_some((i, j))
         })
+    }
+
+    /// Vertices in counterclockwise order, including after reflection.
+    #[must_use]
+    pub fn vertices(&self) -> &[Point] {
+        &self.vertices
+    }
+
+    /// Bounding box
+    #[must_use]
+    pub fn bbox(&self) -> Rect {
+        self.bbox
+    }
+
+    /// Area of its interior
+    #[must_use]
+    pub fn area(&self) -> f32 {
+        self.area
+    }
+
+    /// Maximum distance between any two points in the polygon
+    #[must_use]
+    pub fn diameter(&self) -> f32 {
+        self.diameter
+    }
+
+    /// [Pole of inaccessibility](https://en.wikipedia.org/wiki/Pole_of_inaccessibility) represented as a circle
+    #[must_use]
+    pub fn poi(&self) -> Circle {
+        self.poi
     }
 }
 

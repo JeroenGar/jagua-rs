@@ -47,7 +47,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         "avg number of edges per item: {}",
         ITEMS_ID_TO_TEST
             .iter()
-            .map(|&item_idx| instance.item(item_idx).shape_cd.n_vertices())
+            .map(|&item_idx| instance.item(item_idx).shape_cd().n_vertices())
             .sum::<usize>() as f32
             / ITEMS_ID_TO_TEST.len() as f32
     );
@@ -71,7 +71,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
             .iter()
             .map(|&item_idx| {
                 create_custom_surrogate(
-                    &instance.item(item_idx).shape_cd,
+                    instance.item(item_idx).shape_cd(),
                     ff_pole_area_ratio,
                     n_ff_piers,
                 )
@@ -92,8 +92,8 @@ fn fast_fail_query_bench(c: &mut Criterion) {
             .iter()
             .map(|&item_idx| instance.item(item_idx))
             .map(|item| {
-                let mut buffer = (*item.shape_cd).clone();
-                buffer.surrogate = None; //strip the surrogate for faster transforms, we don't need it for the buffer shape
+                let mut buffer = item.shape_cd().as_ref().clone();
+                buffer.remove_surrogate(); //strip the surrogate for faster transforms, we don't need it for the buffer shape
                 buffer
             })
             .collect_vec();
@@ -116,7 +116,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
                         {
                             true => true,
                             false => {
-                                buffer_shape.transform_from(&item.shape_cd, &transf);
+                                buffer_shape.transform_from(item.shape_cd(), &transf);
                                 layout.cde().detect_poly_collision(buffer_shape, &NoFilter)
                             }
                         };

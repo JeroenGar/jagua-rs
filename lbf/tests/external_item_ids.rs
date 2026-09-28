@@ -22,9 +22,9 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
     }))?;
     let importer = Importer::new(lbf::config::LBFConfig::default().cde_config, None, None);
     let instance = import_instance(&importer, &input)?;
-    assert_eq!(instance.item(0).idx, 0);
-    assert_eq!(instance.item(0).external_id, u64::MAX);
-    assert_eq!(instance.item(1).external_id, 42);
+    assert_eq!(instance.item(0).idx(), 0);
+    assert_eq!(instance.item(0).external_id(), u64::MAX);
+    assert_eq!(instance.item(1).external_id(), 42);
     assert_eq!(instance.item_idx(4), None);
 
     let placement = |id, x| {
@@ -54,7 +54,10 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
     input.items.push(input.items[1].clone());
     assert!(import_instance(&importer, &input).is_err());
     for pi in solution.layout_snapshot.placed_items.values() {
-        assert!(std::sync::Arc::ptr_eq(&pi.item, instance.item(pi.item.idx)));
+        assert!(std::sync::Arc::ptr_eq(
+            pi.item(),
+            instance.item(pi.item().idx())
+        ));
     }
     drop(instance);
     let restored = jagua_rs::entities::Layout::from_snapshot(&solution.layout_snapshot);

@@ -42,9 +42,10 @@ fn reflection_bench(c: &mut Criterion) {
         .collect();
     let mut buffers: Vec<_> = samples
         .iter()
-        .map(|(item, _)| item.shape_cd.as_ref().clone())
+        .map(|(item, _)| item.shape_cd().as_ref().clone())
         .collect();
-    let mut collector = BasicHazardCollector::with_capacity(problem.layout.cde().hazards_map.len());
+    let mut collector =
+        BasicHazardCollector::with_capacity(problem.layout.cde().hazards_map().len());
     let mut group = c.benchmark_group("reflection");
     group.throughput(criterion::Throughput::Elements(N_SAMPLES_PER_ITER as u64));
     for mode in ["unreflected", "reflected", "alternating"] {
@@ -63,11 +64,11 @@ fn reflection_bench(c: &mut Criterion) {
                         };
                         let transform = &transforms[usize::from(reflected)];
                         if operation == "transform_clone" {
-                            black_box(item.shape_cd.transform_clone(transform));
+                            black_box(item.shape_cd().transform_clone(transform));
                             continue;
                         }
                         let buffer = &mut buffers[index];
-                        buffer.transform_from(&item.shape_cd, transform);
+                        buffer.transform_from(item.shape_cd(), transform);
                         if operation == "transform_and_collect" {
                             problem
                                 .layout
@@ -112,20 +113,20 @@ fn cde_collect_bench(c: &mut Criterion) {
             b.iter(|| {
                 let search_for = problem
                     .layout
-                    .placed_items
+                    .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
-                let item = &search_for.1.item;
+                let item = &search_for.1.item();
                 let cde = &problem.layout.cde();
-                let mut buffer_shape = item.shape_cd.as_ref().clone();
-                let mut collector = BasicHazardCollector::with_capacity(cde.hazards_map.len());
+                let mut buffer_shape = item.shape_cd().as_ref().clone();
+                let mut collector = BasicHazardCollector::with_capacity(cde.hazards_map().len());
                 let sampler = UniformRectSampler::new(cde.bbox(), item);
                 for _ in 0..N_SAMPLES_PER_ITER {
                     let d_transf = sampler.sample(&mut rng);
                     let transf = d_transf.compose();
                     //detect collisions with the surrogate
-                    buffer_shape.transform_from(&item.shape_cd, &transf);
+                    buffer_shape.transform_from(item.shape_cd(), &transf);
                     cde.collect_surrogate_collisions(&buffer_shape, &mut collector);
                     //detect collisions with the actual shape
                     cde.collect_poly_collisions(&buffer_shape, &mut collector);
@@ -160,24 +161,24 @@ fn cde_detect_bench(c: &mut Criterion) {
             b.iter(|| {
                 let item_to_move = problem
                     .layout
-                    .placed_items
+                    .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
-                let item = &item_to_move.1.item;
+                let item = &item_to_move.1.item();
                 let cde = &problem.layout.cde();
-                let mut buffer_shape = item.shape_cd.as_ref().clone();
+                let mut buffer_shape = item.shape_cd().as_ref().clone();
                 let sampler = UniformRectSampler::new(cde.bbox(), item);
                 for _ in 0..N_SAMPLES_PER_ITER {
                     let d_transf = sampler.sample(&mut rng);
                     let transf = d_transf.compose();
                     //detect collisions with the surrogate
                     if !cde.detect_surrogate_collision(
-                        item.shape_cd.surrogate(),
+                        item.shape_cd().surrogate(),
                         &transf,
                         &NoFilter,
                     ) {
-                        buffer_shape.transform_from(&item.shape_cd, &transf);
+                        buffer_shape.transform_from(item.shape_cd(), &transf);
                         if !cde.detect_poly_collision(&buffer_shape, &NoFilter) {
                             n_detected += 1;
                         }
@@ -209,14 +210,14 @@ fn cde_update_bench(c: &mut Criterion) {
                     // Remove an item from the layout
                     let (pkey, pi) = problem
                         .layout
-                        .placed_items
+                        .placed_items()
                         .iter()
                         .choose(&mut rng)
                         .expect("No items in layout");
 
                     let p_opt = SPPlacement {
-                        item_idx: pi.item.idx,
-                        d_transf: pi.d_transf,
+                        item_idx: pi.item().idx(),
+                        d_transf: pi.d_transf(),
                     };
 
                     //println!("Removing item with idx: {}\n", pi_uid.item_idx);

@@ -44,7 +44,7 @@ impl LBFOptimizerSP {
             //place all items of this type
             while self.problem.item_demand_qtys[item_idx] > 0 {
                 let cde = self.problem.layout.cde();
-                let placement = match &item.min_quality {
+                let placement = match &item.min_quality() {
                     None => search(
                         cde,
                         item,
@@ -55,7 +55,7 @@ impl LBFOptimizerSP {
                     ),
                     Some(min_quality) => {
                         let filter =
-                            HazKeyFilter::from_irrelevant_qzones(*min_quality, &cde.hazards_map);
+                            HazKeyFilter::from_irrelevant_qzones(*min_quality, cde.hazards_map());
                         search(
                             cde,
                             item,
@@ -70,18 +70,18 @@ impl LBFOptimizerSP {
                 match placement {
                     Some((d_transf, _)) => {
                         self.problem.place_item(SPPlacement {
-                            item_idx: item.idx,
+                            item_idx: item.idx(),
                             d_transf,
                         });
                         info!(
                             "[LBF] placing item {}/{} with id {} at [{}]",
-                            self.problem.layout.placed_items.len(),
+                            self.problem.layout.placed_items().len(),
                             self.instance.total_item_qty(),
-                            item.idx,
+                            item.idx(),
                             d_transf,
                         );
                         #[allow(clippy::absurd_extreme_comparisons)]
-                        if self.problem.layout.placed_items.len() >= ITEM_LIMIT {
+                        if self.problem.layout.placed_items().len() >= ITEM_LIMIT {
                             break 'outer;
                         }
                     }

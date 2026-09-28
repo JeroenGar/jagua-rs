@@ -10,19 +10,19 @@ use anyhow::Result;
 #[derive(Clone, Debug)]
 pub struct Item {
     /// Dense index in the owning instance's item list.
-    pub idx: usize,
+    pub(crate) idx: usize,
     /// Original caller-supplied identifier, preserved on export.
-    pub external_id: u64,
+    pub(crate) external_id: u64,
     /// Original contour of the item as defined in the input
-    pub shape_orig: Arc<OriginalShape>,
+    pub(crate) shape_orig: Arc<OriginalShape>,
     /// Contour of the item to be used for collision detection
-    pub shape_cd: Arc<SPolygon>,
+    pub(crate) shape_cd: Arc<SPolygon>,
     /// Allowed rotations and reflections in which the item can be placed
-    pub allowed_orientations: AllowedOrientations,
+    pub(crate) allowed_orientations: AllowedOrientations,
     /// The minimum quality the item should be produced out of, if `None` the item requires full quality
-    pub min_quality: Option<usize>,
+    pub(crate) min_quality: Option<usize>,
     /// Configuration for the surrogate generation
-    pub surrogate_config: SPSurrogateConfig,
+    pub(crate) surrogate_config: SPSurrogateConfig,
 }
 
 impl Item {
@@ -54,5 +54,47 @@ impl Item {
     #[must_use]
     pub fn area(&self) -> f32 {
         self.shape_orig.area()
+    }
+
+    /// Dense index in the owning instance's item list.
+    #[must_use]
+    pub fn idx(&self) -> usize {
+        self.idx
+    }
+
+    /// Original caller-supplied identifier, preserved on export.
+    #[must_use]
+    pub fn external_id(&self) -> u64 {
+        self.external_id
+    }
+
+    /// Original contour of the item as defined in the input
+    #[must_use]
+    pub fn shape_orig(&self) -> &Arc<OriginalShape> {
+        &self.shape_orig
+    }
+
+    /// Contour of the item to be used for collision detection
+    #[must_use]
+    pub fn shape_cd(&self) -> &Arc<SPolygon> {
+        &self.shape_cd
+    }
+
+    /// Allowed rotations and reflections in which the item can be placed
+    #[must_use]
+    pub fn allowed_orientations(&self) -> &AllowedOrientations {
+        &self.allowed_orientations
+    }
+
+    /// The minimum quality the item should be produced out of, if `None` the item requires full quality
+    #[must_use]
+    pub fn min_quality(&self) -> Option<usize> {
+        self.min_quality
+    }
+
+    /// Configuration for the surrogate generation
+    #[must_use]
+    pub fn surrogate_config(&self) -> SPSurrogateConfig {
+        self.surrogate_config
     }
 }

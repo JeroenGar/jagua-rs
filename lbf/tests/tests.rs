@@ -53,7 +53,7 @@ mod tests {
                     //pick random existing layout
                     let random_placed_item = problem
                         .layout
-                        .placed_items
+                        .placed_items()
                         .iter()
                         .choose(&mut rng)
                         .map(|(key, _)| key);
@@ -106,7 +106,7 @@ mod tests {
                     //pick random existing layout
                     let lkey = problem.layouts.keys().choose(&mut rng).unwrap();
                     let random_placed_item = problem.layouts[lkey]
-                        .placed_items
+                        .placed_items()
                         .iter()
                         .choose(&mut rng)
                         .map(|(key, _)| key);
@@ -192,7 +192,11 @@ mod tests {
             zones: vec![],
         })?;
         assert_eq!(
-            container.quality_zones[0].as_ref().unwrap().shapes_cd.len(),
+            container.quality_zones()[0]
+                .as_ref()
+                .unwrap()
+                .shapes_cd()
+                .len(),
             1
         );
         input.items[0].base.shape = ExtShape::Polygon(ExtPolygon {
@@ -236,14 +240,14 @@ mod tests {
         let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
         assert_eq!(input.min_item_separation, 0.0);
         let plain = spp::io::import_instance(&importer(), &input)?;
-        assert_eq!(plain.item(0).shape_orig.modify_config.offset, None);
+        assert_eq!(plain.item(0).shape_orig().modify_config.offset, None);
 
         input.min_item_separation = 2.0;
         let spaced = spp::io::import_instance(&importer(), &input)?;
-        assert_eq!(spaced.item(0).shape_orig.modify_config.offset, Some(1.0));
+        assert_eq!(spaced.item(0).shape_orig().modify_config.offset, Some(1.0));
         let problem = jagua_rs::probs::spp::entities::SPProblem::new(spaced)?;
         assert_eq!(
-            problem.layout.container.outer_orig.modify_config.offset,
+            problem.layout.container().outer_orig().modify_config.offset,
             Some(1.0)
         );
 
@@ -286,7 +290,7 @@ mod tests {
             let external: ExtSPInstance = serde_json::from_value(input(rotation))?;
             let instance = spp::io::import_instance(&importer(), &external)?;
             assert_eq!(
-                instance.item(0).allowed_orientations.rotations(false),
+                instance.item(0).allowed_orientations().rotations(false),
                 Some(&expected)
             );
             let round_trip: ExtSPInstance =
@@ -327,7 +331,7 @@ mod tests {
             serde_json::from_value(input(json!({"mode": "stepped", "step": 0.1})))?;
         let instance = spp::io::import_instance(&importer(), &decimal)?;
         assert!(
-            matches!(instance.item(0).allowed_orientations.rotations(false), Some(RotationRange::Discrete(a)) if a.len() == 3600)
+            matches!(instance.item(0).allowed_orientations().rotations(false), Some(RotationRange::Discrete(a)) if a.len() == 3600)
         );
         Ok(())
     }

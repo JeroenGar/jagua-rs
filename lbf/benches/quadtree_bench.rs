@@ -47,14 +47,14 @@ fn quadtree_update_bench(c: &mut Criterion) {
                 // Remove an item from the layout
                 let (pkey, pi) = problem
                     .layout
-                    .placed_items
+                    .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
 
                 let p_opt = SPPlacement {
-                    item_idx: pi.item.idx,
-                    d_transf: pi.d_transf,
+                    item_idx: pi.item().idx(),
+                    d_transf: pi.d_transf(),
                 };
 
                 //println!("Removing item with idx: {}\n", pi_uid.item_idx);
@@ -83,7 +83,8 @@ fn quadtree_query_bench(c: &mut Criterion) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformRectSampler::new(layout.container.outer_cd.bbox, instance.item(0));
+        let sampler =
+            UniformRectSampler::new(layout.container().outer_cd().bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -105,9 +106,9 @@ fn quadtree_query_bench(c: &mut Criterion) {
                 let item_idx = item_idx_cycler.next().unwrap();
                 let item = instance.item(item_idx);
                 let layout = &problem.layout;
-                let mut buffer_shape = item.shape_cd.as_ref().clone();
+                let mut buffer_shape = item.shape_cd().as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
-                    buffer_shape.transform_from(&item.shape_cd, transf);
+                    buffer_shape.transform_from(item.shape_cd(), transf);
                     let collides = layout.cde().detect_poly_collision(&buffer_shape, &NoFilter);
                     if collides {
                         n_invalid += 1;
@@ -138,7 +139,8 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         let (mut problem, _) = util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformRectSampler::new(layout.container.outer_cd.bbox, instance.item(0));
+        let sampler =
+            UniformRectSampler::new(layout.container().outer_cd().bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -151,14 +153,14 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
             b.iter(|| {
                 let (pkey, pi) = problem
                     .layout
-                    .placed_items
+                    .placed_items()
                     .iter()
                     .choose(&mut rng)
                     .expect("No items in layout");
 
                 let p_opt = SPPlacement {
-                    item_idx: pi.item.idx,
-                    d_transf: pi.d_transf,
+                    item_idx: pi.item().idx(),
+                    d_transf: pi.d_transf(),
                 };
 
                 problem.remove_item(pkey);
@@ -166,9 +168,9 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
                 let item_idx = p_opt.item_idx;
                 let item = instance.item(item_idx);
                 let layout = &problem.layout;
-                let mut buffer_shape = item.shape_cd.as_ref().clone();
+                let mut buffer_shape = item.shape_cd().as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
-                    buffer_shape.transform_from(&item.shape_cd, transf);
+                    buffer_shape.transform_from(item.shape_cd(), transf);
                     let collides = layout.cde().detect_poly_collision(&buffer_shape, &NoFilter);
                     std::hint::black_box(collides); //prevent the compiler from optimizing the loop away
                 }
@@ -197,7 +199,8 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
         let layout = &problem.layout;
-        let sampler = UniformRectSampler::new(layout.container.outer_cd.bbox, instance.item(0));
+        let sampler =
+            UniformRectSampler::new(layout.container().outer_cd().bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
 
         let samples = (0..N_TOTAL_SAMPLES)
@@ -220,11 +223,11 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
                 let item_idx = item_idx_cycler.next().unwrap();
                 let item = instance.item(item_idx);
                 let layout = &problem.layout;
-                let mut buffer_shape = item.shape_cd.as_ref().clone();
+                let mut buffer_shape = item.shape_cd().as_ref().clone();
                 let mut collector =
-                    BasicHazardCollector::with_capacity(layout.cde().hazards_map.len());
+                    BasicHazardCollector::with_capacity(layout.cde().hazards_map().len());
                 for transf in sample_cycler.next().unwrap() {
-                    buffer_shape.transform_from(&item.shape_cd, transf);
+                    buffer_shape.transform_from(item.shape_cd(), transf);
                     layout
                         .cde()
                         .collect_poly_collisions(&buffer_shape, &mut collector);

@@ -20,11 +20,11 @@ use slotmap::SlotMap;
 #[derive(Clone, Debug)]
 pub struct CDEngine {
     /// Root node of the quadtree
-    pub quadtree: QTNode,
+    pub(crate) quadtree: QTNode,
     /// All hazards registered in the CDE (active and inactive)
-    pub hazards_map: SlotMap<HazKey, Hazard>,
+    pub(crate) hazards_map: SlotMap<HazKey, Hazard>,
     /// Configuration of the CDE
-    pub config: CDEConfig,
+    pub(crate) config: CDEConfig,
     /// The key of the hazard that represents the exterior of the container.
     hkey_exterior: HazKey,
 }
@@ -396,6 +396,24 @@ impl CDEngine {
                 _ => false,
             })
             .map(|(key, _)| key)
+    }
+
+    /// Root node of the quadtree
+    #[must_use]
+    pub fn quadtree(&self) -> &QTNode {
+        &self.quadtree
+    }
+
+    /// All hazards registered in the CDE (active and inactive)
+    #[must_use]
+    pub fn hazards_map(&self) -> &SlotMap<HazKey, Hazard> {
+        &self.hazards_map
+    }
+
+    /// Configuration of the CDE
+    #[must_use]
+    pub fn config(&self) -> CDEConfig {
+        self.config
     }
 }
 

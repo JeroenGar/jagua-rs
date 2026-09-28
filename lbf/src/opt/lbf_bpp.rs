@@ -120,14 +120,14 @@ fn search_layouts(
         let cde = match layout_id {
             BPLayoutType::Open(lkey) => problem.layouts[lkey].cde(),
             BPLayoutType::Closed { bin_id } => {
-                problem.instance.bins[bin_id].container.base_cde.as_ref()
+                problem.instance.bins[bin_id].container.base_cde().as_ref()
             }
         };
 
-        let placement = match &item.min_quality {
+        let placement = match &item.min_quality() {
             None => search(cde, item, config, rng, sample_counter, &NoFilter),
             Some(min_quality) => {
-                let filter = HazKeyFilter::from_irrelevant_qzones(*min_quality, &cde.hazards_map);
+                let filter = HazKeyFilter::from_irrelevant_qzones(*min_quality, cde.hazards_map());
                 search(cde, item, config, rng, sample_counter, &filter)
             }
         };
@@ -135,7 +135,7 @@ fn search_layouts(
         if let Some((d_transf, _)) = placement {
             return Some(BPPlacement {
                 layout_id,
-                item_idx: item.idx,
+                item_idx: item.idx(),
                 d_transf,
             });
         }
