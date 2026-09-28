@@ -87,6 +87,10 @@ does not prove the full polygon collision-free. Keep these contracts concise.
 
 ### 7. CDE restore assumptions
 
+Implemented: CDEngine::save, CDEngine::restore and CDESnapshot are crate-private.
+Layout is their only caller; consumers restore through Layout::restore, which
+checks container identity. The CDE snapshot re-export is also crate-private.
+
 CDEngine::restore restores dynamic hazards and matches existing hazards by
 entity; it does not replace the geometry of an existing entity. Decide whether
 to document the required identity/static-state assumptions or restrict this

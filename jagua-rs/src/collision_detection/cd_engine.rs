@@ -96,7 +96,7 @@ impl CDEngine {
     }
 
     #[must_use]
-    pub fn save(&self) -> CDESnapshot {
+    pub(crate) fn save(&self) -> CDESnapshot {
         let dynamic_hazards = self
             .hazards_map
             .values()
@@ -107,7 +107,7 @@ impl CDEngine {
     }
 
     /// Restores the CDE to a previous state, as described by the snapshot.
-    pub fn restore(&mut self, snapshot: &CDESnapshot) {
+    pub(crate) fn restore(&mut self, snapshot: &CDESnapshot) {
         //Restore the quadtree, by doing a 'diff' between the current state and the snapshot
         //Only dynamic hazards are considered
 
@@ -435,6 +435,6 @@ pub struct CDEConfig {
 
 /// Snapshot of the state of [`CDEngine`]. Can be used to restore to a previous state.
 #[derive(Clone, Debug)]
-pub struct CDESnapshot {
+pub(crate) struct CDESnapshot {
     pub(crate) dynamic_hazards: Vec<Hazard>,
 }
