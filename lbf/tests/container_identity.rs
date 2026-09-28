@@ -31,7 +31,7 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
     let mut layout = Layout::new(importer.import_container(&container)?);
     layout.place_item(&item, DTransformation::new(0.0, (5.0, 5.0)));
     let saved = layout.save();
-    assert!(layout.is_feasible());
+    assert!(layout.is_collision_free());
     for changed in [
         json!({"id": 0, "shape": rectangle(10)}),
         json!({"id": 0, "shape": rectangle(3)}),
@@ -43,13 +43,13 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
     ] {
         layout.swap_container(importer.import_container(&serde_json::from_value(changed)?)?);
         let before = layout.save();
-        let feasible_before = layout.is_feasible();
+        let collision_free_before = layout.is_collision_free();
         assert_eq!(layout.restore(&saved), Err(ContainerMismatch));
         assert!(Arc::ptr_eq(
             layout.container().base_cde(),
             before.container().base_cde()
         ));
-        assert_eq!(layout.is_feasible(), feasible_before);
+        assert_eq!(layout.is_collision_free(), collision_free_before);
         assert!(jagua_rs::util::assertions::snapshot_matches_layout(
             &layout, &before
         ));
@@ -59,13 +59,13 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
 
         layout.swap_container(saved.container().clone());
         layout.restore(&saved)?;
-        assert!(layout.is_feasible());
+        assert!(layout.is_collision_free());
         assert!(Arc::ptr_eq(
             layout.container().base_cde(),
             saved.container().base_cde()
         ));
         layout.restore(&saved)?;
-        assert!(layout.is_feasible());
+        assert!(layout.is_collision_free());
     }
 
     let input: ExtBPInstance = serde_json::from_value(json!({

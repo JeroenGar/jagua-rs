@@ -262,7 +262,7 @@ mod tests {
             SmallRng::seed_from_u64(0),
         )?;
         optimizer.solve()?;
-        assert!(optimizer.problem.layout.is_feasible());
+        assert!(optimizer.problem.layout.is_collision_free());
         small.min_item_separation = 2.0;
         assert!(spp::io::import_instance(&importer(), &small).is_err());
 

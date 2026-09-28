@@ -34,6 +34,10 @@ performance delta has been measured for the consumer migration.
 
 ## Preserve existing behavior
 
+Rename `Layout::is_feasible()` calls to `Layout::is_collision_free()`.
+The behavior is unchanged: this checks collisions, not demand or orientation
+permissions. There is no compatibility alias for the old name.
+
 - Keep inserting the moving item's hazard into the collision collector to
   exclude self-collision. Keep the corresponding ignored-entry count.
 - Keep read access to surrogate poles and convex-hull area for overlap losses,

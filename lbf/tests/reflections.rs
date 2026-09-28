@@ -510,7 +510,7 @@ mod io {
             item_idx: 0,
             d_transf: internal,
         });
-        assert!(problem.layout.is_feasible());
+        assert!(problem.layout.is_collision_free());
         let saved = problem.save();
         assert!(problem.layout.cde().detect_surrogate_collision(
             item.shape_cd().surrogate(),
@@ -521,11 +521,11 @@ mod io {
             item_idx: 0,
             d_transf: internal,
         });
-        assert!(!problem.layout.is_feasible());
+        assert!(!problem.layout.is_collision_free());
         problem.remove_item(overlap);
         problem.remove_item(pk);
         problem.restore(&saved);
-        assert!(problem.layout.is_feasible());
+        assert!(problem.layout.is_collision_free());
         assert_eq!(problem.layout.placed_items()[pk].d_transf(), internal);
 
         let output = export(&saved, saved.time_stamp);

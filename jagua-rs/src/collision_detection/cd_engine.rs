@@ -201,6 +201,8 @@ impl CDEngine {
     }
 
     /// Checks whether a surrogate collides with any of the (relevant) hazards.
+    /// A `true` result proves a collision for the represented polygon.
+    /// A `false` result is inconclusive; follow with [`Self::detect_poly_collision`].
     /// # Arguments
     /// * `base_surrogate` - The (untransformed) surrogate to be checked for collisions
     /// * `transform` - The transformation to be applied to the surrogate (on the fly)

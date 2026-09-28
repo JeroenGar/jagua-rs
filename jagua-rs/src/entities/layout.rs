@@ -90,6 +90,7 @@ impl Layout {
 
     /// Places an item in the layout at a specific position by applying a transformation.
     /// Returns the unique key for the placed item.
+    /// Does not check collisions or orientation permissions before placement.
     pub fn place_item(&mut self, item: &Arc<Item>, d_transformation: DTransformation) -> PItemKey {
         let pk = self
             .placed_items
@@ -155,9 +156,9 @@ impl Layout {
         &self.cde
     }
 
-    /// Returns true if all the items are placed without colliding
+    /// Returns true if no placed item collides with the container or another item.
     #[must_use]
-    pub fn is_feasible(&self) -> bool {
+    pub fn is_collision_free(&self) -> bool {
         self.placed_items.iter().all(|(pk, pi)| {
             let hkey = self
                 .cde

@@ -76,6 +76,10 @@ See io/import.rs and entities/container.rs.
 
 ### 6. Collision and feasibility contracts
 
+Implemented: rename Layout::is_feasible to is_collision_free, document unchecked
+placement, and state that a positive surrogate collision proves a collision while
+a negative result requires the full polygon query. Behavior is unchanged.
+
 Document that Layout::place_item registers a placement without validating
 collisions or orientation permissions. Layout::is_feasible checks collisions,
 not demand or permitted orientations. A negative surrogate screening result

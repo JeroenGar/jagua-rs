@@ -45,7 +45,7 @@ impl SPProblem {
 
     /// Shrinks the strip to the minimum width that fits all items.
     pub fn fit_strip(&mut self) -> Result<()> {
-        let feasible_before = self.layout.is_feasible();
+        let collision_free_before = self.layout.is_collision_free();
 
         //Find the rightmost item in the strip and add some tolerance (avoiding false collision positives)
         let item_x_max = self
@@ -61,7 +61,7 @@ impl SPProblem {
         let fitted_width = item_x_max + self.strip.shape_modify_config.offset.unwrap_or(0.0);
 
         self.change_strip_width(fitted_width)?;
-        debug_assert_eq!(feasible_before, self.layout.is_feasible());
+        debug_assert_eq!(collision_free_before, self.layout.is_collision_free());
         Ok(())
     }
 
