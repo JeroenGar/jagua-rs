@@ -10,10 +10,10 @@ use itertools::Itertools;
 /// Modifiable counterpart of [`SPInstance`]: items can be placed and removed, strip can be extended or fitted.
 #[derive(Clone)]
 pub struct SPProblem {
-    pub instance: SPInstance,
-    pub strip: Strip,
-    pub layout: Layout,
-    pub item_demand_qtys: Vec<usize>,
+    pub(crate) instance: SPInstance,
+    pub(crate) strip: Strip,
+    pub(crate) layout: Layout,
+    pub(crate) item_demand_qtys: Vec<usize>,
 }
 
 impl SPProblem {
@@ -44,7 +44,9 @@ impl SPProblem {
     }
 
     /// Shrinks the strip to the minimum width that fits all items.
+    /// Returns an error if no items are placed.
     pub fn fit_strip(&mut self) -> Result<()> {
+        ensure!(!self.layout.is_empty(), "cannot fit an empty strip");
         let collision_free_before = self.layout.is_collision_free();
 
         //Find the rightmost item in the strip and add some tolerance (avoiding false collision positives)
@@ -53,7 +55,7 @@ impl SPProblem {
             .placed_items
             .values()
             .map(|pi| pi.shape.bbox.x_max)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .max_by(f32::total_cmp)
             .unwrap()
             * 1.00001;
 
@@ -66,6 +68,7 @@ impl SPProblem {
     }
 
     /// Places an item according to the given `SPPlacement` in the problem.
+    /// Panics if the item's demand is exhausted.
     pub fn place_item(&mut self, placement: SPPlacement) -> PItemKey {
         self.register_included_item(placement.item_idx);
         let item = self.instance.item(placement.item_idx);
@@ -122,11 +125,32 @@ impl SPProblem {
     }
 
     fn register_included_item(&mut self, item_idx: usize) {
+        assert!(self.item_demand_qtys[item_idx] > 0, "item demand exhausted");
         self.item_demand_qtys[item_idx] -= 1;
     }
 
     fn deregister_included_item(&mut self, item_idx: usize) {
         self.item_demand_qtys[item_idx] += 1;
+    }
+
+    #[must_use]
+    pub fn instance(&self) -> &SPInstance {
+        &self.instance
+    }
+
+    #[must_use]
+    pub fn strip(&self) -> &Strip {
+        &self.strip
+    }
+
+    #[must_use]
+    pub fn layout(&self) -> &Layout {
+        &self.layout
+    }
+
+    #[must_use]
+    pub fn item_demand_qtys(&self) -> &[usize] {
+        &self.item_demand_qtys
     }
 
     #[must_use]

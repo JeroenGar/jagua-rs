@@ -4,7 +4,8 @@ use crate::geometry::fail_fast::SPSurrogateConfig;
 use crate::geometry::primitives::SPolygon;
 use crate::geometry::{AllowedOrientations, OriginalShape};
 
-use anyhow::Result;
+use crate::entities::N_QUALITIES;
+use anyhow::{Result, ensure};
 
 /// Item to be produced.
 #[derive(Clone, Debug)]
@@ -26,6 +27,7 @@ pub struct Item {
 }
 
 impl Item {
+    /// Returns an error for invalid geometry or a minimum quality outside `0..N_QUALITIES`.
     pub fn new(
         idx: usize,
         external_id: u64,
@@ -34,6 +36,10 @@ impl Item {
         min_quality: Option<usize>,
         surrogate_config: SPSurrogateConfig,
     ) -> Result<Item> {
+        ensure!(
+            min_quality.is_none_or(|quality| quality < N_QUALITIES),
+            "Item minimum quality must be below {N_QUALITIES}"
+        );
         let shape_orig = Arc::new(original_shape);
         let shape_int = {
             let mut shape_int = shape_orig.convert_to_internal()?;

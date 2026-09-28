@@ -492,7 +492,7 @@ mod io {
         let external = DTransformation::new(PI, (20.0, 5.0)).with_reflection(true);
         let internal = ext_to_int_transformation(&external, &item.shape_orig().pre_transform);
         assert!(item.allowed_orientations().allows(&internal));
-        assert!(!problem.layout.cde().detect_surrogate_collision(
+        assert!(!problem.layout().cde().detect_surrogate_collision(
             item.shape_cd().surrogate(),
             &internal.compose(),
             &NoFilter,
@@ -510,9 +510,9 @@ mod io {
             item_idx: 0,
             d_transf: internal,
         });
-        assert!(problem.layout.is_collision_free());
+        assert!(problem.layout().is_collision_free());
         let saved = problem.save();
-        assert!(problem.layout.cde().detect_surrogate_collision(
+        assert!(problem.layout().cde().detect_surrogate_collision(
             item.shape_cd().surrogate(),
             &internal.compose(),
             &NoFilter,
@@ -521,12 +521,12 @@ mod io {
             item_idx: 0,
             d_transf: internal,
         });
-        assert!(!problem.layout.is_collision_free());
+        assert!(!problem.layout().is_collision_free());
         problem.remove_item(overlap);
         problem.remove_item(pk);
         problem.restore(&saved);
-        assert!(problem.layout.is_collision_free());
-        assert_eq!(problem.layout.placed_items()[pk].d_transf(), internal);
+        assert!(problem.layout().is_collision_free());
+        assert_eq!(problem.layout().placed_items()[pk].d_transf(), internal);
 
         let output = export(&saved, saved.time_stamp);
         let encoded = serde_json::to_string(&output).unwrap();
@@ -534,13 +534,13 @@ mod io {
         assert!(decoded.layout.placed_items[0].transformation.reflected);
         let restored = import_solution(&instance, &decoded).unwrap();
         let restored_item = restored
-            .layout_snapshot
+            .layout_snapshot()
             .placed_items()
             .values()
             .next()
             .unwrap();
         assert!(restored_item.d_transf().reflected);
-        let original_item = &problem.layout.placed_items()[pk];
+        let original_item = &problem.layout().placed_items()[pk];
         for (a, b) in restored_item
             .shape()
             .vertices()
@@ -550,7 +550,7 @@ mod io {
             assert!(a.distance_to(b) < 0.0001);
         }
         let svg =
-            layout_to_svg(&problem.layout, SvgDrawOptions::default(), "reflection").to_string();
+            layout_to_svg(problem.layout(), SvgDrawOptions::default(), "reflection").to_string();
         assert!(svg.contains(", scale(1 -1)"));
         assert!(svg.contains("rotate("));
     }

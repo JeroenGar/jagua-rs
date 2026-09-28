@@ -53,7 +53,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     );
 
     let mut rng = SmallRng::seed_from_u64(0);
-    let layout = &problem.layout;
+    let layout = &problem.layout();
     let samples = ITEMS_ID_TO_TEST
         .iter()
         .map(|&item_idx| {

@@ -46,7 +46,7 @@ fn quadtree_update_bench(c: &mut Criterion) {
             b.iter(|| {
                 // Remove an item from the layout
                 let (pkey, pi) = problem
-                    .layout
+                    .layout()
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
@@ -82,7 +82,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
         let (problem, selected_pi_uids) =
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = &problem.layout;
+        let layout = &problem.layout();
         let sampler =
             UniformRectSampler::new(layout.container().outer_cd().bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
@@ -105,7 +105,7 @@ fn quadtree_query_bench(c: &mut Criterion) {
             b.iter(|| {
                 let item_idx = item_idx_cycler.next().unwrap();
                 let item = instance.item(item_idx);
-                let layout = &problem.layout;
+                let layout = &problem.layout();
                 let mut buffer_shape = item.shape_cd().as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(item.shape_cd(), transf);
@@ -138,7 +138,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         let instance = util::create_instance(config.cde_config, config.poly_simpl_tolerance);
         let (mut problem, _) = util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = &problem.layout;
+        let layout = &problem.layout();
         let sampler =
             UniformRectSampler::new(layout.container().outer_cd().bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
@@ -152,7 +152,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
         group.bench_function(BenchmarkId::from_parameter(depth), |b| {
             b.iter(|| {
                 let (pkey, pi) = problem
-                    .layout
+                    .layout()
                     .placed_items()
                     .iter()
                     .choose(&mut rng)
@@ -167,7 +167,7 @@ fn quadtree_query_update_1000_1(c: &mut Criterion) {
 
                 let item_idx = p_opt.item_idx;
                 let item = instance.item(item_idx);
-                let layout = &problem.layout;
+                let layout = &problem.layout();
                 let mut buffer_shape = item.shape_cd().as_ref().clone();
                 for transf in sample_cycler.next().unwrap() {
                     buffer_shape.transform_from(item.shape_cd(), transf);
@@ -198,7 +198,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
         let (problem, selected_pi_uids) =
             util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
 
-        let layout = &problem.layout;
+        let layout = &problem.layout();
         let sampler =
             UniformRectSampler::new(layout.container().outer_cd().bbox(), instance.item(0));
         let mut rng = SmallRng::seed_from_u64(0);
@@ -222,7 +222,7 @@ fn quadtree_collect_query_bench(c: &mut Criterion) {
             b.iter(|| {
                 let item_idx = item_idx_cycler.next().unwrap();
                 let item = instance.item(item_idx);
-                let layout = &problem.layout;
+                let layout = &problem.layout();
                 let mut buffer_shape = item.shape_cd().as_ref().clone();
                 let mut collector =
                     BasicHazardCollector::with_capacity(layout.cde().hazards_map().len());

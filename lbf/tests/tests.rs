@@ -52,7 +52,7 @@ mod tests {
                 for _ in 0..N_ITEMS_TO_REMOVE {
                     //pick random existing layout
                     let random_placed_item = problem
-                        .layout
+                        .layout()
                         .placed_items()
                         .iter()
                         .choose(&mut rng)
@@ -104,8 +104,8 @@ mod tests {
                 let problem = &mut opt.problem;
                 for _ in 0..N_ITEMS_TO_REMOVE {
                     //pick random existing layout
-                    let lkey = problem.layouts.keys().choose(&mut rng).unwrap();
-                    let random_placed_item = problem.layouts[lkey]
+                    let lkey = problem.layouts().keys().choose(&mut rng).unwrap();
+                    let random_placed_item = problem.layouts()[lkey]
                         .placed_items()
                         .iter()
                         .choose(&mut rng)
@@ -233,6 +233,14 @@ mod tests {
             ..polygon
         });
         assert!(spp::io::import_instance(&importer(), &input).is_ok());
+        for quality in [0, N_QUALITIES - 1] {
+            input.items[0].base.min_quality = Some(quality);
+            assert!(importer().import_item(&input.items[0].base, 0).is_ok());
+        }
+        for quality in [N_QUALITIES, usize::MAX] {
+            input.items[0].base.min_quality = Some(quality);
+            assert!(importer().import_item(&input.items[0].base, 0).is_err());
+        }
         Ok(())
     }
 
@@ -259,6 +267,11 @@ mod tests {
         }))?;
         let importer = importer();
         let container = importer.import_container(&external)?;
+        // This zone covers complete quadtree nodes, including the query's virtual root.
+        let large_zone: ExtContainer = serde_json::from_value(json!({
+            "id": 0, "shape": rectangle(0, 0, 100, 100),
+            "zones": [{"quality": 5, "shape": rectangle(0, 0, 60, 60)}]
+        }))?;
         for required in [Some(3), None] {
             let input: ExtItem = serde_json::from_value(json!({
                 "id": 0, "min_quality": required,
@@ -300,6 +313,27 @@ mod tests {
             layout.remove_item(first);
             layout.place_item(&item, DTransformation::new(0.0, (-1.0, 5.0)));
             assert!(!layout.is_collision_free());
+            let mut covered = Layout::new(importer.import_container(&large_zone)?);
+            let mut small_input = input.clone();
+            small_input.shape = jagua_rs::io::ext_repr::ExtShape::Rectangle {
+                x_min: 0.0,
+                y_min: 0.0,
+                width: 0.5,
+                height: 0.5,
+            };
+            let small_item = importer.import_item(&small_input, 0)?;
+            let pose = DTransformation::new(0.0, (4.0, 4.0));
+            let shape = small_item.shape_cd().transform_clone(&pose.compose());
+            let filter = HazKeyFilter::from_irrelevant_qzones(
+                required.unwrap_or(jagua_rs::entities::N_QUALITIES),
+                covered.cde().hazards_map(),
+            );
+            assert_eq!(
+                covered.cde().detect_poly_collision(&shape, &filter),
+                required.is_none()
+            );
+            covered.place_item(&small_item, pose);
+            assert_eq!(covered.is_collision_free(), required.is_some());
         }
         Ok(())
     }
@@ -317,20 +351,23 @@ mod tests {
             }))?;
         let small_instance = spp::io::import_instance(&importer(), &small)?;
         let mut small_problem = spp::entities::SPProblem::new(small_instance)?;
+        let width_before = small_problem.strip_width();
+        assert!(small_problem.fit_strip().is_err());
+        assert_eq!(small_problem.strip_width(), width_before);
         let before = small_problem.save();
         assert!(small_problem.change_strip_width(0.02).is_err());
-        assert_eq!(small_problem.strip, before.strip);
+        assert_eq!(small_problem.strip(), before.strip());
         assert!(jagua_rs::util::assertions::snapshot_matches_layout(
-            &small_problem.layout,
-            &before.layout_snapshot
+            small_problem.layout(),
+            before.layout_snapshot()
         ));
         let mut optimizer = LBFOptimizerSP::new(
-            small_problem.instance.clone(),
+            small_problem.instance().clone(),
             config(),
             SmallRng::seed_from_u64(0),
         )?;
         optimizer.solve()?;
-        assert!(optimizer.problem.layout.is_collision_free());
+        assert!(optimizer.problem.layout().is_collision_free());
         small.min_item_separation = 2.0;
         assert!(spp::io::import_instance(&importer(), &small).is_err());
 
@@ -344,7 +381,12 @@ mod tests {
         assert_eq!(spaced.item(0).shape_orig().modify_config.offset, Some(1.0));
         let problem = jagua_rs::probs::spp::entities::SPProblem::new(spaced)?;
         assert_eq!(
-            problem.layout.container().outer_orig().modify_config.offset,
+            problem
+                .layout()
+                .container()
+                .outer_orig()
+                .modify_config
+                .offset,
             Some(1.0)
         );
 
@@ -402,7 +444,7 @@ mod tests {
                     .solve()?;
             let exported = spp::io::export(&solution, epoch);
             let restored = spp::io::import_solution(&instance, &exported)?;
-            assert_eq!(restored.layout_snapshot.placed_items().len(), 2);
+            assert_eq!(restored.layout_snapshot().placed_items().len(), 2);
         }
         for rotation in [
             json!(null),

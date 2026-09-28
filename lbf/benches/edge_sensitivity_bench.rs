@@ -67,7 +67,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        let layout = &problem.layout;
+        let layout = &problem.layout();
         /*let samples = {
             let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
             (0..N_SAMPLES).map(

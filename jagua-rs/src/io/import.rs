@@ -14,6 +14,7 @@ use log::debug;
 use std::sync::Arc;
 
 /// Converts external representations of items and containers into internal ones.
+/// Direct configuration changes must satisfy [`ShapeModifyConfig`]'s documented ranges.
 #[derive(Clone, Debug, Copy)]
 pub struct Importer {
     pub shape_modify_config: ShapeModifyConfig,
@@ -54,7 +55,7 @@ impl Importer {
     }
 
     /// Import geometry with a caller-assigned internal index, independent of the external ID.
-    pub fn import_item(&self, ext_item: &ExtItem, internal_id: usize) -> Result<Arc<Item>> {
+    pub fn import_item(&self, ext_item: &ExtItem, idx: usize) -> Result<Arc<Item>> {
         debug!("[IMPORT] starting item {:?}", ext_item.id);
 
         let original_shape = {
@@ -96,7 +97,7 @@ impl Importer {
         let allowed_orientations = AllowedOrientations::new(rotations, axes)?;
 
         Item::new(
-            internal_id,
+            idx,
             ext_item.id,
             original_shape,
             allowed_orientations,

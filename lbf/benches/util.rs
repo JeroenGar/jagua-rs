@@ -37,7 +37,7 @@ pub fn create_lbf_problem(
     let mut rng = SmallRng::seed_from_u64(0);
     // Remove some items from the layout
     let placed_items_to_remove = problem
-        .layout
+        .layout()
         .placed_items()
         .iter()
         .map(|(k, _)| k)
@@ -46,7 +46,7 @@ pub fn create_lbf_problem(
     let p_opts = placed_items_to_remove
         .iter()
         .map(|k| {
-            let pi = &problem.layout.placed_items()[*k];
+            let pi = &problem.layout().placed_items()[*k];
             SPPlacement {
                 item_idx: pi.item().idx(),
                 d_transf: pi.d_transf(),
@@ -55,7 +55,7 @@ pub fn create_lbf_problem(
         .collect_vec();
 
     for pkey in placed_items_to_remove {
-        let item_idx = problem.layout.placed_items()[pkey].item().idx();
+        let item_idx = problem.layout().placed_items()[pkey].item().idx();
         problem.remove_item(pkey);
         info!(
             "Removed item: {} with {} edges",

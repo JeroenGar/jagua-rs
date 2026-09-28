@@ -42,8 +42,8 @@ impl LBFOptimizerSP {
         {
             let item = self.instance.item(item_idx);
             //place all items of this type
-            while self.problem.item_demand_qtys[item_idx] > 0 {
-                let cde = self.problem.layout.cde();
+            while self.problem.item_demand_qtys()[item_idx] > 0 {
+                let cde = self.problem.layout().cde();
                 let placement = match &item.min_quality() {
                     None => search(
                         cde,
@@ -75,23 +75,23 @@ impl LBFOptimizerSP {
                         });
                         info!(
                             "[LBF] placing item {}/{} with id {} at [{}]",
-                            self.problem.layout.placed_items().len(),
+                            self.problem.layout().placed_items().len(),
                             self.instance.total_item_qty(),
                             item.idx(),
                             d_transf,
                         );
                         #[allow(clippy::absurd_extreme_comparisons)]
-                        if self.problem.layout.placed_items().len() >= ITEM_LIMIT {
+                        if self.problem.layout().placed_items().len() >= ITEM_LIMIT {
                             break 'outer;
                         }
                     }
                     None => {
                         // item does not fit anywhere, increase the strip width
                         self.problem
-                            .change_strip_width(self.problem.strip.width * 1.1)?;
+                            .change_strip_width(self.problem.strip().width * 1.1)?;
                         info!(
                             "[LBF] no placement found, extended strip by 10% to {:.3}",
-                            self.problem.strip.width
+                            self.problem.strip().width
                         );
                         assert!(
                             strip_width_is_in_check(&self.problem),
@@ -105,7 +105,7 @@ impl LBFOptimizerSP {
         self.problem.fit_strip()?;
         info!(
             "[LBF] fitted strip width to {:.3}",
-            self.problem.strip.width
+            self.problem.strip().width
         );
 
         let solution = self.problem.save();
@@ -118,7 +118,7 @@ impl LBFOptimizerSP {
 
         info!(
             "[LBF] solution contains {} items with a density of {:.3}%",
-            solution.layout_snapshot.placed_items().len(),
+            solution.layout_snapshot().placed_items().len(),
             solution.density() * 100.0
         );
         Ok(solution)

@@ -91,7 +91,7 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
         problem.remove_item(key, item);
     }
     problem.restore(&saved);
-    assert_eq!(problem.bin_stock_qtys, vec![1, 1]);
+    assert_eq!(problem.bin_stock_qtys(), vec![1, 1]);
     assert_eq!(problem.bin_cost(), 18);
     let exported = export(&instance, &problem.save(), epoch);
     let mut ids: Vec<_> = exported.layouts.iter().map(|l| l.container_id).collect();

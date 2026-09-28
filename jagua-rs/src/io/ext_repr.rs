@@ -10,8 +10,8 @@ pub struct ExtItem {
     pub orientation: ExtOrientation,
     /// Shape of the item. Polygons with holes and multipolygons are not supported.
     pub shape: ExtShape,
-    /// The minimum required quality of the item.
-    /// Maximum quality required if not specified.
+    /// Minimum required quality in `0..N_QUALITIES`, validated at import.
+    /// Missing or null requires full quality. Holes always block placement.
     pub min_quality: Option<usize>,
 }
 

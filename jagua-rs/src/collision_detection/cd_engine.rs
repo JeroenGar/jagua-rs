@@ -172,22 +172,19 @@ impl CDEngine {
 
             // Check for containment of the shape in any of the hazards
             for qt_hazard in v_qt_root.hazards.iter() {
+                if filter.is_irrelevant(qt_hazard.hkey) {
+                    continue;
+                }
                 match &qt_hazard.presence {
                     QTHazPresence::None => {}
                     QTHazPresence::Entire => unreachable!(
                         "Entire hazards in the virtual root should have been caught by the edge intersection tests"
                     ),
                     QTHazPresence::Partial(_) => {
-                        if !filter.is_irrelevant(qt_hazard.hkey) {
-                            let haz_shape = &self.hazards_map[qt_hazard.hkey].shape;
-                            if Self::detect_containment_collision(
-                                shape,
-                                haz_shape,
-                                qt_hazard.entity,
-                            ) {
-                                // The hazard is contained in the shape (or vice versa)
-                                return true;
-                            }
+                        let haz_shape = &self.hazards_map[qt_hazard.hkey].shape;
+                        if Self::detect_containment_collision(shape, haz_shape, qt_hazard.entity) {
+                            // The hazard is contained in the shape (or vice versa)
+                            return true;
                         }
                     }
                 }
@@ -425,7 +422,8 @@ impl CDEngine {
 ///Configuration of the [`CDEngine`]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct CDEConfig {
-    ///Maximum depth of the quadtree
+    /// Maximum depth of the quadtree. Typically 3–10.
+    /// Excessive depths can exhaust memory or panic when coordinates can no longer be subdivided.
     pub quadtree_depth: u8,
     /// Stop traversing the quadtree and perform collision collection immediately when the total number of edges in a node falls below this number
     pub cd_threshold: u8,

@@ -27,6 +27,7 @@ pub enum ShapeModifyMode {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq)]
+/// Shape modification settings. Supplied distances and ratios must be finite and nonnegative.
 pub struct ShapeModifyConfig {
     /// Maximum deviation of the simplified polygon with respect to the original polygon area as a ratio.
     /// If undefined, no simplification is performed.

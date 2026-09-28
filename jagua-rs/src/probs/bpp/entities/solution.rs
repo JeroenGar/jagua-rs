@@ -7,15 +7,25 @@ use slotmap::SecondaryMap;
 /// Can be used to restore to a previous state.
 #[derive(Debug, Clone)]
 pub struct BPSolution {
-    /// A map of the layout snapshots, identified by the same keys as in the problem
-    pub layout_snapshots: SecondaryMap<LayKey, LayoutSnapshot>,
+    /// Layout snapshots keyed by their keys at capture time.
+    pub(crate) layout_snapshots: SecondaryMap<LayKey, LayoutSnapshot>,
     /// Source bin index for each layout.
-    pub layout_bins: SecondaryMap<LayKey, usize>,
+    pub(crate) layout_bins: SecondaryMap<LayKey, usize>,
     /// Instant the solution was created
     pub time_stamp: Instant,
 }
 
 impl BPSolution {
+    #[must_use]
+    pub fn layout_snapshots(&self) -> &SecondaryMap<LayKey, LayoutSnapshot> {
+        &self.layout_snapshots
+    }
+
+    #[must_use]
+    pub fn layout_bins(&self) -> &SecondaryMap<LayKey, usize> {
+        &self.layout_bins
+    }
+
     #[must_use]
     pub fn density(&self) -> f32 {
         let total_bin_area = self
