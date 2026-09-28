@@ -237,6 +237,74 @@ mod tests {
     }
 
     #[test]
+    fn quality_zones_filter_queries_and_layouts_consistently() -> Result<()> {
+        use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
+        use jagua_rs::entities::Layout;
+        use jagua_rs::geometry::DTransformation;
+        use jagua_rs::geometry::geo_traits::Transformable;
+        use jagua_rs::io::ext_repr::{ExtContainer, ExtItem};
+        use serde_json::json;
+
+        let rectangle = |x, y, width, height| {
+            json!({
+                "type": "rectangle",
+                "data": {"x_min": x, "y_min": y, "width": width, "height": height}
+            })
+        };
+        let external: ExtContainer = serde_json::from_value(json!({
+            "id": 0, "shape": rectangle(0, 0, 30, 12),
+            "zones": ([0, 2, 3, 4].into_iter().enumerate().map(|(i, q)| json!({
+                "quality": q, "shape": rectangle(2 + 6 * i, 2, 4, 6)
+            })).collect::<Vec<_>>())
+        }))?;
+        let importer = importer();
+        let container = importer.import_container(&external)?;
+        for required in [Some(3), None] {
+            let input: ExtItem = serde_json::from_value(json!({
+                "id": 0, "min_quality": required,
+                "orientation": {"rotation": {"mode": "discrete", "angles": [0]}},
+                "shape": rectangle(0, 0, 2, 2)
+            }))?;
+            let item = importer.import_item(&input, 0)?;
+            let mut layout = Layout::new(container.clone());
+            for (quality, x) in [(0, 2.0), (2, 8.0), (3, 14.0), (4, 20.0)] {
+                // Exercise containment and crossing a zone boundary.
+                for dx in [2.0, 0.5] {
+                    let pose = DTransformation::new(0.0, (x + dx, 5.0));
+                    let shape = item.shape_cd().transform_clone(&pose.compose());
+                    let expected_collision = required.is_none() || quality < 3;
+                    let cde = layout.cde();
+                    let collision = match required {
+                        Some(q) => cde.detect_poly_collision(
+                            &shape,
+                            &HazKeyFilter::from_irrelevant_qzones(q, cde.hazards_map()),
+                        ),
+                        None => cde.detect_poly_collision(&shape, &NoFilter),
+                    };
+                    assert_eq!(
+                        collision, expected_collision,
+                        "quality {quality}, required {required:?}"
+                    );
+                    let key = layout.place_item(&item, pose);
+                    assert_eq!(layout.is_collision_free(), !expected_collision);
+                    layout.remove_item(key);
+                }
+            }
+            // Quality filtering must not hide other items or the exterior.
+            let pose = DTransformation::new(0.0, (27.0, 5.0));
+            let first = layout.place_item(&item, pose);
+            assert!(layout.is_collision_free());
+            let second = layout.place_item(&item, pose);
+            assert!(!layout.is_collision_free());
+            layout.remove_item(second);
+            layout.remove_item(first);
+            layout.place_item(&item, DTransformation::new(0.0, (-1.0, 5.0)));
+            assert!(!layout.is_collision_free());
+        }
+        Ok(())
+    }
+
+    #[test]
     fn instance_separation_controls_item_and_container_geometry() -> Result<()> {
         let mut small: spp::io::ext_repr::ExtSPInstance =
             serde_json::from_value(serde_json::json!({

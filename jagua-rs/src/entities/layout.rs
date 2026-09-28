@@ -1,4 +1,5 @@
 use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::filter::HazKeyFilter;
 use crate::collision_detection::{CDESnapshot, CDEngine};
 use crate::entities::Container;
 use crate::entities::Item;
@@ -157,6 +158,7 @@ impl Layout {
     }
 
     /// Returns true if no placed item collides with the container or another item.
+    /// Quality zones meeting each item's minimum quality are ignored; holes remain blocking.
     #[must_use]
     pub fn is_collision_free(&self) -> bool {
         self.placed_items.iter().all(|(pk, pi)| {
@@ -164,7 +166,15 @@ impl Layout {
                 .cde
                 .haz_key_from_pi_key(pk)
                 .expect("all placed items should be registered in the CDE");
-            !self.cde.detect_poly_collision(&pi.shape, &hkey)
+            match pi.item.min_quality {
+                Some(quality) => {
+                    let mut filter =
+                        HazKeyFilter::from_irrelevant_qzones(quality, self.cde.hazards_map());
+                    filter.0.insert(hkey, ());
+                    !self.cde.detect_poly_collision(&pi.shape, &filter)
+                }
+                None => !self.cde.detect_poly_collision(&pi.shape, &hkey),
+            }
         })
     }
 

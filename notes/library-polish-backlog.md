@@ -98,10 +98,13 @@ lower-level operation. Layout::restore already checks container identity.
 
 ### 8. Quality-filter discrepancy
 
-HazKeyFilter::from_irrelevant_qzones documents ignoring zones above or at the
-required quality, while its predicate selects quality < required_quality.
-Verify the intended semantics and consumers before changing code or wording.
-See collision_detection/hazards/filter.rs.
+Implemented after independent Claude review: ignore quality zones at or above
+the item's minimum quality. Layout::is_collision_free now uses the same filter.
+An integration regression covers containment and boundary crossings, equal/higher/
+lower quality, full-quality items, holes, other items and the container exterior.
+
+Separate follow-up: validate item min_quality during import; out-of-range values
+can currently panic when SVG export indexes the quality-color palette.
 
 ### 9. Library entry-point documentation
 
