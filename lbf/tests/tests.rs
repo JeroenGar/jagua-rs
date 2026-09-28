@@ -177,7 +177,10 @@ mod tests {
 
     #[test]
     fn item_holes_are_rejected_but_container_holes_are_preserved() -> Result<()> {
-        use jagua_rs::io::ext_repr::{ExtContainer, ExtPolygon, ExtSPolygon, ExtShape};
+        use jagua_rs::entities::{InferiorQualityZone, N_QUALITIES};
+        use jagua_rs::io::ext_repr::{
+            ExtContainer, ExtPolygon, ExtQualityZone, ExtSPolygon, ExtShape,
+        };
 
         let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
         let polygon = ExtPolygon {
@@ -199,6 +202,32 @@ mod tests {
                 .len(),
             1
         );
+        let mut external_container = ExtContainer {
+            id: 0,
+            shape: ExtShape::Polygon(polygon.clone()),
+            zones: vec![ExtQualityZone {
+                quality: 1,
+                shape: ExtShape::SimplePolygon(polygon.inner[0].clone()),
+            }],
+        };
+        assert!(importer().import_container(&external_container).is_ok());
+        for quality in [N_QUALITIES, usize::MAX] {
+            external_container.zones[0].quality = quality;
+            assert!(importer().import_container(&external_container).is_err());
+            assert!(InferiorQualityZone::new(quality, vec![]).is_err());
+        }
+        external_container.zones[0].quality = 1;
+        for shape in [
+            ExtShape::Polygon(polygon.clone()),
+            ExtShape::MultiPolygon(vec![polygon.clone()]),
+        ] {
+            external_container.zones[0].shape = shape;
+            assert!(importer().import_container(&external_container).is_err());
+        }
+        external_container.zones.clear();
+        external_container.shape = ExtShape::MultiPolygon(vec![polygon.clone()]);
+        assert!(importer().import_container(&external_container).is_err());
+
         input.items[0].base.shape = ExtShape::Polygon(ExtPolygon {
             inner: vec![],
             ..polygon

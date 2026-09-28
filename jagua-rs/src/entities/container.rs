@@ -116,8 +116,9 @@ pub struct InferiorQualityZone {
 }
 
 impl InferiorQualityZone {
+    /// Returns an error for invalid geometry or a quality outside `0..N_QUALITIES`.
     pub fn new(quality: usize, original_shapes: Vec<OriginalShape>) -> Result<Self> {
-        assert!(
+        ensure!(
             quality < N_QUALITIES,
             "Quality must be in range of N_QUALITIES"
         );

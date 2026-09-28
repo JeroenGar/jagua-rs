@@ -106,10 +106,12 @@ impl Importer {
         .map(Arc::new)
     }
 
+    /// Imports container geometry and quality zones.
+    /// Returns an error for invalid geometry, unsupported shapes or out-of-range qualities.
     pub fn import_container(&self, ext_cont: &ExtContainer) -> Result<Container> {
-        assert!(
+        ensure!(
             ext_cont.zones.iter().all(|zone| zone.quality < N_QUALITIES),
-            "All quality zones must have lower quality than N_QUALITIES, set N_QUALITIES to a higher value if required"
+            "Quality zones must have quality below {N_QUALITIES}"
         );
 
         let original_outer = {
@@ -144,7 +146,7 @@ impl Importer {
                     .collect::<Result<Vec<SPolygon>>>()?
             }
             ExtShape::MultiPolygon(_) => {
-                unimplemented!("No support for multipolygon shapes yet")
+                bail!("No support for multipolygon shapes yet")
             }
         };
 
@@ -164,10 +166,10 @@ impl Importer {
                             .map(Into::into),
                         ExtShape::SimplePolygon(esp) => import_simple_polygon(esp),
                         ExtShape::Polygon(_) => {
-                            unimplemented!("No support for polygon to simplepolygon conversion yet")
+                            bail!("Quality zones require rectangles or simple polygons")
                         }
                         ExtShape::MultiPolygon(_) => {
-                            unimplemented!("No support for multipolygon shapes yet")
+                            bail!("Quality zones do not support multipolygons")
                         }
                     })
                     .collect::<Result<Vec<SPolygon>>>()

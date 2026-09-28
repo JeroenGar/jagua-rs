@@ -65,6 +65,10 @@ read access; do not hide entire modules indiscriminately.
 
 ### 5. Import errors versus panics
 
+Implemented: invalid quality levels and unsupported quality-zone shapes return
+errors from container import and InferiorQualityZone::new. The existing geometry
+import integration test covers these cases and a valid quality-zone control.
+
 Importer::import_container returns Result but asserts on out-of-range quality
 levels and reaches unimplemented! for unsupported quality-zone shapes. Return
 errors for invalid external input. Keep assertions for internal invariants.
