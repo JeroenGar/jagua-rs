@@ -20,13 +20,6 @@ use anyhow::{Result, bail};
 /// A Simple Polygon is a polygon that does not intersect itself and contains no holes.
 /// It is a closed shape with a finite number of vertices and edges.
 /// [read more](https://en.wikipedia.org/wiki/Simple_polygon)
-/// Vertices are read-only; use transformation methods to keep cached geometry consistent.
-/// ```compile_fail
-/// # use jagua_rs::geometry::primitives::SPolygon;
-/// fn edit(polygon: &mut SPolygon) {
-///     polygon.vertices()[0].0 = 0.0;
-/// }
-/// ```
 #[derive(Clone, Debug)]
 pub struct SPolygon {
     /// Vertices in counterclockwise order, including after reflection.
@@ -119,7 +112,7 @@ impl SPolygon {
     }
 
     #[must_use]
-    pub fn calculate_diameter(points: Vec<Point>) -> f32 {
+    fn calculate_diameter(points: Vec<Point>) -> f32 {
         //The two points furthest apart must be part of the convex hull
         let ch = convex_hull_from_points(points);
 
@@ -166,7 +159,7 @@ impl SPolygon {
         0.5 * sigma
     }
 
-    pub fn calculate_poi(points: &[Point], diameter: f32) -> Result<Circle> {
+    fn calculate_poi(points: &[Point], diameter: f32) -> Result<Circle> {
         //need to make a dummy simple polygon, because the pole generation algorithm
         //relies on many of the methods provided by the simple polygon struct
         let dummy_sp = {

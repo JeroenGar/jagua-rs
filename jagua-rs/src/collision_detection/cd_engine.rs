@@ -180,8 +180,11 @@ impl CDEngine {
                     QTHazPresence::Partial(_) => {
                         if !filter.is_irrelevant(qt_hazard.hkey) {
                             let haz_shape = &self.hazards_map[qt_hazard.hkey].shape;
-                            if self.detect_containment_collision(shape, haz_shape, qt_hazard.entity)
-                            {
+                            if Self::detect_containment_collision(
+                                shape,
+                                haz_shape,
+                                qt_hazard.entity,
+                            ) {
                                 // The hazard is contained in the shape (or vice versa)
                                 return true;
                             }
@@ -230,8 +233,7 @@ impl CDEngine {
     /// * `haz_shape` - The shape of the respective hazard
     /// * `haz_entity` - The entity inducing the hazard
     #[must_use]
-    pub fn detect_containment_collision(
-        &self,
+    fn detect_containment_collision(
         shape: &SPolygon,
         haz_shape: &SPolygon,
         haz_entity: HazardEntity,
@@ -306,7 +308,7 @@ impl CDEngine {
                 QTHazPresence::Partial(_) => {
                     if !collector.contains_key(qt_haz.hkey) {
                         let h_shape = &self.hazards_map[qt_haz.hkey].shape;
-                        if self.detect_containment_collision(shape, h_shape, qt_haz.entity) {
+                        if Self::detect_containment_collision(shape, h_shape, qt_haz.entity) {
                             collector.insert(qt_haz.hkey, qt_haz.entity);
                             if stop_after_collision(qt_haz.entity) {
                                 return true;
@@ -367,7 +369,7 @@ impl CDEngine {
     /// Returns the lowest `QTNode` that completely surrounds the given bounding box.
     /// Used to initiate collision checks from lower in the quadtree.
     #[must_use]
-    pub fn get_virtual_root(&self, bbox: Rect) -> &QTNode {
+    fn get_virtual_root(&self, bbox: Rect) -> &QTNode {
         let mut v_root = &self.quadtree;
         while let Some(children) = v_root.children.as_ref() {
             // Keep going down the tree until we cannot find a child that fully surrounds the shape
@@ -398,12 +400,6 @@ impl CDEngine {
             .map(|(key, _)| key)
     }
 
-    /// Root node of the quadtree
-    #[must_use]
-    pub fn quadtree(&self) -> &QTNode {
-        &self.quadtree
-    }
-
     /// All hazards registered in the CDE (active and inactive)
     #[must_use]
     pub fn hazards_map(&self) -> &SlotMap<HazKey, Hazard> {
@@ -429,7 +425,14 @@ pub struct CDEConfig {
 }
 
 /// Snapshot of the state of [`CDEngine`]. Can be used to restore to a previous state.
+/// Created by [`CDEngine::save`]; its captured hazards cannot be edited.
+/// ```compile_fail
+/// # use jagua_rs::collision_detection::CDESnapshot;
+/// fn edit(snapshot: &mut CDESnapshot) {
+///     snapshot.dynamic_hazards.clear();
+/// }
+/// ```
 #[derive(Clone, Debug)]
 pub struct CDESnapshot {
-    pub dynamic_hazards: Vec<Hazard>,
+    pub(crate) dynamic_hazards: Vec<Hazard>,
 }

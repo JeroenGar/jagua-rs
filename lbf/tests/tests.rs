@@ -305,7 +305,7 @@ mod tests {
                     .solve()?;
             let exported = spp::io::export(&solution, epoch);
             let restored = spp::io::import_solution(&instance, &exported)?;
-            assert_eq!(restored.layout_snapshot.placed_items.len(), 2);
+            assert_eq!(restored.layout_snapshot.placed_items().len(), 2);
         }
         for rotation in [
             json!(null),

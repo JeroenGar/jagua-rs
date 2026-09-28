@@ -15,9 +15,9 @@ use anyhow::{Result, ensure};
 /// is fully contained in the original [`SPolygon`].
 /// Used for *fail-fast* collision detection.
 pub struct SPSurrogate {
-    /// Set of [poles](pole::generate_surrogate_poles)
+    /// Interior circles used for collision screening and overlap estimation.
     pub poles: Vec<Circle>,
-    /// Set of [piers](piers::generate_piers)
+    /// Interior line segments used for collision screening.
     pub piers: Vec<Edge>,
     /// Indices of the polygon vertices forming its counterclockwise convex hull.
     /// The owning polygon remaps these when reflection reverses its vertex storage.

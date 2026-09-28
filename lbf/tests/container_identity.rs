@@ -47,7 +47,7 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
         assert_eq!(layout.restore(&saved), Err(ContainerMismatch));
         assert!(Arc::ptr_eq(
             layout.container().base_cde(),
-            before.container.base_cde()
+            before.container().base_cde()
         ));
         assert_eq!(layout.is_feasible(), feasible_before);
         assert!(jagua_rs::util::assertions::snapshot_matches_layout(
@@ -57,12 +57,12 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
             &layout
         ));
 
-        layout.swap_container(saved.container.clone());
+        layout.swap_container(saved.container().clone());
         layout.restore(&saved)?;
         assert!(layout.is_feasible());
         assert!(Arc::ptr_eq(
             layout.container().base_cde(),
-            saved.container.base_cde()
+            saved.container().base_cde()
         ));
         layout.restore(&saved)?;
         assert!(layout.is_feasible());

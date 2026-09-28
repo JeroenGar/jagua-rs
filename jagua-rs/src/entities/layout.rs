@@ -12,13 +12,6 @@ use std::sync::Arc;
 /// A [`Layout`] is a dynamic representation of items that have been placed in a container at specific positions.
 /// Items can be placed and removed. The container can be swapped. Snapshots can be taken and restored to.
 /// Each layout maintains a [`CDEngine`], which can be used to check for collisions before placing items.
-/// Read access does not permit bypassing the layout's mutation methods:
-/// ```compile_fail
-/// # use jagua_rs::entities::Layout;
-/// fn clear(layout: &mut Layout) {
-///     layout.placed_items().clear();
-/// }
-/// ```
 #[derive(Clone)]
 pub struct Layout {
     /// The container used for this layout
@@ -194,17 +187,36 @@ pub struct ContainerMismatch;
 
 /// Immutable and compact representation of a [`Layout`].
 /// Can be used to restore a [`Layout`] back to a previous state.
+/// Captured placements cannot be edited independently of collision state.
+/// ```compile_fail
+/// # use jagua_rs::entities::LayoutSnapshot;
+/// fn edit(snapshot: &mut LayoutSnapshot) {
+///     snapshot.placed_items().clear();
+/// }
+/// ```
 #[derive(Clone, Debug)]
 pub struct LayoutSnapshot {
     /// A copy of the container used in the layout
-    pub container: Container,
+    pub(crate) container: Container,
     /// A copy of the placed items in the layout
-    pub placed_items: SlotMap<PItemKey, PlacedItem>,
+    pub(crate) placed_items: SlotMap<PItemKey, PlacedItem>,
     /// Snapshot of the collision detection engine
-    pub cde_snapshot: CDESnapshot,
+    pub(crate) cde_snapshot: CDESnapshot,
 }
 
 impl LayoutSnapshot {
+    /// The container captured in this snapshot.
+    #[must_use]
+    pub fn container(&self) -> &Container {
+        &self.container
+    }
+
+    /// The placements captured in this snapshot.
+    #[must_use]
+    pub fn placed_items(&self) -> &SlotMap<PItemKey, PlacedItem> {
+        &self.placed_items
+    }
+
     /// Equivalent to [`Layout::density`]
     #[must_use]
     pub fn density(&self) -> f32 {

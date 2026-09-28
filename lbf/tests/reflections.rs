@@ -535,7 +535,7 @@ mod io {
         let restored = import_solution(&instance, &decoded).unwrap();
         let restored_item = restored
             .layout_snapshot
-            .placed_items
+            .placed_items()
             .values()
             .next()
             .unwrap();

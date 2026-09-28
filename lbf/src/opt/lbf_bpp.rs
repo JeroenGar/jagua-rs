@@ -88,7 +88,7 @@ impl LBFOptimizerBP {
             solution
                 .layout_snapshots
                 .values()
-                .map(|ls| ls.placed_items.len())
+                .map(|ls| ls.placed_items().len())
                 .sum::<usize>(),
             solution.density() * 100.0
         );

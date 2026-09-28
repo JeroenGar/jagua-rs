@@ -53,7 +53,7 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
     assert!(import_solution(&instance, &external).is_err());
     input.items.push(input.items[1].clone());
     assert!(import_instance(&importer, &input).is_err());
-    for pi in solution.layout_snapshot.placed_items.values() {
+    for pi in solution.layout_snapshot.placed_items().values() {
         assert!(std::sync::Arc::ptr_eq(
             pi.item(),
             instance.item(pi.item().idx())

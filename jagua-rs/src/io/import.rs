@@ -302,7 +302,7 @@ pub fn ext_to_int_transformation(
         .decompose()
 }
 
-pub fn eliminate_degenerate_vertices(points: &mut Vec<Point>) {
+fn eliminate_degenerate_vertices(points: &mut Vec<Point>) {
     let mut indices_to_remove = vec![];
     let n_points = points.len();
     for i in 0..n_points {

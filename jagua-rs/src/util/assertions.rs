@@ -34,27 +34,6 @@ pub fn snapshot_matches_layout(layout: &Layout, layout_snapshot: &LayoutSnapshot
 }
 
 #[must_use]
-pub fn collision_hazards_sorted_correctly(hazards: &[QTHazard]) -> bool {
-    let mut partial_hazard_detected = false;
-    for hazard in hazards {
-        match hazard.presence {
-            QTHazPresence::Partial(_) => {
-                partial_hazard_detected = true;
-            }
-            QTHazPresence::Entire => {
-                if partial_hazard_detected {
-                    return false;
-                }
-            }
-            QTHazPresence::None => {
-                panic!("None hazard should never be collision hazard vec");
-            }
-        }
-    }
-    true
-}
-
-#[must_use]
 pub fn qt_contains_no_dangling_hazards(cde: &CDEngine) -> bool {
     if let Some(children) = &cde.quadtree.children {
         for child in children.as_ref() {
@@ -232,7 +211,7 @@ fn hazards_match<'a>(
 
 /// Checks if the quadrants follow the layout set in [`Rect::QUADRANT_NEIGHBOR_LAYOUT`]
 #[must_use]
-pub fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
+pub(crate) fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
     let layout = Rect::QUADRANT_NEIGHBOR_LAYOUT;
     for (idx, q) in quadrants.iter().enumerate() {
         //make sure they share two points (an edge) with each neighbor

@@ -63,13 +63,6 @@ impl QTHazardVec {
         self.iter().find(|hz| !filter.is_irrelevant(hz.hkey))
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.hazards.is_empty()
-    }
-
-    pub fn len(&self) -> usize {
-        self.hazards.len()
-    }
     pub fn no_partial_hazards(&self) -> bool {
         self.hazards
             .iter()

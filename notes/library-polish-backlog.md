@@ -15,18 +15,49 @@ separate from the orientation/reflection PR.
 
 The stacked implementation covers Layout, Container, InferiorQualityZone, Item,
 PlacedItem, CDEngine and SPolygon. LBF consumers are adapted in the same slice.
-Snapshot integrity remains deferred under item 3; this is not yet complete
-protection against callers modifying a snapshot before restoring it.
+Items 3 and 4 are now implemented in the same stacked PR, as detailed below.
 
 ## Deferred findings
 
 ### 3. Snapshot integrity
+
+Implemented: LayoutSnapshot fields and CDESnapshot hazards are crate-private.
+LayoutSnapshot exposes read-only container and placement accessors. No public
+constructor or mutable accessor allows editing captured components independently.
 
 LayoutSnapshot exposes independently mutable placements, container and CDE
 snapshot. Restrict mutation while preserving inspection so restore can trust the
 saved components to agree. See entities/layout.rs and collision_detection/cd_engine.rs.
 
 ### 4. Accidental public APIs
+
+Implemented: hide the quadtree module and remove its public CDE accessor; make
+virtual-root and containment helpers private; hide polygon diameter/pole
+construction helpers and degenerate-vertex cleanup; remove public surrogate
+generation re-exports. Remove unused quadtree wrappers and a diagnostic helper
+made dead by the visibility changes. Keep layout/CDE diagnostic functions used
+by consumers public.
+
+Consumer audit of sparrow's jg-jagua-0.9-compat branch:
+
+- src/eval/sep_evaluator.rs indexes hazards_map after resolving a placed-item key.
+  This couples it to the SlotMap representation; a focused hazard lookup would
+  be cleaner. Keep read access for now, pending a separate API decision.
+- The same evaluator seeds BasicHazardCollector with the moving item's hazard
+  to exclude self-collision, then subtracts that entry from the count. This is
+  supported by the collector/filter contract, but couples exclusion and results.
+  A separate exclusion filter may be clearer; do not change the hot loop without
+  checking the performance impact.
+- quantify/overlap_proxy.rs, quantify/simd/overlap_proxy_simd.rs and
+  eval/collision_loss.rs read surrogate poles directly; optimizer/explore.rs and
+  optimizer/lbf.rs use convex_hull_area. These are deliberate geometry inputs to
+  sparrow's loss/ordering algorithms. Preserve read access rather than hide them.
+- util/assertions.rs calls layout_qt_matches_fresh_qt. Keep this diagnostic entry
+  point without exposing the quadtree representation.
+
+No sparrow source usages of the newly hidden helpers or quadtree module were found.
+Downstream accessor migration is still separate; this was a source-usage audit,
+not a downstream compilation check.
 
 Review public quadtree internals, get_virtual_root, polygon-construction helpers
 and utility functions. Check consumers before reducing visibility: sparrow and

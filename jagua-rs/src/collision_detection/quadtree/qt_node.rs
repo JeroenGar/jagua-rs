@@ -144,22 +144,11 @@ impl QTNode {
         }
     }
 
-    /// Gathers all hazards that collide with the entity and reports them to the `collector`.
-    /// All hazards already present in the `collector` are ignored.
-    pub fn collect_collisions<T: QTQueryable>(
-        &self,
-        entity: &T,
-        collector: &mut impl HazardCollector,
-    ) {
-        let _ = self.collect_collisions_until(entity, collector, &mut |_| false);
-    }
-
     /// Gathers colliding hazards until `stop_after_collision` requests an early return.
     ///
     /// The callback runs after a colliding hazard is added to the collector for the first time.
     /// Returning `true` stops traversal and leaves the collector with only the hazards found up to
-    /// that point. Returning `false` every time gathers all collisions, like
-    /// [`Self::collect_collisions`].
+    /// that point. Returning `false` every time gathers all collisions.
     #[must_use]
     pub fn collect_collisions_until<T, C, F>(
         &self,
