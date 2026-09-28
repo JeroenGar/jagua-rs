@@ -89,11 +89,6 @@ impl SPolygon {
         Ok(())
     }
 
-    /// Removes the optional surrogate without changing the polygon.
-    pub fn remove_surrogate(&mut self) {
-        self.surrogate = None;
-    }
-
     #[must_use]
     pub fn vertex(&self, i: usize) -> Point {
         self.vertices[i]

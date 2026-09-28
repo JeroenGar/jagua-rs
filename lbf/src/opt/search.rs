@@ -23,12 +23,8 @@ pub fn search(
     filter: &impl HazardFilter,
 ) -> Option<(DTransformation, LBFLoss)> {
     let surrogate = item.shape_cd().surrogate();
-    //create a clone of the shape which will we can use to apply the transformations
-    let mut buffer = {
-        let mut buffer = item.shape_cd().as_ref().clone();
-        buffer.remove_surrogate(); //remove the surrogate for faster transforms, we don't need it for the buffer shape
-        buffer
-    };
+    // Clone a reusable buffer for complete polygon collision checks.
+    let mut buffer = item.shape_cd().as_ref().clone();
 
     let mut best: Option<(DTransformation, LBFLoss)> = None;
 

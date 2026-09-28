@@ -91,11 +91,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         let mut buffer_shapes = ITEMS_ID_TO_TEST
             .iter()
             .map(|&item_idx| instance.item(item_idx))
-            .map(|item| {
-                let mut buffer = item.shape_cd().as_ref().clone();
-                buffer.remove_surrogate(); //strip the surrogate for faster transforms, we don't need it for the buffer shape
-                buffer
-            })
+            .map(|item| item.shape_cd().as_ref().clone())
             .collect_vec();
 
         group.bench_function(
