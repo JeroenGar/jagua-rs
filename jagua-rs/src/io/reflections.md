@@ -75,8 +75,8 @@ counterclockwise from its positive X-axis, before rotation:
 
 | Axis angle | Effect before rotation and translation |
 | --- | --- |
-| 0° (X-axis) | `(x, y)` becomes `(x, -y)` |
-| 90° (Y-axis) | `(x, y)` becomes `(-x, y)` |
+| 0° (horizontal X-axis) | `(x, y)` becomes `(x, -y)` |
+| 90° (vertical Y-axis) | `(x, y)` becomes `(-x, y)` |
 | 45° | `(x, y)` becomes `(y, x)` |
 
 Axes are equivalent modulo 180° and rotations modulo 360°. Import rejects

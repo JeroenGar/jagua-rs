@@ -21,8 +21,11 @@ pub struct ExtItem {
 pub struct ExtOrientation {
     /// Permitted rotations, applied after optional reflection.
     pub rotation: ExtRotation,
-    /// Optional reflection axes through the original local origin, in degrees.
-    /// 0° negates y; 90° negates x. Missing or empty disables reflection.
+    /// Optional reflection axes through the original item's local origin,
+    /// in degrees counterclockwise from its positive x-axis, before rotation.
+    /// 0° is the horizontal x-axis: `(x, y)` becomes `(x, -y)`.
+    /// 90° is the vertical y-axis: `(x, y)` becomes `(-x, y)`.
+    /// Missing or empty disables reflection.
     /// Choose no reflection or one axis; equivalent axes are normalized modulo 180°.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub reflection_axes: Vec<f32>,
