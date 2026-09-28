@@ -406,6 +406,13 @@ impl CDEngine {
         &self.hazards_map
     }
 
+    /// Returns the registered hazard, or `None` if the key is no longer valid.
+    #[inline]
+    #[must_use]
+    pub fn hazard(&self, key: HazKey) -> Option<&Hazard> {
+        self.hazards_map.get(key)
+    }
+
     /// Configuration of the CDE
     #[must_use]
     pub fn config(&self) -> CDEConfig {

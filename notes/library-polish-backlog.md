@@ -41,13 +41,12 @@ by consumers public.
 Consumer audit of sparrow's jg-jagua-0.9-compat branch:
 
 - src/eval/sep_evaluator.rs indexes hazards_map after resolving a placed-item key.
-  This couples it to the SlotMap representation; a focused hazard lookup would
-  be cleaner. Keep read access for now, pending a separate API decision.
+  Approved: use the inline CDEngine::hazard lookup instead. See
+  [vanilla sparrow migration](vanilla-sparrow-migration.md) for the pending change.
 - The same evaluator seeds BasicHazardCollector with the moving item's hazard
   to exclude self-collision, then subtracts that entry from the count. This is
   supported by the collector/filter contract, but couples exclusion and results.
-  A separate exclusion filter may be clearer; do not change the hot loop without
-  checking the performance impact.
+  Decision: keep this behavior unchanged for now.
 - quantify/overlap_proxy.rs, quantify/simd/overlap_proxy_simd.rs and
   eval/collision_loss.rs read surrogate poles directly; optimizer/explore.rs and
   optimizer/lbf.rs use convex_hull_area. These are deliberate geometry inputs to
