@@ -5,7 +5,7 @@
   <rect width="680" height="390" rx="12" fill="#f8fafc"></rect>
   <g font-family="sans-serif" fill="#172033">
     <text x="30" y="35" font-size="20" font-weight="600">Fixed rotation · optional Y-axis reflection</text>
-    <text x="30" y="60" font-size="14">allowed_rotations: []    allowed_reflection_axes: [90]</text>
+    <text x="30" y="60" font-size="14">rotation: {"mode":"discrete","angles":[0]} · reflection_axes: [90]</text>
     <path d="M70 325 H620 M340 325 V80" stroke="#64748b" stroke-width="1.5"></path>
     <text x="625" y="330" font-size="15">X</text>
     <text x="332" y="76" font-size="15">Y</text>
