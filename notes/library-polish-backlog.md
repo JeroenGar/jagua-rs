@@ -42,7 +42,7 @@ Consumer audit of sparrow's jg-jagua-0.9-compat branch:
 
 - src/eval/sep_evaluator.rs indexes hazards_map after resolving a placed-item key.
   Approved: use the inline CDEngine::hazard lookup instead. See
-  [vanilla sparrow migration](vanilla-sparrow-migration.md) for the pending change.
+  [release migration notes](../docs/releases/1.0.0.md) for the pending change.
 - The same evaluator seeds BasicHazardCollector with the moving item's hazard
   to exclude self-collision, then subtracts that entry from the count. This is
   supported by the collector/filter contract, but couples exclusion and results.
@@ -103,30 +103,42 @@ the item's minimum quality. Layout::is_collision_free now uses the same filter.
 An integration regression covers containment and boundary crossings, equal/higher/
 lower quality, full-quality items, holes, other items and the container exterior.
 
-Separate follow-up: validate item min_quality during import; out-of-range values
-can currently panic when SVG export indexes the quality-color palette.
+Item::new now rejects out-of-range min_quality values, including during import,
+before they can reach SVG export's quality-color palette.
 
 ### 9. Library entry-point documentation
 
-Add one runnable crate-level example showing construction/import, a collision
-query, placement and snapshot/restore. Explain geometry, CDE, layouts and optional
-problem definitions. Document TransformableFrom buffer compatibility: matching
-vertex counts alone does not make arbitrary reference polygons interchangeable.
-Avoid filler documentation for trivial accessors.
+Implemented: a runnable crate-level example covers import, a collision query,
+placement and snapshot/restore without optional features. The introduction explains
+geometry, CDE, layouts and optional problem definitions. TransformableFrom documents
+buffer compatibility: matching vertex counts alone does not make arbitrary reference
+polygons interchangeable.
 
 ### 10. Release and CI checks
 
-Several workflows only run for PRs targeting main, missing stacked PRs. Markdown
-and SVG changes do not trigger documentation builds. Align/document toolchain
-policy and declare a tested minimum Rust version. Add crate-only feature checks
-to avoid workspace feature unification and package verification before release.
-The package file list already includes the embedded Markdown and SVG.
+Implemented: workflows cover stacked PRs, Markdown/SVG changes trigger docs, and
+CI tests the library in isolation for no features, spp, bpp and both. Rust 1.90 is
+the declared minimum; native development uses 1.98.0, CI also tests stable, and
+the WASM demo explicitly uses nightly. Workspace CI and package verification use
+the tracked lockfile.
 
 ### 11. Naming and release notes
 
-Rename Importer::import_item's internal_id parameter to idx. Before final release,
-replace the temporary migration document with appropriate release notes, per the
-earlier review decision. Keep API documentation about current behavior.
+Implemented: import_item uses idx. Temporary migration documents are consolidated
+into docs/releases/1.0.0.md, including breaking changes and consumer migration.
+
+## Second review follow-up
+
+Implemented the ordinary-input cleanups from Claude Opus 5.5's review:
+- Filter irrelevant hazards before checking containment presence, including Entire nodes.
+- Protect coupled SPP/BPP problem and solution fields with read-only accessors;
+  adapt bundled LBF consumers and record vanilla sparrow migration requirements.
+- Return an error for empty-strip fitting and assert demand/stock preconditions.
+- Document BPP restore key changes and direct configuration requirements.
+
+Extreme-coordinate robustness is intentionally skipped at the user's request.
+Excessive quadtree depth is documented as a configuration limit; no subdivision
+algorithm or numerical-policy changes are included.
 
 ## Outside this polishing slice
 

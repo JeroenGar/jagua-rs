@@ -2,17 +2,18 @@ name: Perf Tracker
 
 on:
   pull_request:
-    branches: [ "main" ]
     paths:
       - '**.rs'
       - '**.toml'
       - '**.yml'
+      - 'Cargo.lock'
   push:
     branches: ["main"]
     paths:
       - '**.rs'
       - '**.toml'
       - '**.yml'
+      - 'Cargo.lock'
   workflow_dispatch:
 
 jobs:
@@ -38,7 +39,7 @@ jobs:
           RUSTFLAGS: '-C target-cpu=native -Awarnings'
         run: |
           export RUSTFLAGS=$RUSTFLAGS
-          cargo bench --bench ci_bench -- --output-format bencher | tee output.txt
+          cargo bench --locked --bench ci_bench -- --output-format bencher | tee output.txt
 
       - name: Summarize benchmark result
         if: github.event_name != 'push' || github.ref != 'refs/heads/main'
