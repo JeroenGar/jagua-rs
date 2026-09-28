@@ -187,13 +187,6 @@ pub struct ContainerMismatch;
 
 /// Immutable and compact representation of a [`Layout`].
 /// Can be used to restore a [`Layout`] back to a previous state.
-/// Captured placements cannot be edited independently of collision state.
-/// ```compile_fail
-/// # use jagua_rs::entities::LayoutSnapshot;
-/// fn edit(snapshot: &mut LayoutSnapshot) {
-///     snapshot.placed_items().clear();
-/// }
-/// ```
 #[derive(Clone, Debug)]
 pub struct LayoutSnapshot {
     /// A copy of the container used in the layout

@@ -425,13 +425,6 @@ pub struct CDEConfig {
 }
 
 /// Snapshot of the state of [`CDEngine`]. Can be used to restore to a previous state.
-/// Created by [`CDEngine::save`]; its captured hazards cannot be edited.
-/// ```compile_fail
-/// # use jagua_rs::collision_detection::CDESnapshot;
-/// fn edit(snapshot: &mut CDESnapshot) {
-///     snapshot.dynamic_hazards.clear();
-/// }
-/// ```
 #[derive(Clone, Debug)]
 pub struct CDESnapshot {
     pub(crate) dynamic_hazards: Vec<Hazard>,
