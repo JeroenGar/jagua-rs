@@ -15,6 +15,7 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::util::FPA;
+use crate::util::assertions;
 use anyhow::{Result, bail};
 
 /// A Simple Polygon is a polygon that does not intersect itself and contains no holes.
@@ -273,10 +274,7 @@ impl Transformable for SPolygon {
         if let Some(surrogate) = surrogate.as_mut() {
             surrogate.transform(t);
             if reflected {
-                surrogate.convex_hull_indices.reverse();
-                for i in &mut surrogate.convex_hull_indices {
-                    *i = points.len() - 1 - *i;
-                }
+                surrogate.reverse_vertex_order(points.len());
             }
         }
 
@@ -315,17 +313,19 @@ impl TransformableFrom for SPolygon {
 
         //transform the surrogate
         if let Some(surrogate) = surrogate.as_mut() {
-            surrogate.transform_from(reference.surrogate(), t);
-            let indices = &mut surrogate.convex_hull_indices;
-            let ref_indices = &reference.surrogate().convex_hull_indices;
-            assert_eq!(indices.len(), ref_indices.len());
-            if reflected {
-                for (i, &ref_i) in indices.iter_mut().zip(ref_indices.iter().rev()) {
-                    *i = points.len() - 1 - ref_i;
-                }
-            } else {
-                indices.copy_from_slice(ref_indices);
+            let ref_surrogate = reference.surrogate();
+            surrogate.transform_from(ref_surrogate, t);
+            // The destination was cloned from `reference`, so its hull indices only
+            // need remapping when the vertex storage orientation changes.
+            if surrogate.hull_reversed() != (ref_surrogate.hull_reversed() ^ reflected) {
+                surrogate.reverse_vertex_order(points.len());
             }
+            debug_assert!(assertions::hull_indices_match_reference(
+                surrogate,
+                ref_surrogate,
+                reflected,
+                points.len()
+            ));
         }
         //regenerate bounding box
         *bbox = SPolygon::generate_bounding_box(points);

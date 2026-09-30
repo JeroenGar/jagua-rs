@@ -6,6 +6,7 @@ use crate::collision_detection::quadtree::QTHazard;
 use crate::collision_detection::quadtree::QTNode;
 use crate::entities::Layout;
 use crate::entities::LayoutSnapshot;
+use crate::geometry::fail_fast::SPSurrogate;
 use crate::geometry::primitives::Rect;
 use itertools::Itertools;
 use log::error;
@@ -258,4 +259,25 @@ pub fn print_layout(layout: &Layout) {
             pi.item.idx, transformation_str
         );
     }
+}
+
+/// Checks a transformed buffer's hull indices against those recomputed from its reference.
+#[must_use]
+pub fn hull_indices_match_reference(
+    surrogate: &SPSurrogate,
+    reference: &SPSurrogate,
+    reflected: bool,
+    n_vertices: usize,
+) -> bool {
+    let ref_indices = &reference.convex_hull_indices;
+    let expected: Vec<usize> = if reflected {
+        ref_indices
+            .iter()
+            .rev()
+            .map(|&i| n_vertices - 1 - i)
+            .collect()
+    } else {
+        ref_indices.clone()
+    };
+    surrogate.convex_hull_indices == expected
 }
