@@ -548,7 +548,7 @@ mod io {
             assert!(a.distance_to(b) < 0.0001);
         }
         let svg =
-            layout_to_svg(problem.layout(), SvgDrawOptions::default(), "reflection").to_string();
+            layout_to_svg(problem.layout(), 0, SvgDrawOptions::default(), "reflection").to_string();
         assert!(svg.contains(", scale(1 -1)"));
         assert!(svg.contains("rotate("));
     }
