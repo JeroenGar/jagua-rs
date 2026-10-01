@@ -1,5 +1,5 @@
 use crate::Instant;
-use crate::entities::{Instance, Layout, PItemKey};
+use crate::entities::{Layout, PItemKey};
 use crate::geometry::DTransformation;
 use crate::probs::spp::entities::strip::Strip;
 use crate::probs::spp::entities::{SPInstance, SPSolution};
@@ -59,8 +59,8 @@ impl SPProblem {
 
     /// Places an item according to the given `SPPlacement` in the problem.
     pub fn place_item(&mut self, placement: SPPlacement) -> PItemKey {
-        self.register_included_item(placement.item_id);
-        let item = self.instance.item(placement.item_id);
+        self.register_included_item(placement.item_idx);
+        let item = self.instance.item(placement.item_idx);
 
         self.layout.place_item(item, placement.d_transf)
     }
@@ -68,10 +68,10 @@ impl SPProblem {
     /// Removes a placed item from the strip. Returns the placement of the item.
     pub fn remove_item(&mut self, pkey: PItemKey) -> SPPlacement {
         let pi = self.layout.remove_item(pkey);
-        self.deregister_included_item(pi.item_id);
+        self.deregister_included_item(pi.item.idx);
 
         SPPlacement {
-            item_id: pi.item_id,
+            item_idx: pi.item.idx,
             d_transf: pi.d_transf,
         }
     }
@@ -92,41 +92,38 @@ impl SPProblem {
 
     /// Restores the state of the problem to the given [`SPSolution`].
     pub fn restore(&mut self, solution: &SPSolution) {
-        if self.strip == solution.strip {
-            // the strip is the same, restore the layout
-            self.layout.restore(&solution.layout_snapshot);
-        } else {
-            // the strip has changed, rebuild the layout
+        // A saved solution may use a different strip width.
+        if self.layout.restore(&solution.layout_snapshot).is_err() {
             self.layout = Layout::from_snapshot(&solution.layout_snapshot);
-            self.strip = solution.strip;
         }
+        self.strip = solution.strip;
 
         //Restore the item demands
         {
             self.item_demand_qtys
                 .iter_mut()
                 .enumerate()
-                .for_each(|(id, qty)| *qty = self.instance.item_qty(id));
+                .for_each(|(idx, qty)| *qty = self.instance.item_qty(idx));
 
             self.layout
                 .placed_items
                 .iter()
-                .for_each(|(_, pi)| self.item_demand_qtys[pi.item_id] -= 1);
+                .for_each(|(_, pi)| self.item_demand_qtys[pi.item.idx] -= 1);
         }
         debug_assert!(problem_matches_solution(self, solution));
     }
 
-    fn register_included_item(&mut self, item_id: usize) {
-        self.item_demand_qtys[item_id] -= 1;
+    fn register_included_item(&mut self, item_idx: usize) {
+        self.item_demand_qtys[item_idx] -= 1;
     }
 
-    fn deregister_included_item(&mut self, item_id: usize) {
-        self.item_demand_qtys[item_id] += 1;
+    fn deregister_included_item(&mut self, item_idx: usize) {
+        self.item_demand_qtys[item_idx] += 1;
     }
 
     #[must_use]
     pub fn density(&self) -> f32 {
-        self.layout.density(&self.instance)
+        self.layout.density()
     }
 
     #[must_use]
@@ -143,6 +140,6 @@ impl SPProblem {
 /// Represents a placement of an item in the strip packing problem.
 #[derive(Debug, Clone, Copy)]
 pub struct SPPlacement {
-    pub item_id: usize,
+    pub item_idx: usize,
     pub d_transf: DTransformation,
 }

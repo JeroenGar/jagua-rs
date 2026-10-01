@@ -16,8 +16,8 @@ new_key_type! {
 /// Represents an [`Item`] that has been placed in a [`Layout`]
 #[derive(Clone, Debug)]
 pub struct PlacedItem {
-    /// ID of the type of `Item` that was placed
-    pub item_id: usize,
+    /// Shared immutable item definition, retained by layouts and snapshots.
+    pub item: Arc<Item>,
     /// The transformation that was applied to the `Item` before it was placed
     pub d_transf: DTransformation,
     /// The shape of the `Item` after it has been transformed and placed in a `Layout`
@@ -26,12 +26,12 @@ pub struct PlacedItem {
 
 impl PlacedItem {
     #[must_use]
-    pub fn new(item: &Item, d_transf: DTransformation) -> Self {
+    pub fn new(item: &Arc<Item>, d_transf: DTransformation) -> Self {
         let transf = d_transf.compose();
         let shape = item.shape_cd.transform_clone(&transf);
 
         PlacedItem {
-            item_id: item.id,
+            item: Arc::clone(item),
             d_transf,
             shape: Arc::new(shape),
         }

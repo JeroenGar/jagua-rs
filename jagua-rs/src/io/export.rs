@@ -1,29 +1,31 @@
-use crate::entities::{Instance, LayoutSnapshot};
+use crate::entities::LayoutSnapshot;
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtLayout, ExtPlacedItem};
 
 /// Exports a layout to an external representation.
-pub fn export_layout_snapshot(layout: &LayoutSnapshot, instance: &impl Instance) -> ExtLayout {
+/// The caller supplies the external bin/sheet ID; geometry carries no identity.
+#[must_use]
+pub fn export_layout_snapshot(layout: &LayoutSnapshot, container_id: u64) -> ExtLayout {
     let ext_placed_items = layout
         .placed_items
         .values()
         .map(|pi| {
-            let item = instance.item(pi.item_id);
+            let item = &pi.item;
 
             let abs_transf =
                 int_to_ext_transformation(&pi.d_transf, &item.shape_orig.pre_transform);
 
             ExtPlacedItem {
-                item_id: pi.item_id as u64,
+                item_id: item.external_id,
                 transformation: abs_transf.into(),
             }
         })
         .collect();
 
     ExtLayout {
-        container_id: layout.container.id as u64,
+        container_id,
         placed_items: ext_placed_items,
-        density: layout.density(instance),
+        density: layout.density(),
     }
 }
 

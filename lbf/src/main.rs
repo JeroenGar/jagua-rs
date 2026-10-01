@@ -95,7 +95,7 @@ fn main_spp(
     {
         let output = SPOutput {
             instance: ext_instance,
-            solution: spp::io::export(&instance, &sol, *EPOCH),
+            solution: spp::io::export(&sol, *EPOCH),
             config,
         };
 
@@ -106,7 +106,7 @@ fn main_spp(
 
     {
         let svg_path = output_folder.join(format!("sol_{input_stem}.svg"));
-        let svg = s_layout_to_svg(&sol.layout_snapshot, &instance, config.svg_draw_options, "");
+        let svg = s_layout_to_svg(&sol.layout_snapshot, config.svg_draw_options, "");
 
         io::write_svg(&svg, Path::new(&svg_path))?;
     }
@@ -148,7 +148,7 @@ fn main_bpp(
     {
         for (i, s_layout) in sol.layout_snapshots.values().enumerate() {
             let svg_path = output_folder.join(format!("sol_{input_stem}_{i}.svg"));
-            let svg = s_layout_to_svg(s_layout, &instance, config.svg_draw_options, "");
+            let svg = s_layout_to_svg(s_layout, config.svg_draw_options, "");
 
             io::write_svg(&svg, Path::new(&svg_path))?;
         }

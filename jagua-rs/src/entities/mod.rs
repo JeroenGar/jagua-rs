@@ -1,11 +1,7 @@
 mod container;
-mod instance;
 mod item;
 mod layout;
 mod placed_item;
-
-#[doc(inline)]
-pub use instance::Instance;
 
 #[doc(inline)]
 pub use item::Item;
@@ -13,6 +9,7 @@ pub use item::Item;
 #[doc(inline)]
 pub use layout::Layout;
 
+pub use layout::ContainerMismatch;
 #[doc(inline)]
 pub use layout::LayoutSnapshot;
 

@@ -45,9 +45,7 @@ impl Strip {
 
 impl From<Strip> for Container {
     fn from(s: Strip) -> Container {
-        let id = s.width.to_bits() as usize;
         Container::new(
-            id,
             OriginalShape {
                 shape: SPolygon::from(Rect::try_new(0.0, 0.0, s.width, s.fixed_height).unwrap()),
                 pre_transform: DTransformation::empty(),

@@ -71,7 +71,7 @@ where
 {
     fn from((pk, pi): (PItemKey, T)) -> Self {
         HazardEntity::PlacedItem {
-            id: pi.borrow().item_id,
+            id: pi.borrow().item.idx,
             dt: pi.borrow().d_transf,
             pk,
         }
