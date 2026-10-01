@@ -46,9 +46,10 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
         serde_json::to_value(&external.layout.placed_items)?
     );
     let svg =
-        s_layout_to_svg(solution.layout_snapshot(), SvgDrawOptions::default(), "").to_string();
-    assert!(svg.contains("item_42"));
-    assert!(svg.contains(&format!("item_{}", u64::MAX)));
+        s_layout_to_svg(solution.layout_snapshot(), 7, SvgDrawOptions::default(), "").to_string();
+    assert!(svg.contains("\"container_7\""));
+    assert!(svg.contains("\"item_7_42\"") && svg.contains("\"#item_7_42\""));
+    assert!(svg.contains(&format!("item_7_{}", u64::MAX)));
 
     external.layout.placed_items[0].item_id = 4;
     assert!(import_solution(&instance, &external).is_err());
@@ -65,9 +66,9 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
     assert_eq!(restored.items().count(), 2);
     assert_eq!(restored.density(), output.density);
     assert!(
-        s_layout_to_svg(&restored.save(), SvgDrawOptions::default(), "")
+        s_layout_to_svg(&restored.save(), 7, SvgDrawOptions::default(), "")
             .to_string()
-            .contains("item_42")
+            .contains("item_7_42")
     );
     Ok(())
 }

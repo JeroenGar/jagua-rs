@@ -13,20 +13,28 @@ use svg::Document;
 use svg::node::element::{Definitions, Group, Text, Title, Use};
 
 /// Render a snapshot using its shared item definitions.
+/// See [`layout_to_svg_group`] for `container_id`.
 #[must_use]
 pub fn s_layout_to_svg(
     s_layout: &LayoutSnapshot,
+    container_id: u64,
     options: SvgDrawOptions,
     title: &str,
 ) -> Document {
     let layout = Layout::from_snapshot(s_layout);
-    layout_to_svg(&layout, options, title)
+    layout_to_svg(&layout, container_id, options, title)
 }
 
 /// Render a layout using its shared item definitions.
+/// See [`layout_to_svg_group`] for `container_id`.
 #[must_use]
-pub fn layout_to_svg(layout: &Layout, options: SvgDrawOptions, title: &str) -> Document {
-    let (group, bbox) = layout_to_svg_group(layout, options, title);
+pub fn layout_to_svg(
+    layout: &Layout,
+    container_id: u64,
+    options: SvgDrawOptions,
+    title: &str,
+) -> Document {
+    let (group, bbox) = layout_to_svg_group(layout, container_id, options, title);
 
     let vbox = bbox.scale(1.1);
     let vbox_svg = format!(
@@ -42,7 +50,17 @@ pub fn layout_to_svg(layout: &Layout, options: SvgDrawOptions, title: &str) -> D
 
 #[allow(clippy::too_many_lines)]
 /// Render only the item definitions used by this layout.
-pub fn layout_to_svg_group(layout: &Layout, options: SvgDrawOptions, title: &str) -> (Group, Rect) {
+///
+/// `container_id` is the caller's external bin or sheet ID, as in
+/// [`export_layout_snapshot`](crate::io::export::export_layout_snapshot). It names the
+/// `container_{id}` group and prefixes item definition IDs, so several layouts can share
+/// one document.
+pub fn layout_to_svg_group(
+    layout: &Layout,
+    container_id: u64,
+    options: SvgDrawOptions,
+    title: &str,
+) -> (Group, Rect) {
     let container = &layout.container;
 
     let bbox = container
@@ -96,7 +114,7 @@ pub fn layout_to_svg_group(layout: &Layout, options: SvgDrawOptions, title: &str
 
     //draw container
     let container_group = {
-        let container_group = Group::new().set("id", "container");
+        let container_group = Group::new().set("id", format!("container_{container_id}"));
         let bbox = container.outer_orig.bbox();
         let title = Title::new(format!(
             "container, bbox: [x_min: {:.3}, y_min: {:.3}, x_max: {:.3}, y_max: {:.3}]",
@@ -164,22 +182,24 @@ pub fn layout_to_svg_group(layout: &Layout, options: SvgDrawOptions, title: &str
                 Some(q) => svg_util::blend_colors(theme.item_fill, theme.qz_fill[q]),
             };
             let external_id = item.external_id;
-            item_defs = item_defs.add(Group::new().set("id", format!("item_{external_id}")).add(
-                svg_util::data_to_path(
-                    svg_util::original_shape_data(
-                        &item.shape_orig,
-                        &item.shape_cd,
-                        options.draw_cd_shapes,
-                    ),
-                    &[
-                        ("fill", &*format!("{color}")),
-                        ("stroke-width", &*format!("{stroke_width}")),
-                        ("fill-rule", "nonzero"),
-                        ("stroke", "black"),
-                        ("fill-opacity", "0.5"),
-                    ],
-                ),
-            ));
+            item_defs = item_defs.add(
+                Group::new()
+                    .set("id", format!("item_{container_id}_{external_id}"))
+                    .add(svg_util::data_to_path(
+                        svg_util::original_shape_data(
+                            &item.shape_orig,
+                            &item.shape_cd,
+                            options.draw_cd_shapes,
+                        ),
+                        &[
+                            ("fill", &*format!("{color}")),
+                            ("stroke-width", &*format!("{stroke_width}")),
+                            ("fill-rule", "nonzero"),
+                            ("stroke", "black"),
+                            ("fill-opacity", "0.5"),
+                        ],
+                    )),
+            );
 
             let int_transf = if options.draw_cd_shapes {
                 Transformation::empty()
@@ -191,7 +211,7 @@ pub fn layout_to_svg_group(layout: &Layout, options: SvgDrawOptions, title: &str
 
             if options.surrogate {
                 let mut surrogate_group =
-                    Group::new().set("id", format!("surrogate_{external_id}"));
+                    Group::new().set("id", format!("surrogate_{container_id}_{external_id}"));
                 let poi_style = [
                     ("fill", "black"),
                     ("fill-opacity", "0.1"),
@@ -263,7 +283,7 @@ pub fn layout_to_svg_group(layout: &Layout, options: SvgDrawOptions, title: &str
                         ));
                     }
                 }
-                let group = group.set("id", format!("cd_shape_{external_id}"));
+                let group = group.set("id", format!("cd_shape_{container_id}_{external_id}"));
                 item_defs = item_defs.add(group);
             }
         }
@@ -282,7 +302,7 @@ pub fn layout_to_svg_group(layout: &Layout, options: SvgDrawOptions, title: &str
             let title = Title::new(format!("item, id: {external_id}, transf: [{dtransf}]"));
             let pi_ref = Use::new()
                 .set("transform", transform_to_svg(dtransf))
-                .set("href", format!("#item_{external_id}"))
+                .set("href", format!("#item_{container_id}_{external_id}"))
                 .add(title);
 
             items_group = items_group.add(pi_ref);
@@ -290,14 +310,14 @@ pub fn layout_to_svg_group(layout: &Layout, options: SvgDrawOptions, title: &str
             if options.surrogate {
                 let pi_surr_ref = Use::new()
                     .set("transform", transform_to_svg(dtransf))
-                    .set("href", format!("#surrogate_{external_id}"));
+                    .set("href", format!("#surrogate_{container_id}_{external_id}"));
 
                 surrogate_group = surrogate_group.add(pi_surr_ref);
             }
             if options.highlight_cd_shapes {
                 let pi_cd_ref = Use::new()
                     .set("transform", transform_to_svg(dtransf))
-                    .set("href", format!("#cd_shape_{external_id}"));
+                    .set("href", format!("#cd_shape_{container_id}_{external_id}"));
                 highlight_cd_shapes_group = highlight_cd_shapes_group.add(pi_cd_ref);
             }
         }
