@@ -37,6 +37,8 @@ jobs:
         run: cargo build --locked --workspace --all-targets --all-features
       - name: test
         run: cargo test --locked --workspace --all-features
+      - name: test (release)
+        run: cargo test --locked --workspace --all-features --release
       - name: Verify crate package
         run: cargo package --locked -p jagua-rs
       - name: run README example
