@@ -1,0 +1,23 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 390" role="img" aria-labelledby="reflection-title reflection-description">
+  <title id="reflection-title">Fixed rotation with optional Y-axis reflection</title>
+  <desc id="reflection-description">The asymmetric input polygon is blue, to the right of the Y-axis. Its allowed mirror is orange, to the left. X changes sign, Y stays the same. Both upward grain arrows remain upward.</desc>
+  <rect width="680" height="390" rx="12" fill="#f8fafc"></rect>
+  <g font-family="sans-serif" fill="#172033">
+    <text x="30" y="35" font-size="20" font-weight="600">Fixed rotation · optional Y-axis reflection</text>
+    <text x="30" y="60" font-size="14">rotation: {"mode":"discrete","angles":[0]} · reflection_axes: [90]</text>
+    <path d="M70 325 H620 M340 325 V80" stroke="#64748b" stroke-width="1.5"></path>
+    <text x="625" y="330" font-size="15">X</text>
+    <text x="332" y="76" font-size="15">Y</text>
+    <text x="345" y="344" font-size="13">0</text>
+    <g transform="translate(340 325) scale(25 -25)" stroke-width="0.08" stroke-linejoin="round">
+      <path d="M2 3 H8 V5 H5 V9 H2 Z" fill="#dbeafe" stroke="#2563eb"></path>
+      <path d="M-2 3 H-8 V5 H-5 V9 H-2 Z" fill="#ffedd5" stroke="#c2410c"></path>
+      <path d="M3.5 4 V7 M3.15 6.6 L3.5 7 L3.85 6.6" fill="none" stroke="#2563eb"></path>
+      <path d="M-3.5 4 V7 M-3.85 6.6 L-3.5 7 L-3.15 6.6" fill="none" stroke="#c2410c"></path>
+    </g>
+    <text x="105" y="285" font-size="15" fill="#9a3412">Reflected: (-x, y)</text>
+    <text x="405" y="285" font-size="15" fill="#1d4ed8">Original: (x, y)</text>
+    <text x="30" y="370" font-size="14">Same input coordinates; no translation shown. Upward grain stays upward.</text>
+  </g>
+</svg>

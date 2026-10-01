@@ -1,12 +1,12 @@
 use crate::collision_detection::CDEConfig;
 use crate::entities::Item;
 use crate::entities::{Container, InferiorQualityZone, N_QUALITIES};
-use crate::geometry::OriginalShape;
 use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::primitives::{Point, Rect, SPolygon};
 use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
+use crate::geometry::{AllowedOrientations, OriginalShape};
 use crate::geometry::{DTransformation, Transformation};
-use crate::io::ext_repr::{ExtContainer, ExtItem, ExtSPolygon, ExtShape};
+use crate::io::ext_repr::{ExtContainer, ExtItem, ExtRotation, ExtSPolygon, ExtShape};
 use anyhow::{Result, bail, ensure};
 use float_cmp::approx_eq;
 use itertools::Itertools;
@@ -91,16 +91,9 @@ impl Importer {
 
         let base_quality = ext_item.min_quality;
 
-        let allowed_orientations = match ext_item.allowed_orientations.as_ref() {
-            Some(a_o) => {
-                if a_o.is_empty() || (a_o.len() == 1 && a_o[0] == 0.0) {
-                    RotationRange::None
-                } else {
-                    RotationRange::Discrete(a_o.iter().map(|angle| angle.to_radians()).collect())
-                }
-            }
-            None => RotationRange::Continuous,
-        };
+        let rotations = import_rotation(&ext_item.orientation.rotation)?;
+        let axes = normalized_radians(&ext_item.orientation.reflection_axes, 180.0)?;
+        let allowed_orientations = AllowedOrientations::new(rotations, axes)?;
 
         Item::new(
             internal_id,
@@ -204,6 +197,69 @@ impl Importer {
 
         Container::new(original_outer, quality_zones, self.cde_config)
     }
+}
+
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+fn import_rotation(rotation: &ExtRotation) -> Result<RotationRange> {
+    const MAX_ANGLES: usize = 65_536;
+    let mut angles = match rotation {
+        ExtRotation::Continuous {} => return Ok(RotationRange::Continuous),
+        ExtRotation::Discrete { angles } => {
+            ensure!(
+                !angles.is_empty() && angles.len() <= MAX_ANGLES,
+                "discrete rotation requires 1..=65536 angles"
+            );
+            ensure!(
+                angles.iter().all(|angle| angle.is_finite()),
+                "rotation angles must be finite"
+            );
+            angles
+                .iter()
+                .map(|angle| angle.rem_euclid(360.0) % 360.0)
+                .collect::<Vec<_>>()
+        }
+        ExtRotation::Stepped { step } => {
+            ensure!(
+                step.is_finite() && *step > 0.0 && *step <= 360.0,
+                "rotation step must be finite and in (0, 360]"
+            );
+            let step = f64::from(*step);
+            let count = (360.0 / step).round();
+            ensure!(
+                count <= 65_536.0
+                    && (count * step - 360.0).abs() <= 360.0 * f64::from(f32::EPSILON),
+                "rotation step must divide 360 into at most 65536 angles"
+            );
+            (0..count as u32)
+                .map(|i| (f64::from(i) * 360.0 / count) as f32)
+                .collect()
+        }
+    };
+    angles.sort_by(f32::total_cmp);
+    angles.dedup();
+    if angles == [0.0] {
+        Ok(RotationRange::None)
+    } else {
+        Ok(RotationRange::Discrete(
+            angles.into_iter().map(f32::to_radians).collect(),
+        ))
+    }
+}
+
+// Normalize in the input unit before conversion so equivalent degree values stay identical.
+fn normalized_radians(angles: &[f32], period: f32) -> Result<Vec<f32>> {
+    ensure!(
+        angles.len() <= AllowedOrientations::MAX_ANGLES,
+        "orientation angle list exceeds the count limit"
+    );
+    ensure!(
+        angles.iter().all(|a| a.is_finite()),
+        "orientation angles must be finite"
+    );
+    Ok(angles
+        .iter()
+        .map(|a| (a.rem_euclid(period) % period).to_radians())
+        .collect())
 }
 
 pub fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {

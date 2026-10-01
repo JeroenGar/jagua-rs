@@ -20,7 +20,7 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
     };
     let item_json = json!({
         "id": 42, "demand": 2,
-        "allowed_orientations": [0],
+        "orientation": {"rotation": {"mode": "discrete", "angles": [0]}},
         "shape": {"type": "rectangle", "data": {
             "x_min": 0, "y_min": 0, "width": 2, "height": 2
         }}
@@ -98,30 +98,5 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
     ids.sort_unstable();
     assert_eq!(ids, vec![70, 900]);
 
-    let input = serde_json::from_value(json!({
-        "name": "strip restore", "items": [item_json],
-        "strips": {"height": 10, "max_width": 10}
-    }))?;
-    let instance = jagua_rs::probs::mspp::io::import_instance(&importer, &input)?;
-    let strip = instance.base_strip;
-    let mut problem = jagua_rs::probs::mspp::entities::MSPProblem::new(instance);
-    let mut keys = vec![];
-    for _ in 0..2 {
-        let lk = problem.add_layout_from_strip(strip)?;
-        problem.place_item(jagua_rs::probs::mspp::entities::MSPPlacement {
-            lk,
-            item_idx: 0,
-            d_transf: DTransformation::new(0.0, (5.0, 5.0)),
-        });
-        keys.push(lk);
-    }
-    let saved = problem.save();
-    assert!(!problem.restore(&saved));
-    assert_eq!(problem.item_demand_qtys, vec![0]);
-    problem.remove_layout(keys[0]);
-    assert!(problem.restore(&saved));
-    assert_eq!(problem.item_demand_qtys, vec![0]);
-    assert_eq!(problem.layouts.len(), 2);
-    assert!(problem.layouts.values().all(Layout::is_feasible));
     Ok(())
 }

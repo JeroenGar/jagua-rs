@@ -1,3 +1,5 @@
+#![doc = concat!(include_str!("reflections.md"), "\n", include_str!("reflection.svg"))]
+
 /// External (serializable) representations of the entities within the library.
 pub mod ext_repr;
 

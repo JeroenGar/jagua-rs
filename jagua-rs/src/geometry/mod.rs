@@ -1,7 +1,11 @@
 /// Set of functions to compute and generate [convex hulls](https://en.wikipedia.org/wiki/Convex_hull)
 pub mod convex_hull;
 
+mod allowed_orientations;
 mod d_transformation;
+
+#[doc(inline)]
+pub use allowed_orientations::AllowedOrientations;
 
 /// The *fail-fast surrogate* and all logic pertaining to its generation
 pub mod fail_fast;

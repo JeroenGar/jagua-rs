@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
-use crate::geometry::OriginalShape;
 use crate::geometry::fail_fast::SPSurrogateConfig;
-use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::primitives::SPolygon;
+use crate::geometry::{AllowedOrientations, OriginalShape};
 
 use anyhow::Result;
 
@@ -18,8 +17,8 @@ pub struct Item {
     pub shape_orig: Arc<OriginalShape>,
     /// Contour of the item to be used for collision detection
     pub shape_cd: Arc<SPolygon>,
-    /// Allowed rotations in which the item can be placed
-    pub allowed_rotation: RotationRange,
+    /// Allowed rotations and reflections in which the item can be placed
+    pub allowed_orientations: AllowedOrientations,
     /// The minimum quality the item should be produced out of, if `None` the item requires full quality
     pub min_quality: Option<usize>,
     /// Configuration for the surrogate generation
@@ -31,7 +30,7 @@ impl Item {
         idx: usize,
         external_id: u64,
         original_shape: OriginalShape,
-        allowed_rotation: RotationRange,
+        allowed_orientations: AllowedOrientations,
         min_quality: Option<usize>,
         surrogate_config: SPSurrogateConfig,
     ) -> Result<Item> {
@@ -46,7 +45,7 @@ impl Item {
             external_id,
             shape_orig,
             shape_cd: shape_int,
-            allowed_rotation,
+            allowed_orientations,
             min_quality,
             surrogate_config,
         })

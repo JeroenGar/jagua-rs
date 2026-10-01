@@ -6,6 +6,8 @@
 
 `jagua-rs` is designed to be used as a backend by optimization algorithms solving 2D nesting problems.
 
+Upgrading to 1.0? See the [migration guide](https://github.com/JeroenGar/jagua-rs/blob/main/notes/v1.0-migration.md) for input and Rust API changes.
+
 This library is the implementation of the paper: ["_Decoupling Geometry from Optimization in 2D Irregular Cutting and Packing Problems: an Open-Source Collision Detection Engine_"](https://doi.org/10.1287/ijoc.2024.1025) published in _INFORMS Journal on Computing_.
 The author accepted manuscript of this paper is [freely available on arXiv](https://arxiv.org/abs/2508.08341).
 
@@ -62,13 +64,13 @@ irregular C&P problems and boasts a **powerful Collision Detection Engine (CDE)*
 - **Currently supports:**
   - [x] Irregularly shaped items & containers
   - [x] Continuous rotation & translation
+  - [x] Optional reflections across specified local axes ([input format and native API](jagua-rs/src/io/reflections.md), [visual example](jagua-rs/src/io/reflection.svg))
   - [x] Holes and inferior quality zones in containers
   - [x] Minimum separation distance between an item and any hazard
   - [x] WebAssembly target for browser-based applications (see [WASM Demo](lbf/wasm-demo/README.md))
   - [x] Modelled problem variants:
     - [x] Bin Packing Problem (with feature `bpp`)
     - [x] Strip Packing Problem (with feature `spp`)
-    - [x] Multi Strip Packing Problem (with feature `mspp`)
     - [ ] Knapsack Problem (todo)
 
 

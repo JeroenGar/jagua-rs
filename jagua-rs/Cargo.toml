@@ -1,6 +1,6 @@
 [package]
 name = "jagua-rs"
-version = "0.8.3"
+version = "1.0.0"
 edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/JeroenGar/jagua-rs"
@@ -33,8 +33,6 @@ web-time = { workspace = true }
 spp = []
 ## Enables support for the Bin Packing Problem
 bpp = []
-## Enables support for the Multi Strip Packing Problem
-mspp = []
 
 [package.metadata.docs.rs]
 all-features = true

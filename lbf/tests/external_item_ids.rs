@@ -9,7 +9,8 @@ use serde_json::json;
 fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
     let item = |id, demand| {
         json!({
-            "id": id, "demand": demand, "allowed_orientations": [0],
+            "id": id, "demand": demand,
+            "orientation": {"rotation": {"mode": "discrete", "angles": [0]}},
             "shape": {"type": "rectangle", "data": {
                 "x_min": 0, "y_min": 0, "width": 2, "height": 2
             }}

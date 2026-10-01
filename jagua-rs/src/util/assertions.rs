@@ -268,7 +268,10 @@ pub fn print_layout(layout: &Layout) {
         let transformation_str = {
             let t_decomp = &pi.d_transf;
             let (tr, (tx, ty)) = (t_decomp.rotation(), t_decomp.translation());
-            format!("&DTransformation::new({tr:.6},({tx:.6},{ty:.6}))")
+            format!(
+                "&DTransformation::new({tr:.6},({tx:.6},{ty:.6})).with_reflection({})",
+                t_decomp.reflected
+            )
         };
 
         println!(

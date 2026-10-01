@@ -4,6 +4,7 @@
     {
       "id": 0,
       "demand": 6,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_0.dxf",
       "min_quality": 1,
       "zones": [],
@@ -36,6 +37,7 @@
     {
       "id": 1,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_1.dxf",
       "min_quality": 1,
       "zones": [],
@@ -68,6 +70,7 @@
     {
       "id": 2,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_2.dxf",
       "min_quality": 1,
       "zones": [],
@@ -132,6 +135,7 @@
     {
       "id": 3,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_3.dxf",
       "zones": [],
       "shape": {
@@ -187,6 +191,7 @@
     {
       "id": 4,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_4.dxf",
       "zones": [],
       "shape": {
@@ -238,6 +243,7 @@
     {
       "id": 5,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_5.dxf",
       "zones": [],
       "shape": {
@@ -293,6 +299,7 @@
     {
       "id": 6,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_6.dxf",
       "zones": [],
       "shape": {
@@ -344,6 +351,7 @@
     {
       "id": 7,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_7.dxf",
       "zones": [],
       "shape": {
@@ -419,6 +427,7 @@
     {
       "id": 8,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_8.dxf",
       "zones": [],
       "shape": {
@@ -466,6 +475,7 @@
     {
       "id": 9,
       "demand": 2,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_9.dxf",
       "zones": [],
       "shape": {
@@ -497,6 +507,7 @@
     {
       "id": 10,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_10.dxf",
       "zones": [],
       "shape": {
@@ -528,6 +539,7 @@
     {
       "id": 11,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_11.dxf",
       "zones": [],
       "shape": {
@@ -571,6 +583,7 @@
     {
       "id": 12,
       "demand": 6,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_12.dxf",
       "min_quality": 1,
       "zones": [],
@@ -603,6 +616,7 @@
     {
       "id": 13,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_13.dxf",
       "zones": [],
       "shape": {
@@ -666,6 +680,7 @@
     {
       "id": 14,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_14.dxf",
       "zones": [],
       "shape": {
@@ -705,6 +720,7 @@
     {
       "id": 15,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_15.dxf",
       "zones": [],
       "shape": {
@@ -780,6 +796,7 @@
     {
       "id": 16,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_16.dxf",
       "zones": [],
       "shape": {
@@ -839,6 +856,7 @@
     {
       "id": 17,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_17.dxf",
       "zones": [],
       "shape": {
@@ -878,6 +896,7 @@
     {
       "id": 18,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_18.dxf",
       "min_quality": 1,
       "zones": [],
@@ -942,6 +961,7 @@
     {
       "id": 19,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_19.dxf",
       "zones": [],
       "shape": {
@@ -973,6 +993,7 @@
     {
       "id": 20,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_20.dxf",
       "zones": [],
       "shape": {
@@ -1024,6 +1045,7 @@
     {
       "id": 21,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_21.dxf",
       "zones": [],
       "shape": {
@@ -1055,6 +1077,7 @@
     {
       "id": 22,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_22.dxf",
       "zones": [],
       "shape": {
@@ -1106,6 +1129,7 @@
     {
       "id": 23,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_23.dxf",
       "zones": [],
       "shape": {
@@ -1137,6 +1161,7 @@
     {
       "id": 24,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_24.dxf",
       "min_quality": 1,
       "zones": [],
@@ -1169,6 +1194,7 @@
     {
       "id": 25,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_25.dxf",
       "zones": [],
       "shape": {
@@ -1212,6 +1238,7 @@
     {
       "id": 26,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_26.dxf",
       "zones": [],
       "shape": {
@@ -1243,6 +1270,7 @@
     {
       "id": 27,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_27.dxf",
       "zones": [],
       "shape": {
@@ -1294,6 +1322,7 @@
     {
       "id": 28,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_28.dxf",
       "zones": [],
       "shape": {
@@ -1345,6 +1374,7 @@
     {
       "id": 29,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_29.dxf",
       "zones": [],
       "shape": {
@@ -1376,6 +1406,7 @@
     {
       "id": 30,
       "demand": 2,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_30.dxf",
       "min_quality": 1,
       "zones": [],
@@ -1408,6 +1439,7 @@
     {
       "id": 31,
       "demand": 2,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_31.dxf",
       "min_quality": 1,
       "zones": [],
@@ -1440,6 +1472,7 @@
     {
       "id": 32,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_32.dxf",
       "zones": [],
       "shape": {
@@ -1491,6 +1524,7 @@
     {
       "id": 33,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_33.dxf",
       "zones": [],
       "shape": {
@@ -1570,6 +1604,7 @@
     {
       "id": 34,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_34.dxf",
       "zones": [],
       "shape": {
@@ -1617,6 +1652,7 @@
     {
       "id": 35,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_35.dxf",
       "zones": [],
       "shape": {
@@ -1704,6 +1740,7 @@
     {
       "id": 36,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_36.dxf",
       "zones": [],
       "shape": {
@@ -1739,6 +1776,7 @@
     {
       "id": 37,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_37.dxf",
       "zones": [],
       "shape": {
@@ -1770,6 +1808,7 @@
     {
       "id": 38,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_38.dxf",
       "zones": [],
       "shape": {
@@ -1833,6 +1872,7 @@
     {
       "id": 39,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_39.dxf",
       "zones": [],
       "shape": {
@@ -1872,6 +1912,7 @@
     {
       "id": 40,
       "demand": 1,
+      "orientation": {"rotation": {"mode": "continuous"}},
       "dxf": "dxf/i_40.dxf",
       "zones": [],
       "shape": {

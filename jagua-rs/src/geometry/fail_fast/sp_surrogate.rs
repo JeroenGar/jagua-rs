@@ -19,7 +19,8 @@ pub struct SPSurrogate {
     pub poles: Vec<Circle>,
     /// Set of [piers](piers::generate_piers)
     pub piers: Vec<Edge>,
-    /// Indices of the vertices in the [`SPolygon`] that form the convex hull
+    /// Indices of the polygon vertices forming its counterclockwise convex hull.
+    /// The owning polygon remaps these when reflection reverses its vertex storage.
     pub convex_hull_indices: Vec<usize>,
     /// The area of the convex hull of the [`SPolygon`].
     pub convex_hull_area: f32,
