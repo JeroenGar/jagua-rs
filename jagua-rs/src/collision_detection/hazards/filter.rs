@@ -29,9 +29,9 @@ impl HazKeyFilter {
                 .filter_map(|(hkey, h)| {
                     match h.entity {
                         HazardEntity::InferiorQualityZone { quality, .. }
-                            if quality < required_quality =>
+                            if quality >= required_quality =>
                         {
-                            // Only consider inferior quality zones below the required quality
+                            // Zones meeting the item's minimum quality do not block it.
                             Some((hkey, ()))
                         }
                         _ => None,

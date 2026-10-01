@@ -7,12 +7,15 @@ on:
       - '**.rs'
       - '**.toml'
       - '**.yml'
+      - 'Cargo.lock'
   pull_request:
-    branches: [ "main" ]
     paths:
       - '**.rs'
       - '**.toml'
       - '**.yml'
+      - 'Cargo.lock'
+      - '**.md'
+      - '**.svg'
 
 env:
   CARGO_TERM_COLOR: always
@@ -28,12 +31,28 @@ jobs:
       - name: fmt
         run: cargo fmt --all -- --check
       - name: clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
       - name: build all features
-        run: cargo build --all-targets --all-features
-      - name: build no features
-        run: cargo build --all-targets --no-default-features
+        run: cargo build --locked --workspace --all-targets --all-features
       - name: test
-        run: cargo test --verbose
+        run: cargo test --locked --workspace --all-features
+      - name: Verify crate package
+        run: cargo package --locked -p jagua-rs
       - name: run README example
-        run: cargo run --package lbf --profile release -- -p spp -i assets/swim.json -c assets/config_lbf.json -s solutions
+        run: cargo run --locked --package lbf --profile release -- -p spp -i assets/swim.json -c assets/config_lbf.json -s solutions
+
+  crate-features:
+    name: Library / Rust ${{ matrix.rust }} / ${{ matrix.features || 'none' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: ['1.90.0', stable]
+        features: ['', spp, bpp, 'spp,bpp']
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Test isolated library features
+        run: cargo +${{ matrix.rust }} test --locked -p jagua-rs --no-default-features --features "${{ matrix.features }}"

@@ -89,11 +89,17 @@ mod geometry {
             vec![0.0, PI, -PI],
         )
         .unwrap();
-        assert_eq!(wrapped.rotations(false), Some(&RotationRange::None));
-        assert_eq!(wrapped.rotations(true), Some(&RotationRange::None));
+        assert_eq!(wrapped.rotations(), &RotationRange::None);
+        assert_eq!(
+            wrapped.rotations_after_reflection(),
+            Some(&RotationRange::None)
+        );
         let continuous =
             AllowedOrientations::new(RotationRange::Continuous, vec![0.1, 0.2]).unwrap();
-        assert_eq!(continuous.rotations(true), Some(&RotationRange::Continuous));
+        assert_eq!(
+            continuous.rotations_after_reflection(),
+            Some(&RotationRange::Continuous)
+        );
         assert!(continuous.allows(&DTransformation::new(0.73, (0.0, 0.0)).with_reflection(true)));
         let disabled = AllowedOrientations::new(RotationRange::Discrete(vec![]), vec![]).unwrap();
         assert!(disabled.allows(&DTransformation::empty()));
@@ -102,10 +108,7 @@ mod geometry {
         // Input deduplication must not erase nearby, distinct rotations.
         let close =
             AllowedOrientations::new(RotationRange::Discrete(vec![0.0, 1e-7]), vec![]).unwrap();
-        assert_eq!(
-            close.rotations(false),
-            Some(&RotationRange::Discrete(vec![0.0, 1e-7]))
-        );
+        assert_eq!(close.rotations(), &RotationRange::Discrete(vec![0.0, 1e-7]));
         for invalid in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
             assert!(
                 AllowedOrientations::new(RotationRange::Discrete(vec![invalid]), vec![]).is_err()
@@ -144,30 +147,32 @@ mod geometry {
                         .compose(),
                 );
                 let mut buffer = reference.clone();
-                let vertex_allocation = buffer.vertices.as_ptr();
-                let hull_allocation = buffer
-                    .surrogate
-                    .as_ref()
-                    .map(|s| s.convex_hull_indices.as_ptr());
+                let vertex_allocation = buffer.vertices().as_ptr();
+                let hull_allocation =
+                    with_surrogate.then(|| buffer.surrogate().convex_hull_indices.as_ptr());
                 for reflected in [true, false, true, true, false] {
                     let t = DTransformation::new(0.37, (13.0, 7.0))
                         .with_reflection(reflected)
                         .compose();
                     buffer.transform_from(&reference, &t);
                     let in_place = reference.transform_clone(&t);
-                    assert_eq!(buffer.vertices, in_place.vertices);
-                    assert_eq!(buffer.vertices.as_ptr(), vertex_allocation);
+                    assert_eq!(buffer.vertices(), in_place.vertices());
+                    assert_eq!(buffer.vertices().as_ptr(), vertex_allocation);
                     assert!(
-                        (SPolygon::calculate_area(&buffer.vertices) - original.area).abs() < 0.0001
+                        (SPolygon::calculate_area(buffer.vertices()) - original.area()).abs()
+                            < 0.0001
                     );
-                    assert_eq!(buffer.area, original.area);
+                    assert_eq!(buffer.area(), original.area());
                     assert_point(buffer.centroid(), reference.centroid().transform_clone(&t));
                     assert_eq!(
-                        buffer.bbox,
-                        SPolygon::generate_bounding_box(&buffer.vertices)
+                        buffer.bbox(),
+                        SPolygon::generate_bounding_box(buffer.vertices())
                     );
-                    assert_point(buffer.poi.center, reference.poi.center.transform_clone(&t));
-                    assert_eq!(buffer.poi.radius, reference.poi.radius);
+                    assert_point(
+                        buffer.poi().center,
+                        reference.poi().center.transform_clone(&t),
+                    );
+                    assert_eq!(buffer.poi().radius, reference.poi().radius);
 
                     if with_surrogate {
                         let surrogate = buffer.surrogate();
@@ -180,7 +185,7 @@ mod geometry {
                             in_place.surrogate().convex_hull_indices
                         );
                         let hull = convex_hull_from_surrogate(&buffer).unwrap();
-                        let fresh_hull = convex_hull_from_points(buffer.vertices.clone());
+                        let fresh_hull = convex_hull_from_points(buffer.vertices().to_vec());
                         assert!(SPolygon::calculate_area(&hull) > 0.0);
                         assert_eq!(hull.len(), fresh_hull.len());
                         assert!(hull.iter().all(|p| fresh_hull.contains(p)));
@@ -286,7 +291,7 @@ mod io {
                 assert_eq!(ext.orientation, restored.orientation);
                 for ext in [&ext, &restored] {
                     let item = importer.import_item(ext, 0).unwrap();
-                    assert_eq!(item.allowed_orientations.rotations(false), Some(&expected));
+                    assert_eq!(item.allowed_orientations().rotations(), &expected);
                     for degrees in [0.0_f32, 45.0, 90.0, 180.0, 270.0] {
                         let allowed = match &expected {
                             RotationRange::Continuous => true,
@@ -296,13 +301,13 @@ mod io {
                             }
                         };
                         assert_eq!(
-                            item.allowed_orientations
+                            item.allowed_orientations()
                                 .allows(&DTransformation::new(degrees.to_radians(), (0.0, 0.0))),
                             allowed
                         );
                         // Y-axis reflection compiles to canonical X-reflection plus 180 degrees.
                         assert_eq!(
-                            item.allowed_orientations.allows(
+                            item.allowed_orientations().allows(
                                 &DTransformation::new((degrees + 180.0).to_radians(), (0.0, 0.0))
                                     .with_reflection(true)
                             ),
@@ -414,15 +419,14 @@ mod io {
         ] {
             ext.orientation.rotation = ExtRotation::Stepped { step };
             let item = importer.import_item(&ext, 0).unwrap();
-            let Some(RotationRange::Discrete(angles)) = item.allowed_orientations.rotations(false)
-            else {
+            let RotationRange::Discrete(angles) = item.allowed_orientations().rotations() else {
                 panic!("expected discrete rotations")
             };
             assert_eq!(angles.len(), count);
             assert_eq!(angles[0], 0.0);
             assert!(angles.windows(2).all(|pair| pair[0] < pair[1]));
             assert!(angles[count - 1] < std::f32::consts::TAU);
-            assert!(item.allowed_orientations.allows(&DTransformation::new(
+            assert!(item.allowed_orientations().allows(&DTransformation::new(
                 (360.0 - step).to_radians(),
                 (0.0, 0.0)
             )));
@@ -484,15 +488,15 @@ mod io {
         let item = instance.item(0);
         // External Y reflection: (x,y) -> (20-x, 5+y), independently of centering.
         let external = DTransformation::new(PI, (20.0, 5.0)).with_reflection(true);
-        let internal = ext_to_int_transformation(&external, &item.shape_orig.pre_transform);
-        assert!(item.allowed_orientations.allows(&internal));
-        assert!(!problem.layout.cde().detect_surrogate_collision(
-            item.shape_cd.surrogate(),
+        let internal = ext_to_int_transformation(&external, &item.shape_orig().pre_transform);
+        assert!(item.allowed_orientations().allows(&internal));
+        assert!(!problem.layout().cde().detect_surrogate_collision(
+            item.shape_cd().surrogate(),
             &internal.compose(),
             &NoFilter,
         ));
-        let exported = int_to_ext_transformation(&internal, &item.shape_orig.pre_transform);
-        for p in &item.shape_orig.shape.vertices {
+        let exported = int_to_ext_transformation(&internal, &item.shape_orig().pre_transform);
+        for p in item.shape_orig().shape.vertices() {
             let expected = Point(20.0 - p.0, 5.0 + p.1);
             assert!(
                 p.transform_clone(&exported.compose())
@@ -504,10 +508,10 @@ mod io {
             item_idx: 0,
             d_transf: internal,
         });
-        assert!(problem.layout.is_feasible());
+        assert!(problem.layout().is_collision_free());
         let saved = problem.save();
-        assert!(problem.layout.cde().detect_surrogate_collision(
-            item.shape_cd.surrogate(),
+        assert!(problem.layout().cde().detect_surrogate_collision(
+            item.shape_cd().surrogate(),
             &internal.compose(),
             &NoFilter,
         ));
@@ -515,12 +519,12 @@ mod io {
             item_idx: 0,
             d_transf: internal,
         });
-        assert!(!problem.layout.is_feasible());
+        assert!(!problem.layout().is_collision_free());
         problem.remove_item(overlap);
         problem.remove_item(pk);
         problem.restore(&saved);
-        assert!(problem.layout.is_feasible());
-        assert_eq!(problem.layout.placed_items[pk].d_transf, internal);
+        assert!(problem.layout().is_collision_free());
+        assert_eq!(problem.layout().placed_items()[pk].d_transf(), internal);
 
         let output = export(&saved, saved.time_stamp);
         let encoded = serde_json::to_string(&output).unwrap();
@@ -528,23 +532,23 @@ mod io {
         assert!(decoded.layout.placed_items[0].transformation.reflected);
         let restored = import_solution(&instance, &decoded).unwrap();
         let restored_item = restored
-            .layout_snapshot
-            .placed_items
+            .layout_snapshot()
+            .placed_items()
             .values()
             .next()
             .unwrap();
-        assert!(restored_item.d_transf.reflected);
-        let original_item = &problem.layout.placed_items[pk];
+        assert!(restored_item.d_transf().reflected);
+        let original_item = &problem.layout().placed_items()[pk];
         for (a, b) in restored_item
-            .shape
-            .vertices
+            .shape()
+            .vertices()
             .iter()
-            .zip(&original_item.shape.vertices)
+            .zip(original_item.shape().vertices())
         {
             assert!(a.distance_to(b) < 0.0001);
         }
         let svg =
-            layout_to_svg(&problem.layout, SvgDrawOptions::default(), "reflection").to_string();
+            layout_to_svg(problem.layout(), SvgDrawOptions::default(), "reflection").to_string();
         assert!(svg.contains(", scale(1 -1)"));
         assert!(svg.contains("rotate("));
     }
@@ -586,18 +590,18 @@ mod sampling {
             for _ in 0..128 {
                 let pose = sampler.sample(&mut rng);
                 seen[usize::from(pose.reflected)] = true;
-                assert!(item.allowed_orientations.allows(&pose));
+                assert!(item.allowed_orientations().allows(&pose));
                 let mut local = LSSampler::from_defaults(&item, pose, bbox);
                 for _ in 0..8 {
                     let nearby = local.sample(&mut rng);
                     assert_eq!(nearby.reflected, pose.reflected);
-                    assert!(item.allowed_orientations.allows(&nearby));
+                    assert!(item.allowed_orientations().allows(&nearby));
                 }
                 let next = sampler.sample(&mut rng);
                 local.shift_mean(next);
                 let shifted = local.sample(&mut rng);
                 assert_eq!(shifted.reflected, next.reflected);
-                assert!(item.allowed_orientations.allows(&shifted));
+                assert!(item.allowed_orientations().allows(&shifted));
             }
             assert_eq!(seen, [true, true]);
             if rotation == json!({"mode":"discrete","angles":[0]}) {

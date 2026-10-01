@@ -16,12 +16,12 @@ new_key_type! {
 /// Dynamic counterpart of [`BPInstance`].
 #[derive(Clone)]
 pub struct BPProblem {
-    pub instance: BPInstance,
-    pub layouts: SlotMap<LayKey, Layout>,
+    pub(crate) instance: BPInstance,
+    pub(crate) layouts: SlotMap<LayKey, Layout>,
     /// Source bin index for each open layout.
-    pub layout_bins: SecondaryMap<LayKey, usize>,
-    pub item_demand_qtys: Vec<usize>,
-    pub bin_stock_qtys: Vec<usize>,
+    pub(crate) layout_bins: SecondaryMap<LayKey, usize>,
+    pub(crate) item_demand_qtys: Vec<usize>,
+    pub(crate) bin_stock_qtys: Vec<usize>,
 }
 
 impl BPProblem {
@@ -45,7 +45,12 @@ impl BPProblem {
     }
 
     /// Places an item according to the provided [`BPPlacement`] in the problem.
+    /// Panics if the item's demand or the selected bin's stock is exhausted.
     pub fn place_item(&mut self, placement: BPPlacement) -> (LayKey, PItemKey) {
+        assert!(
+            self.item_demand_qtys[placement.item_idx] > 0,
+            "item demand exhausted"
+        );
         let lkey = match placement.layout_id {
             BPLayoutType::Open(lkey) => lkey,
             BPLayoutType::Closed { bin_id } => {
@@ -101,6 +106,7 @@ impl BPProblem {
 
     /// Restores the state of the problem to the given [`BPSolution`].
     /// Returns `true` if any of the layout keys changed (i.e., layouts were added or removed).
+    /// Recreated layouts receive new keys; snapshot keys are not preserved for them.
     pub fn restore(&mut self, solution: &BPSolution) -> bool {
         let mut layout_keys_changed = false;
         let mut layouts_to_remove = vec![];
@@ -165,6 +171,31 @@ impl BPProblem {
 
         debug_assert!(problem_matches_solution(self, solution));
         layout_keys_changed
+    }
+
+    #[must_use]
+    pub fn instance(&self) -> &BPInstance {
+        &self.instance
+    }
+
+    #[must_use]
+    pub fn layouts(&self) -> &SlotMap<LayKey, Layout> {
+        &self.layouts
+    }
+
+    #[must_use]
+    pub fn layout_bins(&self) -> &SecondaryMap<LayKey, usize> {
+        &self.layout_bins
+    }
+
+    #[must_use]
+    pub fn item_demand_qtys(&self) -> &[usize] {
+        &self.item_demand_qtys
+    }
+
+    #[must_use]
+    pub fn bin_stock_qtys(&self) -> &[usize] {
+        &self.bin_stock_qtys
     }
 
     #[must_use]
@@ -240,6 +271,7 @@ impl BPProblem {
     }
 
     fn open_bin(&mut self, bin_id: usize) {
+        assert!(self.bin_stock_qtys[bin_id] > 0, "bin stock exhausted");
         self.bin_stock_qtys[bin_id] -= 1;
     }
 

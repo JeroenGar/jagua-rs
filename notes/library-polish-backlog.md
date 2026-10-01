@@ -1,0 +1,147 @@
+# Library polish backlog
+
+Review of the 1.0.0 preparation branch, 2026-09-28. These are deferred proposals,
+not approved implementation work. Preserve useful consumer APIs and keep changes
+separate from the orientation/reflection PR.
+
+## Accepted direction
+
+1. Protect coupled state in Layout, Container and the CDE. Callers must not mutate
+   placements, geometry or collision state independently. Keep controlled mutation
+   methods and convenient read access.
+2. Protect cached geometry and placed-item state with ordinary read-only accessors.
+   The selected design uses private-to-the-crate fields, borrowed access for owned
+   data, and copied scalar values. No data-view wrapper or Deref implementation.
+
+The stacked implementation covers Layout, Container, InferiorQualityZone, Item,
+PlacedItem, CDEngine and SPolygon. LBF consumers are adapted in the same slice.
+Items 3 and 4 are now implemented in the same stacked PR, as detailed below.
+
+## Deferred findings
+
+### 3. Snapshot integrity
+
+Implemented: LayoutSnapshot fields and CDESnapshot hazards are crate-private.
+LayoutSnapshot exposes read-only container and placement accessors. No public
+constructor or mutable accessor allows editing captured components independently.
+
+LayoutSnapshot exposes independently mutable placements, container and CDE
+snapshot. Restrict mutation while preserving inspection so restore can trust the
+saved components to agree. See entities/layout.rs and collision_detection/cd_engine.rs.
+
+### 4. Accidental public APIs
+
+Implemented: hide the quadtree module and remove its public CDE accessor; make
+virtual-root and containment helpers private; hide polygon diameter/pole
+construction helpers and degenerate-vertex cleanup; remove public surrogate
+generation re-exports. Remove unused quadtree wrappers and a diagnostic helper
+made dead by the visibility changes. Keep layout/CDE diagnostic functions used
+by consumers public.
+
+Consumer audit of sparrow's jg-jagua-0.9-compat branch:
+
+- src/eval/sep_evaluator.rs indexes hazards_map after resolving a placed-item key.
+  Approved: use the inline CDEngine::hazard lookup instead. See
+  [release migration notes](../docs/releases/1.0.0.md) for the pending change.
+- The same evaluator seeds BasicHazardCollector with the moving item's hazard
+  to exclude self-collision, then subtracts that entry from the count. This is
+  supported by the collector/filter contract, but couples exclusion and results.
+  Decision: keep this behavior unchanged for now.
+- quantify/overlap_proxy.rs, quantify/simd/overlap_proxy_simd.rs and
+  eval/collision_loss.rs read surrogate poles directly; optimizer/explore.rs and
+  optimizer/lbf.rs use convex_hull_area. These are deliberate geometry inputs to
+  sparrow's loss/ordering algorithms. Preserve read access rather than hide them.
+- util/assertions.rs calls layout_qt_matches_fresh_qt. Keep this diagnostic entry
+  point without exposing the quadtree representation.
+
+No sparrow source usages of the newly hidden helpers or quadtree module were found.
+Downstream accessor migration is still separate; this was a source-usage audit,
+not a downstream compilation check.
+
+Review public quadtree internals, get_virtual_root, polygon-construction helpers
+and utility functions. Check consumers before reducing visibility: sparrow and
+Pro read hazards and use jagua-rs assertions. Preserve useful diagnostics and
+read access; do not hide entire modules indiscriminately.
+
+### 5. Import errors versus panics
+
+Implemented: invalid quality levels and unsupported quality-zone shapes return
+errors from container import and InferiorQualityZone::new. The existing geometry
+import integration test covers these cases and a valid quality-zone control.
+
+Importer::import_container returns Result but asserts on out-of-range quality
+levels and reaches unimplemented! for unsupported quality-zone shapes. Return
+errors for invalid external input. Keep assertions for internal invariants.
+See io/import.rs and entities/container.rs.
+
+### 6. Collision and feasibility contracts
+
+Implemented: rename Layout::is_feasible to is_collision_free, document unchecked
+placement, and state that a positive surrogate collision proves a collision while
+a negative result requires the full polygon query. Behavior is unchanged.
+
+Document that Layout::place_item registers a placement without validating
+collisions or orientation permissions. Layout::is_feasible checks collisions,
+not demand or permitted orientations. A negative surrogate screening result
+does not prove the full polygon collision-free. Keep these contracts concise.
+
+### 7. CDE restore assumptions
+
+Implemented: CDEngine::save, CDEngine::restore and CDESnapshot are crate-private.
+Layout is their only caller; consumers restore through Layout::restore, which
+checks container identity. The CDE snapshot re-export is also crate-private.
+
+CDEngine::restore restores dynamic hazards and matches existing hazards by
+entity; it does not replace the geometry of an existing entity. Decide whether
+to document the required identity/static-state assumptions or restrict this
+lower-level operation. Layout::restore already checks container identity.
+
+### 8. Quality-filter discrepancy
+
+Implemented after independent Claude review: ignore quality zones at or above
+the item's minimum quality. Layout::is_collision_free now uses the same filter.
+An integration regression covers containment and boundary crossings, equal/higher/
+lower quality, full-quality items, holes, other items and the container exterior.
+
+Item::new now rejects out-of-range min_quality values, including during import,
+before they can reach SVG export's quality-color palette.
+
+### 9. Library entry-point documentation
+
+Implemented: a runnable crate-level example covers import, a collision query,
+placement and snapshot/restore without optional features. The introduction explains
+geometry, CDE, layouts and optional problem definitions. TransformableFrom documents
+buffer compatibility: matching vertex counts alone does not make arbitrary reference
+polygons interchangeable.
+
+### 10. Release and CI checks
+
+Implemented: workflows cover stacked PRs, Markdown/SVG changes trigger docs, and
+CI tests the library in isolation for no features, spp, bpp and both. Rust 1.90 is
+the declared minimum; native development uses 1.98.0, CI also tests stable, and
+the WASM demo explicitly uses nightly. Workspace CI and package verification use
+the tracked lockfile.
+
+### 11. Naming and release notes
+
+Implemented: import_item uses idx. Temporary migration documents are consolidated
+into docs/releases/1.0.0.md, including breaking changes and consumer migration.
+
+## Second review follow-up
+
+Implemented the ordinary-input cleanups from Claude Opus 5.5's review:
+- Filter irrelevant hazards before checking containment presence, including Entire nodes.
+- Protect coupled SPP/BPP problem and solution fields with read-only accessors;
+  adapt bundled LBF consumers and record sparrow migration requirements.
+- Return an error for empty-strip fitting and assert demand/stock preconditions.
+- Document BPP restore key changes and direct configuration requirements.
+
+Extreme-coordinate robustness is intentionally skipped at the user's request.
+Excessive quadtree depth is documented as a configuration limit; no subdivision
+algorithm or numerical-policy changes are included.
+
+## Outside this polishing slice
+
+Removing SPP/BPP, splitting crates and introducing a broad typed-error hierarchy
+need separate design decisions. Do not turn this audit into an algorithm rewrite
+or add getters to plain input/configuration structs without an invariant to protect.

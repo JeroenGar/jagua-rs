@@ -15,9 +15,9 @@ use anyhow::{Result, ensure};
 /// is fully contained in the original [`SPolygon`].
 /// Used for *fail-fast* collision detection.
 pub struct SPSurrogate {
-    /// Set of [poles](pole::generate_surrogate_poles)
+    /// Interior circles used for collision screening and overlap estimation.
     pub poles: Vec<Circle>,
-    /// Set of [piers](piers::generate_piers)
+    /// Interior line segments used for collision screening.
     pub piers: Vec<Edge>,
     /// Indices of the polygon vertices forming its counterclockwise convex hull.
     /// The owning polygon remaps these when reflection reverses its vertex storage.
@@ -28,6 +28,9 @@ pub struct SPSurrogate {
     pub config: SPSurrogateConfig,
     /// Length of the pole prefix selected by [`SPSurrogateConfig::ff_pole_area_ratio`].
     n_ff_poles: usize,
+    /// Whether the owning polygon's vertex storage is reversed relative to the one
+    /// this surrogate was generated from, which determines `convex_hull_indices`.
+    hull_reversed: bool,
 }
 
 impl SPSurrogate {
@@ -69,6 +72,7 @@ impl SPSurrogate {
             convex_hull_area,
             config,
             n_ff_poles,
+            hull_reversed: false,
         })
     }
 
@@ -82,6 +86,20 @@ impl SPSurrogate {
     pub fn ff_piers(&self) -> &[Edge] {
         &self.piers
     }
+
+    /// Remaps `convex_hull_indices` after the owning polygon reversed its `n_vertices` vertices.
+    pub(crate) fn reverse_vertex_order(&mut self, n_vertices: usize) {
+        self.convex_hull_indices.reverse();
+        for i in &mut self.convex_hull_indices {
+            *i = n_vertices - 1 - *i;
+        }
+        self.hull_reversed = !self.hull_reversed;
+    }
+
+    /// Whether `convex_hull_indices` refer to vertex storage reversed since generation.
+    pub(crate) fn hull_reversed(&self) -> bool {
+        self.hull_reversed
+    }
 }
 
 impl Transformable for SPSurrogate {
@@ -94,6 +112,7 @@ impl Transformable for SPSurrogate {
             convex_hull_area: _,
             config: _,
             n_ff_poles: _,
+            hull_reversed: _,
         } = self;
 
         //transform poles
@@ -123,6 +142,7 @@ impl TransformableFrom for SPSurrogate {
             convex_hull_area: _,
             config: _,
             n_ff_poles: _,
+            hull_reversed: _,
         } = self;
 
         for (pole, ref_pole) in poles.iter_mut().zip(reference.poles.iter()) {

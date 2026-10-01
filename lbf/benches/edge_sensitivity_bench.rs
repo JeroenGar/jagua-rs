@@ -67,7 +67,7 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
 
         let mut rng = SmallRng::seed_from_u64(0);
 
-        let layout = &problem.layout;
+        let layout = &problem.layout();
         /*let samples = {
             let sampler = UniformAARectSampler::new(layout.bin.bbox(), instance.item(0));
             (0..N_SAMPLES).map(
@@ -91,17 +91,17 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
             b.iter(|| {
                 for pi_uid in selected_pi_uids.iter().take(N_ITEMS_REMOVED) {
                     let item = instance.item(pi_uid.item_idx);
-                    let mut buffer_shape = item.shape_cd.as_ref().clone();
+                    let mut buffer_shape = item.shape_cd().as_ref().clone();
                     for dtransf in samples_cycler.next().unwrap() {
                         let transf = dtransf.compose();
                         let collides = match layout.cde().detect_surrogate_collision(
-                            item.shape_cd.surrogate(),
+                            item.shape_cd().surrogate(),
                             &transf,
                             &NoFilter,
                         ) {
                             true => true,
                             false => {
-                                buffer_shape.transform_from(&item.shape_cd, &transf);
+                                buffer_shape.transform_from(item.shape_cd(), &transf);
                                 layout.cde().detect_poly_collision(&buffer_shape, &NoFilter)
                             }
                         };
@@ -123,8 +123,23 @@ fn edge_sensitivity_bench(config: LBFConfig, mut g: BenchmarkGroup<WallTime>) {
 
 fn modify_instance(mut instance: SPInstance, multiplier: usize) -> SPInstance {
     instance.items.iter_mut().for_each(|(item, _)| {
-        let multiplied_shape = multiply_edge_count(&item.shape_cd, multiplier);
-        Arc::make_mut(item).shape_cd = Arc::new(multiplied_shape);
+        let mut original = item.shape_orig().as_ref().clone();
+        original.shape = multiply_edge_count(item.shape_cd(), multiplier);
+        original.pre_transform = jagua_rs::geometry::DTransformation::empty();
+        original.modify_config.offset = None;
+        original.modify_config.simplify_tolerance = None;
+        original.modify_config.narrow_concavity_cutoff = None;
+        *item = Arc::new(
+            jagua_rs::entities::Item::new(
+                item.idx(),
+                item.external_id(),
+                original,
+                item.allowed_orientations().clone(),
+                item.min_quality(),
+                item.surrogate_config(),
+            )
+            .unwrap(),
+        );
     });
     instance
 }
@@ -143,6 +158,6 @@ fn multiply_edge_count(shape: &SPolygon, multiplier: usize) -> SPolygon {
         }
     }
     let new_polygon = SPolygon::new(new_points).unwrap();
-    float_cmp::assert_approx_eq!(f32, shape.area, new_polygon.area);
+    float_cmp::assert_approx_eq!(f32, shape.area(), new_polygon.area());
     new_polygon
 }

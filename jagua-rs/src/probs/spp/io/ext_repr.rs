@@ -32,7 +32,7 @@ pub struct ExtItem {
 pub struct ExtSPSolution {
     /// The strip width of the solution
     pub strip_width: f32,
-    /// Layouts which compose the solution
+    /// Layout of the single strip. Exports always use `container_id: 0`.
     pub layout: ExtLayout,
     /// Sum of the area of the produced items divided by the sum of the area of the containers
     pub density: f32,

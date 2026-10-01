@@ -1,4 +1,5 @@
 use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::filter::HazKeyFilter;
 use crate::collision_detection::{CDESnapshot, CDEngine};
 use crate::entities::Container;
 use crate::entities::Item;
@@ -15,9 +16,9 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct Layout {
     /// The container used for this layout
-    pub container: Container,
+    pub(crate) container: Container,
     /// All the items that have been placed in this layout, indexed by a unique key
-    pub placed_items: SlotMap<PItemKey, PlacedItem>,
+    pub(crate) placed_items: SlotMap<PItemKey, PlacedItem>,
     /// The collision detection engine for this layout
     cde: CDEngine,
 }
@@ -90,6 +91,7 @@ impl Layout {
 
     /// Places an item in the layout at a specific position by applying a transformation.
     /// Returns the unique key for the placed item.
+    /// Does not check collisions or orientation permissions before placement.
     pub fn place_item(&mut self, item: &Arc<Item>, d_transformation: DTransformation) -> PItemKey {
         let pk = self
             .placed_items
@@ -155,16 +157,37 @@ impl Layout {
         &self.cde
     }
 
-    /// Returns true if all the items are placed without colliding
+    /// Returns true if no placed item collides with the container or another item.
+    /// Quality zones meeting each item's minimum quality are ignored; holes remain blocking.
     #[must_use]
-    pub fn is_feasible(&self) -> bool {
+    pub fn is_collision_free(&self) -> bool {
         self.placed_items.iter().all(|(pk, pi)| {
             let hkey = self
                 .cde
                 .haz_key_from_pi_key(pk)
                 .expect("all placed items should be registered in the CDE");
-            !self.cde.detect_poly_collision(&pi.shape, &hkey)
+            match pi.item.min_quality {
+                Some(quality) => {
+                    let mut filter =
+                        HazKeyFilter::from_irrelevant_qzones(quality, self.cde.hazards_map());
+                    filter.0.insert(hkey, ());
+                    !self.cde.detect_poly_collision(&pi.shape, &filter)
+                }
+                None => !self.cde.detect_poly_collision(&pi.shape, &hkey),
+            }
         })
+    }
+
+    /// The container used for this layout
+    #[must_use]
+    pub fn container(&self) -> &Container {
+        &self.container
+    }
+
+    /// All the items that have been placed in this layout, indexed by a unique key
+    #[must_use]
+    pub fn placed_items(&self) -> &SlotMap<PItemKey, PlacedItem> {
+        &self.placed_items
     }
 }
 
@@ -178,14 +201,26 @@ pub struct ContainerMismatch;
 #[derive(Clone, Debug)]
 pub struct LayoutSnapshot {
     /// A copy of the container used in the layout
-    pub container: Container,
+    pub(crate) container: Container,
     /// A copy of the placed items in the layout
-    pub placed_items: SlotMap<PItemKey, PlacedItem>,
+    pub(crate) placed_items: SlotMap<PItemKey, PlacedItem>,
     /// Snapshot of the collision detection engine
-    pub cde_snapshot: CDESnapshot,
+    pub(crate) cde_snapshot: CDESnapshot,
 }
 
 impl LayoutSnapshot {
+    /// The container captured in this snapshot.
+    #[must_use]
+    pub fn container(&self) -> &Container {
+        &self.container
+    }
+
+    /// The placements captured in this snapshot.
+    #[must_use]
+    pub fn placed_items(&self) -> &SlotMap<PItemKey, PlacedItem> {
+        &self.placed_items
+    }
+
     /// Equivalent to [`Layout::density`]
     #[must_use]
     pub fn density(&self) -> f32 {

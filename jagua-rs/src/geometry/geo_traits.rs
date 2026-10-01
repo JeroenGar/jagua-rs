@@ -51,6 +51,9 @@ pub trait Transformable: Clone {
 /// Trait for types that can modify themselves to a reference object with a [`Transformation`] applied.
 ///
 /// Useful when repeatedly transforming a single object without having to reallocate new memory each time.
+/// Initialize the destination by cloning the reference, then reuse it for that reference's transforms.
+/// For [`SPolygon`](crate::geometry::primitives::SPolygon), matching vertex counts alone is
+/// insufficient: the destination must retain the same shape invariants and surrogate configuration.
 pub trait TransformableFrom: Transformable {
     /// Applies a transformation on the reference object and stores the result in `self`.
     fn transform_from(&mut self, reference: &Self, t: &Transformation) -> &mut Self;

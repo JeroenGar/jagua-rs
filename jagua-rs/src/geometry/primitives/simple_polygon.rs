@@ -15,6 +15,7 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::util::FPA;
+use crate::util::assertions;
 use anyhow::{Result, bail};
 
 /// A Simple Polygon is a polygon that does not intersect itself and contains no holes.
@@ -23,17 +24,17 @@ use anyhow::{Result, bail};
 #[derive(Clone, Debug)]
 pub struct SPolygon {
     /// Vertices in counterclockwise order, including after reflection.
-    pub vertices: Vec<Point>,
+    pub(crate) vertices: Vec<Point>,
     /// Bounding box
-    pub bbox: Rect,
+    pub(crate) bbox: Rect,
     /// Area of its interior
-    pub area: f32,
+    pub(crate) area: f32,
     /// Maximum distance between any two points in the polygon
-    pub diameter: f32,
+    pub(crate) diameter: f32,
     /// [Pole of inaccessibility](https://en.wikipedia.org/wiki/Pole_of_inaccessibility) represented as a circle
-    pub poi: Circle,
+    pub(crate) poi: Circle,
     /// Optional surrogate representation of the polygon (subset of the original)
-    pub surrogate: Option<SPSurrogate>,
+    pub(crate) surrogate: Option<SPSurrogate>,
 }
 
 impl SPolygon {
@@ -112,7 +113,7 @@ impl SPolygon {
     }
 
     #[must_use]
-    pub fn calculate_diameter(points: Vec<Point>) -> f32 {
+    fn calculate_diameter(points: Vec<Point>) -> f32 {
         //The two points furthest apart must be part of the convex hull
         let ch = convex_hull_from_points(points);
 
@@ -159,7 +160,7 @@ impl SPolygon {
         0.5 * sigma
     }
 
-    pub fn calculate_poi(points: &[Point], diameter: f32) -> Result<Circle> {
+    fn calculate_poi(points: &[Point], diameter: f32) -> Result<Circle> {
         //need to make a dummy simple polygon, because the pole generation algorithm
         //relies on many of the methods provided by the simple polygon struct
         let dummy_sp = {
@@ -214,6 +215,36 @@ impl SPolygon {
             (!are_neighboring_edges(i, j) && edge(i).collides_with(&edge(j))).then_some((i, j))
         })
     }
+
+    /// Vertices in counterclockwise order, including after reflection.
+    #[must_use]
+    pub fn vertices(&self) -> &[Point] {
+        &self.vertices
+    }
+
+    /// Bounding box
+    #[must_use]
+    pub fn bbox(&self) -> Rect {
+        self.bbox
+    }
+
+    /// Area of its interior
+    #[must_use]
+    pub fn area(&self) -> f32 {
+        self.area
+    }
+
+    /// Maximum distance between any two points in the polygon
+    #[must_use]
+    pub fn diameter(&self) -> f32 {
+        self.diameter
+    }
+
+    /// [Pole of inaccessibility](https://en.wikipedia.org/wiki/Pole_of_inaccessibility) represented as a circle
+    #[must_use]
+    pub fn poi(&self) -> Circle {
+        self.poi
+    }
 }
 
 impl Transformable for SPolygon {
@@ -243,10 +274,7 @@ impl Transformable for SPolygon {
         if let Some(surrogate) = surrogate.as_mut() {
             surrogate.transform(t);
             if reflected {
-                surrogate.convex_hull_indices.reverse();
-                for i in &mut surrogate.convex_hull_indices {
-                    *i = points.len() - 1 - *i;
-                }
+                surrogate.reverse_vertex_order(points.len());
             }
         }
 
@@ -285,17 +313,19 @@ impl TransformableFrom for SPolygon {
 
         //transform the surrogate
         if let Some(surrogate) = surrogate.as_mut() {
-            surrogate.transform_from(reference.surrogate(), t);
-            let indices = &mut surrogate.convex_hull_indices;
-            let ref_indices = &reference.surrogate().convex_hull_indices;
-            assert_eq!(indices.len(), ref_indices.len());
-            if reflected {
-                for (i, &ref_i) in indices.iter_mut().zip(ref_indices.iter().rev()) {
-                    *i = points.len() - 1 - ref_i;
-                }
-            } else {
-                indices.copy_from_slice(ref_indices);
+            let ref_surrogate = reference.surrogate();
+            surrogate.transform_from(ref_surrogate, t);
+            // The destination was cloned from `reference`, so its hull indices only
+            // need remapping when the vertex storage orientation changes.
+            if surrogate.hull_reversed() != (ref_surrogate.hull_reversed() ^ reflected) {
+                surrogate.reverse_vertex_order(points.len());
             }
+            debug_assert!(assertions::hull_indices_match_reference(
+                surrogate,
+                ref_surrogate,
+                reflected,
+                points.len()
+            ));
         }
         //regenerate bounding box
         *bbox = SPolygon::generate_bounding_box(points);

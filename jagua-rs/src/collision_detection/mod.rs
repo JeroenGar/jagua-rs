@@ -4,11 +4,10 @@ mod cd_engine;
 pub mod hazards;
 
 /// Everything Quadtree related.
-pub mod quadtree;
+pub(crate) mod quadtree;
 
 #[doc(inline)]
 pub use cd_engine::CDEConfig;
-#[doc(inline)]
-pub use cd_engine::CDESnapshot;
+pub(crate) use cd_engine::CDESnapshot;
 #[doc(inline)]
 pub use cd_engine::CDEngine;

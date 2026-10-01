@@ -44,7 +44,7 @@ impl LBFOptimizerBP {
         {
             let item = self.instance.item(item_idx);
             //place all items of this type
-            'inner: while self.problem.item_demand_qtys[item_idx] > 0 {
+            'inner: while self.problem.item_demand_qtys()[item_idx] > 0 {
                 //find a position and insert it
                 let placement = search_layouts(
                     &self.problem,
@@ -86,9 +86,9 @@ impl LBFOptimizerBP {
         info!(
             "[LBF] solution contains {} items with a density of {:.3}%",
             solution
-                .layout_snapshots
+                .layout_snapshots()
                 .values()
-                .map(|ls| ls.placed_items.len())
+                .map(|ls| ls.placed_items().len())
                 .sum::<usize>(),
             solution.density() * 100.0
         );
@@ -104,30 +104,32 @@ fn search_layouts(
     sample_counter: &mut usize,
 ) -> Option<BPPlacement> {
     //search all existing layouts and closed bins with remaining stock
-    let open_layouts = problem.layouts.keys().map(BPLayoutType::Open);
-    let bins_with_stock = problem
-        .bin_stock_qtys
-        .iter()
-        .enumerate()
-        .filter_map(|(bin_id, qty)| match *qty > 0 {
-            true => Some(BPLayoutType::Closed { bin_id }),
-            false => None,
-        });
+    let open_layouts = problem.layouts().keys().map(BPLayoutType::Open);
+    let bins_with_stock =
+        problem
+            .bin_stock_qtys()
+            .iter()
+            .enumerate()
+            .filter_map(|(bin_id, qty)| match *qty > 0 {
+                true => Some(BPLayoutType::Closed { bin_id }),
+                false => None,
+            });
 
     //sequential search until a valid placement is found
     for layout_id in open_layouts.chain(bins_with_stock) {
         debug!("searching in layout {layout_id:?}");
         let cde = match layout_id {
-            BPLayoutType::Open(lkey) => problem.layouts[lkey].cde(),
-            BPLayoutType::Closed { bin_id } => {
-                problem.instance.bins[bin_id].container.base_cde.as_ref()
-            }
+            BPLayoutType::Open(lkey) => problem.layouts()[lkey].cde(),
+            BPLayoutType::Closed { bin_id } => problem.instance().bins[bin_id]
+                .container
+                .base_cde()
+                .as_ref(),
         };
 
-        let placement = match &item.min_quality {
+        let placement = match &item.min_quality() {
             None => search(cde, item, config, rng, sample_counter, &NoFilter),
             Some(min_quality) => {
-                let filter = HazKeyFilter::from_irrelevant_qzones(*min_quality, &cde.hazards_map);
+                let filter = HazKeyFilter::from_irrelevant_qzones(*min_quality, cde.hazards_map());
                 search(cde, item, config, rng, sample_counter, &filter)
             }
         };
@@ -135,7 +137,7 @@ fn search_layouts(
         if let Some((d_transf, _)) = placement {
             return Some(BPPlacement {
                 layout_id,
-                item_idx: item.idx,
+                item_idx: item.idx(),
                 d_transf,
             });
         }

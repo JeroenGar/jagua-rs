@@ -23,7 +23,7 @@ impl LBFLoss {
     }
 
     pub fn from_shape(shape: &SPolygon) -> Self {
-        LBFLoss::from_bbox(shape.bbox)
+        LBFLoss::from_bbox(shape.bbox())
     }
 
     pub fn cost(&self) -> f32 {

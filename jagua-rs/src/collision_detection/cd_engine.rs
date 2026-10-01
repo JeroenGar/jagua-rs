@@ -20,11 +20,11 @@ use slotmap::SlotMap;
 #[derive(Clone, Debug)]
 pub struct CDEngine {
     /// Root node of the quadtree
-    pub quadtree: QTNode,
+    pub(crate) quadtree: QTNode,
     /// All hazards registered in the CDE (active and inactive)
-    pub hazards_map: SlotMap<HazKey, Hazard>,
+    pub(crate) hazards_map: SlotMap<HazKey, Hazard>,
     /// Configuration of the CDE
-    pub config: CDEConfig,
+    pub(crate) config: CDEConfig,
     /// The key of the hazard that represents the exterior of the container.
     hkey_exterior: HazKey,
 }
@@ -96,7 +96,7 @@ impl CDEngine {
     }
 
     #[must_use]
-    pub fn save(&self) -> CDESnapshot {
+    pub(crate) fn save(&self) -> CDESnapshot {
         let dynamic_hazards = self
             .hazards_map
             .values()
@@ -107,7 +107,7 @@ impl CDEngine {
     }
 
     /// Restores the CDE to a previous state, as described by the snapshot.
-    pub fn restore(&mut self, snapshot: &CDESnapshot) {
+    pub(crate) fn restore(&mut self, snapshot: &CDESnapshot) {
         //Restore the quadtree, by doing a 'diff' between the current state and the snapshot
         //Only dynamic hazards are considered
 
@@ -172,19 +172,19 @@ impl CDEngine {
 
             // Check for containment of the shape in any of the hazards
             for qt_hazard in v_qt_root.hazards.iter() {
+                if filter.is_irrelevant(qt_hazard.hkey) {
+                    continue;
+                }
                 match &qt_hazard.presence {
                     QTHazPresence::None => {}
                     QTHazPresence::Entire => unreachable!(
                         "Entire hazards in the virtual root should have been caught by the edge intersection tests"
                     ),
                     QTHazPresence::Partial(_) => {
-                        if !filter.is_irrelevant(qt_hazard.hkey) {
-                            let haz_shape = &self.hazards_map[qt_hazard.hkey].shape;
-                            if self.detect_containment_collision(shape, haz_shape, qt_hazard.entity)
-                            {
-                                // The hazard is contained in the shape (or vice versa)
-                                return true;
-                            }
+                        let haz_shape = &self.hazards_map[qt_hazard.hkey].shape;
+                        if Self::detect_containment_collision(shape, haz_shape, qt_hazard.entity) {
+                            // The hazard is contained in the shape (or vice versa)
+                            return true;
                         }
                     }
                 }
@@ -198,6 +198,8 @@ impl CDEngine {
     }
 
     /// Checks whether a surrogate collides with any of the (relevant) hazards.
+    /// A `true` result proves a collision for the represented polygon.
+    /// A `false` result is inconclusive; follow with [`Self::detect_poly_collision`].
     /// # Arguments
     /// * `base_surrogate` - The (untransformed) surrogate to be checked for collisions
     /// * `transform` - The transformation to be applied to the surrogate (on the fly)
@@ -230,8 +232,7 @@ impl CDEngine {
     /// * `haz_shape` - The shape of the respective hazard
     /// * `haz_entity` - The entity inducing the hazard
     #[must_use]
-    pub fn detect_containment_collision(
-        &self,
+    fn detect_containment_collision(
         shape: &SPolygon,
         haz_shape: &SPolygon,
         haz_entity: HazardEntity,
@@ -306,7 +307,7 @@ impl CDEngine {
                 QTHazPresence::Partial(_) => {
                     if !collector.contains_key(qt_haz.hkey) {
                         let h_shape = &self.hazards_map[qt_haz.hkey].shape;
-                        if self.detect_containment_collision(shape, h_shape, qt_haz.entity) {
+                        if Self::detect_containment_collision(shape, h_shape, qt_haz.entity) {
                             collector.insert(qt_haz.hkey, qt_haz.entity);
                             if stop_after_collision(qt_haz.entity) {
                                 return true;
@@ -367,7 +368,7 @@ impl CDEngine {
     /// Returns the lowest `QTNode` that completely surrounds the given bounding box.
     /// Used to initiate collision checks from lower in the quadtree.
     #[must_use]
-    pub fn get_virtual_root(&self, bbox: Rect) -> &QTNode {
+    fn get_virtual_root(&self, bbox: Rect) -> &QTNode {
         let mut v_root = &self.quadtree;
         while let Some(children) = v_root.children.as_ref() {
             // Keep going down the tree until we cannot find a child that fully surrounds the shape
@@ -397,12 +398,32 @@ impl CDEngine {
             })
             .map(|(key, _)| key)
     }
+
+    /// All hazards registered in the CDE (active and inactive)
+    #[must_use]
+    pub fn hazards_map(&self) -> &SlotMap<HazKey, Hazard> {
+        &self.hazards_map
+    }
+
+    /// Returns the registered hazard, or `None` if the key is no longer valid.
+    #[inline]
+    #[must_use]
+    pub fn hazard(&self, key: HazKey) -> Option<&Hazard> {
+        self.hazards_map.get(key)
+    }
+
+    /// Configuration of the CDE
+    #[must_use]
+    pub fn config(&self) -> CDEConfig {
+        self.config
+    }
 }
 
 ///Configuration of the [`CDEngine`]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct CDEConfig {
-    ///Maximum depth of the quadtree
+    /// Maximum depth of the quadtree. Typically 3–10.
+    /// Excessive depths can exhaust memory or panic when coordinates can no longer be subdivided.
     pub quadtree_depth: u8,
     /// Stop traversing the quadtree and perform collision collection immediately when the total number of edges in a node falls below this number
     pub cd_threshold: u8,
@@ -412,6 +433,6 @@ pub struct CDEConfig {
 
 /// Snapshot of the state of [`CDEngine`]. Can be used to restore to a previous state.
 #[derive(Clone, Debug)]
-pub struct CDESnapshot {
-    pub dynamic_hazards: Vec<Hazard>,
+pub(crate) struct CDESnapshot {
+    pub(crate) dynamic_hazards: Vec<Hazard>,
 }

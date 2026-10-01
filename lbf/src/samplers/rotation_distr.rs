@@ -49,7 +49,7 @@ impl UniformRotDistr {
 
 impl NormalRotDistr {
     pub fn from_item(item: &Item, r_ref: f32, stddev: f32) -> Self {
-        match item.allowed_orientations.rotations(false).unwrap() {
+        match item.allowed_orientations().rotations() {
             RotationRange::None => NormalRotDistr::Discrete(r_ref),
             RotationRange::Continuous => NormalRotDistr::Range(Normal::new(r_ref, stddev).unwrap()),
             RotationRange::Discrete(_) => NormalRotDistr::Discrete(r_ref),

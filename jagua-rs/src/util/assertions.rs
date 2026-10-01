@@ -6,6 +6,7 @@ use crate::collision_detection::quadtree::QTHazard;
 use crate::collision_detection::quadtree::QTNode;
 use crate::entities::Layout;
 use crate::entities::LayoutSnapshot;
+use crate::geometry::fail_fast::SPSurrogate;
 use crate::geometry::primitives::Rect;
 use itertools::Itertools;
 use log::error;
@@ -28,27 +29,6 @@ pub fn snapshot_matches_layout(layout: &Layout, layout_snapshot: &LayoutSnapshot
             .any(|pi| pi.item.idx == placed_item.item.idx && pi.d_transf == placed_item.d_transf)
         {
             return false;
-        }
-    }
-    true
-}
-
-#[must_use]
-pub fn collision_hazards_sorted_correctly(hazards: &[QTHazard]) -> bool {
-    let mut partial_hazard_detected = false;
-    for hazard in hazards {
-        match hazard.presence {
-            QTHazPresence::Partial(_) => {
-                partial_hazard_detected = true;
-            }
-            QTHazPresence::Entire => {
-                if partial_hazard_detected {
-                    return false;
-                }
-            }
-            QTHazPresence::None => {
-                panic!("None hazard should never be collision hazard vec");
-            }
         }
     }
     true
@@ -232,7 +212,7 @@ fn hazards_match<'a>(
 
 /// Checks if the quadrants follow the layout set in [`Rect::QUADRANT_NEIGHBOR_LAYOUT`]
 #[must_use]
-pub fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
+pub(crate) fn quadrants_have_valid_layout(quadrants: &[Rect; 4]) -> bool {
     let layout = Rect::QUADRANT_NEIGHBOR_LAYOUT;
     for (idx, q) in quadrants.iter().enumerate() {
         //make sure they share two points (an edge) with each neighbor
@@ -279,4 +259,25 @@ pub fn print_layout(layout: &Layout) {
             pi.item.idx, transformation_str
         );
     }
+}
+
+/// Checks a transformed buffer's hull indices against those recomputed from its reference.
+#[must_use]
+pub fn hull_indices_match_reference(
+    surrogate: &SPSurrogate,
+    reference: &SPSurrogate,
+    reflected: bool,
+    n_vertices: usize,
+) -> bool {
+    let ref_indices = &reference.convex_hull_indices;
+    let expected: Vec<usize> = if reflected {
+        ref_indices
+            .iter()
+            .rev()
+            .map(|&i| n_vertices - 1 - i)
+            .collect()
+    } else {
+        ref_indices.clone()
+    };
+    surrogate.convex_hull_indices == expected
 }

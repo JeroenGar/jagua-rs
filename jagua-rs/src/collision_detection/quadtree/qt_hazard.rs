@@ -90,7 +90,10 @@ impl QTHazard {
 
                     // First lets find the quadrants where edges of the partial hazard are colliding with the quadrants.
                     // These will also be partially present hazards.
-                    let mut constricted_hazards = quadrants.map(|q| {
+                    // A plain loop keeps this hot edge scan inside `constrict`. With `quadrants.map`,
+                    // inlining it depended on LLVM heuristics that flipped with unrelated changes.
+                    let mut constricted_hazards: [Option<QTHazard>; 4] = Default::default();
+                    for (constricted, &q) in constricted_hazards.iter_mut().zip(&quadrants) {
                         //For every quadrant, collect the edges that are colliding with it
                         let mut colliding_edges = None;
                         for edge in &partial_haz.edges {
@@ -99,7 +102,7 @@ impl QTHazard {
                             }
                         }
                         //If there are relevant edges, create a new QTHazard for this quadrant which is partially present
-                        colliding_edges.map(|edges| QTHazard {
+                        *constricted = colliding_edges.map(|edges| QTHazard {
                             qt_bbox: q,
                             presence: QTHazPresence::Partial(QTHazPartial::from_parent(
                                 partial_haz,
@@ -107,8 +110,8 @@ impl QTHazard {
                             )),
                             hkey: self.hkey,
                             entity: self.entity,
-                        })
-                    });
+                        });
+                    }
 
                     debug_assert!(constricted_hazards.iter().filter(|h| h.is_some()).count() > 0);
 

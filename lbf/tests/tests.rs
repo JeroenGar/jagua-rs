@@ -52,8 +52,8 @@ mod tests {
                 for _ in 0..N_ITEMS_TO_REMOVE {
                     //pick random existing layout
                     let random_placed_item = problem
-                        .layout
-                        .placed_items
+                        .layout()
+                        .placed_items()
                         .iter()
                         .choose(&mut rng)
                         .map(|(key, _)| key);
@@ -104,9 +104,9 @@ mod tests {
                 let problem = &mut opt.problem;
                 for _ in 0..N_ITEMS_TO_REMOVE {
                     //pick random existing layout
-                    let lkey = problem.layouts.keys().choose(&mut rng).unwrap();
-                    let random_placed_item = problem.layouts[lkey]
-                        .placed_items
+                    let lkey = problem.layouts().keys().choose(&mut rng).unwrap();
+                    let random_placed_item = problem.layouts()[lkey]
+                        .placed_items()
                         .iter()
                         .choose(&mut rng)
                         .map(|(key, _)| key);
@@ -177,7 +177,10 @@ mod tests {
 
     #[test]
     fn item_holes_are_rejected_but_container_holes_are_preserved() -> Result<()> {
-        use jagua_rs::io::ext_repr::{ExtContainer, ExtPolygon, ExtSPolygon, ExtShape};
+        use jagua_rs::entities::{InferiorQualityZone, N_QUALITIES};
+        use jagua_rs::io::ext_repr::{
+            ExtContainer, ExtPolygon, ExtQualityZone, ExtSPolygon, ExtShape,
+        };
 
         let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
         let polygon = ExtPolygon {
@@ -192,14 +195,146 @@ mod tests {
             zones: vec![],
         })?;
         assert_eq!(
-            container.quality_zones[0].as_ref().unwrap().shapes_cd.len(),
+            container.quality_zones()[0]
+                .as_ref()
+                .unwrap()
+                .shapes_cd()
+                .len(),
             1
         );
+        let mut external_container = ExtContainer {
+            id: 0,
+            shape: ExtShape::Polygon(polygon.clone()),
+            zones: vec![ExtQualityZone {
+                quality: 1,
+                shape: ExtShape::SimplePolygon(polygon.inner[0].clone()),
+            }],
+        };
+        assert!(importer().import_container(&external_container).is_ok());
+        for quality in [N_QUALITIES, usize::MAX] {
+            external_container.zones[0].quality = quality;
+            assert!(importer().import_container(&external_container).is_err());
+            assert!(InferiorQualityZone::new(quality, vec![]).is_err());
+        }
+        external_container.zones[0].quality = 1;
+        for shape in [
+            ExtShape::Polygon(polygon.clone()),
+            ExtShape::MultiPolygon(vec![polygon.clone()]),
+        ] {
+            external_container.zones[0].shape = shape;
+            assert!(importer().import_container(&external_container).is_err());
+        }
+        external_container.zones.clear();
+        external_container.shape = ExtShape::MultiPolygon(vec![polygon.clone()]);
+        assert!(importer().import_container(&external_container).is_err());
+
         input.items[0].base.shape = ExtShape::Polygon(ExtPolygon {
             inner: vec![],
             ..polygon
         });
         assert!(spp::io::import_instance(&importer(), &input).is_ok());
+        for quality in [0, N_QUALITIES - 1] {
+            input.items[0].base.min_quality = Some(quality);
+            assert!(importer().import_item(&input.items[0].base, 0).is_ok());
+        }
+        for quality in [N_QUALITIES, usize::MAX] {
+            input.items[0].base.min_quality = Some(quality);
+            assert!(importer().import_item(&input.items[0].base, 0).is_err());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn quality_zones_filter_queries_and_layouts_consistently() -> Result<()> {
+        use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
+        use jagua_rs::entities::Layout;
+        use jagua_rs::geometry::DTransformation;
+        use jagua_rs::geometry::geo_traits::Transformable;
+        use jagua_rs::io::ext_repr::{ExtContainer, ExtItem};
+        use serde_json::json;
+
+        let rectangle = |x, y, width, height| {
+            json!({
+                "type": "rectangle",
+                "data": {"x_min": x, "y_min": y, "width": width, "height": height}
+            })
+        };
+        let external: ExtContainer = serde_json::from_value(json!({
+            "id": 0, "shape": rectangle(0, 0, 30, 12),
+            "zones": ([0, 2, 3, 4].into_iter().enumerate().map(|(i, q)| json!({
+                "quality": q, "shape": rectangle(2 + 6 * i, 2, 4, 6)
+            })).collect::<Vec<_>>())
+        }))?;
+        let importer = importer();
+        let container = importer.import_container(&external)?;
+        // This zone covers complete quadtree nodes, including the query's virtual root.
+        let large_zone: ExtContainer = serde_json::from_value(json!({
+            "id": 0, "shape": rectangle(0, 0, 100, 100),
+            "zones": [{"quality": 5, "shape": rectangle(0, 0, 60, 60)}]
+        }))?;
+        for required in [Some(3), None] {
+            let input: ExtItem = serde_json::from_value(json!({
+                "id": 0, "min_quality": required,
+                "orientation": {"rotation": {"mode": "discrete", "angles": [0]}},
+                "shape": rectangle(0, 0, 2, 2)
+            }))?;
+            let item = importer.import_item(&input, 0)?;
+            let mut layout = Layout::new(container.clone());
+            for (quality, x) in [(0, 2.0), (2, 8.0), (3, 14.0), (4, 20.0)] {
+                // Exercise containment and crossing a zone boundary.
+                for dx in [2.0, 0.5] {
+                    let pose = DTransformation::new(0.0, (x + dx, 5.0));
+                    let shape = item.shape_cd().transform_clone(&pose.compose());
+                    let expected_collision = required.is_none() || quality < 3;
+                    let cde = layout.cde();
+                    let collision = match required {
+                        Some(q) => cde.detect_poly_collision(
+                            &shape,
+                            &HazKeyFilter::from_irrelevant_qzones(q, cde.hazards_map()),
+                        ),
+                        None => cde.detect_poly_collision(&shape, &NoFilter),
+                    };
+                    assert_eq!(
+                        collision, expected_collision,
+                        "quality {quality}, required {required:?}"
+                    );
+                    let key = layout.place_item(&item, pose);
+                    assert_eq!(layout.is_collision_free(), !expected_collision);
+                    layout.remove_item(key);
+                }
+            }
+            // Quality filtering must not hide other items or the exterior.
+            let pose = DTransformation::new(0.0, (27.0, 5.0));
+            let first = layout.place_item(&item, pose);
+            assert!(layout.is_collision_free());
+            let second = layout.place_item(&item, pose);
+            assert!(!layout.is_collision_free());
+            layout.remove_item(second);
+            layout.remove_item(first);
+            layout.place_item(&item, DTransformation::new(0.0, (-1.0, 5.0)));
+            assert!(!layout.is_collision_free());
+            let mut covered = Layout::new(importer.import_container(&large_zone)?);
+            let mut small_input = input.clone();
+            small_input.shape = jagua_rs::io::ext_repr::ExtShape::Rectangle {
+                x_min: 0.0,
+                y_min: 0.0,
+                width: 0.5,
+                height: 0.5,
+            };
+            let small_item = importer.import_item(&small_input, 0)?;
+            let pose = DTransformation::new(0.0, (4.0, 4.0));
+            let shape = small_item.shape_cd().transform_clone(&pose.compose());
+            let filter = HazKeyFilter::from_irrelevant_qzones(
+                required.unwrap_or(jagua_rs::entities::N_QUALITIES),
+                covered.cde().hazards_map(),
+            );
+            assert_eq!(
+                covered.cde().detect_poly_collision(&shape, &filter),
+                required.is_none()
+            );
+            covered.place_item(&small_item, pose);
+            assert_eq!(covered.is_collision_free(), required.is_some());
+        }
         Ok(())
     }
 
@@ -216,34 +351,42 @@ mod tests {
             }))?;
         let small_instance = spp::io::import_instance(&importer(), &small)?;
         let mut small_problem = spp::entities::SPProblem::new(small_instance)?;
+        let width_before = small_problem.strip_width();
+        assert!(small_problem.fit_strip().is_err());
+        assert_eq!(small_problem.strip_width(), width_before);
         let before = small_problem.save();
         assert!(small_problem.change_strip_width(0.02).is_err());
-        assert_eq!(small_problem.strip, before.strip);
+        assert_eq!(small_problem.strip(), before.strip());
         assert!(jagua_rs::util::assertions::snapshot_matches_layout(
-            &small_problem.layout,
-            &before.layout_snapshot
+            small_problem.layout(),
+            before.layout_snapshot()
         ));
         let mut optimizer = LBFOptimizerSP::new(
-            small_problem.instance.clone(),
+            small_problem.instance().clone(),
             config(),
             SmallRng::seed_from_u64(0),
         )?;
         optimizer.solve()?;
-        assert!(optimizer.problem.layout.is_feasible());
+        assert!(optimizer.problem.layout().is_collision_free());
         small.min_item_separation = 2.0;
         assert!(spp::io::import_instance(&importer(), &small).is_err());
 
         let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
         assert_eq!(input.min_item_separation, 0.0);
         let plain = spp::io::import_instance(&importer(), &input)?;
-        assert_eq!(plain.item(0).shape_orig.modify_config.offset, None);
+        assert_eq!(plain.item(0).shape_orig().modify_config.offset, None);
 
         input.min_item_separation = 2.0;
         let spaced = spp::io::import_instance(&importer(), &input)?;
-        assert_eq!(spaced.item(0).shape_orig.modify_config.offset, Some(1.0));
+        assert_eq!(spaced.item(0).shape_orig().modify_config.offset, Some(1.0));
         let problem = jagua_rs::probs::spp::entities::SPProblem::new(spaced)?;
         assert_eq!(
-            problem.layout.container.outer_orig.modify_config.offset,
+            problem
+                .layout()
+                .container()
+                .outer_orig()
+                .modify_config
+                .offset,
             Some(1.0)
         );
 
@@ -286,8 +429,8 @@ mod tests {
             let external: ExtSPInstance = serde_json::from_value(input(rotation))?;
             let instance = spp::io::import_instance(&importer(), &external)?;
             assert_eq!(
-                instance.item(0).allowed_orientations.rotations(false),
-                Some(&expected)
+                instance.item(0).allowed_orientations().rotations(),
+                &expected
             );
             let round_trip: ExtSPInstance =
                 serde_json::from_value(serde_json::to_value(&external)?)?;
@@ -301,7 +444,7 @@ mod tests {
                     .solve()?;
             let exported = spp::io::export(&solution, epoch);
             let restored = spp::io::import_solution(&instance, &exported)?;
-            assert_eq!(restored.layout_snapshot.placed_items.len(), 2);
+            assert_eq!(restored.layout_snapshot().placed_items().len(), 2);
         }
         for rotation in [
             json!(null),
@@ -327,7 +470,7 @@ mod tests {
             serde_json::from_value(input(json!({"mode": "stepped", "step": 0.1})))?;
         let instance = spp::io::import_instance(&importer(), &decimal)?;
         assert!(
-            matches!(instance.item(0).allowed_orientations.rotations(false), Some(RotationRange::Discrete(a)) if a.len() == 3600)
+            matches!(instance.item(0).allowed_orientations().rotations(), RotationRange::Discrete(a) if a.len() == 3600)
         );
         Ok(())
     }

@@ -22,9 +22,9 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
     }))?;
     let importer = Importer::new(lbf::config::LBFConfig::default().cde_config, None, None);
     let instance = import_instance(&importer, &input)?;
-    assert_eq!(instance.item(0).idx, 0);
-    assert_eq!(instance.item(0).external_id, u64::MAX);
-    assert_eq!(instance.item(1).external_id, 42);
+    assert_eq!(instance.item(0).idx(), 0);
+    assert_eq!(instance.item(0).external_id(), u64::MAX);
+    assert_eq!(instance.item(1).external_id(), 42);
     assert_eq!(instance.item_idx(4), None);
 
     let placement = |id, x| {
@@ -45,7 +45,8 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
         serde_json::to_value(&output.layout.placed_items)?,
         serde_json::to_value(&external.layout.placed_items)?
     );
-    let svg = s_layout_to_svg(&solution.layout_snapshot, SvgDrawOptions::default(), "").to_string();
+    let svg =
+        s_layout_to_svg(solution.layout_snapshot(), SvgDrawOptions::default(), "").to_string();
     assert!(svg.contains("item_42"));
     assert!(svg.contains(&format!("item_{}", u64::MAX)));
 
@@ -53,11 +54,14 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
     assert!(import_solution(&instance, &external).is_err());
     input.items.push(input.items[1].clone());
     assert!(import_instance(&importer, &input).is_err());
-    for pi in solution.layout_snapshot.placed_items.values() {
-        assert!(std::sync::Arc::ptr_eq(&pi.item, instance.item(pi.item.idx)));
+    for pi in solution.layout_snapshot().placed_items().values() {
+        assert!(std::sync::Arc::ptr_eq(
+            pi.item(),
+            instance.item(pi.item().idx())
+        ));
     }
     drop(instance);
-    let restored = jagua_rs::entities::Layout::from_snapshot(&solution.layout_snapshot);
+    let restored = jagua_rs::entities::Layout::from_snapshot(solution.layout_snapshot());
     assert_eq!(restored.items().count(), 2);
     assert_eq!(restored.density(), output.density);
     assert!(

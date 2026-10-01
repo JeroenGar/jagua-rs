@@ -14,6 +14,7 @@ use log::debug;
 use std::sync::Arc;
 
 /// Converts external representations of items and containers into internal ones.
+/// Direct configuration changes must satisfy [`ShapeModifyConfig`]'s documented ranges.
 #[derive(Clone, Debug, Copy)]
 pub struct Importer {
     pub shape_modify_config: ShapeModifyConfig,
@@ -54,7 +55,7 @@ impl Importer {
     }
 
     /// Import geometry with a caller-assigned internal index, independent of the external ID.
-    pub fn import_item(&self, ext_item: &ExtItem, internal_id: usize) -> Result<Arc<Item>> {
+    pub fn import_item(&self, ext_item: &ExtItem, idx: usize) -> Result<Arc<Item>> {
         debug!("[IMPORT] starting item {:?}", ext_item.id);
 
         let original_shape = {
@@ -96,7 +97,7 @@ impl Importer {
         let allowed_orientations = AllowedOrientations::new(rotations, axes)?;
 
         Item::new(
-            internal_id,
+            idx,
             ext_item.id,
             original_shape,
             allowed_orientations,
@@ -106,10 +107,12 @@ impl Importer {
         .map(Arc::new)
     }
 
+    /// Imports container geometry and quality zones.
+    /// Returns an error for invalid geometry, unsupported shapes or out-of-range qualities.
     pub fn import_container(&self, ext_cont: &ExtContainer) -> Result<Container> {
-        assert!(
+        ensure!(
             ext_cont.zones.iter().all(|zone| zone.quality < N_QUALITIES),
-            "All quality zones must have lower quality than N_QUALITIES, set N_QUALITIES to a higher value if required"
+            "Quality zones must have quality below {N_QUALITIES}"
         );
 
         let original_outer = {
@@ -144,7 +147,7 @@ impl Importer {
                     .collect::<Result<Vec<SPolygon>>>()?
             }
             ExtShape::MultiPolygon(_) => {
-                unimplemented!("No support for multipolygon shapes yet")
+                bail!("No support for multipolygon shapes yet")
             }
         };
 
@@ -164,10 +167,10 @@ impl Importer {
                             .map(Into::into),
                         ExtShape::SimplePolygon(esp) => import_simple_polygon(esp),
                         ExtShape::Polygon(_) => {
-                            unimplemented!("No support for polygon to simplepolygon conversion yet")
+                            bail!("Quality zones require rectangles or simple polygons")
                         }
                         ExtShape::MultiPolygon(_) => {
-                            unimplemented!("No support for multipolygon shapes yet")
+                            bail!("Quality zones do not support multipolygons")
                         }
                     })
                     .collect::<Result<Vec<SPolygon>>>()
@@ -302,7 +305,7 @@ pub fn ext_to_int_transformation(
         .decompose()
 }
 
-pub fn eliminate_degenerate_vertices(points: &mut Vec<Point>) {
+fn eliminate_degenerate_vertices(points: &mut Vec<Point>) {
     let mut indices_to_remove = vec![];
     let n_points = points.len();
     for i in 0..n_points {
