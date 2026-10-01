@@ -38,12 +38,13 @@ mod tests {
             let mut config = config();
             config.cde_config.quadtree_depth = qt_depth;
 
-            let mut opt = LBFOptimizerSP::new(instance.clone(), config, SmallRng::seed_from_u64(0));
+            let mut opt =
+                LBFOptimizerSP::new(instance.clone(), config, SmallRng::seed_from_u64(0))?;
 
             let mut rng = SmallRng::seed_from_u64(0);
 
             // a first lbf run
-            opt.solve();
+            opt.solve()?;
             {
                 // remove some items
                 let problem = &mut opt.problem;
@@ -67,11 +68,11 @@ mod tests {
 
                 let solution = opt.problem.save();
                 // second optimization run
-                opt.solve();
+                opt.solve()?;
                 // restore the solution
                 opt.problem.restore(&solution);
                 // third optimization run
-                opt.solve();
+                opt.solve()?;
             }
         }
         Ok(())
@@ -145,7 +146,8 @@ mod tests {
             items: Vec<jagua_rs::io::ext_repr::ExtItem>,
         }
 
-        let importer = Importer::new(config().cde_config, None, Some(2.0), None);
+        let importer =
+            Importer::new(config().cde_config, None, None).with_min_item_separation(2.0)?;
         let mut n_items = 0;
         for entry in std::fs::read_dir("../assets")? {
             let path = entry?.path();
@@ -172,6 +174,83 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn item_holes_are_rejected_but_container_holes_are_preserved() -> Result<()> {
+        use jagua_rs::io::ext_repr::{ExtContainer, ExtPolygon, ExtSPolygon, ExtShape};
+
+        let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
+        let polygon = ExtPolygon {
+            outer: ExtSPolygon(vec![(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]),
+            inner: vec![ExtSPolygon(vec![(2.0, 2.0), (3.0, 2.0), (2.0, 3.0)])],
+        };
+        input.items[0].base.shape = ExtShape::Polygon(polygon.clone());
+        assert!(spp::io::import_instance(&importer(), &input).is_err());
+        let container = importer().import_container(&ExtContainer {
+            id: 0,
+            shape: ExtShape::Polygon(polygon.clone()),
+            zones: vec![],
+        })?;
+        assert_eq!(
+            container.quality_zones[0].as_ref().unwrap().shapes_cd.len(),
+            1
+        );
+        input.items[0].base.shape = ExtShape::Polygon(ExtPolygon {
+            inner: vec![],
+            ..polygon
+        });
+        assert!(spp::io::import_instance(&importer(), &input).is_ok());
+        Ok(())
+    }
+
+    #[test]
+    fn instance_separation_controls_item_and_container_geometry() -> Result<()> {
+        let mut small: spp::io::ext_repr::ExtSPInstance =
+            serde_json::from_value(serde_json::json!({
+                "name": "small separated items", "strip_height": 2.0,
+                "min_item_separation": 0.5,
+                "items": [{"id": 0, "demand": 2, "shape": {"type": "rectangle",
+                    "data": {"x_min": 0, "y_min": 0, "width": 0.1, "height": 0.1}}}]
+            }))?;
+        let small_instance = spp::io::import_instance(&importer(), &small)?;
+        let mut small_problem = spp::entities::SPProblem::new(small_instance)?;
+        let before = small_problem.save();
+        assert!(small_problem.change_strip_width(0.02).is_err());
+        assert_eq!(small_problem.strip, before.strip);
+        assert!(jagua_rs::util::assertions::snapshot_matches_layout(
+            &small_problem.layout,
+            &before.layout_snapshot
+        ));
+        let mut optimizer = LBFOptimizerSP::new(
+            small_problem.instance.clone(),
+            config(),
+            SmallRng::seed_from_u64(0),
+        )?;
+        optimizer.solve()?;
+        assert!(optimizer.problem.layout.is_feasible());
+        small.min_item_separation = 2.0;
+        assert!(spp::io::import_instance(&importer(), &small).is_err());
+
+        let mut input = read_spp_instance(Path::new("../assets/fu.json"))?;
+        assert_eq!(input.min_item_separation, 0.0);
+        let plain = spp::io::import_instance(&importer(), &input)?;
+        assert_eq!(plain.item(0).shape_orig.modify_config.offset, None);
+
+        input.min_item_separation = 2.0;
+        let spaced = spp::io::import_instance(&importer(), &input)?;
+        assert_eq!(spaced.item(0).shape_orig.modify_config.offset, Some(1.0));
+        let problem = jagua_rs::probs::spp::entities::SPProblem::new(spaced)?;
+        assert_eq!(
+            problem.layout.container.outer_orig.modify_config.offset,
+            Some(1.0)
+        );
+
+        for invalid in [-1.0, f32::INFINITY, f32::NAN] {
+            input.min_item_separation = invalid;
+            assert!(spp::io::import_instance(&importer(), &input).is_err());
+        }
+        Ok(())
+    }
+
     fn config() -> LBFConfig {
         LBFConfig {
             n_samples: 100,
@@ -183,7 +262,6 @@ mod tests {
         Importer::new(
             config().cde_config,
             config().poly_simpl_tolerance,
-            config().min_item_separation,
             config().narrow_concavity_cutoff,
         )
     }

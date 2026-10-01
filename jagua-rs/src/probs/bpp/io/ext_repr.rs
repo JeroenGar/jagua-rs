@@ -6,6 +6,10 @@ use serde::{Deserialize, Serialize};
 pub struct ExtBPInstance {
     /// The name of the instance
     pub name: String,
+    /// Minimum distance between items and other hazards, in input units.
+    /// Must be finite and nonnegative. Omitted means zero; null is invalid.
+    #[serde(default)]
+    pub min_item_separation: f32,
     /// Set of items to be produced
     pub items: Vec<ExtItem>,
     /// Set of bins to be used

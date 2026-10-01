@@ -82,7 +82,6 @@ fn main_spp(
     let importer = Importer::new(
         config.cde_config,
         config.poly_simpl_tolerance,
-        config.min_item_separation,
         config.narrow_concavity_cutoff,
     );
     let rng = match config.prng_seed {
@@ -90,7 +89,7 @@ fn main_spp(
         None => rand::make_rng(),
     };
     let instance = spp::io::import_instance(&importer, &ext_instance)?;
-    let sol = LBFOptimizerSP::new(instance.clone(), config, rng).solve();
+    let sol = LBFOptimizerSP::new(instance.clone(), config, rng)?.solve()?;
 
     {
         let output = SPOutput {
@@ -123,7 +122,6 @@ fn main_bpp(
     let importer = Importer::new(
         config.cde_config,
         config.poly_simpl_tolerance,
-        config.min_item_separation,
         config.narrow_concavity_cutoff,
     );
     let rng = match config.prng_seed {

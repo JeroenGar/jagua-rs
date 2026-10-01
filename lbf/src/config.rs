@@ -15,9 +15,6 @@ pub struct LBFConfig {
     /// See [`jagua_rs::geometry::shape_modification::ShapeModifyConfig`] for more details.
     /// If undefined, the algorithm will run without closing narrow concavities
     pub narrow_concavity_cutoff: Option<(f32, f32)>,
-    /// Minimum distance between items and other hazards.
-    /// If undefined, the algorithm will run without this constraint
-    pub min_item_separation: Option<f32>,
     /// Seed for the PRNG. If undefined, the algorithm will run in non-deterministic mode using entropy
     pub prng_seed: Option<u64>,
     /// Total budget of samples per item per layout
@@ -42,7 +39,6 @@ impl Default for LBFConfig {
             },
             poly_simpl_tolerance: Some(0.001),
             narrow_concavity_cutoff: Some((0.01, 0.01)),
-            min_item_separation: None,
             prng_seed: None,
             n_samples: 5000,
             ls_frac: 0.2,

@@ -10,7 +10,7 @@ pub struct ExtItem {
     /// Continuous rotation if not specified
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allowed_orientations: Option<Vec<f32>>,
-    /// Shape of the item
+    /// Shape of the item. Polygons with holes and multipolygons are not supported.
     pub shape: ExtShape,
     /// The minimum required quality of the item.
     /// Maximum quality required if not specified.

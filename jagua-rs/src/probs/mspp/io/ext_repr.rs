@@ -7,6 +7,10 @@ use crate::io::ext_repr::{ExtContainer, ExtLayout};
 pub struct ExtMSPInstance {
     /// The name of the instance
     pub name: String,
+    /// Minimum distance between items and other hazards, in input units.
+    /// Must be finite and nonnegative. Omitted means zero; null is invalid.
+    #[serde(default)]
+    pub min_item_separation: f32,
     /// Set of items to be produced
     pub items: Vec<ExtItem>,
     /// Container in which to pack the items

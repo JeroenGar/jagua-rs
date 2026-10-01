@@ -8,6 +8,7 @@ use rayon::prelude::*;
 
 /// Imports an instance into the library
 pub fn import_instance(importer: &Importer, ext_instance: &ExtMSPInstance) -> Result<MSPInstance> {
+    let importer = importer.with_min_item_separation(ext_instance.min_item_separation)?;
     ensure!(
         ext_instance
             .items

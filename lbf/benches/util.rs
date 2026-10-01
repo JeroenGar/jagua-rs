@@ -16,7 +16,7 @@ pub const N_ITEMS_REMOVED: usize = 5;
 
 pub fn create_instance(cde_config: CDEConfig, poly_simpl_tolerance: Option<f32>) -> SPInstance {
     let ext_instance = io::read_spp_instance(Path::new(SWIM_PATH)).unwrap();
-    let importer = Importer::new(cde_config, poly_simpl_tolerance, None, None);
+    let importer = Importer::new(cde_config, poly_simpl_tolerance, None);
     spp::io::import_instance(&importer, &ext_instance).unwrap()
 }
 
@@ -29,8 +29,8 @@ pub fn create_lbf_problem(
     n_items_removed: usize,
 ) -> (SPProblem, Vec<SPPlacement>) {
     let mut lbf_optimizer =
-        LBFOptimizerSP::new(instance.clone(), config, SmallRng::seed_from_u64(0));
-    lbf_optimizer.solve();
+        LBFOptimizerSP::new(instance.clone(), config, SmallRng::seed_from_u64(0)).unwrap();
+    lbf_optimizer.solve().unwrap();
 
     let mut problem = lbf_optimizer.problem;
 
