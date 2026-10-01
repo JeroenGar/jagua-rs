@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["hull_indices_match_reference","layout_qt_matches_fresh_qt","print_layout","qt_contains_no_dangling_hazards","snapshot_matches_layout"]};

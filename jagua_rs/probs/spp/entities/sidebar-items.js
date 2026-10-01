@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["SPInstance","SPPlacement","SPProblem","SPSolution","Strip"]};
