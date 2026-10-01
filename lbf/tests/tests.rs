@@ -176,8 +176,52 @@ mod tests {
     }
 
     #[test]
+    fn quality_zones_have_surrogates_and_filtering_shares_shapes() -> Result<()> {
+        use jagua_rs::io::ext_repr::{ExtContainer, ExtQualityZone, ExtShape};
+        use std::sync::Arc;
+
+        let rect = |x_min| ExtShape::Rectangle {
+            x_min,
+            y_min: 2.0,
+            width: 1.0,
+            height: 1.0,
+        };
+        let container = importer().import_container(&ExtContainer {
+            id: 0,
+            shape: ExtShape::Rectangle {
+                x_min: 0.0,
+                y_min: 0.0,
+                width: 10.0,
+                height: 10.0,
+            },
+            zones: [2.0, 6.0]
+                .map(|x_min| ExtQualityZone {
+                    quality: 0,
+                    shape: rect(x_min),
+                })
+                .into(),
+        })?;
+        let zone = container.quality_zones()[0].as_ref().unwrap();
+        assert!(
+            zone.shapes_cd()
+                .iter()
+                .all(|s| !s.surrogate().poles.is_empty())
+        );
+
+        let filtered = zone.filtered(|shape| shape.bbox().x_min > 5.0);
+        assert_eq!(filtered.shapes_cd().len(), 1);
+        assert!(Arc::ptr_eq(&filtered.shapes_cd()[0], &zone.shapes_cd()[1]));
+        assert!(Arc::ptr_eq(
+            &filtered.shapes_orig()[0],
+            &zone.shapes_orig()[1]
+        ));
+        Ok(())
+    }
+
+    #[test]
     fn item_holes_are_rejected_but_container_holes_are_preserved() -> Result<()> {
         use jagua_rs::entities::{InferiorQualityZone, N_QUALITIES};
+        use jagua_rs::geometry::fail_fast::SPSurrogateConfig;
         use jagua_rs::io::ext_repr::{
             ExtContainer, ExtPolygon, ExtQualityZone, ExtSPolygon, ExtShape,
         };
@@ -214,7 +258,7 @@ mod tests {
         for quality in [N_QUALITIES, usize::MAX] {
             external_container.zones[0].quality = quality;
             assert!(importer().import_container(&external_container).is_err());
-            assert!(InferiorQualityZone::new(quality, vec![]).is_err());
+            assert!(InferiorQualityZone::new(quality, vec![], SPSurrogateConfig::none()).is_err());
         }
         external_container.zones[0].quality = 1;
         for shape in [
