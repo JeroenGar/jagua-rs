@@ -19,10 +19,10 @@ impl UniformRectSampler {
     pub fn new(bbox: Rect, item: &Item) -> Self {
         let uniform_x = Uniform::new(bbox.x_min, bbox.x_max).unwrap();
         let uniform_y = Uniform::new(bbox.y_min, bbox.y_max).unwrap();
-        let uniform_r = UniformRotDistr::new(item.allowed_orientations().rotations(false).unwrap());
+        let uniform_r = UniformRotDistr::new(item.allowed_orientations().rotations());
         let uniform_reflected_r = item
             .allowed_orientations()
-            .rotations(true)
+            .rotations_after_reflection()
             .map(UniformRotDistr::new);
         Self {
             bbox,

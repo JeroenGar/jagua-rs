@@ -5,7 +5,7 @@ use anyhow::{Result, ensure};
 use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::{DTransformation, normalize_rotation};
 
-/// Permitted orientations, compiled into canonical rotations for each reflection state.
+/// Permitted rotations without reflection and after canonical x-axis reflection.
 ///
 /// Choose no reflection or one permitted local reflection axis, then an allowed rotation.
 /// Reflecting across an axis at angle `a`, followed by rotation `r`, is represented by
@@ -14,7 +14,7 @@ use crate::geometry::{DTransformation, normalize_rotation};
 #[derive(Clone, Debug, PartialEq)]
 pub struct AllowedOrientations {
     rotations: RotationRange,
-    reflected_rotations: Option<RotationRange>,
+    rotations_after_reflection: Option<RotationRange>,
 }
 
 impl AllowedOrientations {
@@ -44,7 +44,7 @@ impl AllowedOrientations {
         }
         reflection_axes.sort_by(f32::total_cmp);
         reflection_axes.dedup();
-        let reflected_rotations = if reflection_axes.is_empty() {
+        let rotations_after_reflection = if reflection_axes.is_empty() {
             None
         } else {
             Some(match &rotations {
@@ -68,19 +68,23 @@ impl AllowedOrientations {
         };
         Ok(Self {
             rotations,
-            reflected_rotations,
+            rotations_after_reflection,
         })
     }
 
-    /// Canonical rotations for a reflection state. `None` means that state is forbidden.
-    /// A returned [`RotationRange::None`] means fixed zero in that state.
+    /// Permitted rotations without reflection, in radians.
+    /// [`RotationRange::None`] means fixed zero.
     #[must_use]
-    pub fn rotations(&self, reflected: bool) -> Option<&RotationRange> {
-        if reflected {
-            self.reflected_rotations.as_ref()
-        } else {
-            Some(&self.rotations)
-        }
+    pub fn rotations(&self) -> &RotationRange {
+        &self.rotations
+    }
+
+    /// Permitted rotations after canonical x-axis reflection, in radians.
+    /// These are transformation angles, not reflection axes.
+    /// `None` disables reflection; [`RotationRange::None`] means fixed zero after reflection.
+    #[must_use]
+    pub fn rotations_after_reflection(&self) -> Option<&RotationRange> {
+        self.rotations_after_reflection.as_ref()
     }
 
     /// Checks orientation only, allowing 4 f32 epsilons of a full turn for matrix
@@ -96,7 +100,12 @@ impl AllowedOrientations {
             let distance = (rotation - r).abs();
             distance.min(TAU - distance) <= 4.0 * f32::EPSILON * TAU
         };
-        match self.rotations(transformation.reflected) {
+        let rotations = if transformation.reflected {
+            self.rotations_after_reflection()
+        } else {
+            Some(self.rotations())
+        };
+        match rotations {
             None => false,
             Some(RotationRange::Continuous) => true,
             Some(RotationRange::None) => matches(0.0),

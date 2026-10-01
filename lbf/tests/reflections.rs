@@ -89,11 +89,17 @@ mod geometry {
             vec![0.0, PI, -PI],
         )
         .unwrap();
-        assert_eq!(wrapped.rotations(false), Some(&RotationRange::None));
-        assert_eq!(wrapped.rotations(true), Some(&RotationRange::None));
+        assert_eq!(wrapped.rotations(), &RotationRange::None);
+        assert_eq!(
+            wrapped.rotations_after_reflection(),
+            Some(&RotationRange::None)
+        );
         let continuous =
             AllowedOrientations::new(RotationRange::Continuous, vec![0.1, 0.2]).unwrap();
-        assert_eq!(continuous.rotations(true), Some(&RotationRange::Continuous));
+        assert_eq!(
+            continuous.rotations_after_reflection(),
+            Some(&RotationRange::Continuous)
+        );
         assert!(continuous.allows(&DTransformation::new(0.73, (0.0, 0.0)).with_reflection(true)));
         let disabled = AllowedOrientations::new(RotationRange::Discrete(vec![]), vec![]).unwrap();
         assert!(disabled.allows(&DTransformation::empty()));
@@ -102,10 +108,7 @@ mod geometry {
         // Input deduplication must not erase nearby, distinct rotations.
         let close =
             AllowedOrientations::new(RotationRange::Discrete(vec![0.0, 1e-7]), vec![]).unwrap();
-        assert_eq!(
-            close.rotations(false),
-            Some(&RotationRange::Discrete(vec![0.0, 1e-7]))
-        );
+        assert_eq!(close.rotations(), &RotationRange::Discrete(vec![0.0, 1e-7]));
         for invalid in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
             assert!(
                 AllowedOrientations::new(RotationRange::Discrete(vec![invalid]), vec![]).is_err()
@@ -288,10 +291,7 @@ mod io {
                 assert_eq!(ext.orientation, restored.orientation);
                 for ext in [&ext, &restored] {
                     let item = importer.import_item(ext, 0).unwrap();
-                    assert_eq!(
-                        item.allowed_orientations().rotations(false),
-                        Some(&expected)
-                    );
+                    assert_eq!(item.allowed_orientations().rotations(), &expected);
                     for degrees in [0.0_f32, 45.0, 90.0, 180.0, 270.0] {
                         let allowed = match &expected {
                             RotationRange::Continuous => true,
@@ -419,9 +419,7 @@ mod io {
         ] {
             ext.orientation.rotation = ExtRotation::Stepped { step };
             let item = importer.import_item(&ext, 0).unwrap();
-            let Some(RotationRange::Discrete(angles)) =
-                item.allowed_orientations().rotations(false)
-            else {
+            let RotationRange::Discrete(angles) = item.allowed_orientations().rotations() else {
                 panic!("expected discrete rotations")
             };
             assert_eq!(angles.len(), count);

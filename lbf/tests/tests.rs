@@ -429,8 +429,8 @@ mod tests {
             let external: ExtSPInstance = serde_json::from_value(input(rotation))?;
             let instance = spp::io::import_instance(&importer(), &external)?;
             assert_eq!(
-                instance.item(0).allowed_orientations().rotations(false),
-                Some(&expected)
+                instance.item(0).allowed_orientations().rotations(),
+                &expected
             );
             let round_trip: ExtSPInstance =
                 serde_json::from_value(serde_json::to_value(&external)?)?;
@@ -470,7 +470,7 @@ mod tests {
             serde_json::from_value(input(json!({"mode": "stepped", "step": 0.1})))?;
         let instance = spp::io::import_instance(&importer(), &decimal)?;
         assert!(
-            matches!(instance.item(0).allowed_orientations().rotations(false), Some(RotationRange::Discrete(a)) if a.len() == 3600)
+            matches!(instance.item(0).allowed_orientations().rotations(), RotationRange::Discrete(a) if a.len() == 3600)
         );
         Ok(())
     }
