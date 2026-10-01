@@ -194,7 +194,7 @@ impl Importer {
                         modify_config: self.shape_modify_config,
                     })
                     .collect_vec();
-                InferiorQualityZone::new(q, original_shapes)
+                InferiorQualityZone::new(q, original_shapes, self.cde_config.item_surrogate_config)
             })
             .collect::<Result<Vec<InferiorQualityZone>>>()?;
 

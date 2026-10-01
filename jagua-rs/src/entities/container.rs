@@ -6,6 +6,7 @@ use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::{CDEConfig, CDEngine};
 use crate::geometry::OriginalShape;
+use crate::geometry::fail_fast::SPSurrogateConfig;
 use crate::geometry::primitives::SPolygon;
 
 use anyhow::{Result, ensure};
@@ -116,15 +117,25 @@ pub struct InferiorQualityZone {
 }
 
 impl InferiorQualityZone {
+    /// Converts the shapes for collision detection and generates their surrogates,
+    /// so they can be quantified as collision targets.
     /// Returns an error for invalid geometry or a quality outside `0..N_QUALITIES`.
-    pub fn new(quality: usize, original_shapes: Vec<OriginalShape>) -> Result<Self> {
+    pub fn new(
+        quality: usize,
+        original_shapes: Vec<OriginalShape>,
+        surrogate_config: SPSurrogateConfig,
+    ) -> Result<Self> {
         ensure!(
             quality < N_QUALITIES,
             "Quality must be in range of N_QUALITIES"
         );
         let shapes: Result<Vec<Arc<SPolygon>>> = original_shapes
             .iter()
-            .map(|orig| orig.convert_to_internal().map(Arc::new))
+            .map(|orig| {
+                let mut shape = orig.convert_to_internal()?;
+                shape.generate_surrogate(surrogate_config)?;
+                Ok(Arc::new(shape))
+            })
             .collect();
 
         let original_shapes = original_shapes.into_iter().map(Arc::new).collect_vec();
@@ -134,6 +145,24 @@ impl InferiorQualityZone {
             shapes_cd: shapes?,
             shapes_orig: original_shapes,
         })
+    }
+
+    /// Returns a zone with only the shapes whose collision contour satisfies `f`, in their original order.
+    /// Kept shapes are shared, not converted again. Hazard indices refer to the new zone's order.
+    #[must_use]
+    pub fn filtered(&self, mut f: impl FnMut(&SPolygon) -> bool) -> Self {
+        let (shapes_orig, shapes_cd) = self
+            .shapes_orig
+            .iter()
+            .zip(&self.shapes_cd)
+            .filter(|(_, shape)| f(shape))
+            .map(|(orig, cd)| (orig.clone(), cd.clone()))
+            .unzip();
+        Self {
+            quality: self.quality,
+            shapes_orig,
+            shapes_cd,
+        }
     }
 
     /// Returns the set of hazards induced by this zone.
