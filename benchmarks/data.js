@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790868156179,
+  "lastUpdate": 1790871234958,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -6633,6 +6633,138 @@ window.BENCHMARK_DATA = {
             "name": "reflection/transform_and_collect/alternating",
             "value": 1547436,
             "range": "± 9294",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jeroen.gardeyn@hotmail.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6d9da94583aede5811dd0c90c26331445fb12f50",
+          "message": "Name SVG container groups and item definitions by container ID (#108)\n\n* Name SVG container groups and item definitions by container ID\n\nlayout_to_svg_group and its wrappers take the layout's external\ncontainer ID, as export_layout_snapshot does. The container group is\nnamed container_{id} again, and item, surrogate and collision-shape\ndefinitions are prefixed with it, so several layouts can share one SVG\ndocument without duplicate element IDs.\n\n* Document SVG container IDs in the 1.1.0 release notes",
+          "timestamp": "2026-10-01T18:09:04+02:00",
+          "tree_id": "3e353d94b370b0ffea4fb2386b3848e21d7ccd9f",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/6d9da94583aede5811dd0c90c26331445fb12f50"
+        },
+        "date": 1790871233811,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 1654731,
+            "range": "± 73204",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 1666240,
+            "range": "± 72350",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 1672538,
+            "range": "± 78860",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 1782856,
+            "range": "± 15063",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 2885539,
+            "range": "± 15669",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 5428572,
+            "range": "± 32595",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 200307,
+            "range": "± 6300",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 155953,
+            "range": "± 5283",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 141416,
+            "range": "± 2624",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_from/unreflected",
+            "value": 51557,
+            "range": "± 99",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_clone/unreflected",
+            "value": 96921,
+            "range": "± 1679",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_and_collect/unreflected",
+            "value": 1065628,
+            "range": "± 22646",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_from/reflected",
+            "value": 51778,
+            "range": "± 316",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_clone/reflected",
+            "value": 110900,
+            "range": "± 1509",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_and_collect/reflected",
+            "value": 1060111,
+            "range": "± 12236",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_from/alternating",
+            "value": 52490,
+            "range": "± 146",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_clone/alternating",
+            "value": 105842,
+            "range": "± 2359",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_and_collect/alternating",
+            "value": 1063106,
+            "range": "± 29586",
             "unit": "ns/iter"
           }
         ]
