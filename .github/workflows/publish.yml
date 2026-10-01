@@ -1,0 +1,41 @@
+name: Publish crate
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: crates-publish-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/rust.yml
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Check release version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version=$(cargo metadata --locked --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "jagua-rs") | .version')
+          test "$RELEASE_TAG" = "v$version"
+      - name: Authenticate with crates.io
+        id: auth
+        uses: rust-lang/crates-io-auth-action@v1
+      - name: Publish jagua-rs
+        run: cargo publish --locked -p jagua-rs
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
