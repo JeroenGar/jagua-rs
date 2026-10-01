@@ -132,7 +132,7 @@ into docs/releases/1.0.0.md, including breaking changes and consumer migration.
 Implemented the ordinary-input cleanups from Claude Opus 5.5's review:
 - Filter irrelevant hazards before checking containment presence, including Entire nodes.
 - Protect coupled SPP/BPP problem and solution fields with read-only accessors;
-  adapt bundled LBF consumers and record vanilla sparrow migration requirements.
+  adapt bundled LBF consumers and record sparrow migration requirements.
 - Return an error for empty-strip fitting and assert demand/stock preconditions.
 - Document BPP restore key changes and direct configuration requirements.
 
