@@ -1,5 +1,6 @@
-use geo::Buffer;
 use geo::algorithm::buffer::{BufferStyle, LineJoin};
+use geo::{Area, BooleanOps, Buffer, Simplify};
+use geo_types::{Coord, LineString, MultiPolygon, Polygon};
 use itertools::Itertools;
 use log::{debug, error, info, warn};
 use ordered_float::OrderedFloat;
@@ -27,13 +28,15 @@ pub enum ShapeModifyMode {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq)]
-/// Shape modification settings. Supplied distances and ratios must be finite and nonnegative.
+/// Shape modification settings. Supplied values must be finite; ratios and the simplification
+/// tolerance must also be nonnegative.
 pub struct ShapeModifyConfig {
     /// Maximum deviation of the simplified polygon with respect to the original polygon area as a ratio.
     /// If undefined, no simplification is performed.
     /// See [`simplify_shape`]
     pub simplify_tolerance: Option<f32>,
-    /// Offset by which to inflate or deflate the polygon.
+    /// Signed offset by which to inflate or deflate the polygon, depending on the
+    /// [`ShapeModifyMode`]. Only `Deflate` shapes accept a negative offset.
     /// If undefined, no offset is applied.
     /// See [`offset_shape`]
     pub offset: Option<f32>,
@@ -340,25 +343,120 @@ impl CornerType {
 
 /// Offsets a [`SPolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
 /// Uses [`geo::Buffer`] to resolve intersections in the offset boundary.
+///
+/// A negative `distance` grows a [`Deflate`](ShapeModifyMode::Deflate) shape, such as a container
+/// outline, letting items come up to `distance` closer to its boundary, but no closer than that
+/// (within 1.1% of `distance`). Inner corners are pulled back, so items keep a little more distance
+/// near them. Near narrow inlets, which growing would close, the shape is kept as is. If the grown
+/// shape cannot be represented safely, the shape is returned unchanged.
+/// A negative `distance` on an [`Inflate`](ShapeModifyMode::Inflate) shape is an error: shrinking
+/// it could miss collisions at its corners and thin parts.
 pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Result<SPolygon> {
-    let offset = match mode {
-        ShapeModifyMode::Deflate => -distance,
-        ShapeModifyMode::Inflate => distance,
+    match mode {
+        ShapeModifyMode::Inflate if distance < 0.0 => {
+            bail!("Inflate shapes cannot be offset by a negative distance: {distance}")
+        }
+        ShapeModifyMode::Inflate => buffer_single(sp, distance),
+        ShapeModifyMode::Deflate if distance < 0.0 => Ok(grow_outline(sp, -distance)),
+        ShapeModifyMode::Deflate => buffer_single(sp, -distance),
+    }
+}
+
+/// Grows a shape that items must stay inside of by `distance`, without letting items closer
+/// than `distance` to its original boundary.
+fn grow_outline(sp: &SPolygon, distance: f32) -> SPolygon {
+    let (original, distance) = (to_geo(sp), f64::from(distance));
+    // Items keep `distance` from the grown boundary, so they stay within it shrunk by `distance`,
+    // which must not extend beyond `sp` by more than 1% of `distance`.
+    let tolerated = buffer(&original, 0.01 * distance);
+    let exposed = |grown: &Polygon<f64>| {
+        let exposed = buffer(grown, -distance).difference(&tolerated);
+        let exposed = exposed
+            .into_iter()
+            .filter(|part| part.unsigned_area() > 1e-6 * distance * distance);
+        MultiPolygon::new(exposed.collect())
     };
+    let mut grown = grow_notched(&original, distance);
+    let inlets = exposed(&grown);
+    if !inlets.0.is_empty() {
+        // Growing would close narrow inlets, so the original outline is kept near them.
+        let kept = grown.difference(&buffer(&inlets, distance));
+        grown = largest_exterior(MultiPolygon::from(original).union(&kept));
+    }
+    // Removes slivers and vertices that f32 cannot tell apart, which could make edges intersect.
+    // Removing slivers only shrinks the shape; simplifying moves it by at most 0.1% of `distance`.
+    let sliver = 0.01 * distance;
+    let grown = largest_exterior(buffer(&buffer(&grown, -sliver), sliver));
+    // Rounding to f32 could still make the outline invalid or unsafe; then it is not grown.
+    match from_geo(&grown.simplify(1e-3 * distance)) {
+        Ok(grown) if exposed(&to_geo(&grown)).0.is_empty() => grown,
+        _ => {
+            warn!("The outline could not be grown safely, so it is kept as is.");
+            sp.clone()
+        }
+    }
+}
 
-    // Convert the SPolygon to a geo_types::Polygon
-    let geo_poly = geo_types::Polygon::new(
-        sp.vertices
-            .iter()
-            .map(|p| (f64::from(p.0), f64::from(p.1)))
-            .collect(),
-        vec![],
-    );
+/// Grows `original` by `distance`, pulling back inner corners that would end up farther than
+/// `distance` from the original corner.
+fn grow_notched(original: &Polygon<f64>, distance: f64) -> Polygon<f64> {
+    let orientation = original.signed_area().signum();
+    let ring = &original.exterior().0;
+    let n = ring.len() - 1;
+    let notches = (0..n).filter_map(|i| {
+        let (prev, v, next) = (ring[(i + n - 1) % n], ring[i], ring[i + 1]);
+        let (da, db) = (unit(v - prev), unit(next - v));
+        // Only inner corners are pulled back; their growth meets beyond the corner.
+        if orientation * cross(da, db) >= 0.0 {
+            return None;
+        }
+        let outward = |t: Coord<f64>| Coord { x: t.y, y: -t.x } * orientation;
+        let (na, nb) = (outward(da), outward(db));
+        let corner = v + (na + nb) * (distance / (1.0 + dot(na, nb)));
+        let overshoot = norm(corner - v) - distance;
+        // Smaller overshoots stay well within the tolerance of `grow_outline`.
+        if overshoot <= 0.005 * distance {
+            return None;
+        }
+        // A V from the grown corner back to `distance` from the original corner.
+        let pulled = v + unit(na + nb) * distance;
+        let wings = [corner - da * overshoot, corner + db * overshoot];
+        Some(Polygon::new(
+            LineString::from(vec![pulled, wings[0], wings[1]]),
+            vec![],
+        ))
+    });
+    let notches = MultiPolygon::new(notches.collect());
+    largest_exterior(buffer(original, distance).difference(&notches))
+}
 
-    // Create the offset polygon
-    // Preserve the previous buffer's 0.1-radian round-join resolution.
-    let style = BufferStyle::new(f64::from(offset)).line_join(LineJoin::Round(0.1));
-    let geo_poly_offsets = geo_poly.buffer_with_style(style).0;
+/// The exterior of the largest polygon; dropping holes and other parts.
+fn largest_exterior(polygons: MultiPolygon<f64>) -> Polygon<f64> {
+    let largest = polygons
+        .into_iter()
+        .max_by(|a, b| a.unsigned_area().total_cmp(&b.unsigned_area()))
+        .expect("at least one polygon");
+    Polygon::new(largest.exterior().clone(), vec![])
+}
+
+fn unit(c: Coord<f64>) -> Coord<f64> {
+    c / norm(c)
+}
+
+fn norm(c: Coord<f64>) -> f64 {
+    c.x.hypot(c.y)
+}
+
+fn dot(a: Coord<f64>, b: Coord<f64>) -> f64 {
+    a.x * b.x + a.y * b.y
+}
+
+fn cross(a: Coord<f64>, b: Coord<f64>) -> f64 {
+    a.x * b.y - a.y * b.x
+}
+
+fn buffer_single(sp: &SPolygon, distance: f32) -> Result<SPolygon> {
+    let geo_poly_offsets = buffer(&to_geo(sp), f64::from(distance)).0;
 
     let geo_poly_offset = match geo_poly_offsets.len() {
         0 => bail!("Offset resulted in an empty polygon"),
@@ -371,16 +469,35 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
         }
     };
 
-    // Convert back to internal representation (by using the import function)
+    from_geo(geo_poly_offset)
+}
+
+fn buffer(geometry: &impl Buffer<Scalar = f64>, distance: f64) -> MultiPolygon<f64> {
+    // Preserve the previous buffer's 0.1-radian round-join resolution.
+    let style = BufferStyle::new(distance).line_join(LineJoin::Round(0.1));
+    geometry.buffer_with_style(style)
+}
+
+/// Converts back to the internal representation (by using the import function).
+fn from_geo(polygon: &geo_types::Polygon<f64>) -> Result<SPolygon> {
     let ext_s_polygon = ExtSPolygon(
-        geo_poly_offset
+        polygon
             .exterior()
             .points()
             .map(|p| (p.x().to_f32().unwrap(), p.y().to_f32().unwrap()))
             .collect_vec(),
     );
-
     import::import_simple_polygon(&ext_s_polygon)
+}
+
+fn to_geo(sp: &SPolygon) -> geo_types::Polygon<f64> {
+    geo_types::Polygon::new(
+        sp.vertices
+            .iter()
+            .map(|p| (f64::from(p.0), f64::from(p.1)))
+            .collect(),
+        vec![],
+    )
 }
 
 #[allow(clippy::too_many_lines)]
