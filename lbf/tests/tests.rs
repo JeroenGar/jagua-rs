@@ -526,6 +526,165 @@ mod tests {
         }
     }
 
+    /// Distance from `p` to the boundary of `shape`.
+    fn boundary_distance(
+        shape: &jagua_rs::geometry::primitives::SPolygon,
+        p: &jagua_rs::geometry::primitives::Point,
+    ) -> f32 {
+        use jagua_rs::geometry::geo_traits::DistanceTo;
+        shape
+            .edge_iter()
+            .map(|e| e.distance_to(p))
+            .fold(f32::INFINITY, f32::min)
+    }
+
+    /// Checks that no point of `original`'s boundary, sampled densely near its vertices, is
+    /// farther than `d` from the boundary of the relaxed `grown`, so items never get closer than
+    /// requested. Each `(p, expected)` pair checks how far `grown` relaxed at `p`, within 2%.
+    fn assert_relaxed(
+        original: &jagua_rs::geometry::primitives::SPolygon,
+        grown: &jagua_rs::geometry::primitives::SPolygon,
+        d: f32,
+        expected: &[(jagua_rs::geometry::primitives::Point, f32)],
+    ) {
+        use jagua_rs::geometry::primitives::Point;
+        for edge in original.edge_iter() {
+            let (Point(x0, y0), Point(x1, y1)) = (edge.start, edge.end);
+            let length = edge.length();
+            let near_ends = (0..=20)
+                .map(|k| k as f32 * d / 5.0)
+                .filter(|&s| s <= length);
+            for s in near_ends
+                .flat_map(|s| [s, length - s])
+                .chain([length / 2.0])
+            {
+                let p = Point(x0 + (x1 - x0) * s / length, y0 + (y1 - y0) * s / length);
+                let distance = boundary_distance(grown, &p);
+                assert!(
+                    distance <= 1.011 * d,
+                    "{p:?} is {distance} from the boundary"
+                );
+            }
+        }
+        for (p, relaxed) in expected {
+            let distance = boundary_distance(grown, p);
+            assert!(
+                (distance - relaxed).abs() <= 0.02 * relaxed,
+                "{p:?} relaxed by {distance}, not {relaxed}"
+            );
+        }
+    }
+
+    /// Hide outlines of leather instances grow safely, and by nearly the full distance.
+    #[test_case("../assets/baldacci1.json"; "baldacci1")]
+    #[test_case("../assets/baldacci2.json"; "baldacci2")]
+    #[test_case("../assets/baldacci3.json"; "baldacci3")]
+    #[test_case("../assets/baldacci4.json"; "baldacci4")]
+    #[test_case("../assets/baldacci5.json"; "baldacci5")]
+    #[test_case("../assets/baldacci6.json"; "baldacci6")]
+    fn negative_offsets_grow_hides(instance_path: &str) -> Result<()> {
+        use jagua_rs::geometry::shape_modification::{ShapeModifyMode, offset_shape};
+
+        let ext_instance = read_bpp_instance(Path::new(instance_path))?;
+        let instance = bpp::io::import_instance(&importer(), &ext_instance)?;
+        for bin in instance.bins() {
+            let hide = &bin.container.outer_orig().shape;
+            for d in [10.0, 40.0] {
+                let grown = offset_shape(hide, ShapeModifyMode::Deflate, -d)?;
+                assert_relaxed(hide, &grown, d, &[]);
+                // Nearly all of the boundary relaxes by nearly the full distance; only the
+                // surroundings of narrow inlets and inner corners keep more.
+                let vertices = hide.vertices();
+                let relaxed = vertices
+                    .iter()
+                    .filter(|p| boundary_distance(&grown, p) >= 0.9 * d)
+                    .count();
+                let share = relaxed as f32 / vertices.len() as f32;
+                assert!(share >= 0.85, "only {share} of the vertices relaxed");
+            }
+        }
+        Ok(())
+    }
+
+    /// A negative offset grows a container outline, letting items come closer to its boundary,
+    /// unless that would let items into a notch. Holes cannot be shrunk.
+    #[test]
+    fn negative_offsets_grow_outlines() -> Result<()> {
+        use jagua_rs::geometry::geo_traits::CollidesWith;
+        use jagua_rs::geometry::primitives::{Point, SPolygon};
+        use jagua_rs::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
+        use jagua_rs::geometry::{DTransformation, OriginalShape};
+
+        let shape = |points: &[(f32, f32)], modify_mode, offset| -> Result<_> {
+            Ok(OriginalShape {
+                shape: SPolygon::new(points.iter().map(|&(x, y)| Point(x, y)).collect())?,
+                pre_transform: DTransformation::empty(),
+                modify_mode,
+                modify_config: ShapeModifyConfig {
+                    offset: Some(offset),
+                    ..ShapeModifyConfig::default()
+                },
+            })
+        };
+        let square = |side: f32, modify_mode, offset| {
+            shape(
+                &[(0.0, 0.0), (side, 0.0), (side, side), (0.0, side)],
+                modify_mode,
+                offset,
+            )
+        };
+
+        // Convex sheets of any size grow by the full distance.
+        for (side, d) in [(100.0, 5.0), (4000.0, 0.5)] {
+            let grown = square(side, ShapeModifyMode::Deflate, -d)?.convert_to_internal()?;
+            let bbox = grown.bbox();
+            let expected = [-d, -d, side + d, side + d];
+            let actual = [bbox.x_min, bbox.y_min, bbox.x_max, bbox.y_max];
+            assert!(
+                actual
+                    .iter()
+                    .zip(expected)
+                    .all(|(a, e)| (a - e).abs() < 0.01 * d)
+            );
+        }
+
+        // An L-shaped sheet grows by the full distance along its edges; its inner corner is pulled
+        // back, keeping the full distance there too.
+        let l_shape = [
+            (0.0, 0.0),
+            (100.0, 0.0),
+            (100.0, 50.0),
+            (50.0, 50.0),
+            (50.0, 100.0),
+            (0.0, 100.0),
+        ];
+        let l_shape = shape(&l_shape, ShapeModifyMode::Deflate, -5.0)?;
+        let grown = l_shape.convert_to_internal()?;
+        assert_relaxed(&l_shape.shape, &grown, 5.0, &[(Point(75.0, 50.0), 5.0)]);
+        assert_relaxed(&l_shape.shape, &grown, 5.0, &[(Point(50.0, 50.0), 5.0)]);
+
+        // Growing would close this slot, so the outline is kept near it and grows elsewhere.
+        let slot = [
+            (0.0, 0.0),
+            (100.0, 0.0),
+            (100.0, 100.0),
+            (52.0, 100.0),
+            (52.0, 50.0),
+            (48.0, 50.0),
+            (48.0, 100.0),
+            (0.0, 100.0),
+        ];
+        let slotted = shape(&slot, ShapeModifyMode::Deflate, -5.0)?;
+        let grown = slotted.convert_to_internal()?;
+        assert_relaxed(&slotted.shape, &grown, 5.0, &[(Point(0.0, 25.0), 5.0)]);
+        assert!(!grown.collides_with(&Point(50.0, 75.0)));
+
+        // Shrinking a hole could miss collisions at its corners.
+        let hole = square(20.0, ShapeModifyMode::Inflate, -5.0)?;
+        assert!(hole.convert_to_internal().is_err());
+        Ok(())
+    }
+
     fn importer() -> Importer {
         Importer::new(
             config().cde_config,
