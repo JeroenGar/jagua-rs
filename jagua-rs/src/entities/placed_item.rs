@@ -1,17 +1,13 @@
+use crate::collision_detection::hazards::{HazardEntity, PItemKey};
 use crate::entities::Item;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Transformable;
 use crate::geometry::primitives::SPolygon;
-use slotmap::new_key_type;
+use std::borrow::Borrow;
 use std::sync::Arc;
 
 #[cfg(doc)]
 use crate::entities::Layout;
-
-new_key_type! {
-    /// Unique key for each [`PlacedItem`] in a layout.
-    pub struct PItemKey;
-}
 
 /// Represents an [`Item`] that has been placed in a [`Layout`]
 #[derive(Clone, Debug)]
@@ -53,5 +49,18 @@ impl PlacedItem {
     #[must_use]
     pub fn shape(&self) -> &Arc<SPolygon> {
         &self.shape
+    }
+}
+
+impl<T> From<(PItemKey, T)> for HazardEntity
+where
+    T: Borrow<PlacedItem>,
+{
+    fn from((pk, pi): (PItemKey, T)) -> Self {
+        HazardEntity::PlacedItem {
+            id: pi.borrow().item.idx,
+            dt: pi.borrow().d_transf,
+            pk,
+        }
     }
 }

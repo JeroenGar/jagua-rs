@@ -1,10 +1,10 @@
 use crate::collision_detection::hazards::HazKey;
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::hazards::PItemKey;
 use crate::collision_detection::hazards::collector::HazardCollector;
 use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::quadtree::{QTHazPresence, QTHazard, QTNode};
-use crate::entities::PItemKey;
 use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
