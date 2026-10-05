@@ -1,11 +1,11 @@
 use crate::collision_detection::hazards::collector::HazardCollector;
-use crate::collision_detection::hazards::{HazKey, Hazard, HazardEntity};
+use crate::collision_detection::hazards::{BasicHazardEntity, HazKey, Hazard};
 use slotmap::{SecondaryMap, SlotMap};
 
-/// Trait for filters to ignore all [`Hazard`]s induced by specific [`HazardEntity`]s.
-/// Enables collision queries to ignore specific hazards during the check.
-pub trait HazardFilter {
-    fn is_irrelevant(&self, haz_key: HazKey) -> bool;
+/// Decides which [`Hazard`]s a collision query ignores, by key or by the entity inducing them.
+pub trait HazardFilter<E> {
+    /// Whether the hazard registered under `key` and induced by `entity` is ignored.
+    fn is_irrelevant(&self, key: HazKey, entity: &E) -> bool;
 }
 
 /// Deems hazards with specific [`HazKey`]'s as irrelevant.
@@ -28,7 +28,7 @@ impl HazKeyFilter {
                 .iter()
                 .filter_map(|(hkey, h)| {
                     match h.entity {
-                        HazardEntity::InferiorQualityZone { quality, .. }
+                        BasicHazardEntity::InferiorQualityZone { quality, .. }
                             if quality >= required_quality =>
                         {
                             // Zones meeting the item's minimum quality do not block it.
@@ -42,16 +42,23 @@ impl HazKeyFilter {
     }
 }
 
-impl HazardFilter for HazKeyFilter {
-    fn is_irrelevant(&self, haz_key: HazKey) -> bool {
-        self.0.contains_key(haz_key)
+impl<E> HazardFilter<E> for HazKeyFilter {
+    fn is_irrelevant(&self, key: HazKey, _: &E) -> bool {
+        self.0.contains_key(key)
     }
 }
 
 /// Deems hazards induced by itself as irrelevant.
-impl HazardFilter for HazKey {
-    fn is_irrelevant(&self, hk: HazKey) -> bool {
-        *self == hk
+impl<E> HazardFilter<E> for HazKey {
+    fn is_irrelevant(&self, key: HazKey, _: &E) -> bool {
+        *self == key
+    }
+}
+
+/// Ignores the hazards either filter ignores.
+impl<E, A: HazardFilter<E>, B: HazardFilter<E>> HazardFilter<E> for (A, B) {
+    fn is_irrelevant(&self, key: HazKey, entity: &E) -> bool {
+        self.0.is_irrelevant(key, entity) || self.1.is_irrelevant(key, entity)
     }
 }
 
@@ -59,19 +66,16 @@ impl HazardFilter for HazKey {
 #[derive(Clone, Debug)]
 pub struct NoFilter;
 
-impl HazardFilter for NoFilter {
-    fn is_irrelevant(&self, _haz_key: HazKey) -> bool {
+impl<E> HazardFilter<E> for NoFilter {
+    fn is_irrelevant(&self, _: HazKey, _: &E) -> bool {
         false
     }
 }
 
 /// Implements [`HazardFilter`] for any type that implements [`HazardCollector`].
-/// Any [`HazardEntity`]s that are already in the collector are considered irrelevant.
-impl<T> HazardFilter for T
-where
-    T: HazardCollector,
-{
-    fn is_irrelevant(&self, hkey: HazKey) -> bool {
-        self.contains_key(hkey)
+/// Any hazards that are already in the collector are considered irrelevant.
+impl<T: HazardCollector> HazardFilter<T::Entity> for T {
+    fn is_irrelevant(&self, key: HazKey, _: &T::Entity) -> bool {
+        self.contains_key(key)
     }
 }

@@ -7,6 +7,8 @@ pub mod filter;
 pub mod collector;
 
 #[doc(inline)]
+pub use hazard::BasicHazardEntity;
+#[doc(inline)]
 pub use hazard::HazKey;
 #[doc(inline)]
 pub use hazard::Hazard;

@@ -1,9 +1,8 @@
 use crate::collision_detection::hazards::HazKey;
 use crate::collision_detection::hazards::Hazard;
-use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::hazards::PItemKey;
 use crate::collision_detection::hazards::collector::HazardCollector;
 use crate::collision_detection::hazards::filter::HazardFilter;
+use crate::collision_detection::hazards::{BasicHazardEntity, HazardEntity};
 use crate::collision_detection::quadtree::{QTHazPresence, QTHazard, QTNode};
 use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
@@ -17,21 +16,23 @@ use slotmap::SlotMap;
 
 /// The Collision Detection Engine (CDE).
 /// [`Hazard`]s can be (de)registered and collision queries can be performed.
+/// The entity type `E` defines what can induce a hazard, see [`HazardEntity`].
 #[derive(Clone, Debug)]
-pub struct CDEngine {
+pub struct CDEngine<E = BasicHazardEntity> {
     /// Root node of the quadtree
-    pub(crate) quadtree: QTNode,
+    pub(crate) quadtree: QTNode<E>,
     /// All hazards registered in the CDE (active and inactive)
-    pub(crate) hazards_map: SlotMap<HazKey, Hazard>,
+    pub(crate) hazards_map: SlotMap<HazKey, Hazard<E>>,
     /// Configuration of the CDE
     pub(crate) config: CDEConfig,
     /// The key of the hazard that represents the exterior of the container.
     hkey_exterior: HazKey,
 }
 
-impl CDEngine {
+impl<E: HazardEntity> CDEngine<E> {
+    /// Creates an engine with the static hazards, exactly one of which covers the exterior.
     #[must_use]
-    pub fn new(bbox: Rect, static_hazards: Vec<Hazard>, config: CDEConfig) -> CDEngine {
+    pub fn new(bbox: Rect, static_hazards: Vec<Hazard<E>>, config: CDEConfig) -> Self {
         let mut quadtree = QTNode::new(config.quadtree_depth, bbox, config.cd_threshold);
         let mut hazards_map = SlotMap::with_key();
 
@@ -41,11 +42,17 @@ impl CDEngine {
             quadtree.register_hazard(qt_haz, &hazards_map);
         }
 
-        let hkey_exterior = hazards_map
+        let mut exteriors = hazards_map
             .iter()
-            .find(|(_, h)| matches!(h.entity, HazardEntity::Exterior))
-            .map(|(hkey, _)| hkey)
+            .filter(|(_, h)| h.entity.scope() == GeoPosition::Exterior)
+            .map(|(hkey, _)| hkey);
+        let hkey_exterior = exteriors
+            .next()
             .expect("No exterior hazard registered in the CDE");
+        assert!(
+            exteriors.next().is_none(),
+            "More than one exterior hazard registered in the CDE"
+        );
 
         CDEngine {
             quadtree,
@@ -56,7 +63,7 @@ impl CDEngine {
     }
 
     /// Registers a new hazard in the CDE.
-    pub fn register_hazard(&mut self, hazard: Hazard) {
+    pub fn register_hazard(&mut self, hazard: Hazard<E>) {
         debug_assert!(
             !self.hazards_map.values().any(|h| h.entity == hazard.entity),
             "Hazard with an identical entity already registered"
@@ -69,7 +76,7 @@ impl CDEngine {
     }
 
     /// Removes a hazard from the CDE.
-    pub fn deregister_hazard_by_entity(&mut self, hazard_entity: HazardEntity) -> Hazard {
+    pub fn deregister_hazard_by_entity(&mut self, hazard_entity: E) -> Hazard<E> {
         let hkey = self
             .hazards_map
             .iter()
@@ -84,7 +91,7 @@ impl CDEngine {
         hazard
     }
 
-    pub fn deregister_hazard_by_key(&mut self, hkey: HazKey) -> Hazard {
+    pub fn deregister_hazard_by_key(&mut self, hkey: HazKey) -> Hazard<E> {
         let hazard = self
             .hazards_map
             .remove(hkey)
@@ -97,18 +104,18 @@ impl CDEngine {
 
     /// Saves the dynamic hazards, to restore them later with [`CDEngine::restore`].
     #[must_use]
-    pub fn save(&self) -> CDESnapshot {
+    pub fn save(&self) -> CDESnapshot<E> {
         let dynamic_hazards = self
             .hazards_map
             .values()
-            .filter(|h| h.dynamic)
+            .filter(|h| h.entity.is_dynamic())
             .cloned()
             .collect_vec();
         CDESnapshot { dynamic_hazards }
     }
 
     /// Restores the dynamic hazards of a snapshot, keeping those present in both.
-    pub fn restore(&mut self, snapshot: &CDESnapshot) {
+    pub fn restore(&mut self, snapshot: &CDESnapshot<E>) {
         //Restore the quadtree, by doing a 'diff' between the current state and the snapshot
         //Only dynamic hazards are considered
 
@@ -116,7 +123,7 @@ impl CDEngine {
         let mut hazards_to_remove = self
             .hazards_map
             .iter()
-            .filter(|(_, h)| h.dynamic)
+            .filter(|(_, h)| h.entity.is_dynamic())
             .map(|(hkey, h)| (hkey, h.entity))
             .collect_vec();
         let mut hazards_to_add = vec![];
@@ -145,13 +152,16 @@ impl CDEngine {
         }
 
         debug_assert_eq!(
-            self.hazards_map.values().filter(|h| h.dynamic).count(),
+            self.hazards_map
+                .values()
+                .filter(|h| h.entity.is_dynamic())
+                .count(),
             snapshot.dynamic_hazards.len()
         );
     }
 
     /// Returns all hazards in the CDE
-    pub fn hazards(&self) -> impl Iterator<Item = &Hazard> {
+    pub fn hazards(&self) -> impl Iterator<Item = &Hazard<E>> {
         self.hazards_map.values()
     }
 
@@ -159,7 +169,7 @@ impl CDEngine {
     /// # Arguments
     /// * `shape` - The shape (already transformed) to be checked for collisions
     /// * `filter` - Hazard filter to be applied
-    pub fn detect_poly_collision(&self, shape: &SPolygon, filter: &impl HazardFilter) -> bool {
+    pub fn detect_poly_collision(&self, shape: &SPolygon, filter: &impl HazardFilter<E>) -> bool {
         if self.bbox().relation_to(shape.bbox) == GeoRelation::Surrounding {
             //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
             let v_qt_root = self.get_virtual_root(shape.bbox);
@@ -173,7 +183,7 @@ impl CDEngine {
 
             // Check for containment of the shape in any of the hazards
             for qt_hazard in v_qt_root.hazards.iter() {
-                if filter.is_irrelevant(qt_hazard.hkey) {
+                if filter.is_irrelevant(qt_hazard.hkey, &qt_hazard.entity) {
                     continue;
                 }
                 match &qt_hazard.presence {
@@ -209,7 +219,7 @@ impl CDEngine {
         &self,
         base_surrogate: &SPSurrogate,
         transform: &Transformation,
-        filter: &impl HazardFilter,
+        filter: &impl HazardFilter<E>,
     ) -> bool {
         for pole in base_surrogate.ff_poles() {
             let t_pole = pole.transform_clone(transform);
@@ -233,11 +243,7 @@ impl CDEngine {
     /// * `haz_shape` - The shape of the respective hazard
     /// * `haz_entity` - The entity inducing the hazard
     #[must_use]
-    fn detect_containment_collision(
-        shape: &SPolygon,
-        haz_shape: &SPolygon,
-        haz_entity: HazardEntity,
-    ) -> bool {
+    fn detect_containment_collision(shape: &SPolygon, haz_shape: &SPolygon, haz_entity: E) -> bool {
         //Due to possible fp issues, we check if the bboxes are "almost" related --
         //meaning that, when edges are very close together, they are considered equal.
         //Some relations which would normally be seen as `Intersecting` are now being considered `Enclosed`/`Surrounding` (which triggers the containment check).
@@ -261,9 +267,15 @@ impl CDEngine {
     /// Collects all hazards with which the polygon collides and reports them to the collector.
     /// # Arguments
     /// * `shape` - The shape to be checked for collisions
+    /// * `filter` - Hazards to ignore
     /// * `collector` - The collector to which the hazards are reported
-    pub fn collect_poly_collisions(&self, shape: &SPolygon, collector: &mut impl HazardCollector) {
-        let _ = self.collect_poly_collisions_until(shape, collector, |_| false);
+    pub fn collect_poly_collisions(
+        &self,
+        shape: &SPolygon,
+        filter: &impl HazardFilter<E>,
+        collector: &mut impl HazardCollector<Entity = E>,
+    ) {
+        let _ = self.collect_poly_collisions_until(shape, filter, collector, |_| false);
     }
 
     /// Collects polygon collisions until `stop_after_collision` requests an early return.
@@ -272,21 +284,25 @@ impl CDEngine {
     /// the first time. Returning `true` stops traversal and leaves the collector with only the
     /// hazards found up to that point. Collision order is unspecified.
     #[must_use]
-    pub fn collect_poly_collisions_until<C, F>(
+    pub fn collect_poly_collisions_until<H, C, F>(
         &self,
         shape: &SPolygon,
+        filter: &H,
         collector: &mut C,
         mut stop_after_collision: F,
     ) -> bool
     where
-        C: HazardCollector,
-        F: FnMut(HazardEntity) -> bool,
+        H: HazardFilter<E>,
+        C: HazardCollector<Entity = E>,
+        F: FnMut(E) -> bool,
     {
+        let exterior = self.hazards_map[self.hkey_exterior].entity;
         if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding
             && !collector.contains_key(self.hkey_exterior)
+            && !filter.is_irrelevant(self.hkey_exterior, &exterior)
         {
-            collector.insert(self.hkey_exterior, HazardEntity::Exterior);
-            if stop_after_collision(HazardEntity::Exterior) {
+            collector.insert(self.hkey_exterior, exterior);
+            if stop_after_collision(exterior) {
                 return true;
             }
         }
@@ -295,7 +311,12 @@ impl CDEngine {
         let v_quadtree = self.get_virtual_root(shape.bbox);
 
         for edge in shape.edge_iter() {
-            if v_quadtree.collect_collisions_until(&edge, collector, &mut stop_after_collision) {
+            if v_quadtree.collect_collisions_until(
+                &edge,
+                filter,
+                collector,
+                &mut stop_after_collision,
+            ) {
                 return true;
             }
         }
@@ -306,7 +327,9 @@ impl CDEngine {
                 // No need to check these, guaranteed to be detected by edge intersection
                 QTHazPresence::None | QTHazPresence::Entire => {}
                 QTHazPresence::Partial(_) => {
-                    if !collector.contains_key(qt_haz.hkey) {
+                    if !collector.contains_key(qt_haz.hkey)
+                        && !filter.is_irrelevant(qt_haz.hkey, &qt_haz.entity)
+                    {
                         let h_shape = &self.hazards_map[qt_haz.hkey].shape;
                         if Self::detect_containment_collision(shape, h_shape, qt_haz.entity) {
                             collector.insert(qt_haz.hkey, qt_haz.entity);
@@ -329,9 +352,10 @@ impl CDEngine {
     pub fn collect_surrogate_collisions(
         &self,
         shape: &SPolygon,
-        collector: &mut impl HazardCollector,
+        filter: &impl HazardFilter<E>,
+        collector: &mut impl HazardCollector<Entity = E>,
     ) {
-        let _ = self.collect_surrogate_collisions_until(shape, collector, |_| false);
+        let _ = self.collect_surrogate_collisions_until(shape, filter, collector, |_| false);
     }
 
     /// Collects collisions found by the surrogate screening pass until
@@ -342,24 +366,28 @@ impl CDEngine {
     /// query; follow it with [`Self::collect_poly_collisions_until`] if the callback does not stop
     /// the screening pass.
     #[must_use]
-    pub fn collect_surrogate_collisions_until<C, F>(
+    pub fn collect_surrogate_collisions_until<H, C, F>(
         &self,
         shape: &SPolygon,
+        filter: &H,
         collector: &mut C,
         mut stop_after_collision: F,
     ) -> bool
     where
-        C: HazardCollector,
-        F: FnMut(HazardEntity) -> bool,
+        H: HazardFilter<E>,
+        C: HazardCollector<Entity = E>,
+        F: FnMut(E) -> bool,
     {
         let Some(surrogate) = &shape.surrogate else {
             return false;
         };
         for pole in surrogate.ff_poles() {
-            if self
-                .quadtree
-                .collect_collisions_until(pole, collector, &mut stop_after_collision)
-            {
+            if self.quadtree.collect_collisions_until(
+                pole,
+                filter,
+                collector,
+                &mut stop_after_collision,
+            ) {
                 return true;
             }
         }
@@ -369,7 +397,7 @@ impl CDEngine {
     /// Returns the lowest `QTNode` that completely surrounds the given bounding box.
     /// Used to initiate collision checks from lower in the quadtree.
     #[must_use]
-    fn get_virtual_root(&self, bbox: Rect) -> &QTNode {
+    fn get_virtual_root(&self, bbox: Rect) -> &QTNode<E> {
         let mut v_root = &self.quadtree;
         while let Some(children) = v_root.children.as_ref() {
             // Keep going down the tree until we cannot find a child that fully surrounds the shape
@@ -389,27 +417,25 @@ impl CDEngine {
         self.quadtree.bbox
     }
 
+    /// Returns the key of the hazard induced by `entity`, if registered.
     #[must_use]
-    pub fn haz_key_from_pi_key(&self, pik: PItemKey) -> Option<HazKey> {
+    pub fn haz_key(&self, entity: &E) -> Option<HazKey> {
         self.hazards_map
             .iter()
-            .find(|(_, hazard)| match hazard.entity {
-                HazardEntity::PlacedItem { pk, .. } => pik == pk,
-                _ => false,
-            })
+            .find(|(_, hazard)| hazard.entity == *entity)
             .map(|(key, _)| key)
     }
 
     /// All hazards registered in the CDE (active and inactive)
     #[must_use]
-    pub fn hazards_map(&self) -> &SlotMap<HazKey, Hazard> {
+    pub fn hazards_map(&self) -> &SlotMap<HazKey, Hazard<E>> {
         &self.hazards_map
     }
 
     /// Returns the registered hazard, or `None` if the key is no longer valid.
     #[inline]
     #[must_use]
-    pub fn hazard(&self, key: HazKey) -> Option<&Hazard> {
+    pub fn hazard(&self, key: HazKey) -> Option<&Hazard<E>> {
         self.hazards_map.get(key)
     }
 
@@ -434,14 +460,14 @@ pub struct CDEConfig {
 
 /// Snapshot of the dynamic hazards of a [`CDEngine`], to restore them later.
 #[derive(Clone, Debug)]
-pub struct CDESnapshot {
-    pub(crate) dynamic_hazards: Vec<Hazard>,
+pub struct CDESnapshot<E = BasicHazardEntity> {
+    pub(crate) dynamic_hazards: Vec<Hazard<E>>,
 }
 
-impl CDESnapshot {
+impl<E> CDESnapshot<E> {
     /// The saved dynamic hazards.
     #[must_use]
-    pub fn dynamic_hazards(&self) -> &[Hazard] {
+    pub fn dynamic_hazards(&self) -> &[Hazard<E>] {
         &self.dynamic_hazards
     }
 }

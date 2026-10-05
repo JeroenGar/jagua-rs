@@ -70,14 +70,16 @@ fn reflection_bench(c: &mut Criterion) {
                         let buffer = &mut buffers[index];
                         buffer.transform_from(item.shape_cd(), transform);
                         if operation == "transform_and_collect" {
-                            problem
-                                .layout()
-                                .cde()
-                                .collect_surrogate_collisions(buffer, &mut collector);
-                            problem
-                                .layout()
-                                .cde()
-                                .collect_poly_collisions(buffer, &mut collector);
+                            problem.layout().cde().collect_surrogate_collisions(
+                                buffer,
+                                &NoFilter,
+                                &mut collector,
+                            );
+                            problem.layout().cde().collect_poly_collisions(
+                                buffer,
+                                &NoFilter,
+                                &mut collector,
+                            );
                             black_box(collector.len());
                             collector.clear();
                         }
@@ -127,9 +129,9 @@ fn cde_collect_bench(c: &mut Criterion) {
                     let transf = d_transf.compose();
                     //detect collisions with the surrogate
                     buffer_shape.transform_from(item.shape_cd(), &transf);
-                    cde.collect_surrogate_collisions(&buffer_shape, &mut collector);
+                    cde.collect_surrogate_collisions(&buffer_shape, &NoFilter, &mut collector);
                     //detect collisions with the actual shape
-                    cde.collect_poly_collisions(&buffer_shape, &mut collector);
+                    cde.collect_poly_collisions(&buffer_shape, &NoFilter, &mut collector);
                     n_detected += collector.len();
                     collector.clear();
                 }

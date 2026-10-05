@@ -4,6 +4,7 @@ use crate::samplers::ls_sampler::LSSampler;
 use crate::samplers::uniform_rect_sampler::UniformRectSampler;
 use itertools::Itertools;
 use jagua_rs::collision_detection::CDEngine;
+use jagua_rs::collision_detection::hazards::BasicHazardEntity;
 use jagua_rs::collision_detection::hazards::filter::HazardFilter;
 use jagua_rs::entities::Item;
 use jagua_rs::geometry::DTransformation;
@@ -20,7 +21,7 @@ pub fn search(
     config: &LBFConfig,
     rng: &mut impl Rng,
     sample_counter: &mut usize,
-    filter: &impl HazardFilter,
+    filter: &impl HazardFilter<BasicHazardEntity>,
 ) -> Option<(DTransformation, LBFLoss)> {
     let surrogate = item.shape_cd().surrogate();
     // Clone a reusable buffer for complete polygon collision checks.

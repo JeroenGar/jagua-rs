@@ -1,4 +1,4 @@
-use crate::collision_detection::hazards::{HazardEntity, PItemKey};
+use crate::collision_detection::hazards::{BasicHazardEntity, PItemKey};
 use crate::entities::Item;
 use crate::geometry::DTransformation;
 use crate::geometry::geo_traits::Transformable;
@@ -52,12 +52,12 @@ impl PlacedItem {
     }
 }
 
-impl<T> From<(PItemKey, T)> for HazardEntity
+impl<T> From<(PItemKey, T)> for BasicHazardEntity
 where
     T: Borrow<PlacedItem>,
 {
     fn from((pk, pi): (PItemKey, T)) -> Self {
-        HazardEntity::PlacedItem {
+        BasicHazardEntity::PlacedItem {
             id: pi.borrow().item.idx,
             dt: pi.borrow().d_transf,
             pk,
