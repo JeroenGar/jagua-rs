@@ -77,17 +77,27 @@ fn qt_node_contains_no_dangling_hazards(node: &QTNode, parent: &QTNode) -> bool 
 #[must_use]
 pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
     //check if every placed item is correctly represented in the quadtree
+    let hazards = layout
+        .placed_items
+        .iter()
+        .map(|(pk, pi)| Hazard::new((pk, pi).into(), pi.shape.clone(), true));
+    cde_matches_fresh(layout.cde(), &layout.container.base_cde, hazards)
+}
 
-    //rebuild the quadtree
-    let container = &layout.container;
-    let mut fresh_cde = container.base_cde.as_ref().clone();
-    for (pk, pi) in &layout.placed_items {
-        let hazard = Hazard::new((pk, pi).into(), pi.shape.clone(), true);
+/// Checks that `cde` matches a fresh copy of `base` with `dynamic_hazards` registered:
+/// the same hazards, represented the same way in the quadtree.
+#[must_use]
+pub fn cde_matches_fresh(
+    cde: &CDEngine,
+    base: &CDEngine,
+    dynamic_hazards: impl IntoIterator<Item = Hazard>,
+) -> bool {
+    let mut fresh_cde = base.clone();
+    for hazard in dynamic_hazards {
         fresh_cde.register_hazard(hazard);
     }
-
-    qt_nodes_match(Some(&layout.cde().quadtree), Some(&fresh_cde.quadtree))
-        && hazards_match(layout.cde().hazards(), fresh_cde.hazards())
+    qt_nodes_match(Some(&cde.quadtree), Some(&fresh_cde.quadtree))
+        && hazards_match(cde.hazards(), fresh_cde.hazards())
 }
 
 fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
