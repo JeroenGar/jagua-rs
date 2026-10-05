@@ -17,7 +17,7 @@ pub use layout::LayoutSnapshot;
 pub use placed_item::PlacedItem;
 
 #[doc(inline)]
-pub use placed_item::PItemKey;
+pub use crate::collision_detection::hazards::PItemKey;
 
 #[doc(inline)]
 pub use container::Container;

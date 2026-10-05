@@ -1,14 +1,15 @@
-use crate::entities::{PItemKey, PlacedItem};
 use crate::geometry::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::SPolygon;
 use slotmap::new_key_type;
-use std::borrow::Borrow;
 use std::sync::Arc;
 
 new_key_type! {
     /// Key to identify hazards inside the CDE.
     pub struct HazKey;
+
+    /// Key of a placed item, identifying it in [`HazardEntity::PlacedItem`].
+    pub struct PItemKey;
 }
 
 /// Any spatial constraint affecting the feasibility of a placement of an Item.
@@ -61,19 +62,6 @@ impl HazardEntity {
             | HazardEntity::Hole { .. }
             | HazardEntity::InferiorQualityZone { .. } => GeoPosition::Interior,
             HazardEntity::Exterior => GeoPosition::Exterior,
-        }
-    }
-}
-
-impl<T> From<(PItemKey, T)> for HazardEntity
-where
-    T: Borrow<PlacedItem>,
-{
-    fn from((pk, pi): (PItemKey, T)) -> Self {
-        HazardEntity::PlacedItem {
-            id: pi.borrow().item.idx,
-            dt: pi.borrow().d_transf,
-            pk,
         }
     }
 }
