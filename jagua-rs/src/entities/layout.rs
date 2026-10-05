@@ -1,5 +1,5 @@
 use crate::collision_detection::hazards::Hazard;
-use crate::collision_detection::hazards::filter::HazKeyFilter;
+use crate::collision_detection::hazards::filter::QualityZoneFilter;
 use crate::collision_detection::{CDESnapshot, CDEngine};
 use crate::entities::Container;
 use crate::entities::Item;
@@ -167,10 +167,8 @@ impl Layout {
                 .haz_key(&(pk, pi).into())
                 .expect("all placed items should be registered in the CDE");
             match pi.item.min_quality {
-                Some(quality) => {
-                    let mut filter =
-                        HazKeyFilter::from_irrelevant_qzones(quality, self.cde.hazards_map());
-                    filter.0.insert(hkey, ());
+                Some(min_quality) => {
+                    let filter = (QualityZoneFilter { min_quality }, hkey);
                     !self.cde.detect_poly_collision(&pi.shape, &filter)
                 }
                 None => !self.cde.detect_poly_collision(&pi.shape, &hkey),

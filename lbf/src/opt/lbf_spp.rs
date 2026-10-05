@@ -5,7 +5,7 @@ use crate::ITEM_LIMIT;
 use crate::config::LBFConfig;
 use crate::opt::search::{item_placement_order, search};
 use crate::util::assertions::strip_width_is_in_check;
-use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
+use jagua_rs::collision_detection::hazards::filter::{NoFilter, QualityZoneFilter};
 use jagua_rs::probs::spp::entities::{SPInstance, SPPlacement, SPProblem, SPSolution};
 use log::info;
 use rand::prelude::SmallRng;
@@ -54,8 +54,9 @@ impl LBFOptimizerSP {
                         &NoFilter,
                     ),
                     Some(min_quality) => {
-                        let filter =
-                            HazKeyFilter::from_irrelevant_qzones(*min_quality, cde.hazards_map());
+                        let filter = QualityZoneFilter {
+                            min_quality: *min_quality,
+                        };
                         search(
                             cde,
                             item,
