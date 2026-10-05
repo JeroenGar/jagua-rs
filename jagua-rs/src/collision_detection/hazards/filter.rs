@@ -55,6 +55,13 @@ impl<E> HazardFilter<E> for HazKey {
     }
 }
 
+/// Ignores the hazards either filter ignores.
+impl<E, A: HazardFilter<E>, B: HazardFilter<E>> HazardFilter<E> for (A, B) {
+    fn is_irrelevant(&self, key: HazKey, entity: &E) -> bool {
+        self.0.is_irrelevant(key, entity) || self.1.is_irrelevant(key, entity)
+    }
+}
+
 /// Deems no hazards as irrelevant.
 #[derive(Clone, Debug)]
 pub struct NoFilter;
