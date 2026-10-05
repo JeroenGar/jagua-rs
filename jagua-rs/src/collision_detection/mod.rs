@@ -8,6 +8,7 @@ pub(crate) mod quadtree;
 
 #[doc(inline)]
 pub use cd_engine::CDEConfig;
-pub(crate) use cd_engine::CDESnapshot;
+#[doc(inline)]
+pub use cd_engine::CDESnapshot;
 #[doc(inline)]
 pub use cd_engine::CDEngine;
