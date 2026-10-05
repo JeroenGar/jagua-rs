@@ -1,8 +1,7 @@
-use crate::collision_detection::hazards::collector::HazardCollector;
-use crate::collision_detection::hazards::{BasicHazardEntity, HazKey, Hazard};
-use slotmap::{SecondaryMap, SlotMap};
+use crate::collision_detection::hazards::{BasicHazardEntity, HazKey};
+use slotmap::SecondaryMap;
 
-/// Decides which [`Hazard`]s a collision query ignores, by key or by the entity inducing them.
+/// Decides which [`Hazard`](super::Hazard)s a collision query ignores, by key or by the entity inducing them.
 pub trait HazardFilter<E> {
     /// Whether the hazard registered under `key` and induced by `entity` is ignored.
     fn is_irrelevant(&self, key: HazKey, entity: &E) -> bool;
@@ -15,30 +14,6 @@ pub struct HazKeyFilter(pub SecondaryMap<HazKey, ()>);
 impl HazKeyFilter {
     pub fn from_keys(keys: impl IntoIterator<Item = HazKey>) -> Self {
         HazKeyFilter(keys.into_iter().map(|k| (k, ())).collect())
-    }
-
-    /// Creates a filter that deems all inferior quality zones above or at a certain quality as irrelevant.
-    #[must_use]
-    pub fn from_irrelevant_qzones(
-        required_quality: usize,
-        haz_map: &SlotMap<HazKey, Hazard>,
-    ) -> Self {
-        HazKeyFilter(
-            haz_map
-                .iter()
-                .filter_map(|(hkey, h)| {
-                    match h.entity {
-                        BasicHazardEntity::InferiorQualityZone { quality, .. }
-                            if quality >= required_quality =>
-                        {
-                            // Zones meeting the item's minimum quality do not block it.
-                            Some((hkey, ()))
-                        }
-                        _ => None,
-                    }
-                })
-                .collect(),
-        )
     }
 }
 
@@ -72,10 +47,18 @@ impl<E> HazardFilter<E> for NoFilter {
     }
 }
 
-/// Implements [`HazardFilter`] for any type that implements [`HazardCollector`].
-/// Any hazards that are already in the collector are considered irrelevant.
-impl<T: HazardCollector> HazardFilter<T::Entity> for T {
-    fn is_irrelevant(&self, key: HazKey, _: &T::Entity) -> bool {
-        self.contains_key(key)
+/// Ignores inferior quality zones that meet an item's minimum quality.
+/// Holes and zones below the minimum keep blocking it.
+#[derive(Clone, Copy, Debug)]
+pub struct QualityZoneFilter {
+    pub min_quality: usize,
+}
+
+impl HazardFilter<BasicHazardEntity> for QualityZoneFilter {
+    fn is_irrelevant(&self, _: HazKey, entity: &BasicHazardEntity) -> bool {
+        matches!(
+            entity,
+            BasicHazardEntity::InferiorQualityZone { quality, .. } if *quality >= self.min_quality
+        )
     }
 }

@@ -290,7 +290,7 @@ mod tests {
 
     #[test]
     fn quality_zones_filter_queries_and_layouts_consistently() -> Result<()> {
-        use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, NoFilter};
+        use jagua_rs::collision_detection::hazards::filter::{NoFilter, QualityZoneFilter};
         use jagua_rs::entities::Layout;
         use jagua_rs::geometry::DTransformation;
         use jagua_rs::geometry::geo_traits::Transformable;
@@ -332,10 +332,9 @@ mod tests {
                     let expected_collision = required.is_none() || quality < 3;
                     let cde = layout.cde();
                     let collision = match required {
-                        Some(q) => cde.detect_poly_collision(
-                            &shape,
-                            &HazKeyFilter::from_irrelevant_qzones(q, cde.hazards_map()),
-                        ),
+                        Some(min_quality) => {
+                            cde.detect_poly_collision(&shape, &QualityZoneFilter { min_quality })
+                        }
                         None => cde.detect_poly_collision(&shape, &NoFilter),
                     };
                     assert_eq!(
@@ -368,10 +367,9 @@ mod tests {
             let small_item = importer.import_item(&small_input, 0)?;
             let pose = DTransformation::new(0.0, (4.0, 4.0));
             let shape = small_item.shape_cd().transform_clone(&pose.compose());
-            let filter = HazKeyFilter::from_irrelevant_qzones(
-                required.unwrap_or(jagua_rs::entities::N_QUALITIES),
-                covered.cde().hazards_map(),
-            );
+            let filter = QualityZoneFilter {
+                min_quality: required.unwrap_or(jagua_rs::entities::N_QUALITIES),
+            };
             assert_eq!(
                 covered.cde().detect_poly_collision(&shape, &filter),
                 required.is_none()
