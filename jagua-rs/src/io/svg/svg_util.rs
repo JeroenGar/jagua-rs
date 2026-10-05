@@ -193,7 +193,7 @@ pub fn simple_polygon_data(s_poly: &SPolygon) -> Data {
 
 pub fn quad_tree_data<E: HazardEntity>(
     qt_root: &QTNode<E>,
-    irrelevant_hazards: &impl HazardFilter,
+    irrelevant_hazards: &impl HazardFilter<E>,
 ) -> (Data, Data, Data) {
     qt_node_data(
         qt_root,
@@ -210,7 +210,7 @@ fn qt_node_data<E: HazardEntity>(
     mut data_eh: Data, //entire hazards data
     mut data_ph: Data, //partial hazards data
     mut data_nh: Data, //no hazards data
-    filter: &impl HazardFilter,
+    filter: &impl HazardFilter<E>,
 ) -> (Data, Data, Data) {
     //Only draw qt_nodes that do not have a child
 

@@ -61,9 +61,10 @@ impl<E: HazardEntity> QTHazardVec<E> {
     #[inline(always)]
     /// Returns the strongest hazard (if any) (`Entire` > `Partial` > `None`)
     /// Ignores any hazards that are deemed irrelevant by the filter.
-    pub fn strongest(&self, filter: &impl HazardFilter) -> Option<&QTHazard<E>> {
+    pub fn strongest(&self, filter: &impl HazardFilter<E>) -> Option<&QTHazard<E>> {
         debug_assert!(assert_caches_correct(self));
-        self.iter().find(|hz| !filter.is_irrelevant(hz.hkey))
+        self.iter()
+            .find(|hz| !filter.is_irrelevant(hz.hkey, &hz.entity))
     }
 
     pub fn no_partial_hazards(&self) -> bool {

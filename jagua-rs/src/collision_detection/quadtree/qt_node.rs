@@ -101,7 +101,11 @@ impl<E: HazardEntity> QTNode<E> {
     /// Used to detect collisions in a binary fashion: either there is a collision or there isn't.
     /// Returns one colliding hazard, if any. Which hazard is returned is unspecified.
     /// Use [`Self::collect_collisions`] to report every colliding hazard.
-    pub fn collides<T: QTQueryable>(&self, entity: &T, filter: &impl HazardFilter) -> Option<&E> {
+    pub fn collides<T: QTQueryable>(
+        &self,
+        entity: &T,
+        filter: &impl HazardFilter<E>,
+    ) -> Option<&E> {
         match self.hazards.strongest(filter) {
             None => None,
             Some(strongest_hazard) => match strongest_hazard.presence {
@@ -127,7 +131,7 @@ impl<E: HazardEntity> QTNode<E> {
                         let mut relevant_hazards = self
                             .hazards
                             .iter()
-                            .filter(|hz| !filter.is_irrelevant(hz.hkey));
+                            .filter(|hz| !filter.is_irrelevant(hz.hkey, &hz.entity));
 
                         relevant_hazards
                             .find(|hz| match &hz.presence {
@@ -150,14 +154,16 @@ impl<E: HazardEntity> QTNode<E> {
     /// Returning `true` stops traversal and leaves the collector with only the hazards found up to
     /// that point. Returning `false` every time gathers all collisions.
     #[must_use]
-    pub fn collect_collisions_until<T, C, F>(
+    pub fn collect_collisions_until<T, H, C, F>(
         &self,
         entity: &T,
+        filter: &H,
         collector: &mut C,
         stop_after_collision: &mut F,
     ) -> bool
     where
         T: QTQueryable,
+        H: HazardFilter<E>,
         C: HazardCollector<Entity = E>,
         F: FnMut(E) -> bool,
     {
@@ -175,12 +181,12 @@ impl<E: HazardEntity> QTNode<E> {
                 .filter(|(_, collides)| **collides)
                 .map(|(i, _)| &children[i])
                 .any(|child| {
-                    child.collect_collisions_until(entity, collector, stop_after_collision)
+                    child.collect_collisions_until(entity, filter, collector, stop_after_collision)
                 })
         } else {
             //Check the hazards now
             for hz in self.hazards.iter() {
-                if !collector.contains_key(hz.hkey) {
+                if !collector.contains_key(hz.hkey) && !filter.is_irrelevant(hz.hkey, &hz.entity) {
                     let collides = match &hz.presence {
                         QTHazPresence::None => false,
                         QTHazPresence::Entire => true,

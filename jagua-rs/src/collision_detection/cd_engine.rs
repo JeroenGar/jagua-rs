@@ -169,7 +169,7 @@ impl<E: HazardEntity> CDEngine<E> {
     /// # Arguments
     /// * `shape` - The shape (already transformed) to be checked for collisions
     /// * `filter` - Hazard filter to be applied
-    pub fn detect_poly_collision(&self, shape: &SPolygon, filter: &impl HazardFilter) -> bool {
+    pub fn detect_poly_collision(&self, shape: &SPolygon, filter: &impl HazardFilter<E>) -> bool {
         if self.bbox().relation_to(shape.bbox) == GeoRelation::Surrounding {
             //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
             let v_qt_root = self.get_virtual_root(shape.bbox);
@@ -183,7 +183,7 @@ impl<E: HazardEntity> CDEngine<E> {
 
             // Check for containment of the shape in any of the hazards
             for qt_hazard in v_qt_root.hazards.iter() {
-                if filter.is_irrelevant(qt_hazard.hkey) {
+                if filter.is_irrelevant(qt_hazard.hkey, &qt_hazard.entity) {
                     continue;
                 }
                 match &qt_hazard.presence {
@@ -219,7 +219,7 @@ impl<E: HazardEntity> CDEngine<E> {
         &self,
         base_surrogate: &SPSurrogate,
         transform: &Transformation,
-        filter: &impl HazardFilter,
+        filter: &impl HazardFilter<E>,
     ) -> bool {
         for pole in base_surrogate.ff_poles() {
             let t_pole = pole.transform_clone(transform);
@@ -267,13 +267,15 @@ impl<E: HazardEntity> CDEngine<E> {
     /// Collects all hazards with which the polygon collides and reports them to the collector.
     /// # Arguments
     /// * `shape` - The shape to be checked for collisions
+    /// * `filter` - Hazards to ignore
     /// * `collector` - The collector to which the hazards are reported
     pub fn collect_poly_collisions(
         &self,
         shape: &SPolygon,
+        filter: &impl HazardFilter<E>,
         collector: &mut impl HazardCollector<Entity = E>,
     ) {
-        let _ = self.collect_poly_collisions_until(shape, collector, |_| false);
+        let _ = self.collect_poly_collisions_until(shape, filter, collector, |_| false);
     }
 
     /// Collects polygon collisions until `stop_after_collision` requests an early return.
@@ -282,20 +284,23 @@ impl<E: HazardEntity> CDEngine<E> {
     /// the first time. Returning `true` stops traversal and leaves the collector with only the
     /// hazards found up to that point. Collision order is unspecified.
     #[must_use]
-    pub fn collect_poly_collisions_until<C, F>(
+    pub fn collect_poly_collisions_until<H, C, F>(
         &self,
         shape: &SPolygon,
+        filter: &H,
         collector: &mut C,
         mut stop_after_collision: F,
     ) -> bool
     where
+        H: HazardFilter<E>,
         C: HazardCollector<Entity = E>,
         F: FnMut(E) -> bool,
     {
+        let exterior = self.hazards_map[self.hkey_exterior].entity;
         if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding
             && !collector.contains_key(self.hkey_exterior)
+            && !filter.is_irrelevant(self.hkey_exterior, &exterior)
         {
-            let exterior = self.hazards_map[self.hkey_exterior].entity;
             collector.insert(self.hkey_exterior, exterior);
             if stop_after_collision(exterior) {
                 return true;
@@ -306,7 +311,12 @@ impl<E: HazardEntity> CDEngine<E> {
         let v_quadtree = self.get_virtual_root(shape.bbox);
 
         for edge in shape.edge_iter() {
-            if v_quadtree.collect_collisions_until(&edge, collector, &mut stop_after_collision) {
+            if v_quadtree.collect_collisions_until(
+                &edge,
+                filter,
+                collector,
+                &mut stop_after_collision,
+            ) {
                 return true;
             }
         }
@@ -317,7 +327,9 @@ impl<E: HazardEntity> CDEngine<E> {
                 // No need to check these, guaranteed to be detected by edge intersection
                 QTHazPresence::None | QTHazPresence::Entire => {}
                 QTHazPresence::Partial(_) => {
-                    if !collector.contains_key(qt_haz.hkey) {
+                    if !collector.contains_key(qt_haz.hkey)
+                        && !filter.is_irrelevant(qt_haz.hkey, &qt_haz.entity)
+                    {
                         let h_shape = &self.hazards_map[qt_haz.hkey].shape;
                         if Self::detect_containment_collision(shape, h_shape, qt_haz.entity) {
                             collector.insert(qt_haz.hkey, qt_haz.entity);
@@ -340,9 +352,10 @@ impl<E: HazardEntity> CDEngine<E> {
     pub fn collect_surrogate_collisions(
         &self,
         shape: &SPolygon,
+        filter: &impl HazardFilter<E>,
         collector: &mut impl HazardCollector<Entity = E>,
     ) {
-        let _ = self.collect_surrogate_collisions_until(shape, collector, |_| false);
+        let _ = self.collect_surrogate_collisions_until(shape, filter, collector, |_| false);
     }
 
     /// Collects collisions found by the surrogate screening pass until
@@ -353,13 +366,15 @@ impl<E: HazardEntity> CDEngine<E> {
     /// query; follow it with [`Self::collect_poly_collisions_until`] if the callback does not stop
     /// the screening pass.
     #[must_use]
-    pub fn collect_surrogate_collisions_until<C, F>(
+    pub fn collect_surrogate_collisions_until<H, C, F>(
         &self,
         shape: &SPolygon,
+        filter: &H,
         collector: &mut C,
         mut stop_after_collision: F,
     ) -> bool
     where
+        H: HazardFilter<E>,
         C: HazardCollector<Entity = E>,
         F: FnMut(E) -> bool,
     {
@@ -367,10 +382,12 @@ impl<E: HazardEntity> CDEngine<E> {
             return false;
         };
         for pole in surrogate.ff_poles() {
-            if self
-                .quadtree
-                .collect_collisions_until(pole, collector, &mut stop_after_collision)
-            {
+            if self.quadtree.collect_collisions_until(
+                pole,
+                filter,
+                collector,
+                &mut stop_after_collision,
+            ) {
                 return true;
             }
         }

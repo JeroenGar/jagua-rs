@@ -1,10 +1,9 @@
-use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::hazards::{BasicHazardEntity, HazKey, HazardEntity};
 use slotmap::{Key, SecondaryMap};
 
 /// Trait for structs that can track and store detected [`Hazard`](crate::collision_detection::hazards::Hazard)s.
 /// Used in 'collision collection' queries to avoid having to repeatedly check hazards induced by one that has already been detected.
-pub trait HazardCollector: HazardFilter {
+pub trait HazardCollector {
     /// The entities the collected hazards are induced by.
     type Entity: HazardEntity;
 
