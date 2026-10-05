@@ -1,4 +1,4 @@
-use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::hazards::BasicHazardEntity;
 use crate::collision_detection::hazards::collector::BasicHazardCollector;
 use crate::collision_detection::hazards::filter::NoFilter;
 use crate::entities::{Layout, LayoutSnapshot};
@@ -376,7 +376,7 @@ pub fn layout_to_svg_group(
                     .collect_poly_collisions(&pi.shape, &mut collector);
                 collector.retain(|_, entity| {
                     // filter out the item itself
-                    if let HazardEntity::PlacedItem {
+                    if let BasicHazardEntity::PlacedItem {
                         pk: colliding_pk, ..
                     } = entity
                     {
@@ -389,7 +389,7 @@ pub fn layout_to_svg_group(
             };
             for (_, haz_entity) in &collector {
                 match haz_entity {
-                    HazardEntity::PlacedItem {
+                    BasicHazardEntity::PlacedItem {
                         pk: colliding_pk, ..
                     } => {
                         let haz_hash = {
@@ -399,7 +399,7 @@ pub fn layout_to_svg_group(
                         };
                         let pi_hash = {
                             let mut hasher = DefaultHasher::new();
-                            HazardEntity::from((pk, pi)).hash(&mut hasher);
+                            BasicHazardEntity::from((pk, pi)).hash(&mut hasher);
                             hasher.finish()
                         };
 
@@ -423,9 +423,12 @@ pub fn layout_to_svg_group(
                             ));
                         }
                     }
-                    HazardEntity::Hole { idx } | HazardEntity::InferiorQualityZone { idx, .. } => {
+                    BasicHazardEntity::Hole { idx }
+                    | BasicHazardEntity::InferiorQualityZone { idx, .. } => {
                         let quality =
-                            if let HazardEntity::InferiorQualityZone { quality, .. } = haz_entity {
+                            if let BasicHazardEntity::InferiorQualityZone { quality, .. } =
+                                haz_entity
+                            {
                                 if pi
                                     .item
                                     .min_quality
@@ -457,7 +460,7 @@ pub fn layout_to_svg_group(
                             ],
                         ));
                     }
-                    HazardEntity::Exterior => {
+                    BasicHazardEntity::Exterior => {
                         collision_group = collision_group.add(svg_util::point(
                             pi.shape.poi.center,
                             Some(&*format!("{}", theme.collision_highlight_color)),

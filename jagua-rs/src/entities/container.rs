@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 
+use crate::collision_detection::hazards::BasicHazardEntity;
 use crate::collision_detection::hazards::Hazard;
-use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::{CDEConfig, CDEngine};
 use crate::geometry::OriginalShape;
 use crate::geometry::fail_fast::SPSurrogateConfig;
@@ -53,7 +53,7 @@ impl Container {
         };
 
         let base_cde = {
-            let mut hazards = vec![Hazard::new(HazardEntity::Exterior, outer.clone(), false)];
+            let mut hazards = vec![Hazard::new(BasicHazardEntity::Exterior, outer.clone())];
             let qz_hazards = quality_zones
                 .iter()
                 .flatten()
@@ -169,13 +169,13 @@ impl InferiorQualityZone {
     pub fn to_hazards(&self) -> impl Iterator<Item = Hazard> {
         self.shapes_cd.iter().enumerate().map(|(idx, shape)| {
             let entity = match self.quality {
-                0 => HazardEntity::Hole { idx },
-                _ => HazardEntity::InferiorQualityZone {
+                0 => BasicHazardEntity::Hole { idx },
+                _ => BasicHazardEntity::InferiorQualityZone {
                     quality: self.quality,
                     idx,
                 },
             };
-            Hazard::new(entity, shape.clone(), false)
+            Hazard::new(entity, shape.clone())
         })
     }
 

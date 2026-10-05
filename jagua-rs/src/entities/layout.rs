@@ -97,7 +97,7 @@ impl Layout {
             .placed_items
             .insert(PlacedItem::new(item, d_transformation));
         let pi = &self.placed_items[pk];
-        let hazard = Hazard::new((pk, pi).into(), pi.shape.clone(), true);
+        let hazard = Hazard::new((pk, pi).into(), pi.shape.clone());
 
         self.cde.register_hazard(hazard);
 
@@ -164,7 +164,7 @@ impl Layout {
         self.placed_items.iter().all(|(pk, pi)| {
             let hkey = self
                 .cde
-                .haz_key_from_pi_key(pk)
+                .haz_key(&(pk, pi).into())
                 .expect("all placed items should be registered in the CDE");
             match pi.item.min_quality {
                 Some(quality) => {

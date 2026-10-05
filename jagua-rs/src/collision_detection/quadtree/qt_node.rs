@@ -11,20 +11,20 @@ use slotmap::SlotMap;
 
 /// Quadtree node
 #[derive(Clone, Debug)]
-pub struct QTNode {
+pub struct QTNode<E> {
     /// The level of the node in the tree, 0 being the bottom-most level
     pub level: u8,
     /// The bounding box of the node
     pub bbox: Rect,
     /// The children of the node, if any
-    pub children: Option<Box<[QTNode; 4]>>,
+    pub children: Option<Box<[QTNode<E>; 4]>>,
     /// The hazards present in the node
-    pub hazards: QTHazardVec,
+    pub hazards: QTHazardVec<E>,
     /// Stop traversing the quadtree and perform collision detection immediately when the total number of edges in a node falls below this number
     pub cd_threshold: u8,
 }
 
-impl QTNode {
+impl<E: HazardEntity> QTNode<E> {
     #[must_use]
     pub fn new(level: u8, bbox: Rect, cd_threshold: u8) -> Self {
         QTNode {
@@ -36,9 +36,13 @@ impl QTNode {
         }
     }
 
-    pub fn register_hazard(&mut self, new_qt_haz: QTHazard, haz_map: &SlotMap<HazKey, Hazard>) {
+    pub fn register_hazard(
+        &mut self,
+        new_qt_haz: QTHazard<E>,
+        haz_map: &SlotMap<HazKey, Hazard<E>>,
+    ) {
         let constrict_and_register_to_children =
-            |qt_hazard: &QTHazard, children: &mut Box<[QTNode; 4]>| {
+            |qt_hazard: &QTHazard<E>, children: &mut Box<[QTNode<E>; 4]>| {
                 // Constrict the hazard to the bounding boxes of the children
                 let child_bboxes = children.each_ref().map(|c| c.bbox);
                 let child_hazards = qt_hazard.constrict(child_bboxes, haz_map);
@@ -97,11 +101,7 @@ impl QTNode {
     /// Used to detect collisions in a binary fashion: either there is a collision or there isn't.
     /// Returns one colliding hazard, if any. Which hazard is returned is unspecified.
     /// Use [`Self::collect_collisions`] to report every colliding hazard.
-    pub fn collides<T: QTQueryable>(
-        &self,
-        entity: &T,
-        filter: &impl HazardFilter,
-    ) -> Option<&HazardEntity> {
+    pub fn collides<T: QTQueryable>(&self, entity: &T, filter: &impl HazardFilter) -> Option<&E> {
         match self.hazards.strongest(filter) {
             None => None,
             Some(strongest_hazard) => match strongest_hazard.presence {
@@ -158,8 +158,8 @@ impl QTNode {
     ) -> bool
     where
         T: QTQueryable,
-        C: HazardCollector,
-        F: FnMut(HazardEntity) -> bool,
+        C: HazardCollector<Entity = E>,
+        F: FnMut(E) -> bool,
     {
         // Condition to perform collision detection now or pass it to children:
         let perform_cd_now = self.hazards.n_active_edges() <= self.cd_threshold as usize;

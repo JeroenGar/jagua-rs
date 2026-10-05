@@ -1,5 +1,4 @@
-use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::hazards::{HazKey, Hazard};
+use crate::collision_detection::hazards::{HazKey, Hazard, HazardEntity};
 use crate::collision_detection::quadtree::qt_partial_hazard::QTHazPartial;
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::CollidesWith;
@@ -10,13 +9,13 @@ use std::array;
 
 /// Representation of a [`Hazard`] in a [`QTNode`](crate::collision_detection::quadtree::QTNode)
 #[derive(Clone, Debug)]
-pub struct QTHazard {
+pub struct QTHazard<E> {
     /// The bounding box of the quadtree node
     pub qt_bbox: Rect,
     /// The key of the hazard in the hazard map in [`CDEngine`](crate::collision_detection::cd_engine::CDEngine)
     pub hkey: HazKey,
     /// Entity inducing the hazard
-    pub entity: HazardEntity,
+    pub entity: E,
     /// How the hazard is present in the node
     pub presence: QTHazPresence,
 }
@@ -31,10 +30,10 @@ pub enum QTHazPresence {
     /// The hazard is present in the entire node.
     Entire,
 }
-impl QTHazard {
+impl<E: HazardEntity> QTHazard<E> {
     /// Converts a [`Hazard`] into a [`QTHazard`], assuming it is for the root of the quadtree.
     #[must_use]
-    pub fn from_root(qt_root_bbox: Rect, haz: &Hazard, hkey: HazKey) -> Self {
+    pub fn from_root(qt_root_bbox: Rect, haz: &Hazard<E>, hkey: HazKey) -> Self {
         Self {
             qt_bbox: qt_root_bbox,
             hkey,
@@ -47,7 +46,11 @@ impl QTHazard {
     /// The quadrants should be ordered according to the [Cartesian system](https://en.wikipedia.org/wiki/Quadrant_(plane_geometry))
     /// and should all be inside the bounds from which `self` was created.
     #[must_use]
-    pub fn constrict(&self, quadrants: [Rect; 4], haz_map: &SlotMap<HazKey, Hazard>) -> [Self; 4] {
+    pub fn constrict(
+        &self,
+        quadrants: [Rect; 4],
+        haz_map: &SlotMap<HazKey, Hazard<E>>,
+    ) -> [Self; 4] {
         debug_assert!(
             quadrants
                 .iter()
@@ -92,7 +95,7 @@ impl QTHazard {
                     // These will also be partially present hazards.
                     // A plain loop keeps this hot edge scan inside `constrict`. With `quadrants.map`,
                     // inlining it depended on LLVM heuristics that flipped with unrelated changes.
-                    let mut constricted_hazards: [Option<QTHazard>; 4] = Default::default();
+                    let mut constricted_hazards: [Option<QTHazard<E>>; 4] = Default::default();
                     for (constricted, &q) in constricted_hazards.iter_mut().zip(&quadrants) {
                         //For every quadrant, collect the edges that are colliding with it
                         let mut colliding_edges = None;

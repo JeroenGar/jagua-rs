@@ -1,5 +1,5 @@
-use crate::collision_detection::hazards::HazKey;
 use crate::collision_detection::hazards::filter::HazardFilter;
+use crate::collision_detection::hazards::{HazKey, HazardEntity};
 use crate::collision_detection::quadtree::QTHazPresence;
 use crate::collision_detection::quadtree::QTHazard;
 use std::cmp::Ordering;
@@ -9,19 +9,22 @@ use std::ops::Not;
 /// <br>
 /// This is a performance optimization to be able to quickly return the "strongest" hazard
 /// Strongest meaning the highest [`QTHazPresence`] (`Entire` > `Partial` > `None`)
-#[derive(Clone, Debug, Default)]
-pub struct QTHazardVec {
-    hazards: Vec<QTHazard>,
+#[derive(Clone, Debug)]
+pub struct QTHazardVec<E> {
+    hazards: Vec<QTHazard<E>>,
     /// Number of edges from active hazards in the vector
     n_active_edges: usize,
 }
 
-impl QTHazardVec {
+impl<E: HazardEntity> QTHazardVec<E> {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            hazards: Vec::new(),
+            n_active_edges: 0,
+        }
     }
 
-    pub fn add(&mut self, haz: QTHazard) {
+    pub fn add(&mut self, haz: QTHazard<E>) {
         debug_assert!(!matches!(haz.presence, QTHazPresence::None));
         debug_assert!(
             self.hazards
@@ -42,7 +45,7 @@ impl QTHazardVec {
         }
     }
 
-    pub fn remove(&mut self, hkey: HazKey) -> Option<QTHazard> {
+    pub fn remove(&mut self, hkey: HazKey) -> Option<QTHazard<E>> {
         let pos = self.hazards.iter().position(|ch| ch.hkey == hkey);
         match pos {
             Some(pos) => {
@@ -58,7 +61,7 @@ impl QTHazardVec {
     #[inline(always)]
     /// Returns the strongest hazard (if any) (`Entire` > `Partial` > `None`)
     /// Ignores any hazards that are deemed irrelevant by the filter.
-    pub fn strongest(&self, filter: &impl HazardFilter) -> Option<&QTHazard> {
+    pub fn strongest(&self, filter: &impl HazardFilter) -> Option<&QTHazard<E>> {
         debug_assert!(assert_caches_correct(self));
         self.iter().find(|hz| !filter.is_irrelevant(hz.hkey))
     }
@@ -70,7 +73,7 @@ impl QTHazardVec {
             .not()
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &QTHazard> {
+    pub fn iter(&self) -> impl Iterator<Item = &QTHazard<E>> {
         self.hazards.iter()
     }
 
@@ -80,8 +83,8 @@ impl QTHazardVec {
     }
 }
 
-fn order_by_descending_strength(qth1: &QTHazard, qth2: &QTHazard) -> Ordering {
-    let qth_presence_sortkey = |qth: &QTHazard| match qth.presence {
+fn order_by_descending_strength<E>(qth1: &QTHazard<E>, qth2: &QTHazard<E>) -> Ordering {
+    let qth_presence_sortkey = |qth: &QTHazard<E>| match qth.presence {
         QTHazPresence::None => 0,
         QTHazPresence::Partial(_) => 1,
         QTHazPresence::Entire => 2,
@@ -93,7 +96,7 @@ fn order_by_descending_strength(qth1: &QTHazard, qth2: &QTHazard) -> Ordering {
         .reverse()
 }
 
-fn assert_caches_correct(qthazard_vec: &QTHazardVec) -> bool {
+fn assert_caches_correct<E: HazardEntity>(qthazard_vec: &QTHazardVec<E>) -> bool {
     assert!(
         qthazard_vec
             .hazards

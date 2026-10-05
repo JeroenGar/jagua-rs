@@ -1,3 +1,4 @@
+use crate::collision_detection::hazards::HazardEntity;
 use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::quadtree::{QTHazPresence, QTNode};
 use crate::entities::N_QUALITIES;
@@ -190,8 +191,8 @@ pub fn simple_polygon_data(s_poly: &SPolygon) -> Data {
     data.close()
 }
 
-pub fn quad_tree_data(
-    qt_root: &QTNode,
+pub fn quad_tree_data<E: HazardEntity>(
+    qt_root: &QTNode<E>,
     irrelevant_hazards: &impl HazardFilter,
 ) -> (Data, Data, Data) {
     qt_node_data(
@@ -204,8 +205,8 @@ pub fn quad_tree_data(
 }
 
 #[allow(clippy::similar_names)]
-fn qt_node_data(
-    qt_node: &QTNode,
+fn qt_node_data<E: HazardEntity>(
+    qt_node: &QTNode<E>,
     mut data_eh: Data, //entire hazards data
     mut data_ph: Data, //partial hazards data
     mut data_nh: Data, //no hazards data

@@ -1,6 +1,6 @@
 use crate::collision_detection::CDEngine;
 use crate::collision_detection::hazards::Hazard;
-use crate::collision_detection::hazards::HazardEntity;
+use crate::collision_detection::hazards::{BasicHazardEntity, HazardEntity};
 use crate::collision_detection::quadtree::QTHazPresence;
 use crate::collision_detection::quadtree::QTHazard;
 use crate::collision_detection::quadtree::QTNode;
@@ -35,7 +35,7 @@ pub fn snapshot_matches_layout(layout: &Layout, layout_snapshot: &LayoutSnapshot
 }
 
 #[must_use]
-pub fn qt_contains_no_dangling_hazards(cde: &CDEngine) -> bool {
+pub fn qt_contains_no_dangling_hazards<E: HazardEntity>(cde: &CDEngine<E>) -> bool {
     if let Some(children) = &cde.quadtree.children {
         for child in children.as_ref() {
             if !qt_node_contains_no_dangling_hazards(child, &cde.quadtree) {
@@ -46,7 +46,10 @@ pub fn qt_contains_no_dangling_hazards(cde: &CDEngine) -> bool {
     true
 }
 
-fn qt_node_contains_no_dangling_hazards(node: &QTNode, parent: &QTNode) -> bool {
+fn qt_node_contains_no_dangling_hazards<E: HazardEntity>(
+    node: &QTNode<E>,
+    parent: &QTNode<E>,
+) -> bool {
     let parent_h_entities = parent
         .hazards
         .iter()
@@ -80,17 +83,17 @@ pub fn layout_qt_matches_fresh_qt(layout: &Layout) -> bool {
     let hazards = layout
         .placed_items
         .iter()
-        .map(|(pk, pi)| Hazard::new((pk, pi).into(), pi.shape.clone(), true));
+        .map(|(pk, pi)| Hazard::new(BasicHazardEntity::from((pk, pi)), pi.shape.clone()));
     cde_matches_fresh(layout.cde(), &layout.container.base_cde, hazards)
 }
 
 /// Checks that `cde` matches a fresh copy of `base` with `dynamic_hazards` registered:
 /// the same hazards, represented the same way in the quadtree.
 #[must_use]
-pub fn cde_matches_fresh(
-    cde: &CDEngine,
-    base: &CDEngine,
-    dynamic_hazards: impl IntoIterator<Item = Hazard>,
+pub fn cde_matches_fresh<E: HazardEntity>(
+    cde: &CDEngine<E>,
+    base: &CDEngine<E>,
+    dynamic_hazards: impl IntoIterator<Item = Hazard<E>>,
 ) -> bool {
     let mut fresh_cde = base.clone();
     for hazard in dynamic_hazards {
@@ -100,8 +103,8 @@ pub fn cde_matches_fresh(
         && hazards_match(cde.hazards(), fresh_cde.hazards())
 }
 
-fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
-    let hashable = |h: &QTHazard| {
+fn qt_nodes_match<E: HazardEntity>(qn1: Option<&QTNode<E>>, qn2: Option<&QTNode<E>>) -> bool {
+    let hashable = |h: &QTHazard<E>| {
         let p_sk = match h.presence {
             QTHazPresence::None => 0,
             QTHazPresence::Partial(_) => 1,
@@ -116,15 +119,9 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
             let hv2 = &qn2.hazards;
 
             //collect active hazards to hashsets
-            let active_haz_1 = hv1
-                .iter()
-                .map(hashable)
-                .collect::<HashSet<(HazardEntity, u8)>>();
+            let active_haz_1 = hv1.iter().map(hashable).collect::<HashSet<(E, u8)>>();
 
-            let active_haz_2 = hv2
-                .iter()
-                .map(hashable)
-                .collect::<HashSet<(HazardEntity, u8)>>();
+            let active_haz_2 = hv2.iter().map(hashable).collect::<HashSet<(E, u8)>>();
 
             let active_in_1_but_not_2 = active_haz_1
                 .difference(&active_haz_2)
@@ -205,9 +202,9 @@ fn qt_nodes_match(qn1: Option<&QTNode>, qn2: Option<&QTNode>) -> bool {
     }
 }
 
-fn hazards_match<'a>(
-    chv1: impl Iterator<Item = &'a Hazard>,
-    chv2: impl Iterator<Item = &'a Hazard>,
+fn hazards_match<'a, E: HazardEntity + 'a>(
+    chv1: impl Iterator<Item = &'a Hazard<E>>,
+    chv2: impl Iterator<Item = &'a Hazard<E>>,
 ) -> bool {
     let chv1_active_hazards = chv1.map(|h| h.entity).collect::<HashSet<_>>();
 

@@ -1,8 +1,8 @@
 use crate::collision_detection::hazards::collector::HazardCollector;
-use crate::collision_detection::hazards::{HazKey, Hazard, HazardEntity};
+use crate::collision_detection::hazards::{BasicHazardEntity, HazKey, Hazard};
 use slotmap::{SecondaryMap, SlotMap};
 
-/// Trait for filters to ignore all [`Hazard`]s induced by specific [`HazardEntity`]s.
+/// Trait for filters to ignore specific [`Hazard`]s.
 /// Enables collision queries to ignore specific hazards during the check.
 pub trait HazardFilter {
     fn is_irrelevant(&self, haz_key: HazKey) -> bool;
@@ -28,7 +28,7 @@ impl HazKeyFilter {
                 .iter()
                 .filter_map(|(hkey, h)| {
                     match h.entity {
-                        HazardEntity::InferiorQualityZone { quality, .. }
+                        BasicHazardEntity::InferiorQualityZone { quality, .. }
                             if quality >= required_quality =>
                         {
                             // Zones meeting the item's minimum quality do not block it.
@@ -66,7 +66,7 @@ impl HazardFilter for NoFilter {
 }
 
 /// Implements [`HazardFilter`] for any type that implements [`HazardCollector`].
-/// Any [`HazardEntity`]s that are already in the collector are considered irrelevant.
+/// Any hazards that are already in the collector are considered irrelevant.
 impl<T> HazardFilter for T
 where
     T: HazardCollector,
