@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BasicHazardEntity"],"mod":["collector","filter"],"struct":["HazKey","Hazard","PItemKey"],"trait":["HazardEntity"]};

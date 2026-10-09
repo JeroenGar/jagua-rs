@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["Circle","Edge","Point","Rect","SPolygon"]};
