@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791576221065,
+  "lastUpdate": 1791578146794,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -7821,6 +7821,138 @@ window.BENCHMARK_DATA = {
             "name": "reflection/transform_and_collect/alternating",
             "value": 990764,
             "range": "± 42577",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jeroen.gardeyn@hotmail.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9e00fd867be0fc493002aea68a1c6613d5b833d6",
+          "message": "Keep the largest part when an offset splits a shape, and log it as an error (#121)",
+          "timestamp": "2026-10-09T22:31:01+02:00",
+          "tree_id": "3d13c90f85f036897871796331776513bda7eebd",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/9e00fd867be0fc493002aea68a1c6613d5b833d6"
+        },
+        "date": 1791578145646,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/3",
+            "value": 1702066,
+            "range": "± 73381",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/4",
+            "value": 1714127,
+            "range": "± 89080",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_collect_1k/5",
+            "value": 1718294,
+            "range": "± 76451",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/3",
+            "value": 1693905,
+            "range": "± 11499",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 2737277,
+            "range": "± 26777",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/5",
+            "value": 5234487,
+            "range": "± 58299",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/3",
+            "value": 190832,
+            "range": "± 5731",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 153757,
+            "range": "± 4936",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/5",
+            "value": 135924,
+            "range": "± 2481",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_from/unreflected",
+            "value": 51343,
+            "range": "± 98",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_clone/unreflected",
+            "value": 94522,
+            "range": "± 796",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_and_collect/unreflected",
+            "value": 1128116,
+            "range": "± 18379",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_from/reflected",
+            "value": 51830,
+            "range": "± 345",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_clone/reflected",
+            "value": 106085,
+            "range": "± 1791",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_and_collect/reflected",
+            "value": 1126637,
+            "range": "± 33226",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_from/alternating",
+            "value": 52288,
+            "range": "± 386",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_clone/alternating",
+            "value": 100585,
+            "range": "± 561",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_and_collect/alternating",
+            "value": 1128246,
+            "range": "± 15708",
             "unit": "ns/iter"
           }
         ]
