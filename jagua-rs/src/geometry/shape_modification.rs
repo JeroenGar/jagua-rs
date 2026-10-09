@@ -1,7 +1,8 @@
 use geo::Buffer;
+use geo::algorithm::Area;
 use geo::algorithm::buffer::{BufferStyle, LineJoin};
 use itertools::Itertools;
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 use ordered_float::OrderedFloat;
 use rand_distr::num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
@@ -368,11 +369,24 @@ pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Resu
     let geo_poly_offset = match geo_poly_offsets.len() {
         0 => bail!("Offset resulted in an empty polygon"),
         1 => &geo_poly_offsets[0],
-        _ => {
-            // If there are multiple polygons, we take the first one.
-            // This can happen if the offset creates multiple disconnected parts.
-            warn!("Offset resulted in multiple polygons, taking the first one.");
-            &geo_poly_offsets[0]
+        n => {
+            // The offset split the shape into disconnected parts (e.g. deflating past a narrow neck).
+            // Keep the largest part and drop the rest.
+            let areas = geo_poly_offsets
+                .iter()
+                .map(Area::unsigned_area)
+                .collect_vec();
+            let largest_idx = areas
+                .iter()
+                .position_max_by_key(|a| OrderedFloat(**a))
+                .unwrap();
+            let dropped_area = areas.iter().sum::<f64>() - areas[largest_idx];
+            error!(
+                "Offset split the shape into {n} disconnected parts, keeping the largest (area {:.3}) and dropping {} (total area {dropped_area:.3})",
+                areas[largest_idx],
+                n - 1
+            );
+            &geo_poly_offsets[largest_idx]
         }
     };
 
