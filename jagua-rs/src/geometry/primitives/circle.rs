@@ -4,6 +4,7 @@ use crate::geometry::geo_traits::{
     CollidesWith, DistanceTo, SeparationDistance, Transformable, TransformableFrom,
 };
 use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::GeometryError;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use anyhow::Result;
@@ -21,12 +22,8 @@ pub struct Circle {
 impl Circle {
     pub fn try_new(center: Point, radius: f32) -> Result<Self> {
         ensure!(
-            radius.is_finite() && radius >= 0.0,
-            "invalid circle radius: {radius}",
-        );
-        ensure!(
-            center.0.is_finite() && center.1.is_finite(),
-            "invalid circle center: {center:?}",
+            radius.is_finite() && radius >= 0.0 && center.0.is_finite() && center.1.is_finite(),
+            GeometryError::InvalidCircle { center, radius }
         );
 
         Ok(Self { center, radius })

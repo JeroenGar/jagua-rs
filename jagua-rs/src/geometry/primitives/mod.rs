@@ -2,6 +2,7 @@
 
 mod circle;
 mod edge;
+mod error;
 mod point;
 mod rect;
 mod simple_polygon;
@@ -10,6 +11,8 @@ mod simple_polygon;
 pub use circle::Circle;
 #[doc(inline)]
 pub use edge::Edge;
+#[doc(inline)]
+pub use error::GeometryError;
 #[doc(inline)]
 pub use point::Point;
 #[doc(inline)]

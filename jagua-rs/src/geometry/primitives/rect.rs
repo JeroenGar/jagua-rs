@@ -3,6 +3,7 @@ use crate::geometry::geo_traits::{
     AlmostCollidesWith, CollidesWith, DistanceTo, SeparationDistance,
 };
 use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::GeometryError;
 use crate::geometry::primitives::Point;
 use crate::util::FPA;
 use anyhow::Result;
@@ -22,7 +23,12 @@ impl Rect {
     pub fn try_new(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> Result<Self> {
         ensure!(
             x_min < x_max && y_min < y_max,
-            "invalid rectangle, x_min: {x_min}, x_max: {x_max}, y_min: {y_min}, y_max: {y_max}"
+            GeometryError::InvalidRect {
+                x_min,
+                y_min,
+                x_max,
+                y_max
+            }
         );
         Ok(Rect {
             x_min,
