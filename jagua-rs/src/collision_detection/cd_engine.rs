@@ -9,7 +9,7 @@ use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Transformable};
-use crate::geometry::primitives::{Rect, SPolygon};
+use crate::geometry::primitives::{Circle, Rect, SPolygon};
 use crate::util::assertions;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -404,8 +404,18 @@ impl<E: HazardEntity> CDEngine<E> {
                     return true;
                 }
             }
-            let pole_bbox = pole.bbox();
-            let stopped = self.index.any_overlapping(pole_bbox, |hkey| {
+        }
+        let poles = surrogate.ff_poles();
+        let Some(union) = poles.iter().map(Circle::bbox).reduce(|a, b| Rect {
+            x_min: a.x_min.min(b.x_min),
+            y_min: a.y_min.min(b.y_min),
+            x_max: a.x_max.max(b.x_max),
+            y_max: a.y_max.max(b.y_max),
+        }) else {
+            return false;
+        };
+        self.index
+            .any_overlapping_each(union, poles.iter().map(Circle::bbox), |pi, hkey| {
                 if collector.contains_key(hkey) {
                     return false;
                 }
@@ -413,22 +423,18 @@ impl<E: HazardEntity> CDEngine<E> {
                 if filter.is_irrelevant(hkey, &haz.entity) {
                     return false;
                 }
+                let pole = &poles[pi];
                 // A pole that touches no edge collides only if it lies inside the hazard,
                 // which requires its bounding box to lie within the hazard's.
                 let collides = hazard_index::circle_touches_edges(pole, &haz.shape)
-                    || (haz.shape.bbox.relation_to(pole_bbox) == GeoRelation::Surrounding
+                    || (haz.shape.bbox.relation_to(pole.bbox()) == GeoRelation::Surrounding
                         && haz.shape.collides_with(&pole.center));
                 if collides {
                     collector.insert(hkey, haz.entity);
                     return stop_after_collision(haz.entity);
                 }
                 false
-            });
-            if stopped {
-                return true;
-            }
-        }
-        false
+            })
     }
 
     /// Returns the lowest `QTNode` that completely surrounds the given bounding box.

@@ -38,16 +38,64 @@ impl HazardIndex {
     /// until `f` returns `true`. Returns whether it did.
     #[inline(always)]
     pub fn any_overlapping(&self, r: Rect, mut f: impl FnMut(HazKey) -> bool) -> bool {
-        for i in 0..self.keys.len() {
-            let overlaps = (self.x_min[i] <= r.x_max)
-                & (self.x_max[i] >= r.x_min)
-                & (self.y_min[i] <= r.y_max)
-                & (self.y_max[i] >= r.y_min);
-            if overlaps && f(self.keys[i]) {
-                return true;
+        for start in (0..self.keys.len()).step_by(64) {
+            let mut mask = self.chunk_mask(start, r);
+            while mask != 0 {
+                let i = start + mask.trailing_zeros() as usize;
+                mask &= mask - 1;
+                if f(self.keys[i]) {
+                    return true;
+                }
             }
         }
         false
+    }
+
+    /// Like [`Self::any_overlapping`] for several rectangles at once, all contained in `union`.
+    /// The arrays are scanned once with `union`; the few candidates are then tested per rectangle.
+    #[inline(always)]
+    pub fn any_overlapping_each<'a>(
+        &self,
+        union: Rect,
+        rects: impl Iterator<Item = Rect> + Clone,
+        mut f: impl FnMut(usize, HazKey) -> bool,
+    ) -> bool {
+        for start in (0..self.keys.len()).step_by(64) {
+            let candidates = self.chunk_mask(start, union);
+            if candidates == 0 {
+                continue;
+            }
+            for (ri, r) in rects.clone().enumerate() {
+                let mut mask = candidates;
+                while mask != 0 {
+                    let i = start + mask.trailing_zeros() as usize;
+                    mask &= mask - 1;
+                    let overlaps = (self.x_min[i] <= r.x_max)
+                        & (self.x_max[i] >= r.x_min)
+                        & (self.y_min[i] <= r.y_max)
+                        & (self.y_max[i] >= r.y_min);
+                    if overlaps && f(ri, self.keys[i]) {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    /// Bit `j` is set if the hazard at `start + j` overlaps `r`, for up to 64 hazards.
+    #[inline(always)]
+    fn chunk_mask(&self, start: usize, r: Rect) -> u64 {
+        let end = (start + 64).min(self.keys.len());
+        let (x_min, y_min) = (&self.x_min[start..end], &self.y_min[start..end]);
+        let (x_max, y_max) = (&self.x_max[start..end], &self.y_max[start..end]);
+        let mut mask = 0u64;
+        for (j, (((&x0, &y0), &x1), &y1)) in x_min.iter().zip(y_min).zip(x_max).zip(y_max).enumerate()
+        {
+            let overlaps = (x0 <= r.x_max) & (x1 >= r.x_min) & (y0 <= r.y_max) & (y1 >= r.y_min);
+            mask |= u64::from(overlaps) << j;
+        }
+        mask
     }
 }
 
