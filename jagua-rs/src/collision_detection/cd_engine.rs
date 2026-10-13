@@ -30,6 +30,9 @@ pub struct CDEngine<E = BasicHazardEntity> {
     hkey_exterior: HazKey,
     /// Prototype: bounding boxes of all interior hazards, for hazard-first collection queries.
     index: HazardIndex,
+    /// Prototype: whether the exterior hazard's shape is its own bounding box.
+    /// Then anything strictly inside that bounding box cannot collide with the exterior.
+    exterior_is_rect: bool,
 }
 
 impl<E: HazardEntity> CDEngine<E> {
@@ -64,12 +67,21 @@ impl<E: HazardEntity> CDEngine<E> {
             }
         }
 
+        let ext_shape = &hazards_map[hkey_exterior].shape;
+        let ext_bbox = ext_shape.bbox;
+        let exterior_is_rect = ext_shape.n_vertices() == 4
+            && ext_shape.vertices().iter().all(|p| {
+                (p.0 == ext_bbox.x_min || p.0 == ext_bbox.x_max)
+                    && (p.1 == ext_bbox.y_min || p.1 == ext_bbox.y_max)
+            });
+
         CDEngine {
             quadtree,
             hazards_map,
             config,
             hkey_exterior,
             index,
+            exterior_is_rect,
         }
     }
 
@@ -322,7 +334,8 @@ impl<E: HazardEntity> CDEngine<E> {
         }
 
         let ext_shape = &self.hazards_map[self.hkey_exterior].shape;
-        if !collector.contains_key(self.hkey_exterior)
+        if !self.strictly_inside_rect_exterior(shape.bbox)
+            && !collector.contains_key(self.hkey_exterior)
             && !filter.is_irrelevant(self.hkey_exterior, &exterior)
             && let Some(r) = hazard_index::overlap(shape.bbox, ext_shape.bbox)
             && (hazard_index::edges_intersect(shape, ext_shape, r)
@@ -394,7 +407,8 @@ impl<E: HazardEntity> CDEngine<E> {
         let exterior = self.hazards_map[self.hkey_exterior].entity;
         let ext_shape = &self.hazards_map[self.hkey_exterior].shape;
         for pole in surrogate.ff_poles() {
-            if !collector.contains_key(self.hkey_exterior)
+            if !self.strictly_inside_rect_exterior(pole.bbox())
+                && !collector.contains_key(self.hkey_exterior)
                 && !filter.is_irrelevant(self.hkey_exterior, &exterior)
                 && (hazard_index::circle_touches_edges(pole, ext_shape)
                     || !ext_shape.collides_with(&pole.center))
@@ -435,6 +449,17 @@ impl<E: HazardEntity> CDEngine<E> {
                 }
                 false
             })
+    }
+
+    /// Prototype: whether `bbox` lies strictly inside a rectangular exterior, so cannot collide with it.
+    #[inline(always)]
+    fn strictly_inside_rect_exterior(&self, bbox: Rect) -> bool {
+        let ext = self.hazards_map[self.hkey_exterior].shape.bbox;
+        self.exterior_is_rect
+            && ext.x_min < bbox.x_min
+            && bbox.x_max < ext.x_max
+            && ext.y_min < bbox.y_min
+            && bbox.y_max < ext.y_max
     }
 
     /// Returns the lowest `QTNode` that completely surrounds the given bounding box.
