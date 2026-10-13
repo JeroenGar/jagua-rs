@@ -1,5 +1,6 @@
 use crate::geometry::Transformation;
 use crate::geometry::geo_traits::{CollidesWith, DistanceTo, Transformable, TransformableFrom};
+use crate::geometry::primitives::GeometryError;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use anyhow::Result;
@@ -14,7 +15,7 @@ pub struct Edge {
 
 impl Edge {
     pub fn try_new(start: Point, end: Point) -> Result<Self> {
-        ensure!(start != end, "degenerate edge, {start:?} == {end:?}");
+        ensure!(start != end, GeometryError::DegenerateEdge(start));
         Ok(Edge { start, end })
     }
 

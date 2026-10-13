@@ -12,6 +12,7 @@ use crate::geometry::geo_traits::{
 };
 use crate::geometry::primitives::Circle;
 use crate::geometry::primitives::Edge;
+use crate::geometry::primitives::GeometryError;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::util::FPA;
@@ -41,17 +42,21 @@ impl SPolygon {
     /// Create a new simple polygon from a set of points, expensive operations are performed here! Use [`Self::clone()`] or [`Self::transform()`] to avoid recomputation.
     pub fn new(mut points: Vec<Point>) -> Result<Self> {
         if points.len() < 3 {
-            bail!("Simple polygon must have at least 3 points");
+            bail!(GeometryError::TooFewPoints(points.len()));
         }
         if points.iter().unique().count() != points.len() {
-            bail!("Simple polygon should not contain duplicate points");
+            let [i, j] = (0..points.len())
+                .array_combinations()
+                .find(|&[i, j]| points[i] == points[j])
+                .expect("a duplicate point exists");
+            bail!(GeometryError::DuplicatePoints(i, j));
         }
         if let Some((e1_idx, e2_idx)) = SPolygon::find_self_intersection(&points) {
-            bail!("Simple polygon contains intersecting edges {e1_idx} and {e2_idx}");
+            bail!(GeometryError::IntersectingEdges(e1_idx, e2_idx));
         }
 
         let area = match SPolygon::calculate_area(&points) {
-            0.0 => bail!("Simple polygon has no area"),
+            0.0 => bail!(GeometryError::NoArea),
             area if area < 0.0 => {
                 //edges should always be ordered counterclockwise (positive area)
                 points.reverse();
