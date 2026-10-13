@@ -60,7 +60,7 @@ impl<E: HazardEntity> CDEngine<E> {
         let mut index = HazardIndex::default();
         for (hkey, haz) in &hazards_map {
             if hkey != hkey_exterior {
-                index.insert(hkey, haz.shape.bbox);
+                index.insert(hkey, &haz.shape);
             }
         }
 
@@ -80,7 +80,7 @@ impl<E: HazardEntity> CDEngine<E> {
             "Hazard with an identical entity already registered"
         );
         let hkey = self.hazards_map.insert(hazard);
-        self.index.insert(hkey, self.hazards_map[hkey].shape.bbox);
+        self.index.insert(hkey, &self.hazards_map[hkey].shape);
         let qt_hazard = QTHazard::from_root(self.bbox(), &self.hazards_map[hkey], hkey);
         self.quadtree.register_hazard(qt_hazard, &self.hazards_map);
 
@@ -335,7 +335,7 @@ impl<E: HazardEntity> CDEngine<E> {
         }
 
         // Hazard-first: every hazard whose bounding box overlaps the shape's is checked once
-        self.index.any_overlapping(shape.bbox, |hkey| {
+        self.index.any_overlapping(shape.bbox, |hkey, edge_boxes| {
             if collector.contains_key(hkey) {
                 return false;
             }
@@ -345,7 +345,7 @@ impl<E: HazardEntity> CDEngine<E> {
             }
             let r = hazard_index::overlap(shape.bbox, haz.shape.bbox)
                 .expect("candidate bounding boxes overlap");
-            let collides = hazard_index::edges_intersect(shape, &haz.shape, r)
+            let collides = hazard_index::edges_intersect_cached(shape, &haz.shape, edge_boxes, r)
                 || Self::detect_containment_collision(shape, &haz.shape, haz.entity);
             if collides {
                 collector.insert(hkey, haz.entity);
@@ -415,7 +415,7 @@ impl<E: HazardEntity> CDEngine<E> {
             return false;
         };
         self.index
-            .any_overlapping_each(union, poles.iter().map(Circle::bbox), |pi, hkey| {
+            .any_overlapping_each(union, poles.iter().map(Circle::bbox), |pi, hkey, edge_boxes| {
                 if collector.contains_key(hkey) {
                     return false;
                 }
@@ -426,7 +426,7 @@ impl<E: HazardEntity> CDEngine<E> {
                 let pole = &poles[pi];
                 // A pole that touches no edge collides only if it lies inside the hazard,
                 // which requires its bounding box to lie within the hazard's.
-                let collides = hazard_index::circle_touches_edges(pole, &haz.shape)
+                let collides = hazard_index::circle_touches_edges_cached(pole, &haz.shape, edge_boxes)
                     || (haz.shape.bbox.relation_to(pole.bbox()) == GeoRelation::Surrounding
                         && haz.shape.collides_with(&pole.center));
                 if collides {
