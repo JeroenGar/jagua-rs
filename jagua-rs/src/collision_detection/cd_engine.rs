@@ -1,3 +1,4 @@
+use crate::collision_detection::hazard_index::{self, HazardIndex};
 use crate::collision_detection::hazards::HazKey;
 use crate::collision_detection::hazards::Hazard;
 use crate::collision_detection::hazards::collector::HazardCollector;
@@ -27,6 +28,8 @@ pub struct CDEngine<E = BasicHazardEntity> {
     pub(crate) config: CDEConfig,
     /// The key of the hazard that represents the exterior of the container.
     hkey_exterior: HazKey,
+    /// Prototype: bounding boxes of all interior hazards, for hazard-first collection queries.
+    index: HazardIndex,
 }
 
 impl<E: HazardEntity> CDEngine<E> {
@@ -54,11 +57,19 @@ impl<E: HazardEntity> CDEngine<E> {
             "More than one exterior hazard registered in the CDE"
         );
 
+        let mut index = HazardIndex::default();
+        for (hkey, haz) in &hazards_map {
+            if hkey != hkey_exterior {
+                index.insert(hkey, haz.shape.bbox);
+            }
+        }
+
         CDEngine {
             quadtree,
             hazards_map,
             config,
             hkey_exterior,
+            index,
         }
     }
 
@@ -69,6 +80,7 @@ impl<E: HazardEntity> CDEngine<E> {
             "Hazard with an identical entity already registered"
         );
         let hkey = self.hazards_map.insert(hazard);
+        self.index.insert(hkey, self.hazards_map[hkey].shape.bbox);
         let qt_hazard = QTHazard::from_root(self.bbox(), &self.hazards_map[hkey], hkey);
         self.quadtree.register_hazard(qt_hazard, &self.hazards_map);
 
@@ -85,6 +97,7 @@ impl<E: HazardEntity> CDEngine<E> {
             .expect("Cannot deregister hazard that is not registered");
 
         self.quadtree.deregister_hazard(hkey);
+        self.index.remove(hkey);
         let hazard = self.hazards_map.remove(hkey).unwrap();
         debug_assert!(assertions::qt_contains_no_dangling_hazards(self));
 
@@ -97,6 +110,7 @@ impl<E: HazardEntity> CDEngine<E> {
             .remove(hkey)
             .expect("Cannot deregister hazard that is not registered");
         self.quadtree.deregister_hazard(hkey);
+        self.index.remove(hkey);
         debug_assert!(assertions::qt_contains_no_dangling_hazards(self));
 
         hazard
@@ -307,42 +321,38 @@ impl<E: HazardEntity> CDEngine<E> {
             }
         }
 
-        //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
-        let v_quadtree = self.get_virtual_root(shape.bbox);
-
-        for edge in shape.edge_iter() {
-            if v_quadtree.collect_collisions_until(
-                &edge,
-                filter,
-                collector,
-                &mut stop_after_collision,
-            ) {
+        let ext_shape = &self.hazards_map[self.hkey_exterior].shape;
+        if !collector.contains_key(self.hkey_exterior)
+            && !filter.is_irrelevant(self.hkey_exterior, &exterior)
+            && let Some(r) = hazard_index::overlap(shape.bbox, ext_shape.bbox)
+            && (hazard_index::edges_intersect(shape, ext_shape, r)
+                || Self::detect_containment_collision(shape, ext_shape, exterior))
+        {
+            collector.insert(self.hkey_exterior, exterior);
+            if stop_after_collision(exterior) {
                 return true;
             }
         }
 
-        //Check if there are any other collisions due to containment
-        for qt_haz in v_quadtree.hazards.iter() {
-            match &qt_haz.presence {
-                // No need to check these, guaranteed to be detected by edge intersection
-                QTHazPresence::None | QTHazPresence::Entire => {}
-                QTHazPresence::Partial(_) => {
-                    if !collector.contains_key(qt_haz.hkey)
-                        && !filter.is_irrelevant(qt_haz.hkey, &qt_haz.entity)
-                    {
-                        let h_shape = &self.hazards_map[qt_haz.hkey].shape;
-                        if Self::detect_containment_collision(shape, h_shape, qt_haz.entity) {
-                            collector.insert(qt_haz.hkey, qt_haz.entity);
-                            if stop_after_collision(qt_haz.entity) {
-                                return true;
-                            }
-                        }
-                    }
-                }
+        // Hazard-first: every hazard whose bounding box overlaps the shape's is checked once
+        self.index.any_overlapping(shape.bbox, |hkey| {
+            if collector.contains_key(hkey) {
+                return false;
             }
-        }
-
-        false
+            let haz = &self.hazards_map[hkey];
+            if filter.is_irrelevant(hkey, &haz.entity) {
+                return false;
+            }
+            let r = hazard_index::overlap(shape.bbox, haz.shape.bbox)
+                .expect("candidate bounding boxes overlap");
+            let collides = hazard_index::edges_intersect(shape, &haz.shape, r)
+                || Self::detect_containment_collision(shape, &haz.shape, haz.entity);
+            if collides {
+                collector.insert(hkey, haz.entity);
+                return stop_after_collision(haz.entity);
+            }
+            false
+        })
     }
 
     /// Collects collisions found by the surrogate screening pass.
@@ -381,13 +391,40 @@ impl<E: HazardEntity> CDEngine<E> {
         let Some(surrogate) = &shape.surrogate else {
             return false;
         };
+        let exterior = self.hazards_map[self.hkey_exterior].entity;
+        let ext_shape = &self.hazards_map[self.hkey_exterior].shape;
         for pole in surrogate.ff_poles() {
-            if self.quadtree.collect_collisions_until(
-                pole,
-                filter,
-                collector,
-                &mut stop_after_collision,
-            ) {
+            if !collector.contains_key(self.hkey_exterior)
+                && !filter.is_irrelevant(self.hkey_exterior, &exterior)
+                && (hazard_index::circle_touches_edges(pole, ext_shape)
+                    || !ext_shape.collides_with(&pole.center))
+            {
+                collector.insert(self.hkey_exterior, exterior);
+                if stop_after_collision(exterior) {
+                    return true;
+                }
+            }
+            let pole_bbox = pole.bbox();
+            let stopped = self.index.any_overlapping(pole_bbox, |hkey| {
+                if collector.contains_key(hkey) {
+                    return false;
+                }
+                let haz = &self.hazards_map[hkey];
+                if filter.is_irrelevant(hkey, &haz.entity) {
+                    return false;
+                }
+                // A pole that touches no edge collides only if it lies inside the hazard,
+                // which requires its bounding box to lie within the hazard's.
+                let collides = hazard_index::circle_touches_edges(pole, &haz.shape)
+                    || (haz.shape.bbox.relation_to(pole_bbox) == GeoRelation::Surrounding
+                        && haz.shape.collides_with(&pole.center));
+                if collides {
+                    collector.insert(hkey, haz.entity);
+                    return stop_after_collision(haz.entity);
+                }
+                false
+            });
+            if stopped {
                 return true;
             }
         }
