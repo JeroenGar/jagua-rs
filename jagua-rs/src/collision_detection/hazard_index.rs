@@ -114,49 +114,83 @@ pub fn overlap(a: Rect, b: Rect) -> Option<Rect> {
     })
 }
 
+/// Cohen-Sutherland outcode of `p` relative to `r`: one bit per side of `r` that `p` lies beyond.
+/// An edge can only overlap `r` if the outcodes of its endpoints share no bit.
 #[inline(always)]
-fn edge_bbox_overlaps(e: &Edge, r: &Rect) -> bool {
-    e.x_min().max(r.x_min) <= e.x_max().min(r.x_max)
-        && e.y_min().max(r.y_min) <= e.y_max().min(r.y_max)
+fn outcode(p: Point, r: &Rect) -> u8 {
+    u8::from(p.0 < r.x_min)
+        | (u8::from(p.0 > r.x_max) << 1)
+        | (u8::from(p.1 < r.y_min) << 2)
+        | (u8::from(p.1 > r.y_max) << 3)
+}
+
+const BUF: usize = 64;
+
+/// Collects the edges of `poly` whose bounding box overlaps `r` into `buf`.
+/// Returns `None` if they do not fit.
+#[inline(always)]
+fn edges_overlapping(poly: &SPolygon, r: &Rect, buf: &mut [Edge; BUF]) -> Option<usize> {
+    let vertices = poly.vertices();
+    let mut prev = *vertices.last().unwrap();
+    let mut prev_code = outcode(prev, r);
+    let mut n = 0;
+    for &cur in vertices {
+        let code = outcode(cur, r);
+        if prev_code & code == 0 {
+            if n == BUF {
+                return None;
+            }
+            buf[n] = Edge {
+                start: prev,
+                end: cur,
+            };
+            n += 1;
+        }
+        (prev, prev_code) = (cur, code);
+    }
+    Some(n)
 }
 
 /// Whether any edge of `a` intersects any edge of `b`.
 /// Only edges whose bounding box overlaps `r`, the overlap of both polygons' bounding boxes, can intersect.
 pub fn edges_intersect(a: &SPolygon, b: &SPolygon, r: Rect) -> bool {
-    const BUF: usize = 64;
-    let mut buf = [Edge {
+    let empty = Edge {
         start: Point(0.0, 0.0),
         end: Point(0.0, 0.0),
-    }; BUF];
-    let mut n = 0;
-    for e in b.edge_iter() {
-        if edge_bbox_overlaps(&e, &r) {
-            if n == BUF {
-                // Too many candidate edges for the buffer: test all pairs directly
-                return a.edge_iter().filter(|ea| edge_bbox_overlaps(ea, &r)).any(|ea| {
-                    b.edge_iter()
-                        .filter(|eb| edge_bbox_overlaps(eb, &r))
-                        .any(|eb| ea.collides_with(&eb))
-                });
-            }
-            buf[n] = e;
-            n += 1;
-        }
+    };
+    let (mut buf_a, mut buf_b) = ([empty; BUF], [empty; BUF]);
+    match (
+        edges_overlapping(b, &r, &mut buf_b),
+        edges_overlapping(a, &r, &mut buf_a),
+    ) {
+        (Some(n_b), Some(n_a)) => buf_a[..n_a]
+            .iter()
+            .any(|ea| buf_b[..n_b].iter().any(|eb| ea.collides_with(eb))),
+        // Too many candidate edges for the buffers: test all pairs directly
+        _ => a.edge_iter().any(|ea| b.edge_iter().any(|eb| ea.collides_with(&eb))),
     }
-    if n == 0 {
-        return false;
-    }
-    let b_edges = &buf[..n];
-    a.edge_iter()
-        .filter(|ea| edge_bbox_overlaps(ea, &r))
-        .any(|ea| b_edges.iter().any(|eb| ea.collides_with(eb)))
 }
 
 /// Whether `c` touches any edge of `poly` whose bounding box overlaps the circle's bounding box.
 pub fn circle_touches_edges(c: &Circle, poly: &SPolygon) -> bool {
     let r = c.bbox();
     let sq_radius = c.radius.powi(2);
-    poly.edge_iter()
-        .filter(|e| edge_bbox_overlaps(e, &r))
-        .any(|e| e.sq_distance_to(&c.center) <= sq_radius)
+    let vertices = poly.vertices();
+    let mut prev = *vertices.last().unwrap();
+    let mut prev_code = outcode(prev, &r);
+    for &cur in vertices {
+        let code = outcode(cur, &r);
+        if prev_code & code == 0
+            && (Edge {
+                start: prev,
+                end: cur,
+            })
+            .sq_distance_to(&c.center)
+                <= sq_radius
+        {
+            return true;
+        }
+        (prev, prev_code) = (cur, code);
+    }
+    false
 }
