@@ -1,0 +1,9 @@
+(function() {
+    const implementors = Object.fromEntries([["jagua_rs",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.98.0/core/cmp/trait.PartialOrd.html\" title=\"trait core::cmp::PartialOrd\">PartialOrd</a> for <a class=\"struct\" href=\"jagua_rs/util/struct.FPA.html\" title=\"struct jagua_rs::util::FPA\">FPA</a>",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.98.0/core/cmp/trait.PartialOrd.html\" title=\"trait core::cmp::PartialOrd\">PartialOrd</a> for <a class=\"struct\" href=\"jagua_rs/collision_detection/hazards/struct.HazKey.html\" title=\"struct jagua_rs::collision_detection::hazards::HazKey\">HazKey</a>",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.98.0/core/cmp/trait.PartialOrd.html\" title=\"trait core::cmp::PartialOrd\">PartialOrd</a> for <a class=\"struct\" href=\"jagua_rs/probs/bpp/entities/struct.LayKey.html\" title=\"struct jagua_rs::probs::bpp::entities::LayKey\">LayKey</a>",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.98.0/core/cmp/trait.PartialOrd.html\" title=\"trait core::cmp::PartialOrd\">PartialOrd</a> for <a class=\"struct\" href=\"jagua_rs/entities/struct.PItemKey.html\" title=\"struct jagua_rs::entities::PItemKey\">PItemKey</a>",0]]],["lbf",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.98.0/core/cmp/trait.PartialOrd.html\" title=\"trait core::cmp::PartialOrd\">PartialOrd</a> for <a class=\"struct\" href=\"lbf/opt/loss/struct.LBFLoss.html\" title=\"struct lbf::opt::loss::LBFLoss\">LBFLoss</a>",0]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":59,"fragment_lengths":[1188,285]}
