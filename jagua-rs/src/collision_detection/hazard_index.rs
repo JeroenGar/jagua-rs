@@ -4,8 +4,9 @@
 use crate::collision_detection::hazards::HazKey;
 use crate::geometry::primitives::Rect;
 
-/// Bounding boxes of hazards in flat arrays sorted by `x_min`, so a query only scans the hazards
-/// in its x-window and tests their boxes 64 at a time.
+/// Bounding boxes of hazards in flat arrays sorted by `x_min`, tested 64 at a time. A query
+/// stops at the first box starting right of it and skips the chunks of 64 boxes that all end left
+/// of it.
 #[derive(Clone, Debug, Default)]
 pub(crate) struct HazardIndex {
     keys: Vec<HazKey>,
@@ -13,8 +14,8 @@ pub(crate) struct HazardIndex {
     y_min: Vec<f32>,
     x_max: Vec<f32>,
     y_max: Vec<f32>,
-    /// Upper bound on the width of the boxes
-    max_width: f32,
+    /// Largest `x_max` of each chunk of 64 consecutive boxes
+    chunk_x_max: Vec<f32>,
 }
 
 impl HazardIndex {
@@ -25,7 +26,7 @@ impl HazardIndex {
         self.y_min.insert(i, bbox.y_min);
         self.x_max.insert(i, bbox.x_max);
         self.y_max.insert(i, bbox.y_max);
-        self.max_width = self.max_width.max(bbox.width());
+        self.update_chunks(i / 64);
     }
 
     /// Removes the hazard with `hkey`, inserted with `bbox`.
@@ -41,15 +42,23 @@ impl HazardIndex {
         self.y_min.remove(i);
         self.x_max.remove(i);
         self.y_max.remove(i);
+        self.update_chunks(i / 64);
+    }
+
+    /// Recomputes the bounds of the chunks from `first` on, whose boxes have shifted.
+    fn update_chunks(&mut self, first: usize) {
+        self.chunk_x_max.truncate(first);
+        let maxima = self.x_max[first * 64..]
+            .chunks(64)
+            .map(|chunk| chunk.iter().copied().fold(f32::NEG_INFINITY, f32::max));
+        self.chunk_x_max.extend(maxima);
     }
 
     /// Calls `f` for every hazard whose bounding box overlaps `r` (borders included),
     /// until it returns `true`. Returns whether it did.
     #[inline(always)]
     pub fn any_overlapping(&self, r: Rect, mut f: impl FnMut(HazKey) -> bool) -> bool {
-        let (lo, hi) = self.window(r);
-        for start in (lo..hi).step_by(64) {
-            let mut mask = self.chunk_mask(start, hi, r);
+        self.any_chunk(r, |start, mut mask| {
             while mask != 0 {
                 let i = start + mask.trailing_zeros() as usize;
                 mask &= mask - 1;
@@ -57,8 +66,8 @@ impl HazardIndex {
                     return true;
                 }
             }
-        }
-        false
+            false
+        })
     }
 
     /// Like [`Self::any_overlapping`] for several rectangles, all inside `union`: the boxes are
@@ -71,12 +80,7 @@ impl HazardIndex {
         rects: &(impl Iterator<Item = Rect> + Clone),
         mut f: impl FnMut(usize, HazKey) -> bool,
     ) -> bool {
-        let (lo, hi) = self.window(union);
-        for start in (lo..hi).step_by(64) {
-            let candidates = self.chunk_mask(start, hi, union);
-            if candidates == 0 {
-                continue;
-            }
+        self.any_chunk(union, |start, candidates| {
             for (ri, r) in rects.clone().enumerate() {
                 let mut mask = candidates;
                 while mask != 0 {
@@ -91,8 +95,8 @@ impl HazardIndex {
                     }
                 }
             }
-        }
-        false
+            false
+        })
     }
 
     /// The hazards in the index with their bounding boxes, sorted by `x_min`.
@@ -108,22 +112,37 @@ impl HazardIndex {
         })
     }
 
-    pub fn max_width(&self) -> f32 {
-        self.max_width
+    /// Largest `x_max` of each chunk of 64 consecutive boxes.
+    pub fn chunk_x_max(&self) -> &[f32] {
+        &self.chunk_x_max
     }
 
-    /// Range of hazards that can overlap `r`: those with `x_min` in `[r.x_min - max_width, r.x_max]`.
+    /// Calls `f` with the start and overlap mask of every chunk with a box overlapping `r`,
+    /// until it returns `true`. Returns whether it did.
     #[inline(always)]
-    fn window(&self, r: Rect) -> (usize, usize) {
-        if self.x_min.len() <= 64 {
+    fn any_chunk(&self, r: Rect, mut f: impl FnMut(usize, u64) -> bool) -> bool {
+        // Boxes from `hi` on start right of `r`
+        let hi = if self.x_min.len() <= 64 {
             // A single chunk: scanning it all is cheaper than searching
-            return (0, self.x_min.len());
+            self.x_min.len()
+        } else {
+            self.x_min.partition_point(|&x| x <= r.x_max)
+        };
+        for (c, &x_max) in self.chunk_x_max.iter().enumerate() {
+            let start = c * 64;
+            if start >= hi {
+                break;
+            }
+            if x_max < r.x_min {
+                // Every box in the chunk ends left of `r`
+                continue;
+            }
+            let mask = self.chunk_mask(start, hi, r);
+            if mask != 0 && f(start, mask) {
+                return true;
+            }
         }
-        let lo = self
-            .x_min
-            .partition_point(|&x| x < r.x_min - self.max_width);
-        let hi = self.x_min.partition_point(|&x| x <= r.x_max);
-        (lo, hi.max(lo))
+        false
     }
 
     /// Bit `j` is set if the hazard at `start + j` overlaps `r`, for up to 64 hazards before `hi`.
