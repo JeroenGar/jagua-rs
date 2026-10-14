@@ -316,15 +316,3 @@ pub fn circle_touches_edges(c: &Circle, poly: &SPolygon) -> bool {
     }
     false
 }
-
-/// Whether `e` intersects any edge of `poly`, whose edges' bounding boxes are given.
-pub fn edge_touches_edges_cached(e: &Edge, poly: &SPolygon, boxes: &EdgeBoxes) -> bool {
-    let r = Rect {
-        x_min: e.x_min(),
-        y_min: e.y_min(),
-        x_max: e.x_max(),
-        y_max: e.y_max(),
-    };
-    let vertices = poly.vertices();
-    boxes.any_overlapping(r, |i| edge_to(vertices, i).collides_with(e))
-}
