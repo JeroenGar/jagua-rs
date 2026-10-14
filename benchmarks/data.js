@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791993698930,
+  "lastUpdate": 1791994330453,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -8349,6 +8349,102 @@ window.BENCHMARK_DATA = {
             "name": "reflection/transform_and_collect/alternating",
             "value": 1407754,
             "range": "± 11364",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jeroen.gardeyn@hotmail.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "efdd0ab37f0a169b8b5ca8ec17ae115dfb6f8629",
+          "message": "Redesigned Collision Detection Engine (#125)\n\n* Check collision queries against exact geometry on changing LBF layouts\n\n* Collect collisions on a sorted index of hazard bounding boxes, with edge geometry shared by each hazard\n\n* Detect collisions on the hazard index and remove the quadtree\n\n* Remove the quadtree configuration, HazardEntity::is_dynamic and surrogate piers, and release 2.0.0\n\n* Keep the CDE benchmark IDs the performance tracker knows\n\n* Rename the edges module to narrow_phase and move the box mask to the hazard index",
+          "timestamp": "2026-10-14T18:08:21+02:00",
+          "tree_id": "65dd4e154944036389934c86e1fb3c86851fb420",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/efdd0ab37f0a169b8b5ca8ec17ae115dfb6f8629"
+        },
+        "date": 1791994329763,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k/4",
+            "value": 790361,
+            "range": "± 23342",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k/4",
+            "value": 876781,
+            "range": "± 16395",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k/4",
+            "value": 138132,
+            "range": "± 2406",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_from/unreflected",
+            "value": 55143,
+            "range": "± 265",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_clone/unreflected",
+            "value": 112611,
+            "range": "± 1231",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_and_collect/unreflected",
+            "value": 546848,
+            "range": "± 3364",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_from/reflected",
+            "value": 55747,
+            "range": "± 341",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_clone/reflected",
+            "value": 124829,
+            "range": "± 1127",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_and_collect/reflected",
+            "value": 541901,
+            "range": "± 8721",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_from/alternating",
+            "value": 56336,
+            "range": "± 252",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_clone/alternating",
+            "value": 119514,
+            "range": "± 534",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reflection/transform_and_collect/alternating",
+            "value": 545301,
+            "range": "± 1941",
             "unit": "ns/iter"
           }
         ]
