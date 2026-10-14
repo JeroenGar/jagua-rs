@@ -217,6 +217,12 @@ pub fn circle_touches_edges(c: &Circle, edges: &impl EdgeSet) -> bool {
     edges.any_edge_overlapping(c.bbox(), |e| e.sq_distance_to(&c.center) <= sq_radius)
 }
 
+/// Whether `edge` intersects an edge of `edges`.
+#[inline(always)]
+pub fn edge_touches_edges(edge: &Edge, edges: &impl EdgeSet) -> bool {
+    edges.any_edge_overlapping(edge.bbox(), |e| e.collides_with(edge))
+}
+
 /// Intersection of two rectangles, or `None` if they are disjoint. Touching counts as overlap.
 #[inline(always)]
 pub fn overlap(a: Rect, b: Rect) -> Option<Rect> {

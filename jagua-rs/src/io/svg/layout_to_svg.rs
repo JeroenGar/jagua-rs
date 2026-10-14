@@ -325,45 +325,6 @@ pub fn layout_to_svg_group(
         (items_group, surrogate_group, highlight_cd_shapes_group)
     };
 
-    //draw quadtree (if enabled)
-    let quad_tree_group = if options.quadtree {
-        let qt_data = svg_util::quad_tree_data(&layout.cde().quadtree, &NoFilter);
-        let qt_group = Group::new()
-            .set("id", "quadtree")
-            .add(svg_util::data_to_path(
-                qt_data.0,
-                &[
-                    ("fill", "red"),
-                    ("stroke-width", &*format!("{}", stroke_width * 0.25)),
-                    ("fill-rule", "nonzero"),
-                    ("fill-opacity", "0.6"),
-                    ("stroke", "black"),
-                ],
-            ))
-            .add(svg_util::data_to_path(
-                qt_data.1,
-                &[
-                    ("fill", "none"),
-                    ("stroke-width", &*format!("{}", stroke_width * 0.25)),
-                    ("fill-rule", "nonzero"),
-                    ("fill-opacity", "0.3"),
-                    ("stroke", "black"),
-                ],
-            ))
-            .add(svg_util::data_to_path(
-                qt_data.2,
-                &[
-                    ("fill", "green"),
-                    ("fill-opacity", "0.6"),
-                    ("stroke-width", &*format!("{}", stroke_width * 0.25)),
-                    ("stroke", "black"),
-                ],
-            ));
-        Some(qt_group)
-    } else {
-        None
-    };
-
     //highlight colliding items (if enabled)
     let collision_group = if options.highlight_collisions {
         let mut collision_group = Group::new().set("id", "collision_lines");
@@ -485,7 +446,6 @@ pub fn layout_to_svg_group(
     let optionals = [
         Some(highlight_cd_shape_group),
         Some(surrogate_group),
-        quad_tree_group,
         collision_group,
     ]
     .into_iter()

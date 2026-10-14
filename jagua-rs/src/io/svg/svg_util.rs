@@ -1,6 +1,3 @@
-use crate::collision_detection::hazards::HazardEntity;
-use crate::collision_detection::hazards::filter::HazardFilter;
-use crate::collision_detection::quadtree::{QTHazPresence, QTNode};
 use crate::entities::N_QUALITIES;
 use crate::geometry;
 use crate::geometry::OriginalShape;
@@ -16,8 +13,6 @@ use svg::node::element::{Circle, Path};
 pub struct SvgDrawOptions {
     ///The theme to use for the svg
     pub theme: SvgLayoutTheme,
-    ///Draw the quadtree on top
-    pub quadtree: bool,
     ///Draw the fail fast surrogate on top of each item
     pub surrogate: bool,
     ///Draw dashed lines between colliding items
@@ -32,7 +27,6 @@ impl Default for SvgDrawOptions {
     fn default() -> Self {
         Self {
             theme: SvgLayoutTheme::default(),
-            quadtree: false,
             surrogate: false,
             highlight_collisions: true,
             draw_cd_shapes: false,
@@ -189,63 +183,6 @@ pub fn simple_polygon_data(s_poly: &SPolygon) -> Data {
         data = data.line_to::<(f32, f32)>(s_poly.vertex(i).into());
     }
     data.close()
-}
-
-pub fn quad_tree_data<E: HazardEntity>(
-    qt_root: &QTNode<E>,
-    irrelevant_hazards: &impl HazardFilter<E>,
-) -> (Data, Data, Data) {
-    qt_node_data(
-        qt_root,
-        Data::new(),
-        Data::new(),
-        Data::new(),
-        irrelevant_hazards,
-    )
-}
-
-#[allow(clippy::similar_names)]
-fn qt_node_data<E: HazardEntity>(
-    qt_node: &QTNode<E>,
-    mut data_eh: Data, //entire hazards data
-    mut data_ph: Data, //partial hazards data
-    mut data_nh: Data, //no hazards data
-    filter: &impl HazardFilter<E>,
-) -> (Data, Data, Data) {
-    //Only draw qt_nodes that do not have a child
-
-    if let (Some(children), Some(_)) =
-        (qt_node.children.as_ref(), qt_node.hazards.strongest(filter))
-    {
-        //not a leaf node, go to children
-        for child in children.iter() {
-            let data = qt_node_data(child, data_eh, data_ph, data_nh, filter);
-            data_eh = data.0;
-            data_ph = data.1;
-            data_nh = data.2;
-        }
-    } else {
-        //leaf node, draw it
-        let rect = &qt_node.bbox;
-        let draw = |data: Data| -> Data {
-            data.move_to((rect.x_min, rect.y_min))
-                .line_to((rect.x_max, rect.y_min))
-                .line_to((rect.x_max, rect.y_max))
-                .line_to((rect.x_min, rect.y_max))
-                .close()
-        };
-
-        match qt_node.hazards.strongest(filter) {
-            Some(ch) => match ch.presence {
-                QTHazPresence::Entire => data_eh = draw(data_eh),
-                QTHazPresence::Partial(_) => data_ph = draw(data_ph),
-                QTHazPresence::None => unreachable!(),
-            },
-            None => data_nh = draw(data_nh),
-        }
-    }
-
-    (data_eh, data_ph, data_nh)
 }
 
 pub fn data_to_path(data: Data, params: &[(&str, &str)]) -> Path {
