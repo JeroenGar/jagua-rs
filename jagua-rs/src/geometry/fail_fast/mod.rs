@@ -1,4 +1,3 @@
-mod piers;
 mod pole;
 mod sp_surrogate;
 

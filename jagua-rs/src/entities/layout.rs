@@ -84,7 +84,7 @@ impl Layout {
         self.placed_items.clone_from(&layout_snapshot.placed_items);
         self.cde.restore(&layout_snapshot.cde_snapshot);
 
-        debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
+        debug_assert!(assertions::layout_cde_matches_fresh(self));
         debug_assert!(assertions::snapshot_matches_layout(self, layout_snapshot));
         Ok(())
     }
@@ -101,7 +101,7 @@ impl Layout {
 
         self.cde.register_hazard(hazard);
 
-        debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
+        debug_assert!(assertions::layout_cde_matches_fresh(self));
 
         pk
     }
@@ -116,7 +116,7 @@ impl Layout {
         // update the collision detection engine
         self.cde.deregister_hazard_by_entity((pk, &pi).into());
 
-        debug_assert!(assertions::layout_qt_matches_fresh_qt(self));
+        debug_assert!(assertions::layout_cde_matches_fresh(self));
 
         pi
     }

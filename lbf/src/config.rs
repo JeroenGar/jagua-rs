@@ -29,12 +29,9 @@ impl Default for LBFConfig {
     fn default() -> Self {
         Self {
             cde_config: CDEConfig {
-                quadtree_depth: 5,
-                cd_threshold: 96,
                 item_surrogate_config: SPSurrogateConfig {
                     n_pole_limits: [(100, 0.0), (20, 0.75), (10, 0.90)],
                     ff_pole_area_ratio: 0.5,
-                    n_ff_piers: 0,
                 },
             },
             poly_simpl_tolerance: Some(0.001),

@@ -14,5 +14,6 @@ pub use hazard::HazKey;
 pub use hazard::Hazard;
 #[doc(inline)]
 pub use hazard::HazardEntity;
+pub(crate) use hazard::HazardGeometry;
 #[doc(inline)]
 pub use hazard::PItemKey;

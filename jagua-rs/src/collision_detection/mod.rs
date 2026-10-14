@@ -1,10 +1,9 @@
 mod cd_engine;
+mod hazard_index;
+mod narrow_phase;
 
 /// Everything Hazard related
 pub mod hazards;
-
-/// Everything Quadtree related.
-pub(crate) mod quadtree;
 
 #[doc(inline)]
 pub use cd_engine::CDEConfig;

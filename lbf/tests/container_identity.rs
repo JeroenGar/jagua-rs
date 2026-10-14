@@ -53,7 +53,7 @@ fn restore_uses_static_geometry_and_bin_stock_uses_bin_identity() -> anyhow::Res
         assert!(jagua_rs::util::assertions::snapshot_matches_layout(
             &layout, &before
         ));
-        assert!(jagua_rs::util::assertions::layout_qt_matches_fresh_qt(
+        assert!(jagua_rs::util::assertions::layout_cde_matches_fresh(
             &layout
         ));
 

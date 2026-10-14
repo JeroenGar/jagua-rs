@@ -1,50 +1,54 @@
+use crate::collision_detection::hazard_index::HazardIndex;
 use crate::collision_detection::hazards::HazKey;
 use crate::collision_detection::hazards::Hazard;
+use crate::collision_detection::hazards::HazardGeometry;
 use crate::collision_detection::hazards::collector::HazardCollector;
 use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::hazards::{BasicHazardEntity, HazardEntity};
-use crate::collision_detection::quadtree::{QTHazPresence, QTHazard, QTNode};
+use crate::collision_detection::narrow_phase::{self, EdgeChains};
 use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Transformable};
-use crate::geometry::primitives::{Rect, SPolygon};
+use crate::geometry::primitives::{Circle, Rect, SPolygon};
 use crate::util::assertions;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use slotmap::SlotMap;
+use slotmap::{SecondaryMap, SlotMap};
 
 /// The Collision Detection Engine (CDE).
 /// [`Hazard`]s can be (de)registered and collision queries can be performed.
 /// The entity type `E` defines what can induce a hazard, see [`HazardEntity`].
 #[derive(Clone, Debug)]
 pub struct CDEngine<E = BasicHazardEntity> {
-    /// Root node of the quadtree
-    pub(crate) quadtree: QTNode<E>,
+    /// Shapes reaching outside this rectangle collide with the exterior
+    bbox: Rect,
     /// All hazards registered in the CDE (active and inactive)
     pub(crate) hazards_map: SlotMap<HazKey, Hazard<E>>,
     /// Configuration of the CDE
     pub(crate) config: CDEConfig,
     /// The key of the hazard that represents the exterior of the container.
     hkey_exterior: HazKey,
+    /// Bounding boxes of all hazards except the exterior
+    pub(crate) index: HazardIndex,
+    /// Keys of the hazards the CDE was created with, which snapshots leave out
+    base_keys: SecondaryMap<HazKey, ()>,
 }
 
 impl<E: HazardEntity> CDEngine<E> {
     /// Creates an engine with the static hazards, exactly one of which covers the exterior.
+    /// Snapshots hold only the hazards registered later.
     #[must_use]
     pub fn new(bbox: Rect, static_hazards: Vec<Hazard<E>>, config: CDEConfig) -> Self {
-        let mut quadtree = QTNode::new(config.quadtree_depth, bbox, config.cd_threshold);
         let mut hazards_map = SlotMap::with_key();
-
         for haz in static_hazards {
-            let hkey = hazards_map.insert(haz);
-            let qt_haz = QTHazard::from_root(quadtree.bbox, &hazards_map[hkey], hkey);
-            quadtree.register_hazard(qt_haz, &hazards_map);
+            hazards_map.insert(haz);
         }
+        let base_keys = hazards_map.keys().map(|k| (k, ())).collect();
 
         let mut exteriors = hazards_map
             .iter()
-            .filter(|(_, h)| h.entity.scope() == GeoPosition::Exterior)
+            .filter(|(_, h)| h.entity().scope() == GeoPosition::Exterior)
             .map(|(hkey, _)| hkey);
         let hkey_exterior = exteriors
             .next()
@@ -54,25 +58,42 @@ impl<E: HazardEntity> CDEngine<E> {
             "More than one exterior hazard registered in the CDE"
         );
 
-        CDEngine {
-            quadtree,
+        let mut index = HazardIndex::default();
+        for (hkey, haz) in &hazards_map {
+            if hkey != hkey_exterior {
+                index.insert(hkey, haz.shape().bbox);
+            }
+        }
+
+        let cde = CDEngine {
+            bbox,
             hazards_map,
             config,
             hkey_exterior,
-        }
+            index,
+            base_keys,
+        };
+        debug_assert!(assertions::index_matches_hazards(&cde));
+        cde
     }
 
     /// Registers a new hazard in the CDE.
     pub fn register_hazard(&mut self, hazard: Hazard<E>) {
         debug_assert!(
-            !self.hazards_map.values().any(|h| h.entity == hazard.entity),
+            !self
+                .hazards_map
+                .values()
+                .any(|h| h.entity() == hazard.entity()),
             "Hazard with an identical entity already registered"
         );
+        debug_assert!(
+            hazard.entity().scope() == GeoPosition::Interior,
+            "The exterior hazard can only be registered at construction"
+        );
+        let bbox = hazard.shape().bbox;
         let hkey = self.hazards_map.insert(hazard);
-        let qt_hazard = QTHazard::from_root(self.bbox(), &self.hazards_map[hkey], hkey);
-        self.quadtree.register_hazard(qt_hazard, &self.hazards_map);
-
-        debug_assert!(assertions::qt_contains_no_dangling_hazards(self));
+        self.index.insert(hkey, bbox);
+        debug_assert!(assertions::index_matches_hazards(self));
     }
 
     /// Removes a hazard from the CDE.
@@ -80,58 +101,59 @@ impl<E: HazardEntity> CDEngine<E> {
         let hkey = self
             .hazards_map
             .iter()
-            .find(|(_, h)| h.entity == hazard_entity)
+            .find(|(_, h)| h.entity() == hazard_entity)
             .map(|(hkey, _)| hkey)
             .expect("Cannot deregister hazard that is not registered");
-
-        self.quadtree.deregister_hazard(hkey);
-        let hazard = self.hazards_map.remove(hkey).unwrap();
-        debug_assert!(assertions::qt_contains_no_dangling_hazards(self));
-
-        hazard
+        self.deregister_hazard_by_key(hkey)
     }
 
+    /// Removes a hazard registered after construction from the CDE.
     pub fn deregister_hazard_by_key(&mut self, hkey: HazKey) -> Hazard<E> {
+        debug_assert!(
+            !self.base_keys.contains_key(hkey),
+            "Hazards the CDE was created with cannot be deregistered"
+        );
         let hazard = self
             .hazards_map
             .remove(hkey)
             .expect("Cannot deregister hazard that is not registered");
-        self.quadtree.deregister_hazard(hkey);
-        debug_assert!(assertions::qt_contains_no_dangling_hazards(self));
+        self.index.remove(hkey, hazard.shape().bbox);
+        debug_assert!(assertions::index_matches_hazards(self));
 
         hazard
     }
 
-    /// Saves the dynamic hazards, to restore them later with [`CDEngine::restore`].
+    /// Saves the hazards registered after construction, to restore them later with
+    /// [`CDEngine::restore`].
     #[must_use]
     pub fn save(&self) -> CDESnapshot<E> {
         let dynamic_hazards = self
             .hazards_map
-            .values()
-            .filter(|h| h.entity.is_dynamic())
-            .cloned()
+            .iter()
+            .filter(|(hkey, _)| !self.base_keys.contains_key(*hkey))
+            .map(|(_, h)| h.clone())
             .collect_vec();
         CDESnapshot { dynamic_hazards }
     }
 
-    /// Restores the dynamic hazards of a snapshot, keeping those present in both.
+    /// Restores the hazards registered after construction to those of a snapshot, keeping
+    /// those present in both.
     pub fn restore(&mut self, snapshot: &CDESnapshot<E>) {
-        //Restore the quadtree, by doing a 'diff' between the current state and the snapshot
-        //Only dynamic hazards are considered
+        //Restore the hazards, by doing a 'diff' between the current state and the snapshot
 
-        //Determine which dynamic hazards need to be removed and which need to be added
+        //Determine which hazards need to be removed and which need to be added
         let mut hazards_to_remove = self
             .hazards_map
             .iter()
-            .filter(|(_, h)| h.entity.is_dynamic())
-            .map(|(hkey, h)| (hkey, h.entity))
+            .filter(|(hkey, _)| !self.base_keys.contains_key(*hkey))
+            .map(|(hkey, h)| (hkey, h.entity()))
             .collect_vec();
         let mut hazards_to_add = vec![];
 
         for hazard in &snapshot.dynamic_hazards {
             let present = hazards_to_remove
                 .iter()
-                .position(|(_, h)| h == &hazard.entity);
+                .position(|(_, h)| *h == hazard.entity());
             if let Some(idx) = present {
                 //the hazard is already present in the CDE, remove it from the hazards to remove
                 hazards_to_remove.swap_remove(idx);
@@ -152,10 +174,7 @@ impl<E: HazardEntity> CDEngine<E> {
         }
 
         debug_assert_eq!(
-            self.hazards_map
-                .values()
-                .filter(|h| h.entity.is_dynamic())
-                .count(),
+            self.hazards_map.len() - self.base_keys.len(),
             snapshot.dynamic_hazards.len()
         );
     }
@@ -170,42 +189,20 @@ impl<E: HazardEntity> CDEngine<E> {
     /// * `shape` - The shape (already transformed) to be checked for collisions
     /// * `filter` - Hazard filter to be applied
     pub fn detect_poly_collision(&self, shape: &SPolygon, filter: &impl HazardFilter<E>) -> bool {
-        if self.bbox().relation_to(shape.bbox) == GeoRelation::Surrounding {
-            //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
-            let v_qt_root = self.get_virtual_root(shape.bbox);
-
-            // Check for edge intersections with the shape
-            for edge in shape.edge_iter() {
-                if v_qt_root.collides(&edge, filter).is_some() {
-                    return true;
-                }
-            }
-
-            // Check for containment of the shape in any of the hazards
-            for qt_hazard in v_qt_root.hazards.iter() {
-                if filter.is_irrelevant(qt_hazard.hkey, &qt_hazard.entity) {
-                    continue;
-                }
-                match &qt_hazard.presence {
-                    QTHazPresence::None => {}
-                    QTHazPresence::Entire => unreachable!(
-                        "Entire hazards in the virtual root should have been caught by the edge intersection tests"
-                    ),
-                    QTHazPresence::Partial(_) => {
-                        let haz_shape = &self.hazards_map[qt_hazard.hkey].shape;
-                        if Self::detect_containment_collision(shape, haz_shape, qt_hazard.entity) {
-                            // The hazard is contained in the shape (or vice versa)
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            false
-        } else {
+        if self.bbox.relation_to(shape.bbox) != GeoRelation::Surrounding {
             //The CDE does not capture the entire shape, so we can immediately return true
-            true
+            return true;
         }
+        let exterior = self.hazards_map[self.hkey_exterior].entity();
+        if !filter.is_irrelevant(self.hkey_exterior, &exterior)
+            && self.collides_with_exterior(shape)
+        {
+            return true;
+        }
+        self.index.any_overlapping(shape.bbox, |hkey| {
+            let haz = &self.hazards_map[hkey];
+            !filter.is_irrelevant(hkey, &haz.entity()) && Self::poly_collides_with(shape, haz)
+        })
     }
 
     /// Checks whether a surrogate collides with any of the (relevant) hazards.
@@ -221,19 +218,39 @@ impl<E: HazardEntity> CDEngine<E> {
         transform: &Transformation,
         filter: &impl HazardFilter<E>,
     ) -> bool {
+        let exterior = self.hazards_map[self.hkey_exterior].entity();
+        let check_exterior = !filter.is_irrelevant(self.hkey_exterior, &exterior);
         for pole in base_surrogate.ff_poles() {
-            let t_pole = pole.transform_clone(transform);
-            if self.quadtree.collides(&t_pole, filter).is_some() {
+            let pole = pole.transform_clone(transform);
+            if check_exterior && self.pole_collides_with_exterior(&pole) {
                 return true;
             }
-        }
-        for pier in base_surrogate.ff_piers() {
-            let t_pier = pier.transform_clone(transform);
-            if self.quadtree.collides(&t_pier, filter).is_some() {
+            let hit = self.index.any_overlapping(pole.bbox(), |hkey| {
+                let haz = &self.hazards_map[hkey];
+                !filter.is_irrelevant(hkey, &haz.entity()) && Self::pole_collides_with(&pole, haz)
+            });
+            if hit {
                 return true;
             }
         }
         false
+    }
+
+    /// Whether `shape` collides with the interior hazard `haz`, given that their bounding boxes overlap.
+    fn poly_collides_with(shape: &SPolygon, haz: &Hazard<E>) -> bool {
+        let r = narrow_phase::overlap(shape.bbox, haz.shape().bbox)
+            .expect("the index reports overlapping bounding boxes");
+        narrow_phase::edges_intersect(shape, r, haz)
+            || Self::detect_containment_collision(shape, haz.shape(), haz.entity())
+    }
+
+    /// Whether `pole` collides with the interior hazard `haz`.
+    fn pole_collides_with(pole: &Circle, haz: &Hazard<E>) -> bool {
+        // A pole touching no edge collides only if it lies inside the hazard,
+        // which requires its bounding box to lie inside the hazard's
+        narrow_phase::circle_touches_edges(pole, haz)
+            || (haz.shape().bbox.relation_to(pole.bbox()) == GeoRelation::Surrounding
+                && haz.shape().collides_with(&pole.center))
     }
 
     /// Check for collision by containment between a shape and a hazard.
@@ -296,10 +313,11 @@ impl<E: HazardEntity> CDEngine<E> {
         C: HazardCollector<Entity = E>,
         F: FnMut(E) -> bool,
     {
-        let exterior = self.hazards_map[self.hkey_exterior].entity;
-        if self.bbox().relation_to(shape.bbox) != GeoRelation::Surrounding
-            && !collector.contains_key(self.hkey_exterior)
+        let exterior = self.hazards_map[self.hkey_exterior].entity();
+        if !collector.contains_key(self.hkey_exterior)
             && !filter.is_irrelevant(self.hkey_exterior, &exterior)
+            && (self.bbox.relation_to(shape.bbox) != GeoRelation::Surrounding
+                || self.collides_with_exterior(shape))
         {
             collector.insert(self.hkey_exterior, exterior);
             if stop_after_collision(exterior) {
@@ -307,42 +325,21 @@ impl<E: HazardEntity> CDEngine<E> {
             }
         }
 
-        //Instead of each time starting from the quadtree root, we can use the virtual root (lowest level node which fully surrounds the shape)
-        let v_quadtree = self.get_virtual_root(shape.bbox);
-
-        for edge in shape.edge_iter() {
-            if v_quadtree.collect_collisions_until(
-                &edge,
-                filter,
-                collector,
-                &mut stop_after_collision,
-            ) {
-                return true;
+        // Every hazard whose bounding box overlaps the shape's is checked once
+        self.index.any_overlapping(shape.bbox, |hkey| {
+            if collector.contains_key(hkey) {
+                return false;
             }
-        }
-
-        //Check if there are any other collisions due to containment
-        for qt_haz in v_quadtree.hazards.iter() {
-            match &qt_haz.presence {
-                // No need to check these, guaranteed to be detected by edge intersection
-                QTHazPresence::None | QTHazPresence::Entire => {}
-                QTHazPresence::Partial(_) => {
-                    if !collector.contains_key(qt_haz.hkey)
-                        && !filter.is_irrelevant(qt_haz.hkey, &qt_haz.entity)
-                    {
-                        let h_shape = &self.hazards_map[qt_haz.hkey].shape;
-                        if Self::detect_containment_collision(shape, h_shape, qt_haz.entity) {
-                            collector.insert(qt_haz.hkey, qt_haz.entity);
-                            if stop_after_collision(qt_haz.entity) {
-                                return true;
-                            }
-                        }
-                    }
-                }
+            let haz = &self.hazards_map[hkey];
+            if filter.is_irrelevant(hkey, &haz.entity()) {
+                return false;
             }
-        }
-
-        false
+            if Self::poly_collides_with(shape, haz) {
+                collector.insert(hkey, haz.entity());
+                return stop_after_collision(haz.entity());
+            }
+            false
+        })
     }
 
     /// Collects collisions found by the surrogate screening pass.
@@ -381,40 +378,81 @@ impl<E: HazardEntity> CDEngine<E> {
         let Some(surrogate) = &shape.surrogate else {
             return false;
         };
-        for pole in surrogate.ff_poles() {
-            if self.quadtree.collect_collisions_until(
-                pole,
-                filter,
-                collector,
-                &mut stop_after_collision,
-            ) {
-                return true;
+        let poles = surrogate.ff_poles();
+        let exterior = self.hazards_map[self.hkey_exterior].entity();
+        for pole in poles {
+            if !collector.contains_key(self.hkey_exterior)
+                && !filter.is_irrelevant(self.hkey_exterior, &exterior)
+                && self.pole_collides_with_exterior(pole)
+            {
+                collector.insert(self.hkey_exterior, exterior);
+                if stop_after_collision(exterior) {
+                    return true;
+                }
             }
         }
-        false
+
+        // One scan of the index with the poles' combined bounding box
+        let Some(union) = poles.iter().map(Circle::bbox).reduce(Rect::bounding_rect) else {
+            return false;
+        };
+        self.index
+            .any_overlapping_each(union, &poles.iter().map(Circle::bbox), |i, hkey| {
+                if collector.contains_key(hkey) {
+                    return false;
+                }
+                let haz = &self.hazards_map[hkey];
+                if filter.is_irrelevant(hkey, &haz.entity()) {
+                    return false;
+                }
+                if Self::pole_collides_with(&poles[i], haz) {
+                    collector.insert(hkey, haz.entity());
+                    return stop_after_collision(haz.entity());
+                }
+                false
+            })
     }
 
-    /// Returns the lowest `QTNode` that completely surrounds the given bounding box.
-    /// Used to initiate collision checks from lower in the quadtree.
-    #[must_use]
-    fn get_virtual_root(&self, bbox: Rect) -> &QTNode<E> {
-        let mut v_root = &self.quadtree;
-        while let Some(children) = v_root.children.as_ref() {
-            // Keep going down the tree until we cannot find a child that fully surrounds the shape
-            let surrounding_child = children
-                .iter()
-                .find(|child| child.bbox.relation_to(bbox) == GeoRelation::Surrounding);
-            match surrounding_child {
-                Some(child) => v_root = child,
-                None => break,
-            }
+    /// The exterior hazard and its geometry.
+    fn exterior(&self) -> (&Hazard<E>, &EdgeChains, bool) {
+        let haz = &self.hazards_map[self.hkey_exterior];
+        match haz.geometry() {
+            HazardGeometry::Exterior { chains, is_rect } => (haz, chains, *is_rect),
+            HazardGeometry::Interior(_) => unreachable!("the exterior has exterior geometry"),
         }
-        v_root
     }
 
+    /// Whether `shape` collides with the exterior hazard.
+    fn collides_with_exterior(&self, shape: &SPolygon) -> bool {
+        let (haz, chains, is_rect) = self.exterior();
+        let ext_bbox = haz.shape().bbox;
+        if is_rect && strictly_inside(shape.bbox, ext_bbox) {
+            return false;
+        }
+        let Some(r) = narrow_phase::overlap(shape.bbox, ext_bbox) else {
+            return true;
+        };
+        narrow_phase::edges_intersect(shape, r, haz)
+            || match ext_bbox.almost_relation_to(shape.bbox) {
+                // No edges cross: the shape lies inside or outside the container as a whole
+                GeoRelation::Surrounding => !chains.contains(shape.poi.center),
+                _ => true,
+            }
+    }
+
+    /// Whether `pole` collides with the exterior hazard.
+    fn pole_collides_with_exterior(&self, pole: &Circle) -> bool {
+        let (haz, chains, is_rect) = self.exterior();
+        if is_rect && strictly_inside(pole.bbox(), haz.shape().bbox) {
+            return false;
+        }
+        narrow_phase::circle_touches_edges(pole, haz) || !chains.contains(pole.center)
+    }
+
+    /// Shapes reaching outside this rectangle collide with the exterior.
     #[must_use]
     pub fn bbox(&self) -> Rect {
-        self.quadtree.bbox
+        self.bbox
     }
 
     /// Returns the key of the hazard induced by `entity`, if registered.
@@ -422,7 +460,7 @@ impl<E: HazardEntity> CDEngine<E> {
     pub fn haz_key(&self, entity: &E) -> Option<HazKey> {
         self.hazards_map
             .iter()
-            .find(|(_, hazard)| hazard.entity == *entity)
+            .find(|(_, hazard)| hazard.entity() == *entity)
             .map(|(key, _)| key)
     }
 
@@ -446,26 +484,30 @@ impl<E: HazardEntity> CDEngine<E> {
     }
 }
 
+/// Whether `inner` lies inside `outer` without touching its sides.
+fn strictly_inside(inner: Rect, outer: Rect) -> bool {
+    outer.x_min < inner.x_min
+        && inner.x_max < outer.x_max
+        && outer.y_min < inner.y_min
+        && inner.y_max < outer.y_max
+}
+
 ///Configuration of the [`CDEngine`]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct CDEConfig {
-    /// Maximum depth of the quadtree. Typically 3–10.
-    /// Excessive depths can exhaust memory or panic when coordinates can no longer be subdivided.
-    pub quadtree_depth: u8,
-    /// Stop traversing the quadtree and perform collision collection immediately when the total number of edges in a node falls below this number
-    pub cd_threshold: u8,
     ///Configuration of the surrogate generation for items
     pub item_surrogate_config: SPSurrogateConfig,
 }
 
-/// Snapshot of the dynamic hazards of a [`CDEngine`], to restore them later.
+/// Snapshot of the dynamic hazards of a [`CDEngine`], those registered after its construction,
+/// to restore them later.
 #[derive(Clone, Debug)]
 pub struct CDESnapshot<E = BasicHazardEntity> {
     pub(crate) dynamic_hazards: Vec<Hazard<E>>,
 }
 
 impl<E> CDESnapshot<E> {
-    /// The saved dynamic hazards.
+    /// The saved hazards, those registered after the engine's construction.
     #[must_use]
     pub fn dynamic_hazards(&self) -> &[Hazard<E>] {
         &self.dynamic_hazards

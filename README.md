@@ -134,7 +134,7 @@ It contains all information required to recreate the solution, such as the conta
 
 A visual representation of every layout of the solution is created as an SVG file.
 By default, only the container and the items placed inside it are drawn.
-Optionally, the quadtree, hazard proximity grid and fail-fast surrogates can be drawn on top.
+Optionally, the fail-fast surrogates can be drawn on top.
 A custom color theme can also be defined.
 
 All visual options can be configured in the config file, see [docs](https://jeroengar.github.io/jagua-rs/jagua_rs/io/svg/struct.SvgDrawOptions.html) for all available
@@ -161,12 +161,9 @@ The configuration file has the following structure:
 ```javascript
 {
   "cde_config": { //Configuration of the collision detection engine
-    "quadtree_depth": 5, //Maximum depth of the quadtree is 5
-    "cd_threshold": 96, // Perform collision collection immediately if the #edges in a node <= 96
     "item_surrogate_config": {
       "n_pole_limits": [[100, 0.0], [20, 0.75], [10, 0.90]], //See docs for details 
-      "ff_pole_area_ratio": 0.5, //Fail-fast poles will cover at least 50% of the polygon area
-      "n_ff_piers": 0 //Zero piers will be used for fail-fast collision detection
+      "ff_pole_area_ratio": 0.5 //Fail-fast poles will cover at least 50% of the polygon area
     }
   },
   "poly_simpl_tolerance": 0.001, //Polygons will be simplified until at most a 0.1% deviation in area from the original

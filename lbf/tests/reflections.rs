@@ -136,7 +136,6 @@ mod geometry {
                     .generate_surrogate(SPSurrogateConfig {
                         n_pole_limits: [(4, 0.0); 3],
                         ff_pole_area_ratio: 0.5,
-                        n_ff_piers: 2,
                     })
                     .unwrap();
             }
@@ -198,11 +197,6 @@ mod geometry {
                         {
                             assert_eq!(*pole, ref_pole.transform_clone(&t));
                         }
-                        for (pier, ref_pier) in
-                            surrogate.piers.iter().zip(&reference.surrogate().piers)
-                        {
-                            assert_eq!(*pier, ref_pier.transform_clone(&t));
-                        }
                     }
                     for x in 0..11_u16 {
                         for y in 0..11_u16 {
@@ -240,12 +234,9 @@ mod io {
     fn importer() -> Importer {
         Importer::new(
             CDEConfig {
-                quadtree_depth: 3,
-                cd_threshold: 16,
                 item_surrogate_config: SPSurrogateConfig {
                     n_pole_limits: [(4, 0.0); 3],
                     ff_pole_area_ratio: 0.5,
-                    n_ff_piers: 2,
                 },
             },
             None,

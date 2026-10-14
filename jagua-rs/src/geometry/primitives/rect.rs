@@ -143,9 +143,6 @@ impl Rect {
         }
     }
 
-    /// For all quadrants, contains indices of the two neighbors of the quadrant at that index.
-    pub const QUADRANT_NEIGHBOR_LAYOUT: [[usize; 2]; 4] = [[1, 3], [0, 2], [1, 3], [0, 2]];
-
     /// Returns the 4 quadrants of `self`.
     /// Ordered in the same way as quadrants in a cartesian plane:
     /// <https://en.wikipedia.org/wiki/Quadrant_(plane_geometry)>
