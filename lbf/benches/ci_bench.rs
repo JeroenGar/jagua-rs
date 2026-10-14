@@ -21,6 +21,9 @@ criterion_group!(
 mod util;
 
 const N_SAMPLES_PER_ITER: usize = 1000;
+/// ID of the CDE benchmarks, kept from the former quadtree depth so the performance tracker
+/// matches them with their history.
+const TRACKED_ID: u8 = 4;
 
 /// Compare buffer transforms and complete queries on the same swim shapes and poses.
 /// Reflection is forced to measure both geometry paths independently of item permissions.
@@ -108,7 +111,7 @@ fn cde_collect_bench(c: &mut Criterion) {
     // Configure throughput measurement - this tells Criterion each iteration performs N_SAMPLES_PER_ITER operations
     group.throughput(criterion::Throughput::Elements(N_SAMPLES_PER_ITER as u64));
 
-    group.bench_function("swim", |b| {
+    group.bench_function(BenchmarkId::from_parameter(TRACKED_ID), |b| {
         b.iter(|| {
             let search_for = problem
                 .layout()
@@ -153,7 +156,7 @@ fn cde_detect_bench(c: &mut Criterion) {
     // Configure throughput measurement - this tells Criterion each iteration performs N_SAMPLES_PER_ITER operations
     group.throughput(criterion::Throughput::Elements(N_SAMPLES_PER_ITER as u64));
 
-    group.bench_function("swim", |b| {
+    group.bench_function(BenchmarkId::from_parameter(TRACKED_ID), |b| {
         b.iter(|| {
             let item_to_move = problem
                 .layout()
@@ -194,7 +197,7 @@ fn cde_update_bench(c: &mut Criterion) {
 
     group.throughput(criterion::Throughput::Elements(N_SAMPLES_PER_ITER as u64));
 
-    group.bench_function("swim", |b| {
+    group.bench_function(BenchmarkId::from_parameter(TRACKED_ID), |b| {
         b.iter(|| {
             for _ in 0..N_SAMPLES_PER_ITER {
                 // Remove an item from the layout
