@@ -1,15 +1,27 @@
 #[cfg(test)]
 mod tests {
     use anyhow::{Context, Result};
+    use itertools::Itertools;
+    use jagua_rs::collision_detection::CDEngine;
+    use jagua_rs::collision_detection::hazards::collector::BasicHazardCollector;
+    use jagua_rs::collision_detection::hazards::filter::{HazKeyFilter, HazardFilter, NoFilter};
+    use jagua_rs::collision_detection::hazards::{BasicHazardEntity, HazardEntity};
+    use jagua_rs::entities::Item;
+    use jagua_rs::geometry::geo_enums::GeoRelation;
+    use jagua_rs::geometry::geo_traits::Transformable;
+    use jagua_rs::geometry::{DTransformation, Transformation};
     use jagua_rs::io::import::Importer;
+    use jagua_rs::probs::bpp::entities::{BPLayoutType, BPPlacement};
+    use jagua_rs::probs::spp::entities::SPPlacement;
     use jagua_rs::probs::{bpp, spp};
     use lbf::config::LBFConfig;
     use lbf::io::{read_bpp_instance, read_spp_instance};
     use lbf::opt::lbf_bpp::LBFOptimizerBP;
     use lbf::opt::lbf_spp::LBFOptimizerSP;
-    use rand::SeedableRng;
+    use lbf::samplers::uniform_rect_sampler::UniformRectSampler;
     use rand::prelude::IteratorRandom;
     use rand::prelude::SmallRng;
+    use rand::{RngExt, SeedableRng};
     use std::path::Path;
     use test_case::test_case;
 
@@ -130,6 +142,160 @@ mod tests {
             }
         }
         Ok(())
+    }
+
+    /// Checks collision queries against exact geometry on LBF layouts that change between
+    /// queries: moved items (overlaps allowed), restored snapshots and wider strips.
+    #[test_case("../assets/swim.json"; "swim")]
+    fn cde_queries_match_exact_geometry_strip(instance_path: &str) -> Result<()> {
+        let ext_instance = read_spp_instance(Path::new(instance_path))?;
+        let instance = spp::io::import_instance(&importer(), &ext_instance)?;
+        let mut opt = LBFOptimizerSP::new(instance, config(), SmallRng::seed_from_u64(0))?;
+        opt.solve()?;
+        let mut problem = opt.problem;
+        let mut rng = SmallRng::seed_from_u64(0);
+        let mut saved = problem.save();
+        for q in 0..N_ORACLE_QUERIES {
+            if q % 25 == 24 {
+                let pk = problem
+                    .layout()
+                    .placed_items()
+                    .keys()
+                    .choose(&mut rng)
+                    .unwrap();
+                let item_idx = problem.remove_item(pk).item_idx;
+                let item = problem.instance().item(item_idx);
+                let d_transf = sample_inside(problem.layout().cde(), item, &mut rng);
+                problem.place_item(SPPlacement { item_idx, d_transf });
+            }
+            match q % 1000 {
+                250 => saved = problem.save(),
+                750 => problem.restore(&saved),
+                // Only wider, so placed items stay inside the engine's bounding box
+                999 => {
+                    let width = problem.strip_width() * rng.random_range(1.0..1.1);
+                    let _ = problem.change_strip_width(width);
+                }
+                _ => {}
+            }
+            let layout = problem.layout();
+            let (_, pi) = layout.placed_items().iter().choose(&mut rng).unwrap();
+            check_queries(layout.cde(), pi.item(), &mut rng);
+        }
+        Ok(())
+    }
+
+    /// Like [`cde_queries_match_exact_geometry_strip`] for bins, with irregular outlines, holes
+    /// and quality zones.
+    #[test_case("../assets/baldacci1.json"; "baldacci1")]
+    fn cde_queries_match_exact_geometry_bins(instance_path: &str) -> Result<()> {
+        let ext_instance = read_bpp_instance(Path::new(instance_path))?;
+        let instance = bpp::io::import_instance(&importer(), &ext_instance)?;
+        let mut opt = LBFOptimizerBP::new(instance, config(), SmallRng::seed_from_u64(0));
+        opt.solve();
+        let mut problem = opt.problem;
+        let mut rng = SmallRng::seed_from_u64(0);
+        let mut saved = problem.save();
+        for q in 0..N_ORACLE_QUERIES {
+            if q % 25 == 24 {
+                // Layouts with a single item would close when it is removed
+                let (lkey, layout) = problem
+                    .layouts()
+                    .iter()
+                    .filter(|(_, l)| l.placed_items().len() > 1)
+                    .choose(&mut rng)
+                    .unwrap();
+                let pk = layout.placed_items().keys().choose(&mut rng).unwrap();
+                let item_idx = problem.remove_item(lkey, pk).item_idx;
+                let item = problem.instance().item(item_idx);
+                let d_transf = sample_inside(problem.layouts()[lkey].cde(), item, &mut rng);
+                problem.place_item(BPPlacement {
+                    layout_id: BPLayoutType::Open(lkey),
+                    item_idx,
+                    d_transf,
+                });
+            }
+            match q % 1000 {
+                250 => saved = problem.save(),
+                750 => {
+                    problem.restore(&saved);
+                }
+                _ => {}
+            }
+            let (_, layout) = problem.layouts().iter().choose(&mut rng).unwrap();
+            let (_, pi) = layout.placed_items().iter().choose(&mut rng).unwrap();
+            check_queries(layout.cde(), pi.item(), &mut rng);
+        }
+        Ok(())
+    }
+
+    const N_ORACLE_QUERIES: usize = 20_000;
+
+    /// A random pose of `item` that keeps it inside the engine's bounding box.
+    fn sample_inside(cde: &CDEngine, item: &Item, rng: &mut SmallRng) -> DTransformation {
+        let sampler = UniformRectSampler::new(cde.bbox(), item);
+        loop {
+            let d_transf = sampler.sample(rng);
+            let bbox = item.shape_cd().transform_clone(&d_transf.compose()).bbox();
+            if cde.bbox().relation_to(bbox) == GeoRelation::Surrounding {
+                return d_transf;
+            }
+        }
+    }
+
+    /// Runs every collision query for `item` at a random pose, with no filter or with three
+    /// random hazards filtered, and checks the results against exact geometry.
+    fn check_queries(cde: &CDEngine, item: &Item, rng: &mut SmallRng) {
+        let transf = UniformRectSampler::new(cde.bbox(), item)
+            .sample(rng)
+            .compose();
+        if rng.random_bool(0.5) {
+            check_filtered_queries(cde, item, &transf, &NoFilter);
+        } else {
+            let keys = cde.hazards_map().keys().sample(rng, 3);
+            check_filtered_queries(cde, item, &transf, &HazKeyFilter::from_keys(keys));
+        }
+    }
+
+    fn check_filtered_queries(
+        cde: &CDEngine,
+        item: &Item,
+        transf: &Transformation,
+        filter: &impl HazardFilter<BasicHazardEntity>,
+    ) {
+        let shape = item.shape_cd().transform_clone(transf);
+        let colliding = cde
+            .hazards_map()
+            .iter()
+            .filter(|(k, h)| {
+                !filter.is_irrelevant(*k, &h.entity)
+                    && exact::collides(&shape, &h.shape, h.entity.scope())
+            })
+            .map(|(k, _)| k)
+            .sorted()
+            .collect_vec();
+        // Shapes reaching outside the engine's bounding box collide whatever the filter
+        let outside = cde.bbox().relation_to(shape.bbox()) != GeoRelation::Surrounding;
+
+        let mut collector = BasicHazardCollector::new();
+        cde.collect_surrogate_collisions(&shape, filter, &mut collector);
+        for (k, _) in collector.iter() {
+            assert!(
+                colliding.contains(&k),
+                "surrogate collection: {k:?} does not collide"
+            );
+        }
+        cde.collect_poly_collisions(&shape, filter, &mut collector);
+        let collected = collector.iter().map(|(k, _)| k).sorted().collect_vec();
+        assert_eq!(collected, colliding, "collection");
+        assert_eq!(
+            cde.detect_poly_collision(&shape, filter),
+            outside || !colliding.is_empty(),
+            "polygon detection"
+        );
+        if cde.detect_surrogate_collision(item.shape_cd().surrogate(), transf, filter) {
+            assert!(outside || !colliding.is_empty(), "surrogate detection");
+        }
     }
 
     #[test]
@@ -530,5 +696,81 @@ mod tests {
             config().poly_simpl_tolerance,
             config().narrow_concavity_cutoff,
         )
+    }
+
+    /// Exact collision tests, in f64 on the polygons' f32 vertices.
+    mod exact {
+        use jagua_rs::geometry::geo_enums::GeoPosition;
+        use jagua_rs::geometry::primitives::SPolygon;
+
+        type P = (f64, f64);
+
+        /// Whether `shape` collides with a hazard with shape `haz` and `scope`: their edges
+        /// intersect or touch, or `shape` lies inside an interior hazard, an interior hazard
+        /// lies inside `shape`, or `shape` lies outside an exterior hazard.
+        pub fn collides(shape: &SPolygon, haz: &SPolygon, scope: GeoPosition) -> bool {
+            let (sb, hb) = (shape.bbox(), haz.bbox());
+            let disjoint = sb.x_max < hb.x_min
+                || hb.x_max < sb.x_min
+                || sb.y_max < hb.y_min
+                || hb.y_max < sb.y_min;
+            match scope {
+                GeoPosition::Interior if disjoint => return false,
+                GeoPosition::Exterior if disjoint => return true,
+                _ => {}
+            }
+            let (s, h) = (points(shape), points(haz));
+            if edges(&s).any(|(a, b)| edges(&h).any(|(c, d)| segments_intersect(a, b, c, d))) {
+                return true;
+            }
+            match scope {
+                GeoPosition::Interior => inside(&h, s[0]) || inside(&s, h[0]),
+                GeoPosition::Exterior => !inside(&h, s[0]),
+            }
+        }
+
+        fn points(poly: &SPolygon) -> Vec<P> {
+            poly.vertices()
+                .iter()
+                .map(|p| (f64::from(p.0), f64::from(p.1)))
+                .collect()
+        }
+
+        fn edges(v: &[P]) -> impl Iterator<Item = (P, P)> + '_ {
+            (0..v.len()).map(|i| (v[i], v[(i + 1) % v.len()]))
+        }
+
+        fn orient(a: P, b: P, c: P) -> f64 {
+            (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0)
+        }
+
+        fn segments_intersect(a: P, b: P, c: P, d: P) -> bool {
+            let (d1, d2) = (orient(c, d, a), orient(c, d, b));
+            let (d3, d4) = (orient(a, b, c), orient(a, b, d));
+            if d1 * d2 < 0.0 && d3 * d4 < 0.0 {
+                return true;
+            }
+            // Touching: an endpoint lies on the other segment
+            let on = |p: P, q: P, r: P| {
+                orient(p, q, r) == 0.0
+                    && r.0 >= p.0.min(q.0)
+                    && r.0 <= p.0.max(q.0)
+                    && r.1 >= p.1.min(q.1)
+                    && r.1 <= p.1.max(q.1)
+            };
+            on(c, d, a) || on(c, d, b) || on(a, b, c) || on(a, b, d)
+        }
+
+        /// Even-odd point-in-polygon test.
+        fn inside(poly: &[P], p: P) -> bool {
+            edges(poly)
+                .filter(|&(a, b)| {
+                    (a.1 > p.1) != (b.1 > p.1)
+                        && p.0 < (b.0 - a.0) * (p.1 - a.1) / (b.1 - a.1) + a.0
+                })
+                .count()
+                % 2
+                == 1
+        }
     }
 }
