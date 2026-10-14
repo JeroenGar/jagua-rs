@@ -1,7 +1,6 @@
 // The query loops rely on being inlined into their callers
 #![allow(clippy::inline_always)]
 
-use crate::collision_detection::edges::rect_mask;
 use crate::collision_detection::hazards::HazKey;
 use crate::geometry::primitives::Rect;
 
@@ -139,4 +138,17 @@ impl HazardIndex {
             r,
         )
     }
+}
+
+/// Bit `j` is set if box `j` overlaps `r` (borders included), for up to 64 boxes.
+#[inline(always)]
+#[allow(clippy::needless_bitwise_bool)] // branch-free
+pub fn rect_mask(x_min: &[f32], y_min: &[f32], x_max: &[f32], y_max: &[f32], r: Rect) -> u64 {
+    debug_assert!(x_min.len() <= 64);
+    let mut mask = 0;
+    for (j, (((&x0, &y0), &x1), &y1)) in x_min.iter().zip(y_min).zip(x_max).zip(y_max).enumerate() {
+        let overlaps = (x0 <= r.x_max) & (x1 >= r.x_min) & (y0 <= r.y_max) & (y1 >= r.y_min);
+        mask |= u64::from(overlaps) << j;
+    }
+    mask
 }

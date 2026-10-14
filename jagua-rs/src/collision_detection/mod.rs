@@ -1,6 +1,6 @@
 mod cd_engine;
-mod edges;
 mod hazard_index;
+mod narrow_phase;
 
 /// Everything Hazard related
 pub mod hazards;

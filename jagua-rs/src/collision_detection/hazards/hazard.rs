@@ -1,4 +1,4 @@
-use crate::collision_detection::edges::{EdgeBoxes, EdgeChains, EdgeSet};
+use crate::collision_detection::narrow_phase::{EdgeBoxes, EdgeChains, EdgeSet};
 use crate::geometry::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::{Edge, Rect, SPolygon};

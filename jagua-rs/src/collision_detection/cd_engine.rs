@@ -1,4 +1,3 @@
-use crate::collision_detection::edges::{self, EdgeChains};
 use crate::collision_detection::hazard_index::HazardIndex;
 use crate::collision_detection::hazards::HazKey;
 use crate::collision_detection::hazards::Hazard;
@@ -6,6 +5,7 @@ use crate::collision_detection::hazards::HazardGeometry;
 use crate::collision_detection::hazards::collector::HazardCollector;
 use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::hazards::{BasicHazardEntity, HazardEntity};
+use crate::collision_detection::narrow_phase::{self, EdgeChains};
 use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
@@ -238,9 +238,9 @@ impl<E: HazardEntity> CDEngine<E> {
 
     /// Whether `shape` collides with the interior hazard `haz`, given that their bounding boxes overlap.
     fn poly_collides_with(shape: &SPolygon, haz: &Hazard<E>) -> bool {
-        let r = edges::overlap(shape.bbox, haz.shape().bbox)
+        let r = narrow_phase::overlap(shape.bbox, haz.shape().bbox)
             .expect("the index reports overlapping bounding boxes");
-        edges::edges_intersect(shape, r, haz)
+        narrow_phase::edges_intersect(shape, r, haz)
             || Self::detect_containment_collision(shape, haz.shape(), haz.entity())
     }
 
@@ -248,7 +248,7 @@ impl<E: HazardEntity> CDEngine<E> {
     fn pole_collides_with(pole: &Circle, haz: &Hazard<E>) -> bool {
         // A pole touching no edge collides only if it lies inside the hazard,
         // which requires its bounding box to lie inside the hazard's
-        edges::circle_touches_edges(pole, haz)
+        narrow_phase::circle_touches_edges(pole, haz)
             || (haz.shape().bbox.relation_to(pole.bbox()) == GeoRelation::Surrounding
                 && haz.shape().collides_with(&pole.center))
     }
@@ -429,10 +429,10 @@ impl<E: HazardEntity> CDEngine<E> {
         if is_rect && strictly_inside(shape.bbox, ext_bbox) {
             return false;
         }
-        let Some(r) = edges::overlap(shape.bbox, ext_bbox) else {
+        let Some(r) = narrow_phase::overlap(shape.bbox, ext_bbox) else {
             return true;
         };
-        edges::edges_intersect(shape, r, haz)
+        narrow_phase::edges_intersect(shape, r, haz)
             || match ext_bbox.almost_relation_to(shape.bbox) {
                 // No edges cross: the shape lies inside or outside the container as a whole
                 GeoRelation::Surrounding => !chains.contains(shape.poi.center),
@@ -446,7 +446,7 @@ impl<E: HazardEntity> CDEngine<E> {
         if is_rect && strictly_inside(pole.bbox(), haz.shape().bbox) {
             return false;
         }
-        edges::circle_touches_edges(pole, haz) || !chains.contains(pole.center)
+        narrow_phase::circle_touches_edges(pole, haz) || !chains.contains(pole.center)
     }
 
     /// Shapes reaching outside this rectangle collide with the exterior.
