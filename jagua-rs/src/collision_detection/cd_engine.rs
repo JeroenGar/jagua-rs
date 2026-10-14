@@ -9,7 +9,7 @@ use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Transformable};
-use crate::geometry::primitives::{Circle, Rect, SPolygon};
+use crate::geometry::primitives::{Circle, Point, Rect, SPolygon};
 use crate::util::assertions;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -33,6 +33,8 @@ pub struct CDEngine<E = BasicHazardEntity> {
     /// Prototype: whether the exterior hazard's shape is its own bounding box.
     /// Then anything strictly inside that bounding box cannot collide with the exterior.
     exterior_is_rect: bool,
+    /// Prototype: bounding boxes of the exterior hazard's edges.
+    exterior_edges: hazard_index::EdgeBoxes,
 }
 
 impl<E: HazardEntity> CDEngine<E> {
@@ -69,6 +71,7 @@ impl<E: HazardEntity> CDEngine<E> {
 
         let ext_shape = &hazards_map[hkey_exterior].shape;
         let ext_bbox = ext_shape.bbox;
+        let exterior_edges = hazard_index::EdgeBoxes::new(ext_shape);
         let exterior_is_rect = ext_shape.n_vertices() == 4
             && ext_shape.vertices().iter().all(|p| {
                 (p.0 == ext_bbox.x_min || p.0 == ext_bbox.x_max)
@@ -82,6 +85,7 @@ impl<E: HazardEntity> CDEngine<E> {
             hkey_exterior,
             index,
             exterior_is_rect,
+            exterior_edges,
         }
     }
 
@@ -407,8 +411,8 @@ impl<E: HazardEntity> CDEngine<E> {
             if !self.strictly_inside_rect_exterior(pole.bbox())
                 && !collector.contains_key(self.hkey_exterior)
                 && !filter.is_irrelevant(self.hkey_exterior, &exterior)
-                && (hazard_index::circle_touches_edges(pole, ext_shape)
-                    || !ext_shape.collides_with(&pole.center))
+                && (hazard_index::circle_touches_edges_cached(pole, ext_shape, &self.exterior_edges)
+                    || self.point_in_exterior(pole.center))
             {
                 collector.insert(self.hkey_exterior, exterior);
                 if stop_after_collision(exterior) {
@@ -455,8 +459,41 @@ impl<E: HazardEntity> CDEngine<E> {
             // Entirely outside the container's bounding box
             None => true,
             Some(r) => {
-                hazard_index::edges_intersect(shape, &ext.shape, r)
-                    || Self::detect_containment_collision(shape, &ext.shape, ext.entity)
+                hazard_index::edges_intersect_cached(shape, &ext.shape, &self.exterior_edges, r)
+                    || match ext.shape.bbox.almost_relation_to(shape.bbox) {
+                        // No edge crosses: the shape lies inside or outside the container as a whole
+                        GeoRelation::Surrounding => self.point_in_exterior(shape.poi.center),
+                        _ => true,
+                    }
+            }
+        }
+    }
+
+    /// Prototype: whether `p` lies in the exterior hazard. The quadtree's presence of the exterior
+    /// in the node containing `p` decides, and only partially covered leaves need a point-in-polygon test.
+    fn point_in_exterior(&self, p: Point) -> bool {
+        let mut node = &self.quadtree;
+        loop {
+            let presence = node
+                .hazards
+                .iter()
+                .find(|h| h.hkey == self.hkey_exterior)
+                .map(|h| &h.presence);
+            match presence {
+                None | Some(QTHazPresence::None) => return false,
+                Some(QTHazPresence::Entire) => return true,
+                Some(QTHazPresence::Partial(_)) => {
+                    match node
+                        .children
+                        .as_ref()
+                        .and_then(|c| c.iter().find(|c| c.bbox.collides_with(&p)))
+                    {
+                        Some(child) => node = child,
+                        None => {
+                            return !self.hazards_map[self.hkey_exterior].shape.collides_with(&p);
+                        }
+                    }
+                }
             }
         }
     }
