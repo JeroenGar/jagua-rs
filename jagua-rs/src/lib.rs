@@ -26,8 +26,6 @@
 //!
 //! # fn main() -> anyhow::Result<()> {
 //! let importer = Importer::new(CDEConfig {
-//!     quadtree_depth: 5,
-//!     cd_threshold: 96,
 //!     item_surrogate_config: SPSurrogateConfig::none(),
 //! }, None, None);
 //! let container = importer.import_container(&ExtContainer {

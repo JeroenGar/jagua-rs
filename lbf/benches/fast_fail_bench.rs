@@ -15,30 +15,18 @@ criterion_group!(benches, fast_fail_query_bench);
 mod util;
 
 const FF_POLE_AREA_RATIOS: &[f32] = &[0.0, 0.25, 0.5, 0.75, 1.0];
-const FF_PIERS: &[usize] = &[0, 1, 2, 3, 4];
 
 const ITEMS_ID_TO_TEST: &[usize] = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 const N_TOTAL_SAMPLES: usize = 100_000;
 const N_SAMPLES_PER_ITER: usize = 1000;
 
-/// Benchmark the query operation of the quadtree for different depths
+/// Benchmark detection queries for different fail-fast pole coverages
 /// We validate 1000 sampled transformations for each of the 5 removed items
 fn fast_fail_query_bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("fast_fail_query_bench");
 
-    let config_combos = FF_POLE_AREA_RATIOS
-        .iter()
-        .flat_map(|ff_pole_area_ratio| {
-            FF_PIERS
-                .iter()
-                .map(|n_ff_piers| (*ff_pole_area_ratio, *n_ff_piers))
-                .collect_vec()
-        })
-        .collect_vec();
-
-    let mut config = create_base_config();
-    config.cde_config.quadtree_depth = 5;
+    let config = create_base_config();
 
     let instance = util::create_instance(config.cde_config, config.poly_simpl_tolerance);
     let (problem, _) = util::create_lbf_problem(instance.clone(), config, N_ITEMS_REMOVED);
@@ -64,17 +52,11 @@ fn fast_fail_query_bench(c: &mut Criterion) {
         })
         .collect_vec();
 
-    for ff_surr_config in config_combos {
-        let (ff_pole_area_ratio, n_ff_piers) = ff_surr_config;
-
+    for &ff_pole_area_ratio in FF_POLE_AREA_RATIOS {
         let custom_surrogates = ITEMS_ID_TO_TEST
             .iter()
             .map(|&item_idx| {
-                create_custom_surrogate(
-                    instance.item(item_idx).shape_cd(),
-                    ff_pole_area_ratio,
-                    n_ff_piers,
-                )
+                create_custom_surrogate(instance.item(item_idx).shape_cd(), ff_pole_area_ratio)
             })
             .collect_vec();
 
@@ -95,9 +77,7 @@ fn fast_fail_query_bench(c: &mut Criterion) {
             .collect_vec();
 
         group.bench_function(
-            BenchmarkId::from_parameter(format!(
-                "{ff_pole_area_ratio}_pole_area_{n_ff_piers}_piers"
-            )),
+            BenchmarkId::from_parameter(format!("{ff_pole_area_ratio}_pole_area")),
             |b| {
                 b.iter(|| {
                     let (i, &item_idx) = i_cycler.next().unwrap();
@@ -132,17 +112,12 @@ fn fast_fail_query_bench(c: &mut Criterion) {
     group.finish();
 }
 
-pub fn create_custom_surrogate(
-    simple_poly: &SPolygon,
-    ff_pole_area_ratio: f32,
-    n_piers: usize,
-) -> SPSurrogate {
+pub fn create_custom_surrogate(simple_poly: &SPolygon, ff_pole_area_ratio: f32) -> SPSurrogate {
     SPSurrogate::new(
         simple_poly,
         SPSurrogateConfig {
             n_pole_limits: [(100, 0.0), (20, 0.75), (10, 0.90)],
             ff_pole_area_ratio,
-            n_ff_piers: n_piers,
         },
     )
     .unwrap()

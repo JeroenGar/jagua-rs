@@ -10,11 +10,11 @@ use crate::geometry::Transformation;
 use crate::geometry::fail_fast::{SPSurrogate, SPSurrogateConfig};
 use crate::geometry::geo_enums::{GeoPosition, GeoRelation};
 use crate::geometry::geo_traits::{CollidesWith, Transformable};
-use crate::geometry::primitives::{Circle, Edge, Rect, SPolygon};
+use crate::geometry::primitives::{Circle, Rect, SPolygon};
 use crate::util::assertions;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use slotmap::SlotMap;
+use slotmap::{SecondaryMap, SlotMap};
 
 /// The Collision Detection Engine (CDE).
 /// [`Hazard`]s can be (de)registered and collision queries can be performed.
@@ -31,16 +31,20 @@ pub struct CDEngine<E = BasicHazardEntity> {
     hkey_exterior: HazKey,
     /// Bounding boxes of all hazards except the exterior
     pub(crate) index: HazardIndex,
+    /// Keys of the hazards the CDE was created with, which snapshots leave out
+    base_keys: SecondaryMap<HazKey, ()>,
 }
 
 impl<E: HazardEntity> CDEngine<E> {
     /// Creates an engine with the static hazards, exactly one of which covers the exterior.
+    /// Snapshots hold only the hazards registered later.
     #[must_use]
     pub fn new(bbox: Rect, static_hazards: Vec<Hazard<E>>, config: CDEConfig) -> Self {
         let mut hazards_map = SlotMap::with_key();
         for haz in static_hazards {
             hazards_map.insert(haz);
         }
+        let base_keys = hazards_map.keys().map(|k| (k, ())).collect();
 
         let mut exteriors = hazards_map
             .iter()
@@ -67,6 +71,7 @@ impl<E: HazardEntity> CDEngine<E> {
             config,
             hkey_exterior,
             index,
+            base_keys,
         };
         debug_assert!(assertions::index_matches_hazards(&cde));
         cde
@@ -102,7 +107,12 @@ impl<E: HazardEntity> CDEngine<E> {
         self.deregister_hazard_by_key(hkey)
     }
 
+    /// Removes a hazard registered after construction from the CDE.
     pub fn deregister_hazard_by_key(&mut self, hkey: HazKey) -> Hazard<E> {
+        debug_assert!(
+            !self.base_keys.contains_key(hkey),
+            "Hazards the CDE was created with cannot be deregistered"
+        );
         let hazard = self
             .hazards_map
             .remove(hkey)
@@ -113,28 +123,29 @@ impl<E: HazardEntity> CDEngine<E> {
         hazard
     }
 
-    /// Saves the dynamic hazards, to restore them later with [`CDEngine::restore`].
+    /// Saves the hazards registered after construction, to restore them later with
+    /// [`CDEngine::restore`].
     #[must_use]
     pub fn save(&self) -> CDESnapshot<E> {
         let dynamic_hazards = self
             .hazards_map
-            .values()
-            .filter(|h| h.entity().is_dynamic())
-            .cloned()
+            .iter()
+            .filter(|(hkey, _)| !self.base_keys.contains_key(*hkey))
+            .map(|(_, h)| h.clone())
             .collect_vec();
         CDESnapshot { dynamic_hazards }
     }
 
-    /// Restores the dynamic hazards of a snapshot, keeping those present in both.
+    /// Restores the hazards registered after construction to those of a snapshot, keeping
+    /// those present in both.
     pub fn restore(&mut self, snapshot: &CDESnapshot<E>) {
         //Restore the hazards, by doing a 'diff' between the current state and the snapshot
-        //Only dynamic hazards are considered
 
-        //Determine which dynamic hazards need to be removed and which need to be added
+        //Determine which hazards need to be removed and which need to be added
         let mut hazards_to_remove = self
             .hazards_map
             .iter()
-            .filter(|(_, h)| h.entity().is_dynamic())
+            .filter(|(hkey, _)| !self.base_keys.contains_key(*hkey))
             .map(|(hkey, h)| (hkey, h.entity()))
             .collect_vec();
         let mut hazards_to_add = vec![];
@@ -163,10 +174,7 @@ impl<E: HazardEntity> CDEngine<E> {
         }
 
         debug_assert_eq!(
-            self.hazards_map
-                .values()
-                .filter(|h| h.entity().is_dynamic())
-                .count(),
+            self.hazards_map.len() - self.base_keys.len(),
             snapshot.dynamic_hazards.len()
         );
     }
@@ -225,19 +233,6 @@ impl<E: HazardEntity> CDEngine<E> {
                 return true;
             }
         }
-        for pier in base_surrogate.ff_piers() {
-            let pier = pier.transform_clone(transform);
-            if check_exterior && self.pier_collides_with_exterior(&pier) {
-                return true;
-            }
-            let hit = self.index.any_overlapping(pier.bbox(), |hkey| {
-                let haz = &self.hazards_map[hkey];
-                !filter.is_irrelevant(hkey, &haz.entity()) && Self::pier_collides_with(&pier, haz)
-            });
-            if hit {
-                return true;
-            }
-        }
         false
     }
 
@@ -256,13 +251,6 @@ impl<E: HazardEntity> CDEngine<E> {
         edges::circle_touches_edges(pole, haz)
             || (haz.shape().bbox.relation_to(pole.bbox()) == GeoRelation::Surrounding
                 && haz.shape().collides_with(&pole.center))
-    }
-
-    /// Whether `pier` collides with the interior hazard `haz`.
-    fn pier_collides_with(pier: &Edge, haz: &Hazard<E>) -> bool {
-        edges::edge_touches_edges(pier, haz)
-            || (haz.shape().bbox.relation_to(pier.bbox()) == GeoRelation::Surrounding
-                && haz.shape().collides_with(&pier.start))
     }
 
     /// Check for collision by containment between a shape and a hazard.
@@ -461,15 +449,6 @@ impl<E: HazardEntity> CDEngine<E> {
         edges::circle_touches_edges(pole, haz) || !chains.contains(pole.center)
     }
 
-    /// Whether `pier` collides with the exterior hazard.
-    fn pier_collides_with_exterior(&self, pier: &Edge) -> bool {
-        let (haz, chains, is_rect) = self.exterior();
-        if is_rect && strictly_inside(pier.bbox(), haz.shape().bbox) {
-            return false;
-        }
-        edges::edge_touches_edges(pier, haz) || !chains.contains(pier.start)
-    }
-
     /// Shapes reaching outside this rectangle collide with the exterior.
     #[must_use]
     pub fn bbox(&self) -> Rect {
@@ -516,23 +495,19 @@ fn strictly_inside(inner: Rect, outer: Rect) -> bool {
 ///Configuration of the [`CDEngine`]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct CDEConfig {
-    /// Maximum depth of the quadtree. Typically 3–10.
-    /// Excessive depths can exhaust memory or panic when coordinates can no longer be subdivided.
-    pub quadtree_depth: u8,
-    /// Stop traversing the quadtree and perform collision collection immediately when the total number of edges in a node falls below this number
-    pub cd_threshold: u8,
     ///Configuration of the surrogate generation for items
     pub item_surrogate_config: SPSurrogateConfig,
 }
 
-/// Snapshot of the dynamic hazards of a [`CDEngine`], to restore them later.
+/// Snapshot of the dynamic hazards of a [`CDEngine`], those registered after its construction,
+/// to restore them later.
 #[derive(Clone, Debug)]
 pub struct CDESnapshot<E = BasicHazardEntity> {
     pub(crate) dynamic_hazards: Vec<Hazard<E>>,
 }
 
 impl<E> CDESnapshot<E> {
-    /// The saved dynamic hazards.
+    /// The saved hazards, those registered after the engine's construction.
     #[must_use]
     pub fn dynamic_hazards(&self) -> &[Hazard<E>] {
         &self.dynamic_hazards

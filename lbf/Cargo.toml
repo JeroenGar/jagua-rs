@@ -47,10 +47,6 @@ web-sys = { workspace = true }
 criterion = { workspace = true }
 
 [[bench]]
-name = "quadtree_bench"
-harness = false
-
-[[bench]]
 name = "fast_fail_bench"
 harness = false
 

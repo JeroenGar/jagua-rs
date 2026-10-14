@@ -27,8 +27,6 @@ mod tests {
 
     const N_ITEMS_TO_REMOVE: usize = 5;
 
-    const QT_DEPTHS: [u8; 3] = [0, 3, 10];
-
     #[test_case("../assets/albano.json"; "albano")]
     #[test_case("../assets/blaz1.json"; "blaz1")]
     #[test_case("../assets/dagli.json"; "dagli")]
@@ -47,46 +45,40 @@ mod tests {
         let ext_instance = read_spp_instance(Path::new(instance_path))?;
         let instance = spp::io::import_instance(&importer(), &ext_instance)?;
 
-        for qt_depth in QT_DEPTHS {
-            let mut config = config();
-            config.cde_config.quadtree_depth = qt_depth;
+        let mut opt = LBFOptimizerSP::new(instance, config(), SmallRng::seed_from_u64(0))?;
 
-            let mut opt =
-                LBFOptimizerSP::new(instance.clone(), config, SmallRng::seed_from_u64(0))?;
+        let mut rng = SmallRng::seed_from_u64(0);
 
-            let mut rng = SmallRng::seed_from_u64(0);
+        // a first lbf run
+        opt.solve()?;
+        {
+            // remove some items
+            let problem = &mut opt.problem;
+            for _ in 0..N_ITEMS_TO_REMOVE {
+                //pick random existing layout
+                let random_placed_item = problem
+                    .layout()
+                    .placed_items()
+                    .iter()
+                    .choose(&mut rng)
+                    .map(|(key, _)| key);
 
-            // a first lbf run
-            opt.solve()?;
-            {
-                // remove some items
-                let problem = &mut opt.problem;
-                for _ in 0..N_ITEMS_TO_REMOVE {
-                    //pick random existing layout
-                    let random_placed_item = problem
-                        .layout()
-                        .placed_items()
-                        .iter()
-                        .choose(&mut rng)
-                        .map(|(key, _)| key);
-
-                    if let Some(random_placed_item) = random_placed_item {
-                        // remove the item
-                        problem.remove_item(random_placed_item);
-                    } else {
-                        // no items to remove
-                        break;
-                    }
+                if let Some(random_placed_item) = random_placed_item {
+                    // remove the item
+                    problem.remove_item(random_placed_item);
+                } else {
+                    // no items to remove
+                    break;
                 }
-
-                let solution = opt.problem.save();
-                // second optimization run
-                opt.solve()?;
-                // restore the solution
-                opt.problem.restore(&solution);
-                // third optimization run
-                opt.solve()?;
             }
+
+            let solution = opt.problem.save();
+            // second optimization run
+            opt.solve()?;
+            // restore the solution
+            opt.problem.restore(&solution);
+            // third optimization run
+            opt.solve()?;
         }
         Ok(())
     }
@@ -101,45 +93,41 @@ mod tests {
         let ext_instance = read_bpp_instance(Path::new(instance_path))?;
         let instance = bpp::io::import_instance(&importer(), &ext_instance)?;
 
-        for qt_depth in QT_DEPTHS {
-            let mut config = config();
-            config.cde_config.quadtree_depth = qt_depth;
-            let mut opt = LBFOptimizerBP::new(instance.clone(), config, SmallRng::seed_from_u64(0));
+        let mut opt = LBFOptimizerBP::new(instance, config(), SmallRng::seed_from_u64(0));
 
-            let mut rng = SmallRng::seed_from_u64(0);
+        let mut rng = SmallRng::seed_from_u64(0);
 
-            // a first optimization run
-            opt.solve();
+        // a first optimization run
+        opt.solve();
 
-            {
-                // remove some items
-                let problem = &mut opt.problem;
-                for _ in 0..N_ITEMS_TO_REMOVE {
-                    //pick random existing layout
-                    let lkey = problem.layouts().keys().choose(&mut rng).unwrap();
-                    let random_placed_item = problem.layouts()[lkey]
-                        .placed_items()
-                        .iter()
-                        .choose(&mut rng)
-                        .map(|(key, _)| key);
+        {
+            // remove some items
+            let problem = &mut opt.problem;
+            for _ in 0..N_ITEMS_TO_REMOVE {
+                //pick random existing layout
+                let lkey = problem.layouts().keys().choose(&mut rng).unwrap();
+                let random_placed_item = problem.layouts()[lkey]
+                    .placed_items()
+                    .iter()
+                    .choose(&mut rng)
+                    .map(|(key, _)| key);
 
-                    if let Some(random_placed_item) = random_placed_item {
-                        // remove the item
-                        problem.remove_item(lkey, random_placed_item);
-                    } else {
-                        // no items to remove
-                        break;
-                    }
+                if let Some(random_placed_item) = random_placed_item {
+                    // remove the item
+                    problem.remove_item(lkey, random_placed_item);
+                } else {
+                    // no items to remove
+                    break;
                 }
-
-                let solution = opt.problem.save();
-                // second optimization run
-                opt.solve();
-                // restore the solution
-                opt.problem.restore(&solution);
-                // third optimization run
-                opt.solve();
             }
+
+            let solution = opt.problem.save();
+            // second optimization run
+            opt.solve();
+            // restore the solution
+            opt.problem.restore(&solution);
+            // third optimization run
+            opt.solve();
         }
         Ok(())
     }
@@ -477,7 +465,7 @@ mod tests {
         }))?;
         let importer = importer();
         let container = importer.import_container(&external)?;
-        // This zone covers complete quadtree nodes, including the query's virtual root.
+        // This zone surrounds every query shape.
         let large_zone: ExtContainer = serde_json::from_value(json!({
             "id": 0, "shape": rectangle(0, 0, 100, 100),
             "zones": [{"quality": 5, "shape": rectangle(0, 0, 60, 60)}]

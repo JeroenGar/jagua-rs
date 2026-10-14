@@ -70,7 +70,6 @@ pub fn create_lbf_problem(
 
     {
         // let draw_options = SvgDrawOptions {
-        //     quadtree: true,
         //     surrogate: true,
         //     ..SvgDrawOptions::default()
         // };

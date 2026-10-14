@@ -254,12 +254,6 @@ pub fn layout_to_svg_group(
                         surrogate_group = surrogate_group.add(svg_circle);
                     }
                 }
-                for pier in &surrogate.piers {
-                    surrogate_group = surrogate_group.add(svg_util::data_to_path(
-                        svg_util::edge_data(pier.transform_clone(&int_transf)),
-                        &ff_style,
-                    ));
-                }
                 surrogate_defs = surrogate_defs.add(surrogate_group);
             }
 

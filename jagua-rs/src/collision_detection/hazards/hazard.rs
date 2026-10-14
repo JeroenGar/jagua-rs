@@ -109,12 +109,6 @@ pub trait HazardEntity: Copy + Eq + Hash + Debug {
     /// Whether the hazard covers the interior or the exterior of its shape.
     /// An engine needs exactly one exterior hazard.
     fn scope(&self) -> GeoPosition;
-
-    /// Whether the hazard can be registered and deregistered over time, such as a placed item.
-    /// Only dynamic hazards are saved and restored by
-    /// [`CDEngine::save`](crate::collision_detection::CDEngine::save) and
-    /// [`CDEngine::restore`](crate::collision_detection::CDEngine::restore).
-    fn is_dynamic(&self) -> bool;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -143,9 +137,5 @@ impl HazardEntity for BasicHazardEntity {
             | BasicHazardEntity::InferiorQualityZone { .. } => GeoPosition::Interior,
             BasicHazardEntity::Exterior => GeoPosition::Exterior,
         }
-    }
-
-    fn is_dynamic(&self) -> bool {
-        matches!(self, BasicHazardEntity::PlacedItem { .. })
     }
 }
