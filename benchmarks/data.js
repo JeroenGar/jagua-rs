@@ -22,57 +22,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 4368327,
-            "range": "± 287555",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 4838896,
             "range": "± 401745",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 5953875,
-            "range": "± 536410",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 401521,
-            "range": "± 21876",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 297289,
             "range": "± 8100",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_detect_1k/5",
-            "value": 269403,
-            "range": "± 4880",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 5528078,
-            "range": "± 60090",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 9294842,
             "range": "± 42095",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/5",
-            "value": 15953785,
-            "range": "± 88778",
             "unit": "ns/iter"
           }
         ]
@@ -100,57 +64,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_update_1k/3",
-            "value": 5490895,
-            "range": "± 29690",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 9330368,
             "range": "± 42026",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15873289,
-            "range": "± 337117",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 402718,
-            "range": "± 23990",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 297745,
             "range": "± 7783",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_detect_1k/5",
-            "value": 269839,
-            "range": "± 4598",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/3",
-            "value": 4372240,
-            "range": "± 288207",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 4857438,
             "range": "± 409667",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/5",
-            "value": 5954793,
-            "range": "± 540637",
             "unit": "ns/iter"
           }
         ]
@@ -174,57 +102,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_update_1k/3",
-            "value": 5295001,
-            "range": "± 57080",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 8977237,
             "range": "± 64816",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15200328,
-            "range": "± 124521",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 372703,
-            "range": "± 19609",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 288903,
             "range": "± 7084",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_detect_1k/5",
-            "value": 265395,
-            "range": "± 4391",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/3",
-            "value": 3822542,
-            "range": "± 328454",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 4579962,
             "range": "± 380479",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/5",
-            "value": 5719215,
-            "range": "± 517303",
             "unit": "ns/iter"
           }
         ]
@@ -252,57 +144,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_update_1k/3",
-            "value": 5343600,
-            "range": "± 33347",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 9027159,
             "range": "± 56628",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15312894,
-            "range": "± 233135",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 375005,
-            "range": "± 18010",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 289005,
             "range": "± 6832",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_detect_1k/5",
-            "value": 267248,
-            "range": "± 4081",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/3",
-            "value": 3823217,
-            "range": "± 244338",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 4594668,
             "range": "± 392191",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/5",
-            "value": 5738795,
-            "range": "± 519310",
             "unit": "ns/iter"
           }
         ]
@@ -326,57 +182,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_update_1k/3",
-            "value": 5252951,
-            "range": "± 22475",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 8985020,
             "range": "± 84203",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15151408,
-            "range": "± 121465",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 370724,
-            "range": "± 19318",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 289474,
             "range": "± 11443",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_detect_1k/5",
-            "value": 272725,
-            "range": "± 5001",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/3",
-            "value": 3810938,
-            "range": "± 245152",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 4544329,
             "range": "± 377480",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/5",
-            "value": 5681707,
-            "range": "± 516866",
             "unit": "ns/iter"
           }
         ]
@@ -404,57 +224,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_update_1k/3",
-            "value": 5293326,
-            "range": "± 19169",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 8960931,
             "range": "± 44310",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15291846,
-            "range": "± 254035",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 375555,
-            "range": "± 18121",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 288292,
             "range": "± 7324",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_detect_1k/5",
-            "value": 266092,
-            "range": "± 4175",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/3",
-            "value": 3799875,
-            "range": "± 234284",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 4574729,
             "range": "± 467714",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/5",
-            "value": 5698248,
-            "range": "± 513456",
             "unit": "ns/iter"
           }
         ]
@@ -482,57 +266,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_update_1k/3",
-            "value": 5283783,
-            "range": "± 192652",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 8936577,
             "range": "± 69646",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15261276,
-            "range": "± 108654",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 375123,
-            "range": "± 18038",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 288610,
             "range": "± 7040",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_detect_1k/5",
-            "value": 266511,
-            "range": "± 4175",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/3",
-            "value": 3784054,
-            "range": "± 235729",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 4472569,
             "range": "± 354383",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/5",
-            "value": 5650497,
-            "range": "± 513179",
             "unit": "ns/iter"
           }
         ]
@@ -560,57 +308,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_update_1k/3",
-            "value": 5297247,
-            "range": "± 25744",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 9039428,
             "range": "± 77579",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15270560,
-            "range": "± 135155",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 374322,
-            "range": "± 18012",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 288998,
             "range": "± 7537",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_detect_1k/5",
-            "value": 268106,
-            "range": "± 10297",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/3",
-            "value": 3917321,
-            "range": "± 253409",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 4635348,
             "range": "± 383182",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/5",
-            "value": 5783350,
-            "range": "± 519562",
             "unit": "ns/iter"
           }
         ]
@@ -634,21 +346,9 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 3419713,
-            "range": "± 206207",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 4555225,
             "range": "± 390883",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/5",
-            "value": 5802036,
-            "range": "± 527553",
             "unit": "ns/iter"
           }
         ]
@@ -672,57 +372,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_update_1k/3",
-            "value": 5188361,
-            "range": "± 164230",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 8896385,
             "range": "± 53027",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15015483,
-            "range": "± 106728",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 318098,
-            "range": "± 13503",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 278499,
             "range": "± 6741",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_detect_1k/5",
-            "value": 262561,
-            "range": "± 4918",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/3",
-            "value": 3327571,
-            "range": "± 205435",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 4369502,
             "range": "± 419471",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/5",
-            "value": 5643489,
-            "range": "± 517889",
             "unit": "ns/iter"
           }
         ]
@@ -750,57 +414,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2908813,
-            "range": "± 145088",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3339778,
             "range": "± 235893",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3371281,
-            "range": "± 237951",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 5536648,
-            "range": "± 28335",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 9440885,
             "range": "± 46748",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15757265,
-            "range": "± 89465",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 308162,
-            "range": "± 8515",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 271494,
             "range": "± 5932",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 259713,
-            "range": "± 8897",
             "unit": "ns/iter"
           }
         ]
@@ -828,57 +456,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2817858,
-            "range": "± 148118",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3264213,
             "range": "± 254783",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3297088,
-            "range": "± 287310",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 5546750,
-            "range": "± 26135",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 9308016,
             "range": "± 60734",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 16049969,
-            "range": "± 90170",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 305118,
-            "range": "± 7826",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 268668,
             "range": "± 5638",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 258121,
-            "range": "± 4232",
             "unit": "ns/iter"
           }
         ]
@@ -906,57 +498,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2810276,
-            "range": "± 150106",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3274567,
             "range": "± 248413",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3301163,
-            "range": "± 248888",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 5549963,
-            "range": "± 23968",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 9374319,
             "range": "± 48637",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15666474,
-            "range": "± 323801",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 306887,
-            "range": "± 7885",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 269822,
             "range": "± 6144",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 263951,
-            "range": "± 3957",
             "unit": "ns/iter"
           }
         ]
@@ -984,57 +540,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2816519,
-            "range": "± 149919",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3277663,
             "range": "± 248237",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3301391,
-            "range": "± 247697",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 5483507,
-            "range": "± 46170",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 9250433,
             "range": "± 78677",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 15546120,
-            "range": "± 73136",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 305387,
-            "range": "± 8023",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 269960,
             "range": "± 5683",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 259054,
-            "range": "± 4415",
             "unit": "ns/iter"
           }
         ]
@@ -1062,57 +582,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2667462,
-            "range": "± 193145",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3119444,
             "range": "± 214286",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3103879,
-            "range": "± 235988",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 3438855,
-            "range": "± 18280",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 6149004,
             "range": "± 337103",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 11231504,
-            "range": "± 200684",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 293479,
-            "range": "± 7697",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 263173,
             "range": "± 5451",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 246533,
-            "range": "± 3055",
             "unit": "ns/iter"
           }
         ]
@@ -1140,57 +624,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2659780,
-            "range": "± 142846",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3115191,
             "range": "± 221726",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3094814,
-            "range": "± 238515",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 3434487,
-            "range": "± 19559",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 6079135,
             "range": "± 30161",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 11110137,
-            "range": "± 123988",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 294176,
-            "range": "± 7337",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 262562,
             "range": "± 5176",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 247348,
-            "range": "± 3077",
             "unit": "ns/iter"
           }
         ]
@@ -1218,57 +666,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2608931,
-            "range": "± 133528",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3094123,
             "range": "± 213604",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3084567,
-            "range": "± 205760",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 3473772,
-            "range": "± 18089",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 6185174,
             "range": "± 39467",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 11328323,
-            "range": "± 77178",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 293893,
-            "range": "± 7427",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 263037,
             "range": "± 12958",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 247668,
-            "range": "± 3206",
             "unit": "ns/iter"
           }
         ]
@@ -1296,57 +708,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2601213,
-            "range": "± 131888",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3086494,
             "range": "± 212637",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3105717,
-            "range": "± 207446",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 3478344,
-            "range": "± 18664",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 6109250,
             "range": "± 26479",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 11147545,
-            "range": "± 69214",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 294395,
-            "range": "± 7455",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 262853,
             "range": "± 5319",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 248527,
-            "range": "± 3212",
             "unit": "ns/iter"
           }
         ]
@@ -1374,57 +750,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2605619,
-            "range": "± 133024",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3078786,
             "range": "± 212554",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3085169,
-            "range": "± 208820",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 3495782,
-            "range": "± 29171",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 6083275,
             "range": "± 44606",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 11289217,
-            "range": "± 77303",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 293480,
-            "range": "± 7950",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 262569,
             "range": "± 5172",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 247964,
-            "range": "± 3367",
             "unit": "ns/iter"
           }
         ]
@@ -1452,57 +792,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2601600,
-            "range": "± 150465",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3081022,
             "range": "± 202769",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3085703,
-            "range": "± 205292",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 3452038,
-            "range": "± 27794",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 6056698,
             "range": "± 31100",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 11093211,
-            "range": "± 146659",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 294708,
-            "range": "± 8040",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 263497,
             "range": "± 5258",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 248366,
-            "range": "± 3231",
             "unit": "ns/iter"
           }
         ]
@@ -1530,57 +834,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2659836,
-            "range": "± 141164",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3115766,
             "range": "± 240762",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3104612,
-            "range": "± 246674",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 3506451,
-            "range": "± 25837",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 6071994,
             "range": "± 42376",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 11253108,
-            "range": "± 82602",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 295160,
-            "range": "± 7612",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 263047,
             "range": "± 5324",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 251894,
-            "range": "± 3587",
             "unit": "ns/iter"
           }
         ]
@@ -1608,57 +876,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2507677,
-            "range": "± 137080",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2981358,
             "range": "± 200600",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2987052,
-            "range": "± 201812",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 3034213,
-            "range": "± 68735",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 5188441,
             "range": "± 26608",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 9786060,
-            "range": "± 96482",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 270683,
-            "range": "± 6988",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 241450,
             "range": "± 4823",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 234263,
-            "range": "± 3277",
             "unit": "ns/iter"
           }
         ]
@@ -1686,57 +918,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2548215,
-            "range": "± 139634",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3022810,
             "range": "± 199223",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3003899,
-            "range": "± 203907",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2323103,
-            "range": "± 12558",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4244410,
             "range": "± 126364",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8199847,
-            "range": "± 72705",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 268215,
-            "range": "± 7100",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 236925,
             "range": "± 4722",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 227719,
-            "range": "± 3734",
             "unit": "ns/iter"
           }
         ]
@@ -1764,57 +960,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2552753,
-            "range": "± 130651",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3015089,
             "range": "± 200089",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3000750,
-            "range": "± 199388",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2310293,
-            "range": "± 17951",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4189745,
             "range": "± 25536",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8164195,
-            "range": "± 95349",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 267283,
-            "range": "± 8761",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 236231,
             "range": "± 4599",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 226273,
-            "range": "± 3010",
             "unit": "ns/iter"
           }
         ]
@@ -1842,57 +1002,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2558573,
-            "range": "± 131533",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3005195,
             "range": "± 205712",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3001659,
-            "range": "± 200242",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2277137,
-            "range": "± 10819",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4215639,
             "range": "± 20738",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8200156,
-            "range": "± 44776",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 267760,
-            "range": "± 7044",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 236180,
             "range": "± 4905",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 227506,
-            "range": "± 3208",
             "unit": "ns/iter"
           }
         ]
@@ -1920,57 +1044,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2552261,
-            "range": "± 131843",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3008760,
             "range": "± 203543",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2992905,
-            "range": "± 197729",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2342361,
-            "range": "± 11935",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4270407,
             "range": "± 29385",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8390120,
-            "range": "± 59803",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 266927,
-            "range": "± 6945",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 236221,
             "range": "± 4646",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 230158,
-            "range": "± 4866",
             "unit": "ns/iter"
           }
         ]
@@ -1998,57 +1086,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2548156,
-            "range": "± 130859",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3005825,
             "range": "± 201752",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2997462,
-            "range": "± 198432",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2270235,
-            "range": "± 14473",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4135851,
             "range": "± 23195",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8214599,
-            "range": "± 65178",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 268358,
-            "range": "± 6848",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 236920,
             "range": "± 4663",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 228969,
-            "range": "± 3124",
             "unit": "ns/iter"
           }
         ]
@@ -2076,57 +1128,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2549149,
-            "range": "± 136016",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3013960,
             "range": "± 200894",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 3025215,
-            "range": "± 202599",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2358787,
-            "range": "± 87906",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4289225,
             "range": "± 66696",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8329051,
-            "range": "± 57646",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 266748,
-            "range": "± 7051",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 236600,
             "range": "± 16557",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 226838,
-            "range": "± 3028",
             "unit": "ns/iter"
           }
         ]
@@ -2154,57 +1170,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2550989,
-            "range": "± 136197",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 3053856,
             "range": "± 202381",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2993834,
-            "range": "± 201455",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2376169,
-            "range": "± 15077",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4216516,
             "range": "± 40887",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8259988,
-            "range": "± 64458",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 268228,
-            "range": "± 6835",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 235925,
             "range": "± 4482",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 226593,
-            "range": "± 3107",
             "unit": "ns/iter"
           }
         ]
@@ -2232,57 +1212,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2526271,
-            "range": "± 128512",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2954635,
             "range": "± 199025",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2966364,
-            "range": "± 198709",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2342193,
-            "range": "± 11722",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4197222,
             "range": "± 35778",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8252885,
-            "range": "± 65593",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 267752,
-            "range": "± 7090",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 235932,
             "range": "± 4683",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 226543,
-            "range": "± 2957",
             "unit": "ns/iter"
           }
         ]
@@ -2310,57 +1254,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2527192,
-            "range": "± 132362",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2974148,
             "range": "± 201726",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2949473,
-            "range": "± 199544",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2341763,
-            "range": "± 27982",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4308697,
             "range": "± 19834",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8340545,
-            "range": "± 379047",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 266662,
-            "range": "± 6638",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 236076,
             "range": "± 8120",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 226686,
-            "range": "± 3026",
             "unit": "ns/iter"
           }
         ]
@@ -2388,57 +1296,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2277175,
-            "range": "± 111223",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2634778,
             "range": "± 151257",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2630185,
-            "range": "± 142658",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2432621,
-            "range": "± 16841",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4252390,
             "range": "± 28134",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8284982,
-            "range": "± 88975",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 246016,
-            "range": "± 6317",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 221269,
             "range": "± 4402",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 217228,
-            "range": "± 3056",
             "unit": "ns/iter"
           }
         ]
@@ -2466,57 +1338,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2272046,
-            "range": "± 107771",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2645901,
             "range": "± 144347",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2607575,
-            "range": "± 136208",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2403499,
-            "range": "± 9320",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4234343,
             "range": "± 16058",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8081466,
-            "range": "± 43365",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 244163,
-            "range": "± 6368",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219741,
             "range": "± 4274",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 216972,
-            "range": "± 4037",
             "unit": "ns/iter"
           }
         ]
@@ -2544,57 +1380,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2269192,
-            "range": "± 107968",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2621336,
             "range": "± 137874",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2608587,
-            "range": "± 136955",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2228898,
-            "range": "± 75558",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4136346,
             "range": "± 110222",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8197181,
-            "range": "± 52953",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 242888,
-            "range": "± 6250",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 220080,
             "range": "± 4790",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 218023,
-            "range": "± 3093",
             "unit": "ns/iter"
           }
         ]
@@ -2622,57 +1422,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2271148,
-            "range": "± 108307",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2615844,
             "range": "± 142263",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2588372,
-            "range": "± 133695",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2263938,
-            "range": "± 96484",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4011017,
             "range": "± 165957",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7703939,
-            "range": "± 42104",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243628,
-            "range": "± 6212",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 220869,
             "range": "± 3981",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 215730,
-            "range": "± 3356",
             "unit": "ns/iter"
           }
         ]
@@ -2700,57 +1464,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2277678,
-            "range": "± 110309",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2631955,
             "range": "± 143438",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2636481,
-            "range": "± 146829",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2365977,
-            "range": "± 10782",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4142366,
             "range": "± 16326",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7956962,
-            "range": "± 248023",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 245587,
-            "range": "± 6014",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 224298,
             "range": "± 4284",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 220553,
-            "range": "± 6519",
             "unit": "ns/iter"
           }
         ]
@@ -2778,57 +1506,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2247758,
-            "range": "± 107152",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2585282,
             "range": "± 135085",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2579099,
-            "range": "± 137870",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2241985,
-            "range": "± 7297",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4044796,
             "range": "± 55177",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7727266,
-            "range": "± 40282",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 245368,
-            "range": "± 6021",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 221894,
             "range": "± 5809",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 220045,
-            "range": "± 2740",
             "unit": "ns/iter"
           }
         ]
@@ -2856,57 +1548,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2293979,
-            "range": "± 112268",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2649171,
             "range": "± 146221",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2654232,
-            "range": "± 159271",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2420212,
-            "range": "± 9987",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4234252,
             "range": "± 17549",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8210816,
-            "range": "± 134960",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 242098,
-            "range": "± 6300",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 218912,
             "range": "± 4192",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 214903,
-            "range": "± 3148",
             "unit": "ns/iter"
           }
         ]
@@ -2934,57 +1590,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2331490,
-            "range": "± 108913",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2647034,
             "range": "± 144740",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2635267,
-            "range": "± 143316",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2360743,
-            "range": "± 9929",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4104935,
             "range": "± 20266",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7879452,
-            "range": "± 53922",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243269,
-            "range": "± 6327",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 223118,
             "range": "± 4602",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 215962,
-            "range": "± 3703",
             "unit": "ns/iter"
           }
         ]
@@ -3012,57 +1632,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2296014,
-            "range": "± 109450",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2646514,
             "range": "± 146076",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2650426,
-            "range": "± 149684",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2348857,
-            "range": "± 8084",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4086925,
             "range": "± 18549",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7847209,
-            "range": "± 50476",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 241969,
-            "range": "± 6217",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219646,
             "range": "± 4340",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 217120,
-            "range": "± 3078",
             "unit": "ns/iter"
           }
         ]
@@ -3090,57 +1674,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2252765,
-            "range": "± 106857",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2587239,
             "range": "± 134198",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2583040,
-            "range": "± 135769",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2311861,
-            "range": "± 13223",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3999523,
             "range": "± 18607",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7781684,
-            "range": "± 61382",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 244687,
-            "range": "± 6286",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 221098,
             "range": "± 4632",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 218169,
-            "range": "± 2982",
             "unit": "ns/iter"
           }
         ]
@@ -3168,57 +1716,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2261657,
-            "range": "± 102597",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2591603,
             "range": "± 133557",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2582646,
-            "range": "± 133974",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2395479,
-            "range": "± 8585",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4236571,
             "range": "± 19777",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8094777,
-            "range": "± 66043",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243595,
-            "range": "± 6316",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219700,
             "range": "± 4209",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 215564,
-            "range": "± 3176",
             "unit": "ns/iter"
           }
         ]
@@ -3246,57 +1758,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2253926,
-            "range": "± 164390",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2611637,
             "range": "± 146023",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2613655,
-            "range": "± 144449",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2227982,
-            "range": "± 8117",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4050698,
             "range": "± 16047",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7889087,
-            "range": "± 55946",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 245733,
-            "range": "± 5923",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 220690,
             "range": "± 4167",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 216587,
-            "range": "± 3050",
             "unit": "ns/iter"
           }
         ]
@@ -3324,57 +1800,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2277153,
-            "range": "± 108874",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2635031,
             "range": "± 143980",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2634098,
-            "range": "± 144926",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2396974,
-            "range": "± 43193",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4203209,
             "range": "± 80131",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8101092,
-            "range": "± 43918",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 245062,
-            "range": "± 6277",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 220159,
             "range": "± 4165",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 217589,
-            "range": "± 3038",
             "unit": "ns/iter"
           }
         ]
@@ -3402,57 +1842,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2268302,
-            "range": "± 110072",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2626593,
             "range": "± 143204",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2621808,
-            "range": "± 142950",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2312910,
-            "range": "± 7592",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4260902,
             "range": "± 15298",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8279077,
-            "range": "± 45666",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 244735,
-            "range": "± 6383",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 220560,
             "range": "± 4450",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 217022,
-            "range": "± 2902",
             "unit": "ns/iter"
           }
         ]
@@ -3480,57 +1884,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2267779,
-            "range": "± 107479",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2594637,
             "range": "± 135663",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2591203,
-            "range": "± 135047",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2200173,
-            "range": "± 7665",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4034320,
             "range": "± 17598",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7786588,
-            "range": "± 52074",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243461,
-            "range": "± 6354",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219373,
             "range": "± 4283",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 216074,
-            "range": "± 3165",
             "unit": "ns/iter"
           }
         ]
@@ -3558,57 +1926,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2279090,
-            "range": "± 106424",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2672376,
             "range": "± 156628",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2631376,
-            "range": "± 142435",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2348235,
-            "range": "± 15721",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4023505,
             "range": "± 15535",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7816724,
-            "range": "± 157389",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 242408,
-            "range": "± 6208",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219633,
             "range": "± 4236",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 216237,
-            "range": "± 2992",
             "unit": "ns/iter"
           }
         ]
@@ -3636,57 +1968,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2265608,
-            "range": "± 112225",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2614178,
             "range": "± 141247",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2602350,
-            "range": "± 134064",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2331509,
-            "range": "± 11370",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4029611,
             "range": "± 26515",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7801074,
-            "range": "± 84962",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243087,
-            "range": "± 6554",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219549,
             "range": "± 4359",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 215863,
-            "range": "± 2765",
             "unit": "ns/iter"
           }
         ]
@@ -3714,57 +2010,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2308440,
-            "range": "± 110457",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2658275,
             "range": "± 148017",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2644411,
-            "range": "± 144270",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2278730,
-            "range": "± 8706",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3998600,
             "range": "± 16779",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7823715,
-            "range": "± 42080",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 244648,
-            "range": "± 6319",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219967,
             "range": "± 4142",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 215419,
-            "range": "± 3049",
             "unit": "ns/iter"
           }
         ]
@@ -3792,57 +2052,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2364242,
-            "range": "± 117483",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2759680,
             "range": "± 156084",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2740502,
-            "range": "± 146038",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2223585,
-            "range": "± 16646",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4016191,
             "range": "± 87040",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7982494,
-            "range": "± 84426",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 255286,
-            "range": "± 8323",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 222328,
             "range": "± 4994",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 217391,
-            "range": "± 4019",
             "unit": "ns/iter"
           }
         ]
@@ -3870,57 +2094,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2278819,
-            "range": "± 108901",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2637886,
             "range": "± 144105",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2631555,
-            "range": "± 146076",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2316569,
-            "range": "± 10720",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4059955,
             "range": "± 19207",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7960597,
-            "range": "± 59106",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 242957,
-            "range": "± 7891",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 217751,
             "range": "± 4195",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 215700,
-            "range": "± 3111",
             "unit": "ns/iter"
           }
         ]
@@ -3948,57 +2136,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2282204,
-            "range": "± 116714",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2629288,
             "range": "± 142602",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2622920,
-            "range": "± 142212",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2311868,
-            "range": "± 7389",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4190699,
             "range": "± 15904",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8175222,
-            "range": "± 48130",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 242801,
-            "range": "± 8424",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219328,
             "range": "± 4343",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 216567,
-            "range": "± 4018",
             "unit": "ns/iter"
           }
         ]
@@ -4026,57 +2178,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2451663,
-            "range": "± 119158",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2821037,
             "range": "± 155290",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2781366,
-            "range": "± 152712",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2441779,
-            "range": "± 13538",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4554501,
             "range": "± 16619",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8636400,
-            "range": "± 52327",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 252295,
-            "range": "± 7377",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 227394,
             "range": "± 5419",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 218483,
-            "range": "± 3447",
             "unit": "ns/iter"
           }
         ]
@@ -4104,57 +2220,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2266317,
-            "range": "± 108453",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2608385,
             "range": "± 142497",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2608828,
-            "range": "± 139769",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2305219,
-            "range": "± 47237",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4177533,
             "range": "± 89633",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8141717,
-            "range": "± 140421",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243569,
-            "range": "± 8308",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 217083,
             "range": "± 4183",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 213634,
-            "range": "± 6417",
             "unit": "ns/iter"
           }
         ]
@@ -4182,57 +2262,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2245555,
-            "range": "± 105361",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2572049,
             "range": "± 135348",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2569036,
-            "range": "± 163962",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2379214,
-            "range": "± 39606",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4177023,
             "range": "± 69450",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8021437,
-            "range": "± 140076",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 240374,
-            "range": "± 6164",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 217895,
             "range": "± 4211",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 214300,
-            "range": "± 2923",
             "unit": "ns/iter"
           }
         ]
@@ -4260,57 +2304,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2247548,
-            "range": "± 104961",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2580058,
             "range": "± 132716",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2566480,
-            "range": "± 132093",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2400819,
-            "range": "± 44736",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4192098,
             "range": "± 82961",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8205253,
-            "range": "± 240078",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 240269,
-            "range": "± 6142",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 216956,
             "range": "± 4108",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 213511,
-            "range": "± 2919",
             "unit": "ns/iter"
           }
         ]
@@ -4338,57 +2346,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2253936,
-            "range": "± 106829",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2593600,
             "range": "± 134400",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2582138,
-            "range": "± 133763",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2310603,
-            "range": "± 38775",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4129686,
             "range": "± 72422",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7995976,
-            "range": "± 137237",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 244486,
-            "range": "± 8062",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219713,
             "range": "± 4240",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 215812,
-            "range": "± 2923",
             "unit": "ns/iter"
           }
         ]
@@ -4416,57 +2388,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2277274,
-            "range": "± 109544",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2628086,
             "range": "± 142125",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2631993,
-            "range": "± 185337",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2417672,
-            "range": "± 53443",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4200211,
             "range": "± 89143",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8020074,
-            "range": "± 190531",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 242937,
-            "range": "± 6280",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 220315,
             "range": "± 4316",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 214435,
-            "range": "± 3836",
             "unit": "ns/iter"
           }
         ]
@@ -4494,57 +2430,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2271835,
-            "range": "± 109368",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2637796,
             "range": "± 144331",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2634369,
-            "range": "± 168583",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2335735,
-            "range": "± 60480",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4061012,
             "range": "± 139426",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7785705,
-            "range": "± 202066",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 242734,
-            "range": "± 6299",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 218394,
             "range": "± 4048",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 216447,
-            "range": "± 2833",
             "unit": "ns/iter"
           }
         ]
@@ -4572,57 +2472,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2278523,
-            "range": "± 107733",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2618991,
             "range": "± 143028",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2627577,
-            "range": "± 153856",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2455833,
-            "range": "± 72786",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4209357,
             "range": "± 94980",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8201003,
-            "range": "± 219492",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243675,
-            "range": "± 6130",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219440,
             "range": "± 4275",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 215890,
-            "range": "± 5927",
             "unit": "ns/iter"
           }
         ]
@@ -4650,57 +2514,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2280091,
-            "range": "± 111671",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2642279,
             "range": "± 146252",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2642677,
-            "range": "± 150707",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2376017,
-            "range": "± 23048",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4139783,
             "range": "± 42544",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8016201,
-            "range": "± 82438",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 244325,
-            "range": "± 6232",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 219954,
             "range": "± 4313",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 215651,
-            "range": "± 3151",
             "unit": "ns/iter"
           }
         ]
@@ -4728,57 +2556,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2304353,
-            "range": "± 109732",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2673372,
             "range": "± 149202",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2679265,
-            "range": "± 150641",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2385257,
-            "range": "± 21381",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4195557,
             "range": "± 49690",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8132645,
-            "range": "± 84033",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243742,
-            "range": "± 6334",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 218850,
             "range": "± 4257",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 219231,
-            "range": "± 3075",
             "unit": "ns/iter"
           }
         ]
@@ -4806,57 +2598,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2307030,
-            "range": "± 111551",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2675039,
             "range": "± 145850",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2660294,
-            "range": "± 142092",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2370356,
-            "range": "± 21338",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4122713,
             "range": "± 37991",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8115973,
-            "range": "± 86176",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 244933,
-            "range": "± 6279",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 221250,
             "range": "± 4313",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 216638,
-            "range": "± 3095",
             "unit": "ns/iter"
           }
         ]
@@ -4884,57 +2640,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2310571,
-            "range": "± 112438",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2681653,
             "range": "± 143555",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2685732,
-            "range": "± 150333",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2258482,
-            "range": "± 18887",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4048806,
             "range": "± 58407",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7929431,
-            "range": "± 66106",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243891,
-            "range": "± 7193",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 218938,
             "range": "± 4142",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 214841,
-            "range": "± 3029",
             "unit": "ns/iter"
           }
         ]
@@ -4962,57 +2682,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2472488,
-            "range": "± 138118",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2904292,
             "range": "± 171944",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2898924,
-            "range": "± 166986",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2220643,
-            "range": "± 36367",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3711358,
             "range": "± 40621",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7347777,
-            "range": "± 69241",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 268234,
-            "range": "± 6277",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 246704,
             "range": "± 5665",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 243522,
-            "range": "± 3085",
             "unit": "ns/iter"
           }
         ]
@@ -5040,57 +2724,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2288055,
-            "range": "± 111298",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2651215,
             "range": "± 142805",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2661370,
-            "range": "± 167741",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2193477,
-            "range": "± 20092",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3985972,
             "range": "± 40227",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7969447,
-            "range": "± 62108",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243512,
-            "range": "± 7347",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 220126,
             "range": "± 4364",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 219489,
-            "range": "± 3173",
             "unit": "ns/iter"
           }
         ]
@@ -5118,57 +2766,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2307093,
-            "range": "± 109965",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2662076,
             "range": "± 147771",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2659634,
-            "range": "± 144002",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2185382,
-            "range": "± 23343",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3882777,
             "range": "± 86163",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7676839,
-            "range": "± 117850",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243980,
-            "range": "± 6493",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 220334,
             "range": "± 6751",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 217136,
-            "range": "± 2930",
             "unit": "ns/iter"
           }
         ]
@@ -5196,57 +2808,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2285868,
-            "range": "± 107765",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2649570,
             "range": "± 155296",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2644257,
-            "range": "± 142104",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2212877,
-            "range": "± 33613",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3929996,
             "range": "± 60258",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7570195,
-            "range": "± 114397",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 239671,
-            "range": "± 6343",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 213429,
             "range": "± 4469",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 209637,
-            "range": "± 3022",
             "unit": "ns/iter"
           }
         ]
@@ -5274,57 +2850,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2286333,
-            "range": "± 108911",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2655352,
             "range": "± 142724",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2644443,
-            "range": "± 142776",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2234612,
-            "range": "± 36305",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3965349,
             "range": "± 68734",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7733850,
-            "range": "± 112636",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243008,
-            "range": "± 6388",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 218340,
             "range": "± 4139",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 210131,
-            "range": "± 2914",
             "unit": "ns/iter"
           }
         ]
@@ -5352,57 +2892,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2276714,
-            "range": "± 105373",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2658624,
             "range": "± 148093",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2649271,
-            "range": "± 140728",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2199746,
-            "range": "± 54068",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3947714,
             "range": "± 63412",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7674832,
-            "range": "± 106397",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 243555,
-            "range": "± 6313",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 220421,
             "range": "± 4235",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 218211,
-            "range": "± 3064",
             "unit": "ns/iter"
           }
         ]
@@ -5430,57 +2934,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2397304,
-            "range": "± 130143",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2721037,
             "range": "± 147933",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2741225,
-            "range": "± 168041",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2331421,
-            "range": "± 35430",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4057792,
             "range": "± 82018",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7887759,
-            "range": "± 110282",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 265185,
-            "range": "± 7516",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 245061,
             "range": "± 10604",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 246904,
-            "range": "± 3301",
             "unit": "ns/iter"
           }
         ]
@@ -5508,57 +2976,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 1989727,
-            "range": "± 81469",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 1993887,
             "range": "± 93039",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2000796,
-            "range": "± 93397",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2101065,
-            "range": "± 65340",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3823940,
             "range": "± 40039",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7571850,
-            "range": "± 71130",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 232837,
-            "range": "± 7696",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 185719,
             "range": "± 4790",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 171894,
-            "range": "± 3575",
             "unit": "ns/iter"
           }
         ]
@@ -5586,57 +3018,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2003909,
-            "range": "± 93622",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2021467,
             "range": "± 95000",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2020517,
-            "range": "± 94998",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2195094,
-            "range": "± 15431",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3885581,
             "range": "± 143620",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7555106,
-            "range": "± 57660",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 231786,
-            "range": "± 7259",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 183281,
             "range": "± 4817",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 170472,
-            "range": "± 4732",
             "unit": "ns/iter"
           }
         ]
@@ -5664,57 +3060,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 1996834,
-            "range": "± 92893",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2005412,
             "range": "± 93410",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2015842,
-            "range": "± 100810",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2126212,
-            "range": "± 8520",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3921885,
             "range": "± 31134",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7659307,
-            "range": "± 76372",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 234488,
-            "range": "± 7489",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 184266,
             "range": "± 4838",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 173959,
-            "range": "± 3773",
             "unit": "ns/iter"
           }
         ]
@@ -5742,57 +3102,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 1580018,
-            "range": "± 101958",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 1571460,
             "range": "± 68572",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 1652207,
-            "range": "± 94060",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 1640291,
-            "range": "± 8857",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3132590,
             "range": "± 94477",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 6084796,
-            "range": "± 269142",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 178860,
-            "range": "± 7664",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 141320,
             "range": "± 4723",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 127839,
-            "range": "± 2573",
             "unit": "ns/iter"
           }
         ]
@@ -5820,57 +3144,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2148745,
-            "range": "± 98796",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2155576,
             "range": "± 100228",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2166110,
-            "range": "± 99462",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2063245,
-            "range": "± 10214",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3518306,
             "range": "± 64010",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 6858415,
-            "range": "± 72031",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 251827,
-            "range": "± 7253",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 198176,
             "range": "± 5194",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 181040,
-            "range": "± 3766",
             "unit": "ns/iter"
           }
         ]
@@ -5898,57 +3186,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 1664223,
-            "range": "± 74106",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 1672424,
             "range": "± 72648",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 1683836,
-            "range": "± 83340",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 1708580,
-            "range": "± 21269",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 2778584,
             "range": "± 23183",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 5281060,
-            "range": "± 31844",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 199550,
-            "range": "± 5736",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 156316,
             "range": "± 4889",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 142312,
-            "range": "± 2721",
             "unit": "ns/iter"
           }
         ]
@@ -5976,57 +3228,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2043061,
-            "range": "± 102915",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2022339,
             "range": "± 100427",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2018271,
-            "range": "± 93784",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2262582,
-            "range": "± 61361",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3980284,
             "range": "± 177648",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7749999,
-            "range": "± 78488",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 231464,
-            "range": "± 7159",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 184164,
             "range": "± 5476",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 171719,
-            "range": "± 3497",
             "unit": "ns/iter"
           }
         ]
@@ -6054,57 +3270,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 1845211,
-            "range": "± 81713",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 1851730,
             "range": "± 83186",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 1862796,
-            "range": "± 86563",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2013426,
-            "range": "± 16640",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3928552,
             "range": "± 20921",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7436162,
-            "range": "± 87594",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 216652,
-            "range": "± 8878",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 169733,
             "range": "± 6754",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 151575,
-            "range": "± 4862",
             "unit": "ns/iter"
           }
         ]
@@ -6132,111 +3312,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2010033,
-            "range": "± 92312",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2012273,
             "range": "± 109896",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2018824,
-            "range": "± 97660",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2140271,
-            "range": "± 48199",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3744762,
             "range": "± 31006",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7399921,
-            "range": "± 56771",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 235820,
-            "range": "± 7559",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 187270,
             "range": "± 5051",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 175504,
-            "range": "± 3633",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 52104,
-            "range": "± 795",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 109473,
-            "range": "± 708",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1381032,
-            "range": "± 22045",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 52576,
-            "range": "± 535",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 120176,
-            "range": "± 2030",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1377445,
-            "range": "± 18902",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 52978,
-            "range": "± 1305",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 115982,
-            "range": "± 1103",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1379414,
-            "range": "± 114746",
             "unit": "ns/iter"
           }
         ]
@@ -6264,111 +3354,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 1661953,
-            "range": "± 72244",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 1677687,
             "range": "± 72496",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 1676640,
-            "range": "± 76322",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 1744272,
-            "range": "± 11437",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 2872238,
             "range": "± 52693",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 5479857,
-            "range": "± 25919",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 197670,
-            "range": "± 6017",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 155685,
             "range": "± 4884",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 141628,
-            "range": "± 3537",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 50911,
-            "range": "± 745",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 93127,
-            "range": "± 556",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1061403,
-            "range": "± 16655",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 51123,
-            "range": "± 83",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 104907,
-            "range": "± 715",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1053496,
-            "range": "± 14132",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 51847,
-            "range": "± 84",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 99503,
-            "range": "± 709",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1060312,
-            "range": "± 40805",
             "unit": "ns/iter"
           }
         ]
@@ -6396,111 +3396,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2010543,
-            "range": "± 105808",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2026127,
             "range": "± 106698",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2034681,
-            "range": "± 105778",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2185778,
-            "range": "± 131417",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3803903,
             "range": "± 16179",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7439362,
-            "range": "± 44763",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 237150,
-            "range": "± 7401",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 187391,
             "range": "± 4927",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 177461,
-            "range": "± 6104",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 52820,
-            "range": "± 605",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 115246,
-            "range": "± 804",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1387428,
-            "range": "± 13657",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 53384,
-            "range": "± 219",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 126543,
-            "range": "± 1032",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1387606,
-            "range": "± 12498",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 53535,
-            "range": "± 236",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 120084,
-            "range": "± 1366",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1388923,
-            "range": "± 11300",
             "unit": "ns/iter"
           }
         ]
@@ -6528,111 +3438,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2235796,
-            "range": "± 101866",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2240961,
             "range": "± 108188",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2243781,
-            "range": "± 101587",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2353178,
-            "range": "± 33555",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4437822,
             "range": "± 23316",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8405516,
-            "range": "± 62087",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 253398,
-            "range": "± 7974",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 201454,
             "range": "± 5597",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 185697,
-            "range": "± 2995",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 67810,
-            "range": "± 210",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 120561,
-            "range": "± 1339",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1552237,
-            "range": "± 6548",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 68644,
-            "range": "± 885",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 133601,
-            "range": "± 544",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1538720,
-            "range": "± 6056",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 68802,
-            "range": "± 128",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 128383,
-            "range": "± 445",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1547436,
-            "range": "± 9294",
             "unit": "ns/iter"
           }
         ]
@@ -6660,111 +3480,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 1654731,
-            "range": "± 73204",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 1666240,
             "range": "± 72350",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 1672538,
-            "range": "± 78860",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 1782856,
-            "range": "± 15063",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 2885539,
             "range": "± 15669",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 5428572,
-            "range": "± 32595",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 200307,
-            "range": "± 6300",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 155953,
             "range": "± 5283",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 141416,
-            "range": "± 2624",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 51557,
-            "range": "± 99",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 96921,
-            "range": "± 1679",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1065628,
-            "range": "± 22646",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 51778,
-            "range": "± 316",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 110900,
-            "range": "± 1509",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1060111,
-            "range": "± 12236",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 52490,
-            "range": "± 146",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 105842,
-            "range": "± 2359",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1063106,
-            "range": "± 29586",
             "unit": "ns/iter"
           }
         ]
@@ -6792,111 +3522,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2013177,
-            "range": "± 101320",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2039744,
             "range": "± 93849",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2029902,
-            "range": "± 95342",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2151711,
-            "range": "± 34706",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3801481,
             "range": "± 81296",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7471543,
-            "range": "± 49424",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 234239,
-            "range": "± 14293",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 185362,
             "range": "± 4980",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 172172,
-            "range": "± 3569",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 51963,
-            "range": "± 461",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 109723,
-            "range": "± 2240",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1394372,
-            "range": "± 20071",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 52473,
-            "range": "± 265",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 121393,
-            "range": "± 2271",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1396640,
-            "range": "± 14795",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 52715,
-            "range": "± 131",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 115372,
-            "range": "± 2186",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1399215,
-            "range": "± 53443",
             "unit": "ns/iter"
           }
         ]
@@ -6924,111 +3564,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2078228,
-            "range": "± 109985",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2058927,
             "range": "± 97116",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2073264,
-            "range": "± 97801",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2139653,
-            "range": "± 37672",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3460120,
             "range": "± 64140",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 6590085,
-            "range": "± 148352",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 245444,
-            "range": "± 8611",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 187920,
             "range": "± 6413",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 171211,
-            "range": "± 4266",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 63062,
-            "range": "± 4014",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 124643,
-            "range": "± 2894",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1290672,
-            "range": "± 30091",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 62914,
-            "range": "± 909",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 135814,
-            "range": "± 2410",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1268171,
-            "range": "± 21972",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 63528,
-            "range": "± 849",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 128605,
-            "range": "± 2825",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1287173,
-            "range": "± 29940",
             "unit": "ns/iter"
           }
         ]
@@ -7056,111 +3606,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 1995547,
-            "range": "± 93789",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2009936,
             "range": "± 94169",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2019245,
-            "range": "± 93693",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2195954,
-            "range": "± 19601",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3807074,
             "range": "± 27140",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7513749,
-            "range": "± 55641",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 240205,
-            "range": "± 9570",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 194027,
             "range": "± 8066",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 179374,
-            "range": "± 7956",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 52015,
-            "range": "± 139",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 120697,
-            "range": "± 993",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1392193,
-            "range": "± 16416",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 52892,
-            "range": "± 292",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 132152,
-            "range": "± 1050",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1385934,
-            "range": "± 20254",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 53127,
-            "range": "± 235",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 125730,
-            "range": "± 1001",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1388569,
-            "range": "± 23843",
             "unit": "ns/iter"
           }
         ]
@@ -7188,111 +3648,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2011395,
-            "range": "± 96577",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2047629,
             "range": "± 98835",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2071375,
-            "range": "± 98270",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2200036,
-            "range": "± 47709",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3494446,
             "range": "± 70681",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 6657097,
-            "range": "± 131311",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 240888,
-            "range": "± 8036",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 191318,
             "range": "± 6181",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 173042,
-            "range": "± 4571",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 62764,
-            "range": "± 833",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 117743,
-            "range": "± 1709",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1300443,
-            "range": "± 25620",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 63280,
-            "range": "± 885",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 132334,
-            "range": "± 2188",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1291243,
-            "range": "± 18588",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 63608,
-            "range": "± 758",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 122084,
-            "range": "± 2549",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1322398,
-            "range": "± 22473",
             "unit": "ns/iter"
           }
         ]
@@ -7320,111 +3690,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2006166,
-            "range": "± 93601",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2016508,
             "range": "± 96792",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2025066,
-            "range": "± 95884",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2168560,
-            "range": "± 15089",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3791842,
             "range": "± 24496",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7390286,
-            "range": "± 316087",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 230840,
-            "range": "± 7549",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 180941,
             "range": "± 5311",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 168251,
-            "range": "± 3109",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 52852,
-            "range": "± 154",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 110770,
-            "range": "± 2724",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1377067,
-            "range": "± 22329",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 53580,
-            "range": "± 259",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 121046,
-            "range": "± 2944",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1367187,
-            "range": "± 17795",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 53606,
-            "range": "± 297",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 116197,
-            "range": "± 2957",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1377465,
-            "range": "± 30948",
             "unit": "ns/iter"
           }
         ]
@@ -7452,111 +3732,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2027546,
-            "range": "± 144667",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2039371,
             "range": "± 133203",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2048275,
-            "range": "± 95979",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2134597,
-            "range": "± 11988",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3809311,
             "range": "± 219248",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7467428,
-            "range": "± 63786",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 235200,
-            "range": "± 7367",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 185178,
             "range": "± 4807",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 173918,
-            "range": "± 17877",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 53729,
-            "range": "± 484",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 111463,
-            "range": "± 6331",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1390596,
-            "range": "± 189886",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 53823,
-            "range": "± 2095",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 121137,
-            "range": "± 4285",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1378488,
-            "range": "± 40623",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 53677,
-            "range": "± 181",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 116286,
-            "range": "± 1148",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1390561,
-            "range": "± 40374",
             "unit": "ns/iter"
           }
         ]
@@ -7584,111 +3774,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2058905,
-            "range": "± 100811",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2028463,
             "range": "± 95347",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2038108,
-            "range": "± 100915",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2160487,
-            "range": "± 21992",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3799015,
             "range": "± 23255",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7375022,
-            "range": "± 48866",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 236083,
-            "range": "± 7367",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 186902,
             "range": "± 5222",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 174684,
-            "range": "± 3629",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 53094,
-            "range": "± 512",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 109378,
-            "range": "± 746",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1412136,
-            "range": "± 26296",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 52800,
-            "range": "± 256",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 119424,
-            "range": "± 434",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1402928,
-            "range": "± 8934",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 53412,
-            "range": "± 734",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 114564,
-            "range": "± 639",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1408516,
-            "range": "± 17227",
             "unit": "ns/iter"
           }
         ]
@@ -7716,111 +3816,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 1672186,
-            "range": "± 119956",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 1652512,
             "range": "± 117873",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 1693262,
-            "range": "± 144853",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 1678768,
-            "range": "± 49603",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3104294,
             "range": "± 193715",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 6059067,
-            "range": "± 394638",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 174257,
-            "range": "± 7550",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 143430,
             "range": "± 8394",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 125907,
-            "range": "± 7676",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 53092,
-            "range": "± 2611",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 84429,
-            "range": "± 970",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1092042,
-            "range": "± 62578",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 51094,
-            "range": "± 2381",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 92800,
-            "range": "± 2114",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 988209,
-            "range": "± 35683",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 52198,
-            "range": "± 2340",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 88863,
-            "range": "± 3711",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 990764,
-            "range": "± 42577",
             "unit": "ns/iter"
           }
         ]
@@ -7848,111 +3858,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 1702066,
-            "range": "± 73381",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 1714127,
             "range": "± 89080",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 1718294,
-            "range": "± 76451",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 1693905,
-            "range": "± 11499",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 2737277,
             "range": "± 26777",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 5234487,
-            "range": "± 58299",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 190832,
-            "range": "± 5731",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 153757,
             "range": "± 4936",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 135924,
-            "range": "± 2481",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 51343,
-            "range": "± 98",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 94522,
-            "range": "± 796",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1128116,
-            "range": "± 18379",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 51830,
-            "range": "± 345",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 106085,
-            "range": "± 1791",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1126637,
-            "range": "± 33226",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 52288,
-            "range": "± 386",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 100585,
-            "range": "± 561",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1128246,
-            "range": "± 15708",
             "unit": "ns/iter"
           }
         ]
@@ -7980,111 +3900,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2066428,
-            "range": "± 92754",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2093656,
             "range": "± 101297",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2086983,
-            "range": "± 94362",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2136533,
-            "range": "± 12188",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3795792,
             "range": "± 15736",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7492928,
-            "range": "± 44443",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 226917,
-            "range": "± 7140",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 184087,
             "range": "± 5899",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 168163,
-            "range": "± 3130",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 53620,
-            "range": "± 241",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 109135,
-            "range": "± 921",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1450114,
-            "range": "± 8510",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 52767,
-            "range": "± 769",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 122520,
-            "range": "± 789",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1450020,
-            "range": "± 28348",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 53860,
-            "range": "± 1207",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 116488,
-            "range": "± 2965",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1456987,
-            "range": "± 25964",
             "unit": "ns/iter"
           }
         ]
@@ -8112,111 +3942,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2078006,
-            "range": "± 97453",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2090588,
             "range": "± 94979",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2099872,
-            "range": "± 95067",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2126785,
-            "range": "± 7320",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 3754111,
             "range": "± 64530",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 7436742,
-            "range": "± 46153",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 227442,
-            "range": "± 7278",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 183106,
             "range": "± 4466",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 168528,
-            "range": "± 2988",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 50793,
-            "range": "± 233",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 107123,
-            "range": "± 1800",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1466766,
-            "range": "± 24010",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 51229,
-            "range": "± 414",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 121702,
-            "range": "± 326",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1463777,
-            "range": "± 14589",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 51665,
-            "range": "± 130",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 115549,
-            "range": "± 427",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1469808,
-            "range": "± 28352",
             "unit": "ns/iter"
           }
         ]
@@ -8244,111 +3984,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/3",
-            "value": 2355091,
-            "range": "± 115108",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 2367038,
             "range": "± 118203",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_collect_1k/5",
-            "value": 2379236,
-            "range": "± 115174",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/3",
-            "value": 2406622,
-            "range": "± 16727",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 4594469,
             "range": "± 23351",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/5",
-            "value": 8855836,
-            "range": "± 104969",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/3",
-            "value": 248698,
-            "range": "± 8447",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 201405,
             "range": "± 6034",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "cde_detect_1k/5",
-            "value": 179728,
-            "range": "± 5900",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 74370,
-            "range": "± 124",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 122271,
-            "range": "± 1324",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 1408023,
-            "range": "± 23216",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 72145,
-            "range": "± 761",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 133726,
-            "range": "± 741",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 1403559,
-            "range": "± 23574",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 73657,
-            "range": "± 287",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 129335,
-            "range": "± 3736",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 1407754,
-            "range": "± 11364",
             "unit": "ns/iter"
           }
         ]
@@ -8376,75 +4026,21 @@ window.BENCHMARK_DATA = {
         "tool": "cargo",
         "benches": [
           {
-            "name": "cde_collect_1k/4",
+            "name": "cde_collect_1k",
             "value": 790361,
             "range": "± 23342",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_update_1k/4",
+            "name": "cde_update_1k",
             "value": 876781,
             "range": "± 16395",
             "unit": "ns/iter"
           },
           {
-            "name": "cde_detect_1k/4",
+            "name": "cde_detect_1k",
             "value": 138132,
             "range": "± 2406",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/unreflected",
-            "value": 55143,
-            "range": "± 265",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/unreflected",
-            "value": 112611,
-            "range": "± 1231",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/unreflected",
-            "value": 546848,
-            "range": "± 3364",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/reflected",
-            "value": 55747,
-            "range": "± 341",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/reflected",
-            "value": 124829,
-            "range": "± 1127",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/reflected",
-            "value": 541901,
-            "range": "± 8721",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_from/alternating",
-            "value": 56336,
-            "range": "± 252",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_clone/alternating",
-            "value": 119514,
-            "range": "± 534",
-            "unit": "ns/iter"
-          },
-          {
-            "name": "reflection/transform_and_collect/alternating",
-            "value": 545301,
-            "range": "± 1941",
             "unit": "ns/iter"
           }
         ]
