@@ -1,4 +1,6 @@
 mod cd_engine;
+mod edges;
+mod hazard_index;
 
 /// Everything Hazard related
 pub mod hazards;

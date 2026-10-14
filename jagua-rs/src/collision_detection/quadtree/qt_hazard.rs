@@ -37,8 +37,8 @@ impl<E: HazardEntity> QTHazard<E> {
         Self {
             qt_bbox: qt_root_bbox,
             hkey,
-            entity: haz.entity,
-            presence: QTHazPresence::Partial(QTHazPartial::from_entire_shape(&haz.shape)),
+            entity: haz.entity(),
+            presence: QTHazPresence::Partial(QTHazPartial::from_entire_shape(haz.shape())),
         }
     }
 
@@ -64,7 +64,7 @@ impl<E: HazardEntity> QTHazard<E> {
             QTHazPresence::Partial(partial_haz) => {
                 //If the hazard is partially present, we need to check which type of presence each quadrant has
 
-                let haz_shape = &haz_map[self.hkey].shape;
+                let haz_shape = haz_map[self.hkey].shape();
 
                 //Check if one of the quadrants entirely contains the hazard
                 let enclosed_hazard_quadrant = quadrants

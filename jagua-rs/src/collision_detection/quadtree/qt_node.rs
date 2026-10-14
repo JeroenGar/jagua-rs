@@ -1,4 +1,3 @@
-use crate::collision_detection::hazards::collector::HazardCollector;
 use crate::collision_detection::hazards::filter::HazardFilter;
 use crate::collision_detection::hazards::{HazKey, Hazard, HazardEntity};
 use crate::collision_detection::quadtree::QTHazPresence;
@@ -145,62 +144,6 @@ impl<E: HazardEntity> QTNode<E> {
                     }
                 }
             },
-        }
-    }
-
-    /// Gathers colliding hazards until `stop_after_collision` requests an early return.
-    ///
-    /// The callback runs after a colliding hazard is added to the collector for the first time.
-    /// Returning `true` stops traversal and leaves the collector with only the hazards found up to
-    /// that point. Returning `false` every time gathers all collisions.
-    #[must_use]
-    pub fn collect_collisions_until<T, H, C, F>(
-        &self,
-        entity: &T,
-        filter: &H,
-        collector: &mut C,
-        stop_after_collision: &mut F,
-    ) -> bool
-    where
-        T: QTQueryable,
-        H: HazardFilter<E>,
-        C: HazardCollector<Entity = E>,
-        F: FnMut(E) -> bool,
-    {
-        // Condition to perform collision detection now or pass it to children:
-        let perform_cd_now = self.hazards.n_active_edges() <= self.cd_threshold as usize;
-
-        if let (Some(children), false) = (self.children.as_ref(), perform_cd_now) {
-            // Collect collisions from all children that collide with the entity
-            let quadrants = [0, 1, 2, 3].map(|idx| &children[idx].bbox);
-            let colliding_quadrants = entity.collides_with_quadrants(&self.bbox, quadrants);
-
-            colliding_quadrants
-                .iter()
-                .enumerate()
-                .filter(|(_, collides)| **collides)
-                .map(|(i, _)| &children[i])
-                .any(|child| {
-                    child.collect_collisions_until(entity, filter, collector, stop_after_collision)
-                })
-        } else {
-            //Check the hazards now
-            for hz in self.hazards.iter() {
-                if !collector.contains_key(hz.hkey) && !filter.is_irrelevant(hz.hkey, &hz.entity) {
-                    let collides = match &hz.presence {
-                        QTHazPresence::None => false,
-                        QTHazPresence::Entire => true,
-                        QTHazPresence::Partial(p_haz) => p_haz.collides_with(entity),
-                    };
-                    if collides {
-                        collector.insert(hz.hkey, hz.entity);
-                        if stop_after_collision(hz.entity) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            false
         }
     }
 }

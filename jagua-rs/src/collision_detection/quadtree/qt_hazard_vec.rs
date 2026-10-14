@@ -77,11 +77,6 @@ impl<E: HazardEntity> QTHazardVec<E> {
     pub fn iter(&self) -> impl Iterator<Item = &QTHazard<E>> {
         self.hazards.iter()
     }
-
-    pub fn n_active_edges(&self) -> usize {
-        debug_assert!(assert_caches_correct(self));
-        self.n_active_edges
-    }
 }
 
 fn order_by_descending_strength<E>(qth1: &QTHazard<E>, qth2: &QTHazard<E>) -> Ordering {

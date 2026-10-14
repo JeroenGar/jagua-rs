@@ -7,6 +7,7 @@ use crate::collision_detection::quadtree::QTNode;
 use crate::entities::Layout;
 use crate::entities::LayoutSnapshot;
 use crate::geometry::fail_fast::SPSurrogate;
+use crate::geometry::geo_enums::GeoPosition;
 use crate::geometry::primitives::Rect;
 use itertools::Itertools;
 use log::error;
@@ -32,6 +33,26 @@ pub fn snapshot_matches_layout(layout: &Layout, layout_snapshot: &LayoutSnapshot
         }
     }
     true
+}
+
+/// Checks that the engine's index holds exactly the bounding boxes of all hazards except the
+/// exterior, sorted by `x_min`, and that its maximum width bounds them.
+#[must_use]
+pub fn index_matches_hazards<E: HazardEntity>(cde: &CDEngine<E>) -> bool {
+    let indexed = cde.index.iter().collect_vec();
+    let sorted = indexed.is_sorted_by(|(_, a), (_, b)| a.x_min <= b.x_min);
+    let max_width = indexed
+        .iter()
+        .all(|(_, bbox)| bbox.width() <= cde.index.max_width());
+    let interior = cde
+        .hazards_map
+        .iter()
+        .filter(|(_, h)| h.entity().scope() == GeoPosition::Interior)
+        .map(|(k, h)| (k, h.shape().bbox))
+        .sorted_by_key(|(k, _)| *k)
+        .collect_vec();
+    let by_key = indexed.into_iter().sorted_by_key(|(k, _)| *k).collect_vec();
+    sorted && max_width && by_key == interior
 }
 
 #[must_use]
@@ -206,9 +227,9 @@ fn hazards_match<'a, E: HazardEntity + 'a>(
     chv1: impl Iterator<Item = &'a Hazard<E>>,
     chv2: impl Iterator<Item = &'a Hazard<E>>,
 ) -> bool {
-    let chv1_active_hazards = chv1.map(|h| h.entity).collect::<HashSet<_>>();
+    let chv1_active_hazards = chv1.map(Hazard::entity).collect::<HashSet<_>>();
 
-    let chv2_active_hazards = chv2.map(|h| h.entity).collect::<HashSet<_>>();
+    let chv2_active_hazards = chv2.map(Hazard::entity).collect::<HashSet<_>>();
 
     if chv1_active_hazards != chv2_active_hazards {
         println!("Hazard vecs don't match");

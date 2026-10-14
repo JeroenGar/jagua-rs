@@ -268,8 +268,8 @@ mod tests {
             .hazards_map()
             .iter()
             .filter(|(k, h)| {
-                !filter.is_irrelevant(*k, &h.entity)
-                    && exact::collides(&shape, &h.shape, h.entity.scope())
+                !filter.is_irrelevant(*k, &h.entity())
+                    && exact::collides(&shape, h.shape(), h.entity().scope())
             })
             .map(|(k, _)| k)
             .sorted()

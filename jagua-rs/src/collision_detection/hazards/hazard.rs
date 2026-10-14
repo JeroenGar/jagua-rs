@@ -1,6 +1,7 @@
+use crate::collision_detection::edges::{EdgeBoxes, EdgeChains, EdgeSet};
 use crate::geometry::DTransformation;
 use crate::geometry::geo_enums::GeoPosition;
-use crate::geometry::primitives::SPolygon;
+use crate::geometry::primitives::{Edge, Rect, SPolygon};
 use slotmap::new_key_type;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -16,18 +17,86 @@ new_key_type! {
 
 /// Any spatial constraint affecting the feasibility of a placement of an Item.
 /// The entity type `E` defines what can induce a hazard; see [`HazardEntity`].
+/// Cloning is cheap: the shape and the geometry derived from it are shared.
 #[derive(Clone, Debug)]
 pub struct Hazard<E = BasicHazardEntity> {
-    /// The entity inducing the hazard
-    pub entity: E,
-    /// The shape of the hazard
-    pub shape: Arc<SPolygon>,
+    entity: E,
+    shape: Arc<SPolygon>,
+    geometry: HazardGeometry,
 }
 
 impl<E: HazardEntity> Hazard<E> {
     #[must_use]
     pub fn new(entity: E, shape: Arc<SPolygon>) -> Self {
-        Self { entity, shape }
+        let geometry = HazardGeometry::new(&shape, entity.scope());
+        Self {
+            entity,
+            shape,
+            geometry,
+        }
+    }
+}
+
+impl<E: Copy> Hazard<E> {
+    /// The entity inducing the hazard
+    #[must_use]
+    pub fn entity(&self) -> E {
+        self.entity
+    }
+
+    /// The shape of the hazard
+    #[must_use]
+    pub fn shape(&self) -> &Arc<SPolygon> {
+        &self.shape
+    }
+
+    pub(crate) fn geometry(&self) -> &HazardGeometry {
+        &self.geometry
+    }
+}
+
+impl<E> EdgeSet for Hazard<E> {
+    #[inline(always)]
+    #[allow(clippy::inline_always)] // part of the query loops
+    fn any_edge_overlapping(&self, r: Rect, f: impl FnMut(&Edge) -> bool) -> bool {
+        match &self.geometry {
+            HazardGeometry::Interior(boxes) => boxes.any_edge_overlapping(&self.shape, r, f),
+            HazardGeometry::Exterior { chains, .. } => chains.any_edge_overlapping(r, f),
+        }
+    }
+}
+
+/// Geometry derived from a hazard's shape to speed up collision queries.
+/// Cloning shares the derived data.
+#[derive(Clone, Debug)]
+pub(crate) enum HazardGeometry {
+    Interior(EdgeBoxes),
+    /// The container's outline
+    Exterior {
+        chains: Arc<EdgeChains>,
+        /// Whether the outline is its own bounding box
+        is_rect: bool,
+    },
+}
+
+impl HazardGeometry {
+    #[allow(clippy::float_cmp)] // the bounding box's sides are vertex coordinates
+    fn new(shape: &SPolygon, scope: GeoPosition) -> Self {
+        match scope {
+            GeoPosition::Interior => HazardGeometry::Interior(EdgeBoxes::new(shape)),
+            GeoPosition::Exterior => {
+                let bbox = shape.bbox;
+                let is_rect = shape.n_vertices() == 4
+                    && shape.vertices.iter().all(|p| {
+                        (p.0 == bbox.x_min || p.0 == bbox.x_max)
+                            && (p.1 == bbox.y_min || p.1 == bbox.y_max)
+                    });
+                HazardGeometry::Exterior {
+                    chains: Arc::new(EdgeChains::new(shape)),
+                    is_rect,
+                }
+            }
+        }
     }
 }
 
