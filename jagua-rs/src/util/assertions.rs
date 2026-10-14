@@ -31,14 +31,20 @@ pub fn snapshot_matches_layout(layout: &Layout, layout_snapshot: &LayoutSnapshot
 }
 
 /// Checks that the engine's index holds exactly the bounding boxes of all hazards except the
-/// exterior, sorted by `x_min`, and that its maximum width bounds them.
+/// exterior, sorted by `x_min`, and that its chunk bounds are the largest `x_max` of each chunk.
 #[must_use]
 pub fn index_matches_hazards<E: HazardEntity>(cde: &CDEngine<E>) -> bool {
     let indexed = cde.index.iter().collect_vec();
     let sorted = indexed.is_sorted_by(|(_, a), (_, b)| a.x_min <= b.x_min);
-    let max_width = indexed
-        .iter()
-        .all(|(_, bbox)| bbox.width() <= cde.index.max_width());
+    let chunk_bounds = indexed
+        .chunks(64)
+        .map(|chunk| {
+            chunk
+                .iter()
+                .map(|(_, bbox)| bbox.x_max)
+                .fold(f32::NEG_INFINITY, f32::max)
+        })
+        .eq(cde.index.chunk_x_max().iter().copied());
     let interior = cde
         .hazards_map
         .iter()
@@ -47,7 +53,7 @@ pub fn index_matches_hazards<E: HazardEntity>(cde: &CDEngine<E>) -> bool {
         .sorted_by_key(|(k, _)| *k)
         .collect_vec();
     let by_key = indexed.into_iter().sorted_by_key(|(k, _)| *k).collect_vec();
-    sorted && max_width && by_key == interior
+    sorted && chunk_bounds && by_key == interior
 }
 
 /// Checks that the layout's engine holds the container's hazards and those of its placed items.

@@ -359,9 +359,10 @@ impl<E: HazardEntity> CDEngine<E> {
     /// `stop_after_collision` requests an early return.
     ///
     /// The callback contract matches [`Self::collect_poly_collisions_until`]. The configured
-    /// fail-fast pole prefix is checked largest-first. This is not a complete polygon collision
-    /// query; follow it with [`Self::collect_poly_collisions_until`] if the callback does not stop
-    /// the screening pass.
+    /// fail-fast poles are checked against the exterior first, then against the other hazards in
+    /// index order, not by pole size. This is not a complete polygon collision query; follow it
+    /// with [`Self::collect_poly_collisions_until`] if the callback does not stop the screening
+    /// pass.
     #[must_use]
     pub fn collect_surrogate_collisions_until<H, C, F>(
         &self,

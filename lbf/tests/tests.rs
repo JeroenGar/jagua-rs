@@ -134,9 +134,13 @@ mod tests {
 
     /// Checks collision queries against exact geometry on LBF layouts that change between
     /// queries: moved items (overlaps allowed), restored snapshots and wider strips.
+    /// Demands are doubled so the engine holds more than one chunk of 64 hazards.
     #[test_case("../assets/swim.json"; "swim")]
     fn cde_queries_match_exact_geometry_strip(instance_path: &str) -> Result<()> {
-        let ext_instance = read_spp_instance(Path::new(instance_path))?;
+        let mut ext_instance = read_spp_instance(Path::new(instance_path))?;
+        for item in &mut ext_instance.items {
+            item.demand *= 2;
+        }
         let instance = spp::io::import_instance(&importer(), &ext_instance)?;
         let mut opt = LBFOptimizerSP::new(instance, config(), SmallRng::seed_from_u64(0))?;
         opt.solve()?;
