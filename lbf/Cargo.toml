@@ -54,6 +54,10 @@ harness = false
 name = "ci_bench"
 harness = false
 
+[[bench]]
+name = "reflection_bench"
+harness = false
+
 #[[bench]]
 #name = "edge_sensitivity_bench"
 #harness = false
