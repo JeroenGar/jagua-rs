@@ -1,0 +1,48 @@
+diff --git a/jagua-rs/src/collision_detection/hazard_index.rs b/jagua-rs/src/collision_detection/hazard_index.rs
+index f73e5ce..a343334 100644
+--- a/jagua-rs/src/collision_detection/hazard_index.rs
++++ b/jagua-rs/src/collision_detection/hazard_index.rs
+@@ -1,6 +1,7 @@
+ use crate::collision_detection::hazards::HazKey;
+ use crate::geometry::geo_traits::{CollidesWith, DistanceTo};
+ use crate::geometry::primitives::{Circle, Edge, Point, Rect, SPolygon};
++use std::sync::Arc;
+ 
+ /// Prototype of a hazard-first broad phase: the bounding boxes of all hazards in flat arrays,
+ /// sorted by `x_min`, so a query only scans the hazards in its x-window.
+@@ -11,8 +12,8 @@ pub struct HazardIndex {
+     y_min: Vec<f32>,
+     x_max: Vec<f32>,
+     y_max: Vec<f32>,
+-    /// Bounding boxes of each hazard's edges
+-    edges: Vec<EdgeBoxes>,
++    /// Bounding boxes of each hazard's edges, shared so clones of the index stay cheap
++    edges: Vec<Arc<EdgeBoxes>>,
+     /// Upper bound on the width of the hazards' bounding boxes
+     max_width: f32,
+ }
+@@ -21,7 +22,7 @@ impl HazardIndex {
+     pub fn insert(&mut self, hkey: HazKey, shape: &SPolygon) {
+         let bbox = shape.bbox;
+         let i = self.x_min.partition_point(|&x| x <= bbox.x_min);
+-        self.edges.insert(i, EdgeBoxes::new(shape));
++        self.edges.insert(i, Arc::new(EdgeBoxes::new(shape)));
+         self.keys.insert(i, hkey);
+         self.x_min.insert(i, bbox.x_min);
+         self.y_min.insert(i, bbox.y_min);
+@@ -133,8 +134,14 @@ pub struct EdgeBoxes {
+ 
+ impl EdgeBoxes {
+     pub fn new(poly: &SPolygon) -> Self {
+-        let mut boxes = Self::default();
+         let vertices = poly.vertices();
++        let n = vertices.len();
++        let mut boxes = Self {
++            x_min: Vec::with_capacity(n),
++            y_min: Vec::with_capacity(n),
++            x_max: Vec::with_capacity(n),
++            y_max: Vec::with_capacity(n),
++        };
+         let mut prev = *vertices.last().unwrap();
+         for &cur in vertices {
+             boxes.x_min.push(prev.0.min(cur.0));

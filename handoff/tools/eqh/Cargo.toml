@@ -1,0 +1,16 @@
+[package]
+name = "eqh"
+version = "0.1.0"
+edition = "2024"
+
+# Standalone: not a member of the jagua-rs workspace.
+[workspace]
+
+[dependencies]
+jagua-rs = { path = "../../../jagua-rs", features = ["spp", "bpp"] }
+lbf = { path = "../../../lbf" }
+rand = "0.10"
+
+[profile.release]
+opt-level = 3
+debug-assertions = false
