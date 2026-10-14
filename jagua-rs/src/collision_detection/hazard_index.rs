@@ -293,29 +293,6 @@ pub fn edges_intersect(a: &SPolygon, b: &SPolygon, r: Rect) -> bool {
     }
 }
 
-/// Whether `c` touches any edge of `poly` whose bounding box overlaps the circle's bounding box.
-pub fn circle_touches_edges(c: &Circle, poly: &SPolygon) -> bool {
-    let r = c.bbox();
-    let sq_radius = c.radius.powi(2);
-    let vertices = poly.vertices();
-    let mut prev = *vertices.last().unwrap();
-    let mut prev_code = outcode(prev, &r);
-    for &cur in vertices {
-        let code = outcode(cur, &r);
-        if prev_code & code == 0
-            && (Edge {
-                start: prev,
-                end: cur,
-            })
-            .sq_distance_to(&c.center)
-                <= sq_radius
-        {
-            return true;
-        }
-        (prev, prev_code) = (cur, code);
-    }
-    false
-}
 
 /// Prototype: a polygon's edges grouped into chains that run monotonically in y, each with a
 /// bounding box. A horizontal ray crosses a y-monotone chain at most once, so a point-in-polygon
@@ -377,10 +354,6 @@ impl EdgeChains {
             }
         }
         Self { edges, chains }
-    }
-
-    pub fn n_chains(&self) -> usize {
-        self.chains.len()
     }
 
     /// The edges whose bounding box overlaps `r`, found chain by chain.
@@ -455,4 +428,16 @@ pub fn circle_touches_chains(c: &Circle, poly: &SPolygon, chains: &EdgeChains) -
     let sq_radius = c.radius.powi(2);
     let _ = poly;
     chains.any_edge_overlapping(c.bbox(), |e| e.sq_distance_to(&c.center) <= sq_radius)
+}
+
+/// Whether `e` intersects any edge of `poly`, whose edges' bounding boxes are given.
+pub fn edge_touches_edges_cached(e: &Edge, poly: &SPolygon, boxes: &EdgeBoxes) -> bool {
+    let r = Rect {
+        x_min: e.x_min(),
+        y_min: e.y_min(),
+        x_max: e.x_max(),
+        y_max: e.y_max(),
+    };
+    let vertices = poly.vertices();
+    boxes.any_overlapping(r, |i| edge_to(vertices, i).collides_with(e))
 }
