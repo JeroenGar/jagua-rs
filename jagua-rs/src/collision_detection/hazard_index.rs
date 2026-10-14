@@ -2,7 +2,8 @@ use crate::collision_detection::hazards::HazKey;
 use crate::geometry::geo_traits::{CollidesWith, DistanceTo};
 use crate::geometry::primitives::{Circle, Edge, Point, Rect, SPolygon};
 
-/// Prototype of a hazard-first broad phase: the bounding boxes of all hazards in flat arrays.
+/// Prototype of a hazard-first broad phase: the bounding boxes of all hazards in flat arrays,
+/// sorted by `x_min`, so a query only scans the hazards in its x-window.
 #[derive(Clone, Debug, Default)]
 pub struct HazardIndex {
     keys: Vec<HazKey>,
@@ -12,17 +13,21 @@ pub struct HazardIndex {
     y_max: Vec<f32>,
     /// Bounding boxes of each hazard's edges
     edges: Vec<EdgeBoxes>,
+    /// Upper bound on the width of the hazards' bounding boxes
+    max_width: f32,
 }
 
 impl HazardIndex {
     pub fn insert(&mut self, hkey: HazKey, shape: &SPolygon) {
         let bbox = shape.bbox;
-        self.edges.push(EdgeBoxes::new(shape));
-        self.keys.push(hkey);
-        self.x_min.push(bbox.x_min);
-        self.y_min.push(bbox.y_min);
-        self.x_max.push(bbox.x_max);
-        self.y_max.push(bbox.y_max);
+        let i = self.x_min.partition_point(|&x| x <= bbox.x_min);
+        self.edges.insert(i, EdgeBoxes::new(shape));
+        self.keys.insert(i, hkey);
+        self.x_min.insert(i, bbox.x_min);
+        self.y_min.insert(i, bbox.y_min);
+        self.x_max.insert(i, bbox.x_max);
+        self.y_max.insert(i, bbox.y_max);
+        self.max_width = self.max_width.max(bbox.x_max - bbox.x_min);
     }
 
     pub fn remove(&mut self, hkey: HazKey) {
@@ -31,20 +36,33 @@ impl HazardIndex {
             .iter()
             .position(|k| *k == hkey)
             .expect("hazard not in index");
-        self.keys.swap_remove(i);
-        self.edges.swap_remove(i);
-        self.x_min.swap_remove(i);
-        self.y_min.swap_remove(i);
-        self.x_max.swap_remove(i);
-        self.y_max.swap_remove(i);
+        self.keys.remove(i);
+        self.edges.remove(i);
+        self.x_min.remove(i);
+        self.y_min.remove(i);
+        self.x_max.remove(i);
+        self.y_max.remove(i);
+    }
+
+    /// Range of hazards that can overlap `r`: those with `x_min` in `[r.x_min - max_width, r.x_max]`.
+    #[inline(always)]
+    fn window(&self, r: Rect) -> (usize, usize) {
+        if self.x_min.len() <= 64 {
+            // A single chunk: scanning it all is cheaper than searching
+            return (0, self.x_min.len());
+        }
+        let lo = self.x_min.partition_point(|&x| x < r.x_min - self.max_width);
+        let hi = self.x_min.partition_point(|&x| x <= r.x_max);
+        (lo, hi.max(lo))
     }
 
     /// Calls `f` for every hazard whose bounding box overlaps `r` (borders included),
     /// until `f` returns `true`. Returns whether it did.
     #[inline(always)]
     pub fn any_overlapping(&self, r: Rect, mut f: impl FnMut(HazKey, &EdgeBoxes) -> bool) -> bool {
-        for start in (0..self.keys.len()).step_by(64) {
-            let mut mask = self.chunk_mask(start, r);
+        let (lo, hi) = self.window(r);
+        for start in (lo..hi).step_by(64) {
+            let mut mask = self.chunk_mask(start, hi, r);
             while mask != 0 {
                 let i = start + mask.trailing_zeros() as usize;
                 mask &= mask - 1;
@@ -59,14 +77,15 @@ impl HazardIndex {
     /// Like [`Self::any_overlapping`] for several rectangles at once, all contained in `union`.
     /// The arrays are scanned once with `union`; the few candidates are then tested per rectangle.
     #[inline(always)]
-    pub fn any_overlapping_each<'a>(
+    pub fn any_overlapping_each(
         &self,
         union: Rect,
         rects: impl Iterator<Item = Rect> + Clone,
         mut f: impl FnMut(usize, HazKey, &EdgeBoxes) -> bool,
     ) -> bool {
-        for start in (0..self.keys.len()).step_by(64) {
-            let candidates = self.chunk_mask(start, union);
+        let (lo, hi) = self.window(union);
+        for start in (lo..hi).step_by(64) {
+            let candidates = self.chunk_mask(start, hi, union);
             if candidates == 0 {
                 continue;
             }
@@ -88,10 +107,10 @@ impl HazardIndex {
         false
     }
 
-    /// Bit `j` is set if the hazard at `start + j` overlaps `r`, for up to 64 hazards.
+    /// Bit `j` is set if the hazard at `start + j` overlaps `r`, for up to 64 hazards before `hi`.
     #[inline(always)]
-    fn chunk_mask(&self, start: usize, r: Rect) -> u64 {
-        let end = (start + 64).min(self.keys.len());
+    fn chunk_mask(&self, start: usize, hi: usize, r: Rect) -> u64 {
+        let end = (start + 64).min(hi);
         rect_mask(
             &self.x_min[start..end],
             &self.y_min[start..end],
