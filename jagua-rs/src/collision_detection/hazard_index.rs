@@ -316,3 +316,143 @@ pub fn circle_touches_edges(c: &Circle, poly: &SPolygon) -> bool {
     }
     false
 }
+
+/// Prototype: a polygon's edges grouped into chains that run monotonically in y, each with a
+/// bounding box. A horizontal ray crosses a y-monotone chain at most once, so a point-in-polygon
+/// test only inspects the edges of chains whose box contains the point.
+#[derive(Clone, Debug)]
+pub struct EdgeChains {
+    /// All edges, chain after chain
+    edges: Vec<Edge>,
+    chains: Vec<Chain>,
+}
+
+#[derive(Clone, Debug)]
+struct Chain {
+    /// The chain's edges in [`EdgeChains::edges`]
+    range: std::ops::Range<usize>,
+    bbox: Rect,
+    /// y of the chain's first and last vertex
+    y_ends: (f32, f32),
+}
+
+/// Longest chain, so diagonal runs keep small boxes.
+const MAX_CHAIN_EDGES: usize = 16;
+
+impl EdgeChains {
+    pub fn new(poly: &SPolygon) -> Self {
+        let edges: Vec<Edge> = poly.edge_iter().collect();
+        let mut chains: Vec<Chain> = vec![];
+        let mut dir = 0i8;
+        for (i, e) in edges.iter().enumerate() {
+            let d = if e.end.1 > e.start.1 { 1 } else if e.end.1 < e.start.1 { -1 } else { 0 };
+            let continues = chains.last().is_some_and(|c| {
+                c.range.len() < MAX_CHAIN_EDGES && (d == 0 || dir == 0 || d == dir)
+            });
+            if continues {
+                let c = chains.last_mut().unwrap();
+                c.range.end = i + 1;
+                c.bbox = Rect {
+                    x_min: c.bbox.x_min.min(e.end.0),
+                    y_min: c.bbox.y_min.min(e.end.1),
+                    x_max: c.bbox.x_max.max(e.end.0),
+                    y_max: c.bbox.y_max.max(e.end.1),
+                };
+                c.y_ends.1 = e.end.1;
+                if dir == 0 {
+                    dir = d;
+                }
+            } else {
+                chains.push(Chain {
+                    range: i..i + 1,
+                    bbox: Rect {
+                        x_min: e.x_min(),
+                        y_min: e.y_min(),
+                        x_max: e.x_max(),
+                        y_max: e.y_max(),
+                    },
+                    y_ends: (e.start.1, e.end.1),
+                });
+                dir = d;
+            }
+        }
+        Self { edges, chains }
+    }
+
+    pub fn n_chains(&self) -> usize {
+        self.chains.len()
+    }
+
+    /// The edges whose bounding box overlaps `r`, found chain by chain.
+    #[inline(always)]
+    pub fn any_edge_overlapping(&self, r: Rect, mut f: impl FnMut(&Edge) -> bool) -> bool {
+        for c in &self.chains {
+            if !boxes_overlap(&c.bbox, &r) {
+                continue;
+            }
+            for e in &self.edges[c.range.clone()] {
+                let overlaps = e.x_min().max(r.x_min) <= e.x_max().min(r.x_max)
+                    && e.y_min().max(r.y_min) <= e.y_max().min(r.y_max);
+                if overlaps && f(e) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    /// Even-odd point-in-polygon test with a ray towards +x. Chains entirely right of the point
+    /// count from their end points alone; only chains whose box contains the point test edges.
+    pub fn contains(&self, p: Point) -> bool {
+        let Point(px, py) = p;
+        let mut inside = false;
+        for c in &self.chains {
+            if py < c.bbox.y_min || py > c.bbox.y_max || px > c.bbox.x_max {
+                continue;
+            }
+            if px < c.bbox.x_min {
+                // y-monotone: the ray crosses the chain once if its ends straddle the ray
+                if (c.y_ends.0 > py) != (c.y_ends.1 > py) {
+                    inside = !inside;
+                }
+                continue;
+            }
+            for e in &self.edges[c.range.clone()] {
+                let (a, b) = (e.start, e.end);
+                if (a.1 > py) != (b.1 > py) && px < (b.0 - a.0) * (py - a.1) / (b.1 - a.1) + a.0 {
+                    inside = !inside;
+                }
+            }
+        }
+        inside
+    }
+}
+
+#[inline(always)]
+fn boxes_overlap(a: &Rect, b: &Rect) -> bool {
+    a.x_min <= b.x_max && a.x_max >= b.x_min && a.y_min <= b.y_max && a.y_max >= b.y_min
+}
+
+/// Like [`edges_intersect`], with the edges of `b` grouped in chains.
+pub fn edges_intersect_chains(a: &SPolygon, b: &SPolygon, b_chains: &EdgeChains, r: Rect) -> bool {
+    let empty = Edge {
+        start: Point(0.0, 0.0),
+        end: Point(0.0, 0.0),
+    };
+    let mut buf_a = [empty; BUF];
+    let Some(n_a) = edges_overlapping(a, &r, &mut buf_a) else {
+        return edges_intersect(a, b, r);
+    };
+    if n_a == 0 {
+        return false;
+    }
+    let a_edges = &buf_a[..n_a];
+    b_chains.any_edge_overlapping(r, |eb| a_edges.iter().any(|ea| ea.collides_with(eb)))
+}
+
+/// Like [`circle_touches_edges`], with the edges of `poly` grouped in chains.
+pub fn circle_touches_chains(c: &Circle, poly: &SPolygon, chains: &EdgeChains) -> bool {
+    let sq_radius = c.radius.powi(2);
+    let _ = poly;
+    chains.any_edge_overlapping(c.bbox(), |e| e.sq_distance_to(&c.center) <= sq_radius)
+}
