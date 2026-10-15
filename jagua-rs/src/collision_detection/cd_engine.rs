@@ -241,7 +241,7 @@ impl<E: HazardEntity> CDEngine<E> {
         let r = narrow_phase::overlap(shape.bbox, haz.shape().bbox)
             .expect("the index reports overlapping bounding boxes");
         narrow_phase::edges_intersect(shape, r, haz)
-            || Self::detect_containment_collision(shape, haz.shape(), haz.entity())
+            || Self::detect_containment_collision(shape, haz)
     }
 
     /// Whether `pole` collides with the interior hazard `haz`.
@@ -250,17 +250,17 @@ impl<E: HazardEntity> CDEngine<E> {
         // which requires its bounding box to lie inside the hazard's
         narrow_phase::circle_touches_edges(pole, haz)
             || (haz.shape().bbox.relation_to(pole.bbox()) == GeoRelation::Surrounding
-                && haz.shape().collides_with(&pole.center))
+                && narrow_phase::poly_contains(haz.shape(), haz, pole.center))
     }
 
     /// Check for collision by containment between a shape and a hazard.
     /// This only guarantees to detect collisions caused by full containment of one shape in another.
     /// # Arguments
     /// * `shape` - The shape to be checked for containment
-    /// * `haz_shape` - The shape of the respective hazard
-    /// * `haz_entity` - The entity inducing the hazard
+    /// * `haz` - The hazard
     #[must_use]
-    fn detect_containment_collision(shape: &SPolygon, haz_shape: &SPolygon, haz_entity: E) -> bool {
+    fn detect_containment_collision(shape: &SPolygon, haz: &Hazard<E>) -> bool {
+        let (haz_shape, haz_entity) = (haz.shape(), haz.entity());
         //Due to possible fp issues, we check if the bboxes are "almost" related --
         //meaning that, when edges are very close together, they are considered equal.
         //Some relations which would normally be seen as `Intersecting` are now being considered `Enclosed`/`Surrounding` (which triggers the containment check).
@@ -269,7 +269,9 @@ impl<E: HazardEntity> CDEngine<E> {
         //If the bounding boxes are contained, we have to check the actual shapes for containment.
         //This can be done by testing whether a single point of the smaller shape is contained in the larger shape.
         let contained = match haz_to_shape_bbox_relation {
-            GeoRelation::Surrounding => haz_shape.collides_with(&shape.poi.center),
+            GeoRelation::Surrounding => {
+                narrow_phase::poly_contains(haz_shape, haz, shape.poi.center)
+            }
             GeoRelation::Enclosed => shape.collides_with(&haz_shape.poi.center),
             GeoRelation::Disjoint | GeoRelation::Intersecting => false,
         };

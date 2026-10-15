@@ -19,3 +19,4 @@ pub use point::Point;
 pub use rect::Rect;
 #[doc(inline)]
 pub use simple_polygon::SPolygon;
+pub(crate) use simple_polygon::ray_crosses;
