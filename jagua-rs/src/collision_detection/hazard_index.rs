@@ -167,18 +167,26 @@ pub fn rect_mask(x_min: &[f32], y_min: &[f32], x_max: &[f32], y_max: &[f32], r: 
     type F = Simd<f32, 8>;
     let n = x_min.len();
     debug_assert!(n <= 64);
+    if n < 8 {
+        return rect_mask_scalar(x_min, y_min, x_max, y_max, r);
+    }
     let (y_min, x_max, y_max) = (&y_min[..n], &x_max[..n], &y_max[..n]);
-    let (lo, hi) = (F::splat(f32::INFINITY), F::splat(f32::NEG_INFINITY));
-    let (r_x_min, r_y_min) = (F::splat(r.x_min), F::splat(r.y_min));
-    let (r_x_max, r_y_max) = (F::splat(r.x_max), F::splat(r.y_max));
+    let [x0, y0, x1, y1] = [r.x_min, r.y_min, r.x_max, r.y_max].map(F::splat);
+    // Whole blocks only: NEON has no masked load, so a partial one would be loaded lane by lane
+    let block = |j: usize| {
+        (F::from_slice(&x_min[j..]).simd_le(x1)
+            & F::from_slice(&x_max[j..]).simd_ge(x0)
+            & F::from_slice(&y_min[j..]).simd_le(y1)
+            & F::from_slice(&y_max[j..]).simd_ge(y0))
+        .to_bitmask()
+    };
     let mut mask = 0;
-    for j in (0..n).step_by(8) {
-        // Lanes past the end hold empty boxes, which overlap nothing
-        let overlaps = F::load_or(&x_min[j..], lo).simd_le(r_x_max)
-            & F::load_or(&x_max[j..], hi).simd_ge(r_x_min)
-            & F::load_or(&y_min[j..], lo).simd_le(r_y_max)
-            & F::load_or(&y_max[j..], hi).simd_ge(r_y_min);
-        mask |= overlaps.to_bitmask() << j;
+    for j in (0..n - n % 8).step_by(8) {
+        mask |= block(j) << j;
+    }
+    if !n.is_multiple_of(8) {
+        // Partial last block: retest the last 8 boxes, which sets the same bits twice for some
+        mask |= block(n - 8) << (n - 8);
     }
     mask
 }
@@ -186,8 +194,13 @@ pub fn rect_mask(x_min: &[f32], y_min: &[f32], x_max: &[f32], y_max: &[f32], r: 
 /// Bit `j` is set if box `j` overlaps `r` (borders included), for up to 64 boxes.
 #[cfg(not(feature = "simd"))]
 #[inline(always)]
-#[allow(clippy::needless_bitwise_bool)] // branch-free
 pub fn rect_mask(x_min: &[f32], y_min: &[f32], x_max: &[f32], y_max: &[f32], r: Rect) -> u64 {
+    rect_mask_scalar(x_min, y_min, x_max, y_max, r)
+}
+
+#[inline(always)]
+#[allow(clippy::needless_bitwise_bool)] // branch-free
+fn rect_mask_scalar(x_min: &[f32], y_min: &[f32], x_max: &[f32], y_max: &[f32], r: Rect) -> u64 {
     debug_assert!(x_min.len() <= 64);
     let mut mask = 0;
     for (j, (((&x0, &y0), &x1), &y1)) in x_min.iter().zip(y_min).zip(x_max).zip(y_max).enumerate() {
@@ -195,4 +208,43 @@ pub fn rect_mask(x_min: &[f32], y_min: &[f32], x_max: &[f32], y_max: &[f32], r: 
         mask |= u64::from(overlaps) << j;
     }
     mask
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[allow(clippy::cast_precision_loss)] // values below 16
+    fn rect_mask_matches_scalar_for_every_length() {
+        // Boxes on a 0..16 grid, so borders touch often
+        let mut seed = 0x2545_f491_u32;
+        let mut next = || {
+            seed ^= seed << 13;
+            seed ^= seed >> 17;
+            seed ^= seed << 5;
+            (seed % 16) as f32
+        };
+        let r = Rect {
+            x_min: 4.0,
+            y_min: 5.0,
+            x_max: 9.0,
+            y_max: 11.0,
+        };
+        for n in 0..=64 {
+            let (mut x_min, mut y_min, mut x_max, mut y_max) = (vec![], vec![], vec![], vec![]);
+            for _ in 0..n {
+                let (x, y, width, height) = (next(), next(), next() / 4.0, next() / 4.0);
+                x_min.push(x);
+                y_min.push(y);
+                x_max.push(x + width);
+                y_max.push(y + height);
+            }
+            assert_eq!(
+                rect_mask(&x_min, &y_min, &x_max, &y_max, r),
+                rect_mask_scalar(&x_min, &y_min, &x_max, &y_max, r),
+                "n = {n}"
+            );
+        }
+    }
 }
