@@ -351,29 +351,34 @@ impl CollidesWith<Point> for SPolygon {
                 end: point_outside,
             };
 
-            let mut n_intersections = 0;
-            for edge in self.edge_iter() {
-                //Check if the ray does not go through (or almost through) a vertex
-                //This can result in funky behaviour, which could incorrect results
-                //Therefore we handle this case
-                let (s_x, s_y) = (FPA(edge.start.0), FPA(edge.start.1));
-                let (e_x, e_y) = (FPA(edge.end.0), FPA(edge.end.1));
-                let (p_x, p_y) = (FPA(point.0), FPA(point.1));
-
-                if (s_y == p_y && s_x > p_x) || (e_y == p_y && e_x > p_x) {
-                    //in this case, the ray passes through (or dangerously close to) a vertex
-                    //We handle this case by only counting an intersection if the edge is below the ray
-                    if s_y < p_y || e_y < p_y {
-                        n_intersections += 1;
-                    }
-                } else if ray.collides_with(&edge) {
-                    n_intersections += 1;
-                }
-            }
+            let n_intersections = self
+                .edge_iter()
+                .filter(|edge| ray_crosses(edge, point, &ray))
+                .count();
             n_intersections % 2 == 1
         } else {
             false
         }
+    }
+}
+
+/// Whether `edge` counts as a crossing of `ray`, shot horizontally to the right from `point`,
+/// in the ray casting test of [`SPolygon::collides_with`].
+#[inline(always)]
+pub(crate) fn ray_crosses(edge: &Edge, point: &Point, ray: &Edge) -> bool {
+    //Check if the ray does not go through (or almost through) a vertex
+    //This can result in funky behaviour, which could incorrect results
+    //Therefore we handle this case
+    let (s_x, s_y) = (FPA(edge.start.0), FPA(edge.start.1));
+    let (e_x, e_y) = (FPA(edge.end.0), FPA(edge.end.1));
+    let (p_x, p_y) = (FPA(point.0), FPA(point.1));
+
+    if (s_y == p_y && s_x > p_x) || (e_y == p_y && e_x > p_x) {
+        //in this case, the ray passes through (or dangerously close to) a vertex
+        //We handle this case by only counting an intersection if the edge is below the ray
+        s_y < p_y || e_y < p_y
+    } else {
+        ray.collides_with(edge)
     }
 }
 

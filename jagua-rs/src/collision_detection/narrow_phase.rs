@@ -3,7 +3,7 @@
 
 use crate::collision_detection::hazard_index::rect_mask;
 use crate::geometry::geo_traits::{CollidesWith, DistanceTo};
-use crate::geometry::primitives::{Circle, Edge, Point, Rect, SPolygon};
+use crate::geometry::primitives::{Circle, Edge, Point, Rect, SPolygon, ray_crosses};
 use std::sync::Arc;
 
 /// Bounding boxes of a polygon's edges in flat arrays, so they can be culled 64 at a time.
@@ -209,6 +209,35 @@ pub fn edges_intersect(poly: &SPolygon, r: Rect, edges: &impl EdgeSet) -> bool {
         (prev, prev_code) = (cur, code);
     }
     n > 0 && edges.any_edge_overlapping(r, |e| buf[..n].iter().any(|b| b.collides_with(e)))
+}
+
+/// Whether `poly` contains `p`, decided exactly as [`SPolygon::collides_with`] does, with
+/// `edges` the edges of `poly`. The ray cast only visits edges whose bounding box reaches the
+/// ray, widened in y by the tolerance of the approximate vertex test, since no other edge can
+/// count as a crossing.
+#[inline(always)]
+pub fn poly_contains(poly: &SPolygon, edges: &impl EdgeSet, p: Point) -> bool {
+    if !poly.bbox.collides_with(&p) {
+        return false;
+    }
+    let ray = Edge {
+        start: p,
+        end: Point(poly.bbox.x_max + poly.bbox.width(), p.1),
+    };
+    // At least float_cmp's default margin: f32::EPSILON absolute or 4 ulps relative
+    let margin = f32::EPSILON + 8.0 * f32::EPSILON * p.1.abs();
+    let r = Rect {
+        x_min: p.0,
+        y_min: p.1 - margin,
+        x_max: f32::INFINITY,
+        y_max: p.1 + margin,
+    };
+    let mut crossings = 0;
+    edges.any_edge_overlapping(r, |e| {
+        crossings += usize::from(ray_crosses(e, &p, &ray));
+        false
+    });
+    crossings % 2 == 1
 }
 
 /// Whether `c` touches an edge of `edges`.
