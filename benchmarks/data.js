@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792007910920,
+  "lastUpdate": 1792096206023,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -4125,6 +4125,48 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k",
             "value": 140198,
             "range": "± 2949",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jeroen.gardeyn@hotmail.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4661c08efa9cd9bbf4404abcb73ad337ca8fc778",
+          "message": "Ray-cast point-in-polygon only over edges whose box reaches the ray (#129)\n\nContainment checks against interior hazards (a pole inside a hazard, or a\nshape's pole of inaccessibility inside one) walked every hazard edge with\nfour approximate comparisons each. They now use the hazard's cached edge\nboxes to visit only edges whose box reaches the ray, widened in y by the\napproximate comparison's tolerance. The per-edge step is shared with\nSPolygon::collides_with, so the result is identical.\n\n\nClaude-Session: https://claude.ai/code/session_01VWi2PhzEuMcqkgM2MqLYML\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+          "timestamp": "2026-10-15T22:27:18+02:00",
+          "tree_id": "f91b3ee8ae3e80fceb7d6343144ba76d163af44e",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/4661c08efa9cd9bbf4404abcb73ad337ca8fc778"
+        },
+        "date": 1792096204982,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k",
+            "value": 754582,
+            "range": "± 23298",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k",
+            "value": 929458,
+            "range": "± 5491",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k",
+            "value": 134675,
+            "range": "± 2279",
             "unit": "ns/iter"
           }
         ]
