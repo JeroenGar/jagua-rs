@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["SD_ROT","SD_TRANSL"],"struct":["LSSampler"]};

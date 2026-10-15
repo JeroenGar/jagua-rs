@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ShapeModifyMode"],"fn":["close_narrow_concavities","offset_shape","shape_modification_valid","simplify_shape"],"struct":["ShapeModifyConfig"]};
