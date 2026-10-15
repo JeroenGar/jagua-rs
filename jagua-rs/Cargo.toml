@@ -34,6 +34,8 @@ web-time = { workspace = true }
 spp = []
 ## Enables support for the Bin Packing Problem
 bpp = []
+## Explicit SIMD in the collision queries (requires nightly Rust)
+simd = []
 
 [package.metadata.docs.rs]
 all-features = true

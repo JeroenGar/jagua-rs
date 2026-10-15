@@ -1,3 +1,4 @@
+#![cfg_attr(feature = "simd", feature(portable_simd))]
 #![warn(
     clippy::pedantic,
     clippy::correctness,

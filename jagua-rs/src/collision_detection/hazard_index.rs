@@ -160,6 +160,31 @@ impl HazardIndex {
 }
 
 /// Bit `j` is set if box `j` overlaps `r` (borders included), for up to 64 boxes.
+#[cfg(feature = "simd")]
+#[inline(always)]
+pub fn rect_mask(x_min: &[f32], y_min: &[f32], x_max: &[f32], y_max: &[f32], r: Rect) -> u64 {
+    use std::simd::prelude::*;
+    type F = Simd<f32, 8>;
+    let n = x_min.len();
+    debug_assert!(n <= 64);
+    let (y_min, x_max, y_max) = (&y_min[..n], &x_max[..n], &y_max[..n]);
+    let (lo, hi) = (F::splat(f32::INFINITY), F::splat(f32::NEG_INFINITY));
+    let (r_x_min, r_y_min) = (F::splat(r.x_min), F::splat(r.y_min));
+    let (r_x_max, r_y_max) = (F::splat(r.x_max), F::splat(r.y_max));
+    let mut mask = 0;
+    for j in (0..n).step_by(8) {
+        // Lanes past the end hold empty boxes, which overlap nothing
+        let overlaps = F::load_or(&x_min[j..], lo).simd_le(r_x_max)
+            & F::load_or(&x_max[j..], hi).simd_ge(r_x_min)
+            & F::load_or(&y_min[j..], lo).simd_le(r_y_max)
+            & F::load_or(&y_max[j..], hi).simd_ge(r_y_min);
+        mask |= overlaps.to_bitmask() << j;
+    }
+    mask
+}
+
+/// Bit `j` is set if box `j` overlaps `r` (borders included), for up to 64 boxes.
+#[cfg(not(feature = "simd"))]
 #[inline(always)]
 #[allow(clippy::needless_bitwise_bool)] // branch-free
 pub fn rect_mask(x_min: &[f32], y_min: &[f32], x_max: &[f32], y_max: &[f32], r: Rect) -> u64 {
