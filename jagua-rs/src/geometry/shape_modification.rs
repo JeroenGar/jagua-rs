@@ -2,7 +2,7 @@ use geo::Buffer;
 use geo::algorithm::Area;
 use geo::algorithm::buffer::{BufferStyle, LineJoin};
 use itertools::Itertools;
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use ordered_float::OrderedFloat;
 use rand_distr::num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
@@ -344,9 +344,55 @@ impl CornerType {
     }
 }
 
+/// Extra distance by which [`offset_shape`] retries a failed offset, relative to the largest absolute coordinate of the shape.
+const OFFSET_RETRY_STEP: f32 = 1e-5;
+/// Number of retries in [`offset_shape`], each with ten times the extra distance of the previous one.
+const OFFSET_RETRIES: usize = 2;
+
 /// Offsets a [`SPolygon`] by a certain `distance` either inwards or outwards depending on the [`ShapeModifyMode`].
 /// Uses [`geo::Buffer`] to resolve intersections in the offset boundary.
+///
+/// The buffer is computed in `f64` and can contain zero-width spikes or pinches, for example where
+/// a slit is exactly twice the `distance` wide (see issue #130). Rounding it back to `f32` can make such
+/// a boundary self-intersect. In that case, the offset is retried with a slightly larger distance,
+/// which still yields a superset (inflate) or subset (deflate) of the original shape.
 pub fn offset_shape(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Result<SPolygon> {
+    let err = match offset_shape_once(sp, mode, distance) {
+        Ok(offset_sp) => return Ok(offset_sp),
+        Err(err) => err,
+    };
+
+    // f32 rounding errors scale with the magnitude of the coordinates
+    let Rect {
+        x_min,
+        y_min,
+        x_max,
+        y_max,
+    } = sp.bbox;
+    let coord_scale = [x_min, y_min, x_max, y_max]
+        .into_iter()
+        .map(f32::abs)
+        .fold(0.0, f32::max);
+    let mut extra = OFFSET_RETRY_STEP * coord_scale;
+    for _ in 0..OFFSET_RETRIES {
+        let retry_distance = distance + extra;
+        match offset_shape_once(sp, mode, retry_distance) {
+            Ok(offset_sp) => {
+                warn!(
+                    "[PS] offset by {distance} failed ({err}), offset by {retry_distance} instead"
+                );
+                return Ok(offset_sp);
+            }
+            Err(retry_err) => {
+                debug!("[PS] retried offset by {retry_distance} failed ({retry_err})");
+            }
+        }
+        extra *= 10.0;
+    }
+    Err(err)
+}
+
+fn offset_shape_once(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Result<SPolygon> {
     let offset = match mode {
         ShapeModifyMode::Deflate => -distance,
         ShapeModifyMode::Inflate => distance,
@@ -602,5 +648,31 @@ mod tests {
             ShapeModifyMode::Inflate
         ));
         assert_eq!(simplified.bbox, shape.bbox);
+    }
+
+    #[test]
+    fn offset_survives_f32_rounding_of_closed_slit() {
+        // Rectangle with a 2.0 wide slit at 20 degrees, see issue #130.
+        // Inflating by exactly half the slit width closes it into a zero-width spike,
+        // whose vertices cross each other when the f64 buffer is rounded to f32.
+        let points = [
+            (0.0, 0.0),
+            (400.0, 0.0),
+            (400.0, 300.0),
+            (202.128_36, 300.0),
+            (222.400_59, 244.302_48),
+            (220.521_21, 243.618_44),
+            (200.0, 300.0),
+            (0.0, 300.0),
+        ];
+        let shape = SPolygon::new(points.map(|(x, y)| Point(x, y)).to_vec()).unwrap();
+
+        let offset = offset_shape(&shape, ShapeModifyMode::Inflate, 1.0).unwrap();
+
+        assert!(shape_modification_valid(
+            &shape,
+            &offset,
+            ShapeModifyMode::Inflate
+        ));
     }
 }
