@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "simd", feature(portable_simd))]
+#![cfg_attr(jagua_simd, feature(portable_simd))]
 #![warn(
     clippy::pedantic,
     clippy::correctness,
@@ -16,6 +16,8 @@
 //! keeps its [`CDEngine`](collision_detection::CDEngine) synchronized as items are added or removed.
 //! Use the CDE to query candidate placements before adding them to a layout.
 //! Optional `spp` and `bpp` features provide strip- and bin-packing models in [`probs`].
+//! On nightly Rust, `RUSTFLAGS="--cfg jagua_simd"` compares bounding boxes with explicit SIMD in
+//! the collision queries.
 //!
 //! # Import, query, place and restore
 //!

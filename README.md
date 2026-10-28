@@ -219,6 +219,7 @@ Contributions to `jagua-rs` are more than welcome!
 
 We especially encourage enhancements to the performance of the most critical operations: collision detection queries, collision collection queries, and state updates.
 Performance improvements in these areas can be measured using `cargo bench --bench ci_bench` and are tracked in the [Performance Tracker](https://jeroengar.github.io/jagua-rs/benchmarks/).
+On nightly Rust, `RUSTFLAGS="--cfg jagua_simd" cargo +nightly bench --bench ci_bench` measures the explicit SIMD variant of the collision queries.
 
 To submit code contributions: [fork](https://help.github.com/articles/fork-a-repo/) the repository,
 commit your changes, and [submit a pull request](https://help.github.com/articles/creating-a-pull-request-from-a-fork/).

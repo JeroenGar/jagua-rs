@@ -160,39 +160,55 @@ impl HazardIndex {
 }
 
 /// Bit `j` is set if box `j` overlaps `r` (borders included), for up to 64 boxes.
-#[cfg(feature = "simd")]
+#[cfg(jagua_simd)]
 #[inline(always)]
 pub fn rect_mask(x_min: &[f32], y_min: &[f32], x_max: &[f32], y_max: &[f32], r: Rect) -> u64 {
-    use std::simd::prelude::*;
-    type F = Simd<f32, 8>;
     let n = x_min.len();
     debug_assert!(n <= 64);
-    if n < 8 {
-        return rect_mask_scalar(x_min, y_min, x_max, y_max, r);
+    // 16 lanes only where one register holds them; elsewhere they are split in halves anyway
+    if cfg!(target_feature = "avx512f") && n >= 16 {
+        rect_mask_lanes::<16>(x_min, y_min, x_max, y_max, r)
+    } else if n >= 8 {
+        rect_mask_lanes::<8>(x_min, y_min, x_max, y_max, r)
+    } else {
+        rect_mask_scalar(x_min, y_min, x_max, y_max, r)
     }
+}
+
+#[cfg(jagua_simd)]
+#[inline(always)]
+fn rect_mask_lanes<const L: usize>(
+    x_min: &[f32],
+    y_min: &[f32],
+    x_max: &[f32],
+    y_max: &[f32],
+    r: Rect,
+) -> u64 {
+    use std::simd::prelude::*;
+    let n = x_min.len();
     let (y_min, x_max, y_max) = (&y_min[..n], &x_max[..n], &y_max[..n]);
-    let [x0, y0, x1, y1] = [r.x_min, r.y_min, r.x_max, r.y_max].map(F::splat);
+    let [x0, y0, x1, y1] = [r.x_min, r.y_min, r.x_max, r.y_max].map(Simd::<f32, L>::splat);
     // Whole blocks only: NEON has no masked load, so a partial one would be loaded lane by lane
     let block = |j: usize| {
-        (F::from_slice(&x_min[j..]).simd_le(x1)
-            & F::from_slice(&x_max[j..]).simd_ge(x0)
-            & F::from_slice(&y_min[j..]).simd_le(y1)
-            & F::from_slice(&y_max[j..]).simd_ge(y0))
+        (Simd::from_slice(&x_min[j..]).simd_le(x1)
+            & Simd::from_slice(&x_max[j..]).simd_ge(x0)
+            & Simd::from_slice(&y_min[j..]).simd_le(y1)
+            & Simd::from_slice(&y_max[j..]).simd_ge(y0))
         .to_bitmask()
     };
     let mut mask = 0;
-    for j in (0..n - n % 8).step_by(8) {
+    for j in (0..n - n % L).step_by(L) {
         mask |= block(j) << j;
     }
-    if !n.is_multiple_of(8) {
-        // Partial last block: retest the last 8 boxes, which sets the same bits twice for some
-        mask |= block(n - 8) << (n - 8);
+    if !n.is_multiple_of(L) {
+        // Partial last block: retest the last boxes, which sets the same bits twice for some
+        mask |= block(n - L) << (n - L);
     }
     mask
 }
 
 /// Bit `j` is set if box `j` overlaps `r` (borders included), for up to 64 boxes.
-#[cfg(not(feature = "simd"))]
+#[cfg(not(jagua_simd))]
 #[inline(always)]
 pub fn rect_mask(x_min: &[f32], y_min: &[f32], x_max: &[f32], y_max: &[f32], r: Rect) -> u64 {
     rect_mask_scalar(x_min, y_min, x_max, y_max, r)

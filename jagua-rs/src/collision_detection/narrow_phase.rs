@@ -188,15 +188,24 @@ pub fn edges_intersect(poly: &SPolygon, r: Rect, edges: &impl EdgeSet) -> bool {
     }; 64];
     let mut n = 0;
     let vertices = poly.vertices();
-    let mut prev = *vertices.last().unwrap();
-    let mut prev_code = outcode(prev, r);
-    for &cur in vertices {
-        let code = outcode(cur, r);
-        // An edge can only overlap `r` if its end points are not beyond the same side
-        if prev_code & code == 0 {
+    let nv = vertices.len();
+    // Edge `i` runs from vertex `i - 1` (the last one for `i = 0`) to vertex `i`. It can only
+    // overlap `r` if its end points are not beyond the same side, one bit per vertex and side.
+    let mut carry = beyond_mask(&vertices[nv - 1..], r);
+    for start in (0..nv).step_by(64) {
+        let end = (start + 64).min(nv);
+        let beyond = beyond_mask(&vertices[start..end], r);
+        let mut mask = u64::MAX >> (64 - (end - start));
+        for (b, c) in beyond.iter().zip(&mut carry) {
+            mask &= !(b & ((b << 1) | *c));
+            *c = b >> (end - start - 1);
+        }
+        while mask != 0 {
+            let i = start + mask.trailing_zeros() as usize;
+            mask &= mask - 1;
             buf[n] = Edge {
-                start: prev,
-                end: cur,
+                start: vertices[if i == 0 { nv - 1 } else { i - 1 }],
+                end: vertices[i],
             };
             n += 1;
             if n == buf.len() {
@@ -206,7 +215,6 @@ pub fn edges_intersect(poly: &SPolygon, r: Rect, edges: &impl EdgeSet) -> bool {
                 n = 0;
             }
         }
-        (prev, prev_code) = (cur, code);
     }
     n > 0 && edges.any_edge_overlapping(r, |e| buf[..n].iter().any(|b| b.collides_with(e)))
 }
@@ -259,11 +267,141 @@ pub fn overlap(a: Rect, b: Rect) -> Option<Rect> {
     (r.x_min <= r.x_max && r.y_min <= r.y_max).then_some(r)
 }
 
-/// Cohen-Sutherland outcode of `p` relative to `r`: one bit per side of `r` that `p` lies beyond.
+/// For each side of `r`, bit `j` is set if point `j` lies beyond it, for up to 64 points.
+/// The sides are left, right, bottom and top.
+#[cfg(jagua_simd)]
 #[inline(always)]
-fn outcode(p: Point, r: Rect) -> u8 {
-    u8::from(p.0 < r.x_min)
-        | (u8::from(p.0 > r.x_max) << 1)
-        | (u8::from(p.1 < r.y_min) << 2)
-        | (u8::from(p.1 > r.y_max) << 3)
+fn beyond_mask(points: &[Point], r: Rect) -> [u64; 4] {
+    use std::simd::prelude::*;
+    type F = Simd<f32, 8>;
+    let len = points.len();
+    debug_assert!(len <= 64);
+    if len < 8 {
+        return beyond_mask_scalar(points, r);
+    }
+    let [x0, y0, x1, y1] = [r.x_min, r.y_min, r.x_max, r.y_max].map(F::splat);
+    let block = |j: usize| {
+        let x = F::from_array(std::array::from_fn(|k| points[j + k].0));
+        let y = F::from_array(std::array::from_fn(|k| points[j + k].1));
+        [x.simd_lt(x0), x.simd_gt(x1), y.simd_lt(y0), y.simd_gt(y1)].map(|m| m.to_bitmask() << j)
+    };
+    let mut mask = [0; 4];
+    let mut or = |b: [u64; 4]| mask.iter_mut().zip(b).for_each(|(m, b)| *m |= b);
+    for j in (0..len - len % 8).step_by(8) {
+        or(block(j));
+    }
+    if !len.is_multiple_of(8) {
+        // Partial last block: retest the last 8 points, which sets the same bits twice for some
+        or(block(len - 8));
+    }
+    mask
+}
+
+/// For each side of `r`, bit `j` is set if point `j` lies beyond it, for up to 64 points.
+/// The sides are left, right, bottom and top.
+#[cfg(not(jagua_simd))]
+#[inline(always)]
+fn beyond_mask(points: &[Point], r: Rect) -> [u64; 4] {
+    beyond_mask_scalar(points, r)
+}
+
+#[inline(always)]
+fn beyond_mask_scalar(points: &[Point], r: Rect) -> [u64; 4] {
+    debug_assert!(points.len() <= 64);
+    let mut mask = [0; 4];
+    for (j, &Point(x, y)) in points.iter().enumerate() {
+        mask[0] |= u64::from(x < r.x_min) << j;
+        mask[1] |= u64::from(x > r.x_max) << j;
+        mask[2] |= u64::from(y < r.y_min) << j;
+        mask[3] |= u64::from(y > r.y_max) << j;
+    }
+    mask
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Xorshift values in `0..16`
+    fn grid_values(mut seed: u32) -> impl FnMut() -> f32 {
+        move || {
+            seed ^= seed << 13;
+            seed ^= seed >> 17;
+            seed ^= seed << 5;
+            #[allow(clippy::cast_precision_loss)] // values below 16
+            let v = (seed % 16) as f32;
+            v
+        }
+    }
+
+    #[test]
+    fn beyond_mask_matches_scalar_for_every_length() {
+        // Points on a grid, so they lie on the sides of `r` often
+        let mut next = grid_values(0x2545_f491);
+        let r = Rect {
+            x_min: 4.0,
+            y_min: 5.0,
+            x_max: 9.0,
+            y_max: 11.0,
+        };
+        for n in 0..=64 {
+            let points = (0..n).map(|_| Point(next(), next())).collect::<Vec<_>>();
+            assert_eq!(
+                beyond_mask(&points, r),
+                beyond_mask_scalar(&points, r),
+                "n = {n}"
+            );
+        }
+    }
+
+    struct AllEdges(Vec<Edge>);
+
+    impl EdgeSet for AllEdges {
+        fn any_edge_overlapping(&self, r: Rect, mut f: impl FnMut(&Edge) -> bool) -> bool {
+            self.0.iter().any(|e| e.bbox().collides_with(&r) && f(e))
+        }
+    }
+
+    #[test]
+    #[allow(clippy::cast_precision_loss)] // small counts
+    fn edges_intersect_matches_brute_force() {
+        let mut next = grid_values(0x9e37_79b9);
+        for n in [3, 7, 8, 9, 63, 64, 65, 100, 128, 129, 150] {
+            // A star-shaped polygon around (8, 8), with more than 64 vertices for some
+            let vertices = (0..n)
+                .map(|k| {
+                    let angle = std::f32::consts::TAU * k as f32 / n as f32;
+                    let radius = 2.0 + next() / 3.0;
+                    Point(8.0 + radius * angle.cos(), 8.0 + radius * angle.sin())
+                })
+                .collect();
+            let poly = SPolygon::new(vertices).unwrap();
+            for _ in 0..50 {
+                let edges = (0..10)
+                    .map(|_| Edge {
+                        start: Point(next(), next()),
+                        end: Point(next(), next()),
+                    })
+                    .filter(|e| e.start != e.end)
+                    .collect::<Vec<_>>();
+                let (x, y) = ([next(), next()], [next(), next()]);
+                let r = Rect {
+                    x_min: x[0].min(x[1]),
+                    y_min: y[0].min(y[1]),
+                    x_max: x[0].max(x[1]),
+                    y_max: y[0].max(y[1]),
+                };
+                let in_r = |e: &Edge| e.bbox().collides_with(&r);
+                let expected = poly
+                    .edge_iter()
+                    .filter(in_r)
+                    .any(|a| edges.iter().filter(|e| in_r(e)).any(|b| a.collides_with(b)));
+                assert_eq!(
+                    edges_intersect(&poly, r, &AllEdges(edges)),
+                    expected,
+                    "n = {n}"
+                );
+            }
+        }
+    }
 }
