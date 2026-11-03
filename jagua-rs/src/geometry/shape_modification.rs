@@ -14,8 +14,6 @@ use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
 
-use crate::io::ext_repr::ExtSPolygon;
-use crate::io::import;
 use anyhow::{Result, bail};
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
@@ -61,6 +59,8 @@ pub fn simplify_shape(
     max_area_change_ratio: f32,
 ) -> SPolygon {
     let original_area = shape.area;
+    // candidates must not create edges that SPolygon::new would remove
+    let min_edge_length = SPolygon::MIN_EDGE_LENGTH_RATIO * shape.diameter;
 
     let mut ref_points = shape.vertices.clone();
 
@@ -118,7 +118,7 @@ pub fn simplify_shape(
             .sorted_by_cached_key(|c| {
                 OrderedFloat(calculate_area_delta(&ref_points, c).unwrap_or(f32::INFINITY))
             })
-            .find(|c| candidate_is_valid(&ref_points, c, &shape.bbox));
+            .find(|c| candidate_is_valid(&ref_points, c, &shape.bbox, min_edge_length));
 
         //if it is within the area change constraints, execute the candidate
         if let Some(best_candidate) = best_candidate {
@@ -187,10 +187,17 @@ fn calculate_area_delta(shape: &[Point], candidate: &Candidate) -> Result<f32, I
     Ok(area)
 }
 
-fn candidate_is_valid(shape: &[Point], candidate: &Candidate, bbox: &Rect) -> bool {
-    //ensure the removal/replacement does not create any self intersections or grow the bounding box
+fn candidate_is_valid(
+    shape: &[Point],
+    candidate: &Candidate,
+    bbox: &Rect,
+    min_edge_length: f32,
+) -> bool {
+    //ensure the removal/replacement does not create any self intersections, too short edges or grow the bounding box
+    let long_enough = |a: Point, b: Point| a.distance_to(&b) >= min_edge_length;
     match candidate {
-        Candidate::Collinear(_) => true,
+        Candidate::Collinear(c) => long_enough(shape[c.0], shape[c.2]),
+        Candidate::Concave(c) if !long_enough(shape[c.0], shape[c.2]) => false,
         Candidate::Concave(c) => {
             let new_edge = Edge::try_new(shape[c.0], shape[c.2]).unwrap();
             let affected_points = [shape[c.0], shape[c.1], shape[c.2]];
@@ -207,6 +214,12 @@ fn candidate_is_valid(shape: &[Point], candidate: &Candidate, bbox: &Rect) -> bo
                 //a replacing vertex outside the bounding box would make the shape larger in some dimension,
                 //which can prevent an item from fitting in a container it fits in originally
                 Ok(new_vertex) if !bbox.collides_with(&new_vertex) => false,
+                Ok(new_vertex)
+                    if !long_enough(shape[c1.0], new_vertex)
+                        || !long_enough(new_vertex, shape[c2.2]) =>
+                {
+                    false
+                }
                 Ok(new_vertex) => {
                     let new_edge_1 = Edge::try_new(shape[c1.0], new_vertex).unwrap();
                     let new_edge_2 = Edge::try_new(new_vertex, shape[c2.2]).unwrap();
@@ -436,16 +449,17 @@ fn offset_shape_once(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Res
         }
     };
 
-    // Convert back to internal representation (by using the import function)
-    let ext_s_polygon = ExtSPolygon(
-        geo_poly_offset
-            .exterior()
-            .points()
-            .map(|p| (p.x().to_f32().unwrap(), p.y().to_f32().unwrap()))
-            .collect_vec(),
-    );
+    // Convert back to internal representation, without the closing point of geo's exterior ring
+    let mut points = geo_poly_offset
+        .exterior()
+        .points()
+        .map(|p| Point(p.x().to_f32().unwrap(), p.y().to_f32().unwrap()))
+        .collect_vec();
+    if points.len() > 1 && points.first() == points.last() {
+        points.pop();
+    }
 
-    import::import_simple_polygon(&ext_s_polygon)
+    SPolygon::new(points)
 }
 
 #[allow(clippy::too_many_lines)]
@@ -483,6 +497,11 @@ pub fn close_narrow_concavities(
 
                 if c_edge.length() > cutoff_distance_ratio * shape.diameter {
                     //If the edge is too long, skip it
+                    continue;
+                }
+
+                if c_edge.length() < SPolygon::MIN_EDGE_LENGTH_RATIO * shape.diameter {
+                    //If the edge is too short, SPolygon::new would remove one of its vertices, skip it
                     continue;
                 }
 

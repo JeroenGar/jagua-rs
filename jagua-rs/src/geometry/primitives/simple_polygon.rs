@@ -18,6 +18,7 @@ use crate::geometry::primitives::Rect;
 use crate::util::FPA;
 use crate::util::assertions;
 use anyhow::{Result, bail};
+use log::debug;
 
 /// A Simple Polygon is a polygon that does not intersect itself and contains no holes.
 /// It is a closed shape with a finite number of vertices and edges.
@@ -39,8 +40,29 @@ pub struct SPolygon {
 }
 
 impl SPolygon {
+    /// Minimum length of an edge, as a fraction of the polygon's diameter.
+    ///
+    /// Shorter edges are removed on construction, see [`SPolygon::new`].
+    /// The margin is large compared to the `f32` rounding error of the coordinates of a centered polygon
+    /// (about `6e-8` times the diameter), so transformations cannot collapse an edge into a single point (issue #133).
+    pub const MIN_EDGE_LENGTH_RATIO: f32 = 1e-5;
+
     /// Create a new simple polygon from a set of points, expensive operations are performed here! Use [`Self::clone()`] or [`Self::transform()`] to avoid recomputation.
+    ///
+    /// Every vertex that lies closer than [`SPolygon::MIN_EDGE_LENGTH_RATIO`] times the diameter
+    /// to the previous kept vertex is removed, so no edge is shorter than that.
+    /// Returns an error if the remaining vertices do not form a valid simple polygon.
     pub fn new(mut points: Vec<Point>) -> Result<Self> {
+        if points.len() < 3 {
+            bail!(GeometryError::TooFewPoints(points.len()));
+        }
+        let n_removed = SPolygon::remove_short_edges(&mut points);
+        if n_removed > 0 {
+            debug!(
+                "[SP] removed {n_removed} vertices forming edges shorter than {} times the diameter",
+                SPolygon::MIN_EDGE_LENGTH_RATIO
+            );
+        }
         if points.len() < 3 {
             bail!(GeometryError::TooFewPoints(points.len()));
         }
@@ -117,6 +139,33 @@ impl SPolygon {
         self.surrogate.as_ref().expect("surrogate not generated")
     }
 
+    /// Removes every vertex that lies closer than [`SPolygon::MIN_EDGE_LENGTH_RATIO`] times the diameter
+    /// of `points` to the previous kept vertex, including across the edge that closes the polygon.
+    /// Comparing against the previous *kept* vertex thins out a dense run of short edges
+    /// (e.g. a finely sampled arc) instead of removing it entirely.
+    /// Returns the number of removed vertices.
+    pub(crate) fn remove_short_edges(points: &mut Vec<Point>) -> usize {
+        let n_points = points.len();
+        let min_length =
+            SPolygon::MIN_EDGE_LENGTH_RATIO * SPolygon::calculate_diameter(points.clone());
+        let min_sq_length = min_length * min_length;
+
+        let mut kept: Vec<Point> = Vec::with_capacity(n_points);
+        for &p in points.iter() {
+            match kept.last() {
+                Some(last) if last.sq_distance_to(&p) < min_sq_length => {}
+                _ => kept.push(p),
+            }
+        }
+        // the closing edge runs from the last kept vertex back to the first one
+        while kept.len() > 1 && kept[kept.len() - 1].sq_distance_to(&kept[0]) < min_sq_length {
+            kept.pop();
+        }
+
+        *points = kept;
+        n_points - points.len()
+    }
+
     #[must_use]
     fn calculate_diameter(points: Vec<Point>) -> f32 {
         //The two points furthest apart must be part of the convex hull
@@ -128,7 +177,7 @@ impl SPolygon {
             .array_combinations::<2>()
             .map(|[p1, p2]| p1.sq_distance_to(p2))
             .max_by_key(|sq_d| NotNan::new(*sq_d).unwrap())
-            .expect("convex hull is empty");
+            .unwrap_or(0.0); // fewer than two distinct points
 
         sq_diam.sqrt()
     }
@@ -432,5 +481,93 @@ where
             (r.x_min, r.y_max).into(),
         ])
         .unwrap()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn points(coords: &[(f32, f32)]) -> Vec<Point> {
+        coords.iter().map(|&(x, y)| Point(x, y)).collect()
+    }
+
+    fn assert_min_edge_length(sp: &SPolygon) {
+        let min_edge_length = SPolygon::MIN_EDGE_LENGTH_RATIO * sp.diameter;
+        assert!(sp.edge_iter().all(|e| e.length() >= min_edge_length));
+    }
+
+    #[test]
+    fn new_removes_short_edges() {
+        let square = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)];
+
+        // exact consecutive duplicate
+        let sp = SPolygon::new(points(&[
+            square[0], square[1], square[1], square[2], square[3],
+        ]));
+        assert_eq!(sp.unwrap().n_vertices(), 4);
+
+        // vertex closer than the minimum edge length to its predecessor
+        let sp = SPolygon::new(points(&[
+            square[0],
+            square[1],
+            (10.0, 1e-5),
+            square[2],
+            square[3],
+        ]));
+        assert_eq!(sp.unwrap().n_vertices(), 4);
+
+        // last vertex too close to the first one (closing edge)
+        let sp = SPolygon::new(points(&[
+            square[0],
+            square[1],
+            square[2],
+            square[3],
+            (0.0, 1e-5),
+        ]));
+        let sp = sp.unwrap();
+        assert_eq!(sp.n_vertices(), 4);
+        assert_min_edge_length(&sp);
+
+        // a vertex at a safe distance is kept
+        let sp = SPolygon::new(points(&[
+            square[0],
+            square[1],
+            (10.0, 1e-3),
+            square[2],
+            square[3],
+        ]));
+        assert_eq!(sp.unwrap().n_vertices(), 5);
+    }
+
+    #[test]
+    fn dense_run_of_short_edges_is_thinned_not_removed() {
+        // A 10x10 square whose bottom edge starts with a run sampled every 1e-5,
+        // far below the minimum edge length (~1.4e-4). Comparing against the previous kept vertex
+        // should keep a vertex roughly every 1.4e-4 instead of removing the whole run.
+        let mut pts = (0..=10_000u16)
+            .map(|i| Point(f32::from(i) * 1e-5, 0.0))
+            .collect_vec();
+        pts.extend(points(&[(10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]));
+
+        let n_removed = SPolygon::remove_short_edges(&mut pts);
+
+        let min_edge_length =
+            SPolygon::MIN_EDGE_LENGTH_RATIO * SPolygon::calculate_diameter(pts.clone());
+        assert!(n_removed > 9_000);
+        assert!(
+            pts.len() > 500,
+            "the sampled edge should be thinned, not removed"
+        );
+        assert!(
+            (0..pts.len())
+                .all(|i| pts[i].distance_to(&pts[(i + 1) % pts.len()]) >= min_edge_length)
+        );
+    }
+
+    #[test]
+    fn new_fails_when_too_few_vertices_remain() {
+        let sliver = points(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1e-6), (0.0, 1e-6)]);
+        assert!(SPolygon::new(sliver).is_err());
     }
 }

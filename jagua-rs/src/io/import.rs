@@ -8,9 +8,8 @@ use crate::geometry::{AllowedOrientations, OriginalShape};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtContainer, ExtItem, ExtRotation, ExtSPolygon, ExtShape};
 use anyhow::{Result, bail, ensure};
-use float_cmp::approx_eq;
 use itertools::Itertools;
-use log::debug;
+use log::{debug, warn};
 use std::sync::Arc;
 
 /// Converts external representations of items and containers into internal ones.
@@ -271,11 +270,13 @@ pub fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {
     if points.len() > 1 && points[0] == points[points.len() - 1] {
         points.pop();
     }
-    //Remove duplicates that are consecutive (e.g. [1, 2, 2, 3] -> [1, 2, 3])
-    eliminate_degenerate_vertices(&mut points);
-    //Bail if there are any non-consecutive duplicates.
-    if points.len() != points.iter().unique().count() {
-        bail!("Simple polygon has non-consecutive duplicate vertices");
+    //Remove vertices too close to their predecessor (SPolygon::new would remove them as well, but silently)
+    let n_removed = SPolygon::remove_short_edges(&mut points);
+    if n_removed > 0 {
+        warn!(
+            "[IMPORT] removed {n_removed} vertices forming edges shorter than {} times the diameter",
+            SPolygon::MIN_EDGE_LENGTH_RATIO
+        );
     }
     SPolygon::new(points)
 }
@@ -303,30 +304,4 @@ pub fn ext_to_int_transformation(
         .transform(&pre_transf.compose().inverse())
         .transform_from_decomposed(ext_transf)
         .decompose()
-}
-
-fn eliminate_degenerate_vertices(points: &mut Vec<Point>) {
-    let mut indices_to_remove = vec![];
-    let n_points = points.len();
-    for i in 0..n_points {
-        let j = (i + 1) % n_points;
-        let p_i = points[i];
-        let p_j = points[j];
-        if approx_eq!(f32, p_i.0, p_j.0) && approx_eq!(f32, p_i.1, p_j.1) {
-            //points are equal, mark for removal
-            indices_to_remove.push(i);
-        }
-    }
-    //remove points in reverse order to avoid shifting indices
-    indices_to_remove.sort_unstable_by(|a, b| b.cmp(a));
-    for index in indices_to_remove {
-        if index < points.len() {
-            let j = (index + 1) % points.len();
-            debug!(
-                "[IMPORT] degenerate vertex eliminated (idx: {}, {:?}, {:?})",
-                index, points[index], points[j]
-            );
-            points.remove(index);
-        }
-    }
 }
