@@ -64,10 +64,7 @@ impl Importer {
                     y_min,
                     width,
                     height,
-                } => {
-                    let rect = Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)?;
-                    SPolygon::from(rect)
-                }
+                } => import_rectangle(*x_min, *y_min, *width, *height)?,
                 ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
                 ExtShape::Polygon(ep) => {
                     ensure!(
@@ -121,7 +118,7 @@ impl Importer {
                     y_min,
                     width,
                     height,
-                } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)?.into(),
+                } => import_rectangle(*x_min, *y_min, *width, *height)?,
                 ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
                 ExtShape::Polygon(ep) => import_simple_polygon(&ep.outer)?,
                 ExtShape::MultiPolygon(_) => {
@@ -162,8 +159,7 @@ impl Importer {
                             y_min,
                             width,
                             height,
-                        } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)
-                            .map(Into::into),
+                        } => import_rectangle(*x_min, *y_min, *width, *height),
                         ExtShape::SimplePolygon(esp) => import_simple_polygon(esp),
                         ExtShape::Polygon(_) => {
                             bail!("Quality zones require rectangles or simple polygons")
@@ -264,6 +260,13 @@ fn normalized_radians(angles: &[f32], period: f32) -> Result<Vec<f32>> {
         .collect())
 }
 
+/// Imports an axis-aligned rectangle as a [`SPolygon`].
+/// Fails for a non-positive width or height, or a rectangle too thin to be a valid [`SPolygon`].
+fn import_rectangle(x_min: f32, y_min: f32, width: f32, height: f32) -> Result<SPolygon> {
+    let rect = Rect::try_new(x_min, y_min, x_min + width, y_min + height)?;
+    SPolygon::try_from(rect)
+}
+
 pub fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {
     let mut points = sp.0.iter().map(|(x, y)| Point(*x, *y)).collect_vec();
     //Strip the last vertex if it is the same as the first one
@@ -304,4 +307,15 @@ pub fn ext_to_int_transformation(
         .transform(&pre_transf.compose().inverse())
         .transform_from_decomposed(ext_transf)
         .decompose()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn too_thin_rectangle_is_an_error() {
+        assert!(import_rectangle(0.0, 0.0, 10.0, 5.0).is_ok());
+        assert!(import_rectangle(0.0, 0.0, 10.0, 1e-6).is_err());
+    }
 }

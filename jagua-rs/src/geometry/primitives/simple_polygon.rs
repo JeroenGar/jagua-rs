@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use itertools::Itertools;
 use ordered_float::{NotNan, OrderedFloat};
 
@@ -468,19 +466,27 @@ impl SeparationDistance<Point> for SPolygon {
     }
 }
 
-impl<T> From<T> for SPolygon
-where
-    T: Borrow<Rect>,
-{
-    fn from(r: T) -> Self {
-        let r = r.borrow();
+impl TryFrom<&Rect> for SPolygon {
+    type Error = anyhow::Error;
+
+    /// Fails if the rectangle is so thin that [`SPolygon::new`] removes its short sides,
+    /// see [`SPolygon::MIN_EDGE_LENGTH_RATIO`].
+    fn try_from(r: &Rect) -> Result<Self> {
         SPolygon::new(vec![
             (r.x_min, r.y_min).into(),
             (r.x_max, r.y_min).into(),
             (r.x_max, r.y_max).into(),
             (r.x_min, r.y_max).into(),
         ])
-        .unwrap()
+    }
+}
+
+impl TryFrom<Rect> for SPolygon {
+    type Error = anyhow::Error;
+
+    /// See [`SPolygon::try_from(&Rect)`](#impl-TryFrom%3C%26Rect%3E-for-SPolygon).
+    fn try_from(r: Rect) -> Result<Self> {
+        SPolygon::try_from(&r)
     }
 }
 
@@ -563,6 +569,16 @@ mod tests {
             (0..pts.len())
                 .all(|i| pts[i].distance_to(&pts[(i + 1) % pts.len()]) >= min_edge_length)
         );
+    }
+
+    #[test]
+    fn rectangle_conversion() {
+        let rect = Rect::try_new(0.0, 0.0, 10.0, 5.0).unwrap();
+        assert_eq!(SPolygon::try_from(rect).unwrap().n_vertices(), 4);
+
+        // the short sides are below the minimum edge length, so they are removed
+        let sliver = Rect::try_new(0.0, 0.0, 10.0, 1e-6).unwrap();
+        assert!(SPolygon::try_from(&sliver).is_err());
     }
 
     #[test]
