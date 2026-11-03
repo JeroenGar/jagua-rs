@@ -101,8 +101,60 @@ mod original_shape {
 mod shape_modification {
     use crate::geometry::primitives::{Point, SPolygon};
     use crate::geometry::shape_modification::{
-        ShapeModifyMode, offset_shape, shape_modification_valid, simplify_shape,
+        ShapeModifyMode, close_narrow_concavities, offset_shape, shape_modification_valid,
+        simplify_shape,
     };
+
+    #[test]
+    fn closing_concavity_measures_the_region_it_removes() {
+        // Square with a notch of area 18 (2 wide, 9 deep) at the top, in a shape of area 82.
+        let points = [
+            (0.0, 0.0),
+            (10.0, 0.0),
+            (10.0, 10.0),
+            (6.0, 10.0),
+            (6.0, 1.0),
+            (4.0, 1.0),
+            (4.0, 10.0),
+            (0.0, 10.0),
+        ];
+        let shape = SPolygon::new(points.map(|(x, y)| Point(x, y)).to_vec()).unwrap();
+
+        // 18 exceeds 15% of the area, the notch stays open
+        let kept = close_narrow_concavities(&shape, ShapeModifyMode::Inflate, (0.2, 0.15));
+        assert_eq!(kept.n_vertices(), shape.n_vertices());
+
+        // 18 is below 25% of the area, the notch is closed
+        let closed = close_narrow_concavities(&shape, ShapeModifyMode::Inflate, (0.2, 0.25));
+        assert_eq!(closed.n_vertices(), shape.n_vertices() - 2);
+        assert!(shape_modification_valid(
+            &shape,
+            &closed,
+            ShapeModifyMode::Inflate
+        ));
+    }
+
+    #[test]
+    fn closing_concavity_does_not_keep_the_concavity_instead_of_the_shape() {
+        // Leaving out the end vertex of the removed region gave it the wrong sign, which closed the edge
+        // from (0,0) to (-10,0) on the wrong side and replaced the shape (area 7) by its notch (area 2.5).
+        let points = [
+            (0.0, 0.0),
+            (0.0, 1.0),
+            (1.0, 2.0),
+            (-10.0, 0.0),
+            (-5.0, 0.5),
+        ];
+        let shape = SPolygon::new(points.map(|(x, y)| Point(x, y)).to_vec()).unwrap();
+
+        let closed = close_narrow_concavities(&shape, ShapeModifyMode::Inflate, (1.0, 0.1));
+
+        assert!(shape_modification_valid(
+            &shape,
+            &closed,
+            ShapeModifyMode::Inflate
+        ));
+    }
 
     #[test]
     fn simplification_does_not_grow_bounding_box() {
@@ -188,6 +240,7 @@ mod shape_modification {
 }
 
 mod simple_polygon {
+    use crate::geometry::fail_fast::SPSurrogateConfig;
     use crate::geometry::primitives::{Point, Rect, SPolygon};
 
     fn points(coords: &[(f32, f32)]) -> Vec<Point> {
@@ -256,6 +309,79 @@ mod simple_polygon {
     fn new_fails_when_too_few_vertices_remain() {
         let sliver = points(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1e-6), (0.0, 1e-6)]);
         assert!(SPolygon::new(sliver).is_err());
+    }
+
+    #[test]
+    fn centroid_far_from_origin() {
+        // The cross products of absolute coordinates cancel out, which put this centroid at (1365.3, 1365.3)
+        let sp = SPolygon::new(points(&[
+            (4096.0, 4096.0),
+            (4097.0, 4096.0),
+            (4097.0, 4097.0),
+            (4096.0, 4097.0),
+        ]))
+        .unwrap();
+        assert_eq!(sp.centroid(), Point(4096.5, 4096.5));
+    }
+
+    #[test]
+    fn diameter_with_vertices_of_equal_x() {
+        // The convex hull sorted the vertices by x only and lost (0,0), giving a diameter of sqrt(181)
+        let sp = SPolygon::new(points(&[
+            (0.0, 1.0),
+            (0.0, 0.0),
+            (1.0, 0.0),
+            (10.0, 10.0),
+            (0.0, 2.0),
+        ]))
+        .unwrap();
+        assert!((sp.diameter - 200.0_f32.sqrt()).abs() < 1e-4);
+    }
+
+    #[test]
+    fn pole_far_from_origin() {
+        // At this x coordinate, the midpoint of a quadrant rounds onto its side, which panicked in Rect::quadrants.
+        // The f32 spacing is 2 here, so no point inside the square can be represented: an error, not a panic.
+        let x = 16_777_216.0;
+        let sp = SPolygon::new(points(&[
+            (x, 0.0),
+            (x + 2.0, 0.0),
+            (x + 2.0, 2.0),
+            (x, 2.0),
+        ]));
+        assert!(sp.is_err());
+    }
+
+    #[test]
+    fn pole_of_thin_shape() {
+        // The arms are thinner than the nodes of the default pole search tree, so no pole was found
+        let sp = SPolygon::new(points(&[
+            (0.0, 0.0),
+            (100.0, 0.0),
+            (100.0, 0.01),
+            (0.01, 0.01),
+            (0.01, 100.0),
+            (0.0, 100.0),
+        ]));
+        assert!(sp.is_ok());
+    }
+
+    #[test]
+    fn surrogate_of_thin_shape() {
+        // The pole search runs out of room before the pole limits are reached, which used to fail
+        let mut sp = SPolygon::new(points(&[
+            (0.0, 0.0),
+            (3000.0, 0.0),
+            (3000.0, 1.0),
+            (0.0, 1.0),
+        ]))
+        .unwrap();
+        let config = SPSurrogateConfig {
+            n_pole_limits: [(100, 0.0), (20, 0.75), (10, 0.90)],
+            ff_pole_area_ratio: 0.5,
+        };
+        sp.generate_surrogate(config).unwrap();
+        assert!(!sp.surrogate().poles.is_empty());
     }
 }
 

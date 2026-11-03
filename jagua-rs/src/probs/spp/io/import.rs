@@ -74,6 +74,11 @@ pub fn import_solution(instance: &SPInstance, ext_solution: &ExtSPSolution) -> R
         let item_idx = instance
             .item_idx(ext_placement.item_id)
             .ok_or_else(|| anyhow!("unknown item ID {}", ext_placement.item_id))?;
+        ensure!(
+            prob.item_demand_qtys()[item_idx] > 0,
+            "solution places item {} more often than its demand",
+            ext_placement.item_id
+        );
         let d_transf = {
             let ext_transf = DTransformation::from(ext_placement.transformation);
             let item = &instance.item(item_idx);

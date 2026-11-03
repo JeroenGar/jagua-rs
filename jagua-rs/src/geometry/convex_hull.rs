@@ -33,8 +33,8 @@ pub fn convex_hull_from_surrogate(s: &SPolygon) -> Result<Vec<Point>> {
 pub fn convex_hull_from_points(mut points: Vec<Point>) -> Vec<Point> {
     //https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
 
-    //sort the points by x coordinate
-    points.sort_by_key(|p| OrderedFloat(p.0));
+    //sort the points by x coordinate, then by y coordinate (monotone chain requires a strict order)
+    points.sort_by_key(|p| (OrderedFloat(p.0), OrderedFloat(p.1)));
 
     let mut lower_hull = points
         .iter()

@@ -53,6 +53,10 @@ fn sparse_item_ids_survive_json_svg_and_warm_start() -> anyhow::Result<()> {
 
     external.layout.placed_items[0].item_id = 4;
     assert!(import_solution(&instance, &external).is_err());
+    // item 42 placed twice, more often than its demand
+    external.layout.placed_items[0].item_id = 42;
+    external.layout.placed_items[1].item_id = 42;
+    assert!(import_solution(&instance, &external).is_err());
     input.items.push(input.items[1].clone());
     assert!(import_instance(&importer, &input).is_err());
     for pi in solution.layout_snapshot().placed_items().values() {

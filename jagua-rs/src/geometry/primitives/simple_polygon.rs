@@ -212,14 +212,16 @@ impl SPolygon {
     pub fn centroid(&self) -> Point {
         //based on: https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
 
+        //relative to the first vertex: far from the origin, the cross products of absolute coordinates cancel out
+        let Point(o_x, o_y) = self.vertex(0);
         let area = self.area;
         let mut c_x = 0.0;
         let mut c_y = 0.0;
 
         for i in 0..self.n_vertices() {
             let j = if i == self.n_vertices() - 1 { 0 } else { i + 1 };
-            let Point(x_i, y_i) = self.vertex(i);
-            let Point(x_j, y_j) = self.vertex(j);
+            let (x_i, y_i) = (self.vertex(i).0 - o_x, self.vertex(i).1 - o_y);
+            let (x_j, y_j) = (self.vertex(j).0 - o_x, self.vertex(j).1 - o_y);
             c_x += (x_i + x_j) * (x_i * y_j - x_j * y_i);
             c_y += (y_i + y_j) * (x_i * y_j - x_j * y_i);
         }
@@ -227,7 +229,7 @@ impl SPolygon {
         c_x /= 6.0 * area;
         c_y /= 6.0 * area;
 
-        (c_x, c_y).into()
+        (o_x + c_x, o_y + c_y).into()
     }
 
     fn find_self_intersection(points: &[Point]) -> Option<(usize, usize)> {
