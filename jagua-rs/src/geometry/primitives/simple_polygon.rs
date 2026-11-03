@@ -37,6 +37,58 @@ pub struct SPolygon {
     pub(crate) surrogate: Option<SPSurrogate>,
 }
 
+/// Result of [`SPolygon::remove_short_edges`].
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct ShortEdgeRemoval {
+    /// Minimum edge length that was enforced
+    pub min_length: f32,
+    /// Removed vertices, in the order of the input points
+    pub removed: Vec<RemovedVertex>,
+}
+
+/// A vertex removed by [`SPolygon::remove_short_edges`]. Indices refer to its input points.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct RemovedVertex {
+    pub idx: usize,
+    pub point: Point,
+    /// Index of the kept vertex it lay too close to
+    pub kept_idx: usize,
+    pub distance: f32,
+}
+
+impl std::fmt::Display for ShortEdgeRemoval {
+    /// Describes the removed vertices, listing at most [`ShortEdgeRemoval::MAX_LISTED`] of them.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let n = self.removed.len();
+        write!(
+            f,
+            "removed {n} {} closer than {:.3e} ({} times the diameter) to the previous kept vertex: ",
+            if n == 1 { "vertex" } else { "vertices" },
+            self.min_length,
+            SPolygon::MIN_EDGE_LENGTH_RATIO
+        )?;
+        for (i, r) in self.removed.iter().take(Self::MAX_LISTED).enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(
+                f,
+                "vertex {} ({}, {}) is {:.3e} from vertex {}",
+                r.idx, r.point.0, r.point.1, r.distance, r.kept_idx
+            )?;
+        }
+        if n > Self::MAX_LISTED {
+            write!(f, " and {} more", n - Self::MAX_LISTED)?;
+        }
+        Ok(())
+    }
+}
+
+impl ShortEdgeRemoval {
+    /// Maximum number of removed vertices listed when displayed
+    const MAX_LISTED: usize = 10;
+}
+
 impl SPolygon {
     /// Minimum length of an edge, as a fraction of the polygon's diameter.
     ///
@@ -54,12 +106,9 @@ impl SPolygon {
         if points.len() < 3 {
             bail!(GeometryError::TooFewPoints(points.len()));
         }
-        let n_removed = SPolygon::remove_short_edges(&mut points);
-        if n_removed > 0 {
-            debug!(
-                "[SP] removed {n_removed} vertices forming edges shorter than {} times the diameter",
-                SPolygon::MIN_EDGE_LENGTH_RATIO
-            );
+        let removal = SPolygon::remove_short_edges(&mut points);
+        if !removal.removed.is_empty() {
+            debug!("[SP] {removal}");
         }
         if points.len() < 3 {
             bail!(GeometryError::TooFewPoints(points.len()));
@@ -141,27 +190,45 @@ impl SPolygon {
     /// of `points` to the previous kept vertex, including across the edge that closes the polygon.
     /// Comparing against the previous *kept* vertex thins out a dense run of short edges
     /// (e.g. a finely sampled arc) instead of removing it entirely.
-    /// Returns the number of removed vertices.
-    pub(crate) fn remove_short_edges(points: &mut Vec<Point>) -> usize {
-        let n_points = points.len();
+    pub(crate) fn remove_short_edges(points: &mut Vec<Point>) -> ShortEdgeRemoval {
         let min_length =
             SPolygon::MIN_EDGE_LENGTH_RATIO * SPolygon::calculate_diameter(points.clone());
         let min_sq_length = min_length * min_length;
 
-        let mut kept: Vec<Point> = Vec::with_capacity(n_points);
-        for &p in points.iter() {
+        let mut removed = vec![];
+        let mut kept: Vec<(usize, Point)> = Vec::with_capacity(points.len());
+        for (idx, &point) in points.iter().enumerate() {
             match kept.last() {
-                Some(last) if last.sq_distance_to(&p) < min_sq_length => {}
-                _ => kept.push(p),
+                Some(&(kept_idx, kept_point))
+                    if kept_point.sq_distance_to(&point) < min_sq_length =>
+                {
+                    removed.push(RemovedVertex {
+                        idx,
+                        point,
+                        kept_idx,
+                        distance: kept_point.distance_to(&point),
+                    });
+                }
+                _ => kept.push((idx, point)),
             }
         }
         // the closing edge runs from the last kept vertex back to the first one
-        while kept.len() > 1 && kept[kept.len() - 1].sq_distance_to(&kept[0]) < min_sq_length {
-            kept.pop();
+        while kept.len() > 1 && kept[kept.len() - 1].1.sq_distance_to(&kept[0].1) < min_sq_length {
+            let (idx, point) = kept.pop().expect("kept is not empty");
+            removed.push(RemovedVertex {
+                idx,
+                point,
+                kept_idx: kept[0].0,
+                distance: kept[0].1.distance_to(&point),
+            });
         }
+        removed.sort_by_key(|r| r.idx);
 
-        *points = kept;
-        n_points - points.len()
+        *points = kept.into_iter().map(|(_, p)| p).collect();
+        ShortEdgeRemoval {
+            min_length,
+            removed,
+        }
     }
 
     #[must_use]
@@ -556,7 +623,7 @@ mod tests {
             .collect_vec();
         pts.extend(points(&[(10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]));
 
-        let n_removed = SPolygon::remove_short_edges(&mut pts);
+        let n_removed = SPolygon::remove_short_edges(&mut pts).removed.len();
 
         let min_edge_length =
             SPolygon::MIN_EDGE_LENGTH_RATIO * SPolygon::calculate_diameter(pts.clone());
@@ -569,6 +636,28 @@ mod tests {
             (0..pts.len())
                 .all(|i| pts[i].distance_to(&pts[(i + 1) % pts.len()]) >= min_edge_length)
         );
+    }
+
+    #[test]
+    fn removed_vertices_are_reported() {
+        let mut pts = points(&[
+            (0.0, 0.0),
+            (10.0, 0.0),
+            (10.0, 1e-5),
+            (10.0, 10.0),
+            (0.0, 10.0),
+            (0.0, 1e-5),
+        ]);
+        let removal = SPolygon::remove_short_edges(&mut pts);
+
+        let reported = removal
+            .removed
+            .iter()
+            .map(|r| (r.idx, r.kept_idx))
+            .collect_vec();
+        // vertex 2 is too close to vertex 1, vertex 5 too close to vertex 0 across the closing edge
+        assert_eq!(reported, [(2, 1), (5, 0)]);
+        assert_eq!(pts.len(), 4);
     }
 
     #[test]
