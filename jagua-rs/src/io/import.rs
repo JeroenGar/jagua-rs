@@ -4,6 +4,7 @@ use crate::entities::{Container, InferiorQualityZone, N_QUALITIES};
 use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::primitives::{Point, Rect, SPolygon};
 use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
+use crate::geometry::short_edges::remove_short_edges;
 use crate::geometry::{AllowedOrientations, OriginalShape};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtContainer, ExtItem, ExtRotation, ExtSPolygon, ExtShape};
@@ -296,7 +297,7 @@ fn import_described_polygon(sp: &ExtSPolygon, shape: impl Display) -> Result<SPo
         points.pop();
     }
     //Remove vertices too close to their predecessor (SPolygon::new would remove them as well, but silently)
-    let removal = SPolygon::remove_short_edges(&mut points);
+    let removal = remove_short_edges(&mut points);
     if !removal.removed.is_empty() {
         warn!("[IMPORT] {shape}: {removal}");
     }
@@ -326,15 +327,4 @@ pub fn ext_to_int_transformation(
         .transform(&pre_transf.compose().inverse())
         .transform_from_decomposed(ext_transf)
         .decompose()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn too_thin_rectangle_is_an_error() {
-        assert!(import_rectangle(0.0, 0.0, 10.0, 5.0).is_ok());
-        assert!(import_rectangle(0.0, 0.0, 10.0, 1e-6).is_err());
-    }
 }

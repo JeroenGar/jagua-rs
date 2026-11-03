@@ -11,3 +11,6 @@ pub mod export;
 
 /// All logic for creating SVG from [`Layout`](crate::entities::Layout)s
 pub mod svg;
+
+#[cfg(test)]
+mod tests;

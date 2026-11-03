@@ -25,6 +25,8 @@ mod original_shape;
 /// Set of function to modify geometric shapes
 pub mod shape_modification;
 
+pub(crate) mod short_edges;
+
 #[doc(inline)]
 pub use d_transformation::DTransformation;
 
@@ -36,3 +38,6 @@ pub use original_shape::OriginalShape;
 
 #[doc(inline)]
 pub use d_transformation::normalize_rotation;
+
+#[cfg(test)]
+mod tests;
