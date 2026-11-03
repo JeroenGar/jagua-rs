@@ -22,7 +22,9 @@ fern = "0.7"
 test-case = "3.3"
 thousands = "0.2"
 jiff = "0.2"
-criterion = { version = "0.8", default-features = false }
+# Criterion via the CodSpeed compatibility layer: behaves like plain criterion under `cargo bench`,
+# and enables instruction-count measurements when built with `cargo codspeed build`.
+criterion = { package = "codspeed-criterion-compat", version = "6.0", default-features = false }
 clap = { version = "4.5", features = ["derive"] }
 wasm-bindgen = { version = "0.2", features = ["serde"] }
 web-sys = { version = "0.3", features = ["Window", "Performance"] }

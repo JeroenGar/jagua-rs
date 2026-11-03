@@ -6,6 +6,7 @@ on:
       - '**.rs'
       - '**.toml'
       - '**.yml'
+      - '**.py'
       - 'Cargo.lock'
   push:
     branches: ["main"]
@@ -13,12 +14,108 @@ on:
       - '**.rs'
       - '**.toml'
       - '**.yml'
+      - '**.py'
       - 'Cargo.lock'
+  # Also lets CodSpeed trigger backtests to generate initial data
   workflow_dispatch:
 
+concurrency:
+  # Only cancel superseded PR runs; every push to main gets its own run
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  benchmark:
-    name: CI Benchmarks
+  # Hardware-independent benchmarks: CodSpeed runs the criterion benchmarks under CPU simulation
+  # (instruction counts + cache model), so results do not depend on which runner picked up the job.
+  # Results, history and PR reports are on https://codspeed.io/JeroenGar/jagua-rs
+  codspeed:
+    name: CodSpeed Benchmarks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC authentication with CodSpeed
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust toolchain, cache and cargo-codspeed
+        uses: moonrepo/setup-rust@v1
+        with:
+          channel: stable
+          cache-target: release
+          bins: cargo-codspeed
+
+      - name: Build benchmarks
+        run: cargo codspeed build --locked -p lbf --bench ci_bench -m simulation
+
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@v5
+        with:
+          mode: simulation
+          run: cargo codspeed run -p lbf --bench ci_bench
+
+  # Wall-clock comparison of the PR against its base, both built and run on the *same* runner,
+  # so differences between runner hardware cancel out.
+  compare:
+    name: Wall-clock PR vs base (same runner)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v6
+        with:
+          path: head
+
+      - name: Checkout base
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            head
+            base
+          cache-targets: false
+
+      - name: Build PR benchmarks
+        working-directory: head
+        run: cargo bench --locked -p lbf --bench ci_bench --no-run
+
+      - name: Build base benchmarks
+        id: build_base
+        continue-on-error: true # e.g. the benchmark does not exist yet on the base branch
+        working-directory: base
+        run: cargo bench --locked -p lbf --bench ci_bench --no-run
+
+      - name: Run benchmarks (interleaved base/PR)
+        run: |
+          mkdir -p results/base results/head
+          bench() { (cd "$1" && cargo bench --locked -p lbf --bench ci_bench -- --output-format bencher) | tee "results/$1/run_$2.txt"; }
+          # ABBA order, so slow drifts in runner performance affect both sides equally
+          if [ "${{ steps.build_base.outcome }}" = "success" ]; then bench base 1; fi
+          bench head 1
+          bench head 2
+          if [ "${{ steps.build_base.outcome }}" = "success" ]; then bench base 2; fi
+
+      - name: Summarize
+        run: |
+          {
+            echo "## Wall-clock benchmarks: PR vs base"
+            echo
+            echo "Base: \`${{ github.event.pull_request.base.sha }}\`"
+            echo
+            python3 head/.github/scripts/compare_benches.py results/base results/head
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # Legacy wall-clock history published to https://jeroengar.github.io/jagua-rs/benchmarks/
+  # Results vary with the (heterogeneous) GitHub runner hardware; see the CodSpeed job for stable numbers.
+  track:
+    name: CI Benchmarks (gh-pages history)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -41,19 +138,7 @@ jobs:
           export RUSTFLAGS=$RUSTFLAGS
           cargo bench --locked --bench ci_bench -- --output-format bencher | tee output.txt
 
-      - name: Summarize benchmark result
-        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
-        uses: benchmark-action/github-action-benchmark@v1
-        with:
-          name: Performance Tracker
-          tool: 'cargo'
-          output-file-path: output.txt
-          benchmark-data-dir-path: 'benchmarks'
-          save-data-file: false
-          summary-always: true
-
       - name: Store benchmark result
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: Performance Tracker
