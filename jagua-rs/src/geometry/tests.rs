@@ -132,6 +132,35 @@ mod shape_modification {
     }
 
     #[test]
+    fn simplification_keeps_short_edges_when_diameter_grows() {
+        // Replacing a chamfer on the right by a square corner grows the diameter,
+        // and with it the minimum edge length, past the length of the short edge on the left.
+        // SPolygon::new would then remove (0,5) from the simplified shape, cutting into the original,
+        // so the replacement must be rejected.
+        let points = [
+            (0.0, 5.000_115),
+            (0.0, 5.0),
+            (4.0, 2.0),
+            (4.0, 0.0),
+            (9.0, 0.0),
+            (10.0, 1.0),
+            (10.0, 9.0),
+            (9.0, 10.0),
+            (4.0, 10.0),
+            (4.0, 8.0),
+        ];
+        let shape = SPolygon::new(points.map(|(x, y)| Point(x, y)).to_vec()).unwrap();
+
+        let simplified = simplify_shape(&shape, ShapeModifyMode::Inflate, 0.01);
+
+        assert!(shape_modification_valid(
+            &shape,
+            &simplified,
+            ShapeModifyMode::Inflate
+        ));
+    }
+
+    #[test]
     fn offset_survives_f32_rounding_of_closed_slit() {
         // Rectangle with a 2.0 wide slit at 20 degrees, see issue #130.
         // Inflating by exactly half the slit width closes it into a zero-width spike,

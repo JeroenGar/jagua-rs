@@ -13,6 +13,7 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
+use crate::geometry::short_edges::has_short_edges;
 
 use anyhow::{Result, bail};
 
@@ -59,8 +60,6 @@ pub fn simplify_shape(
     max_area_change_ratio: f32,
 ) -> SPolygon {
     let original_area = shape.area;
-    // candidates must not create edges that SPolygon::new would remove
-    let min_edge_length = SPolygon::MIN_EDGE_LENGTH_RATIO * shape.diameter;
 
     let mut ref_points = shape.vertices.clone();
 
@@ -113,16 +112,19 @@ pub fn simplify_shape(
         }
 
         //search the candidate with the smallest change in area that is valid
+        //and does not leave edges that SPolygon::new would remove.
+        //The minimum edge length depends on the diameter of the result, which a replacing vertex can grow.
         let best_candidate = candidates
             .iter()
             .sorted_by_cached_key(|c| {
                 OrderedFloat(calculate_area_delta(&ref_points, c).unwrap_or(f32::INFINITY))
             })
-            .find(|c| candidate_is_valid(&ref_points, c, &shape.bbox, min_edge_length));
+            .filter(|c| candidate_is_valid(&ref_points, c, &shape.bbox))
+            .map(|c| (c, execute_candidate(&ref_points, c)))
+            .find(|(_, new_shape)| !has_short_edges(new_shape));
 
         //if it is within the area change constraints, execute the candidate
-        if let Some(best_candidate) = best_candidate {
-            let new_shape = execute_candidate(&ref_points, best_candidate);
+        if let Some((best_candidate, new_shape)) = best_candidate {
             let new_shape_area = SPolygon::calculate_area(&new_shape);
             let area_delta = (new_shape_area - original_area).abs() / original_area;
             if area_delta <= max_area_change_ratio {
@@ -187,19 +189,14 @@ fn calculate_area_delta(shape: &[Point], candidate: &Candidate) -> Result<f32, I
     Ok(area)
 }
 
-fn candidate_is_valid(
-    shape: &[Point],
-    candidate: &Candidate,
-    bbox: &Rect,
-    min_edge_length: f32,
-) -> bool {
-    //ensure the removal/replacement does not create any self intersections, too short edges or grow the bounding box
-    let long_enough = |a: Point, b: Point| a.distance_to(&b) >= min_edge_length;
+fn candidate_is_valid(shape: &[Point], candidate: &Candidate, bbox: &Rect) -> bool {
+    //ensure the removal/replacement does not create any self intersections, degenerate edges or grow the bounding box
     match candidate {
-        Candidate::Collinear(c) => long_enough(shape[c.0], shape[c.2]),
-        Candidate::Concave(c) if !long_enough(shape[c.0], shape[c.2]) => false,
+        Candidate::Collinear(_) => true,
         Candidate::Concave(c) => {
-            let new_edge = Edge::try_new(shape[c.0], shape[c.2]).unwrap();
+            let Ok(new_edge) = Edge::try_new(shape[c.0], shape[c.2]) else {
+                return false;
+            };
             let affected_points = [shape[c.0], shape[c.1], shape[c.2]];
 
             //check for self-intersections
@@ -214,15 +211,13 @@ fn candidate_is_valid(
                 //a replacing vertex outside the bounding box would make the shape larger in some dimension,
                 //which can prevent an item from fitting in a container it fits in originally
                 Ok(new_vertex) if !bbox.collides_with(&new_vertex) => false,
-                Ok(new_vertex)
-                    if !long_enough(shape[c1.0], new_vertex)
-                        || !long_enough(new_vertex, shape[c2.2]) =>
-                {
-                    false
-                }
                 Ok(new_vertex) => {
-                    let new_edge_1 = Edge::try_new(shape[c1.0], new_vertex).unwrap();
-                    let new_edge_2 = Edge::try_new(new_vertex, shape[c2.2]).unwrap();
+                    let (Ok(new_edge_1), Ok(new_edge_2)) = (
+                        Edge::try_new(shape[c1.0], new_vertex),
+                        Edge::try_new(new_vertex, shape[c2.2]),
+                    ) else {
+                        return false;
+                    };
 
                     let affected_points = [shape[c1.1], shape[c1.0], shape[c2.1], shape[c2.2]];
 
@@ -237,6 +232,7 @@ fn candidate_is_valid(
     }
 }
 
+//only used on points without short edges (see `simplify_shape`), so every edge is valid
 fn edge_iter(points: &[Point]) -> impl Iterator<Item = Edge> + '_ {
     let n_points = points.len();
     (0..n_points).map(move |i| {

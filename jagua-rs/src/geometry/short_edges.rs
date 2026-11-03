@@ -1,5 +1,7 @@
 use std::fmt;
 
+use itertools::Itertools;
+
 use crate::geometry::geo_traits::DistanceTo;
 use crate::geometry::primitives::{Point, SPolygon};
 
@@ -8,7 +10,7 @@ use crate::geometry::primitives::{Point, SPolygon};
 /// Comparing against the previous *kept* vertex thins out a dense run of short edges
 /// (e.g. a finely sampled arc) instead of removing it entirely.
 pub(crate) fn remove_short_edges(points: &mut Vec<Point>) -> ShortEdgeRemoval {
-    let min_length = SPolygon::MIN_EDGE_LENGTH_RATIO * SPolygon::calculate_diameter(points.clone());
+    let min_length = min_edge_length(points);
     let min_sq_length = min_length * min_length;
 
     let mut removed = vec![];
@@ -45,6 +47,20 @@ pub(crate) fn remove_short_edges(points: &mut Vec<Point>) -> ShortEdgeRemoval {
         min_length,
         removed,
     }
+}
+
+/// Whether [`remove_short_edges`] would remove any vertex of `points`.
+pub(crate) fn has_short_edges(points: &[Point]) -> bool {
+    let min_length = min_edge_length(points);
+    let min_sq_length = min_length * min_length;
+    points
+        .iter()
+        .circular_tuple_windows()
+        .any(|(a, b)| a.sq_distance_to(b) < min_sq_length)
+}
+
+fn min_edge_length(points: &[Point]) -> f32 {
+    SPolygon::MIN_EDGE_LENGTH_RATIO * SPolygon::calculate_diameter(points.to_vec())
 }
 
 /// Result of [`remove_short_edges`].

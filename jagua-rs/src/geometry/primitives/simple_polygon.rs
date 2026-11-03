@@ -43,7 +43,11 @@ impl SPolygon {
     ///
     /// Shorter edges are removed on construction, see [`SPolygon::new`].
     /// The margin is large compared to the `f32` rounding error of the coordinates of a centered polygon
-    /// (about `6e-8` times the diameter), so transformations cannot collapse an edge into a single point (issue #133).
+    /// (about `6e-8` times the diameter), so centering or rotating it cannot collapse an edge into a single point (issue #133).
+    ///
+    /// [`Transformable::transform`] and [`TransformableFrom::transform_from`] do not uphold this minimum:
+    /// translated far from the origin, where the `f32` spacing exceeds it, a short edge can still collapse.
+    /// Collision detection does not rely on the minimum; rebuild the polygon with [`SPolygon::new`] where it is needed.
     pub const MIN_EDGE_LENGTH_RATIO: f32 = 1e-5;
 
     /// Create a new simple polygon from a set of points, expensive operations are performed here! Use [`Self::clone()`] or [`Self::transform()`] to avoid recomputation.
