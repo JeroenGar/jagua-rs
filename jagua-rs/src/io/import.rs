@@ -291,7 +291,7 @@ pub fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {
 /// [`import_simple_polygon`], with a description of the shape (e.g. "item 3") for its log messages.
 fn import_described_polygon(sp: &ExtSPolygon, shape: impl Display) -> Result<SPolygon> {
     let mut points = sp.0.iter().map(|(x, y)| Point(*x, *y)).collect_vec();
-    //Strip the last vertex if it is the same as the first one
+    //A closed ring repeats its first point at the end, an accepted way to write the format (no warning)
     if points.len() > 1 && points[0] == points[points.len() - 1] {
         points.pop();
     }

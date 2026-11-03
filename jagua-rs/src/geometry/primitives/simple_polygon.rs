@@ -53,16 +53,19 @@ pub(crate) struct RemovedVertex {
     pub point: Point,
     /// Index of the kept vertex it lay too close to
     pub kept_idx: usize,
+    pub kept_point: Point,
     pub distance: f32,
 }
 
 impl std::fmt::Display for ShortEdgeRemoval {
     /// Describes the removed vertices, listing at most [`ShortEdgeRemoval::MAX_LISTED`] of them.
+    /// Coordinates are written like in the JSON input (`[x, y]`), so they can be searched for.
+    /// They match the input text whenever it is exactly representable as `f32`.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let n = self.removed.len();
         write!(
             f,
-            "removed {n} {} closer than {:.3e} ({} times the diameter) to the previous kept vertex: ",
+            "removed {n} {} closer than {:?} ({:?} times the diameter) to the previous kept vertex: ",
             if n == 1 { "vertex" } else { "vertices" },
             self.min_length,
             SPolygon::MIN_EDGE_LENGTH_RATIO
@@ -73,8 +76,8 @@ impl std::fmt::Display for ShortEdgeRemoval {
             }
             write!(
                 f,
-                "vertex {} ({}, {}) is {:.3e} from vertex {}",
-                r.idx, r.point.0, r.point.1, r.distance, r.kept_idx
+                "vertex {} [{:?}, {:?}] is {:?} from vertex {} [{:?}, {:?}]",
+                r.idx, r.point.0, r.point.1, r.distance, r.kept_idx, r.kept_point.0, r.kept_point.1
             )?;
         }
         if n > Self::MAX_LISTED {
@@ -206,6 +209,7 @@ impl SPolygon {
                         idx,
                         point,
                         kept_idx,
+                        kept_point,
                         distance: kept_point.distance_to(&point),
                     });
                 }
@@ -219,6 +223,7 @@ impl SPolygon {
                 idx,
                 point,
                 kept_idx: kept[0].0,
+                kept_point: kept[0].1,
                 distance: kept[0].1.distance_to(&point),
             });
         }
