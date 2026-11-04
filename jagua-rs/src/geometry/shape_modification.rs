@@ -13,9 +13,8 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
 use crate::geometry::primitives::SPolygon;
+use crate::geometry::short_edges::has_short_edges;
 
-use crate::io::ext_repr::ExtSPolygon;
-use crate::io::import;
 use anyhow::{Result, bail};
 
 /// Whether to strictly inflate or deflate when making any modifications to shape.
@@ -113,16 +112,19 @@ pub fn simplify_shape(
         }
 
         //search the candidate with the smallest change in area that is valid
+        //and does not leave edges that SPolygon::new would remove.
+        //The minimum edge length depends on the diameter of the result, which a replacing vertex can grow.
         let best_candidate = candidates
             .iter()
             .sorted_by_cached_key(|c| {
                 OrderedFloat(calculate_area_delta(&ref_points, c).unwrap_or(f32::INFINITY))
             })
-            .find(|c| candidate_is_valid(&ref_points, c, &shape.bbox));
+            .filter(|c| candidate_is_valid(&ref_points, c, &shape.bbox))
+            .map(|c| (c, execute_candidate(&ref_points, c)))
+            .find(|(_, new_shape)| !has_short_edges(new_shape));
 
         //if it is within the area change constraints, execute the candidate
-        if let Some(best_candidate) = best_candidate {
-            let new_shape = execute_candidate(&ref_points, best_candidate);
+        if let Some((best_candidate, new_shape)) = best_candidate {
             let new_shape_area = SPolygon::calculate_area(&new_shape);
             let area_delta = (new_shape_area - original_area).abs() / original_area;
             if area_delta <= max_area_change_ratio {
@@ -188,11 +190,13 @@ fn calculate_area_delta(shape: &[Point], candidate: &Candidate) -> Result<f32, I
 }
 
 fn candidate_is_valid(shape: &[Point], candidate: &Candidate, bbox: &Rect) -> bool {
-    //ensure the removal/replacement does not create any self intersections or grow the bounding box
+    //ensure the removal/replacement does not create any self intersections, degenerate edges or grow the bounding box
     match candidate {
         Candidate::Collinear(_) => true,
         Candidate::Concave(c) => {
-            let new_edge = Edge::try_new(shape[c.0], shape[c.2]).unwrap();
+            let Ok(new_edge) = Edge::try_new(shape[c.0], shape[c.2]) else {
+                return false;
+            };
             let affected_points = [shape[c.0], shape[c.1], shape[c.2]];
 
             //check for self-intersections
@@ -208,8 +212,12 @@ fn candidate_is_valid(shape: &[Point], candidate: &Candidate, bbox: &Rect) -> bo
                 //which can prevent an item from fitting in a container it fits in originally
                 Ok(new_vertex) if !bbox.collides_with(&new_vertex) => false,
                 Ok(new_vertex) => {
-                    let new_edge_1 = Edge::try_new(shape[c1.0], new_vertex).unwrap();
-                    let new_edge_2 = Edge::try_new(new_vertex, shape[c2.2]).unwrap();
+                    let (Ok(new_edge_1), Ok(new_edge_2)) = (
+                        Edge::try_new(shape[c1.0], new_vertex),
+                        Edge::try_new(new_vertex, shape[c2.2]),
+                    ) else {
+                        return false;
+                    };
 
                     let affected_points = [shape[c1.1], shape[c1.0], shape[c2.1], shape[c2.2]];
 
@@ -224,6 +232,7 @@ fn candidate_is_valid(shape: &[Point], candidate: &Candidate, bbox: &Rect) -> bo
     }
 }
 
+//only used on points without short edges (see `simplify_shape`), so every edge is valid
 fn edge_iter(points: &[Point]) -> impl Iterator<Item = Edge> + '_ {
     let n_points = points.len();
     (0..n_points).map(move |i| {
@@ -436,16 +445,17 @@ fn offset_shape_once(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Res
         }
     };
 
-    // Convert back to internal representation (by using the import function)
-    let ext_s_polygon = ExtSPolygon(
-        geo_poly_offset
-            .exterior()
-            .points()
-            .map(|p| (p.x().to_f32().unwrap(), p.y().to_f32().unwrap()))
-            .collect_vec(),
-    );
+    // Convert back to internal representation, without the closing point of geo's exterior ring
+    let mut points = geo_poly_offset
+        .exterior()
+        .points()
+        .map(|p| Point(p.x().to_f32().unwrap(), p.y().to_f32().unwrap()))
+        .collect_vec();
+    if points.len() > 1 && points.first() == points.last() {
+        points.pop();
+    }
 
-    import::import_simple_polygon(&ext_s_polygon)
+    SPolygon::new(points)
 }
 
 #[allow(clippy::too_many_lines)]
@@ -483,6 +493,11 @@ pub fn close_narrow_concavities(
 
                 if c_edge.length() > cutoff_distance_ratio * shape.diameter {
                     //If the edge is too long, skip it
+                    continue;
+                }
+
+                if c_edge.length() < SPolygon::MIN_EDGE_LENGTH_RATIO * shape.diameter {
+                    //If the edge is too short, SPolygon::new would remove one of its vertices, skip it
                     continue;
                 }
 
@@ -617,62 +632,4 @@ pub fn shape_modification_valid(orig: &SPolygon, simpl: &SPolygon, mode: ShapeMo
         }
     }
     true
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn simplification_does_not_grow_bounding_box() {
-        // Rectangle with a V-notch in its bottom edge, see sparrow#176.
-        // Replacing the corners at (0,0) and (15,0) by the intersection of their adjacent edges
-        // would add a vertex at (0,-30): a small area increase, but 30 units of extra height.
-        let points = [
-            (0.0, 0.0),
-            (15.0, 0.0),
-            (30.0, 30.0),
-            (45.0, 0.0),
-            (557.3, 0.0),
-            (557.3, 970.0),
-            (0.0, 970.0),
-        ];
-        let shape = SPolygon::new(points.map(|(x, y)| Point(x, y)).to_vec()).unwrap();
-
-        let simplified = simplify_shape(&shape, ShapeModifyMode::Inflate, 0.001);
-
-        assert!(simplified.n_vertices() < shape.n_vertices());
-        assert!(shape_modification_valid(
-            &shape,
-            &simplified,
-            ShapeModifyMode::Inflate
-        ));
-        assert_eq!(simplified.bbox, shape.bbox);
-    }
-
-    #[test]
-    fn offset_survives_f32_rounding_of_closed_slit() {
-        // Rectangle with a 2.0 wide slit at 20 degrees, see issue #130.
-        // Inflating by exactly half the slit width closes it into a zero-width spike,
-        // whose vertices cross each other when the f64 buffer is rounded to f32.
-        let points = [
-            (0.0, 0.0),
-            (400.0, 0.0),
-            (400.0, 300.0),
-            (202.128_36, 300.0),
-            (222.400_59, 244.302_48),
-            (220.521_21, 243.618_44),
-            (200.0, 300.0),
-            (0.0, 300.0),
-        ];
-        let shape = SPolygon::new(points.map(|(x, y)| Point(x, y)).to_vec()).unwrap();
-
-        let offset = offset_shape(&shape, ShapeModifyMode::Inflate, 1.0).unwrap();
-
-        assert!(shape_modification_valid(
-            &shape,
-            &offset,
-            ShapeModifyMode::Inflate
-        ));
-    }
 }

@@ -4,13 +4,14 @@ use crate::entities::{Container, InferiorQualityZone, N_QUALITIES};
 use crate::geometry::geo_enums::RotationRange;
 use crate::geometry::primitives::{Point, Rect, SPolygon};
 use crate::geometry::shape_modification::{ShapeModifyConfig, ShapeModifyMode};
+use crate::geometry::short_edges::remove_short_edges;
 use crate::geometry::{AllowedOrientations, OriginalShape};
 use crate::geometry::{DTransformation, Transformation};
 use crate::io::ext_repr::{ExtContainer, ExtItem, ExtRotation, ExtSPolygon, ExtShape};
 use anyhow::{Result, bail, ensure};
-use float_cmp::approx_eq;
 use itertools::Itertools;
-use log::debug;
+use log::{debug, warn};
+use std::fmt::Display;
 use std::sync::Arc;
 
 /// Converts external representations of items and containers into internal ones.
@@ -65,18 +66,17 @@ impl Importer {
                     y_min,
                     width,
                     height,
-                } => {
-                    let rect = Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)?;
-                    SPolygon::from(rect)
+                } => import_rectangle(*x_min, *y_min, *width, *height)?,
+                ExtShape::SimplePolygon(esp) => {
+                    import_described_polygon(esp, format_args!("item {}", ext_item.id))?
                 }
-                ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
                 ExtShape::Polygon(ep) => {
                     ensure!(
                         ep.inner.is_empty(),
                         "item {} has unsupported holes",
                         ext_item.id
                     );
-                    import_simple_polygon(&ep.outer)?
+                    import_described_polygon(&ep.outer, format_args!("item {}", ext_item.id))?
                 }
                 ExtShape::MultiPolygon(_) => {
                     bail!("No support for multipolygons yet")
@@ -122,9 +122,13 @@ impl Importer {
                     y_min,
                     width,
                     height,
-                } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)?.into(),
-                ExtShape::SimplePolygon(esp) => import_simple_polygon(esp)?,
-                ExtShape::Polygon(ep) => import_simple_polygon(&ep.outer)?,
+                } => import_rectangle(*x_min, *y_min, *width, *height)?,
+                ExtShape::SimplePolygon(esp) => {
+                    import_described_polygon(esp, format_args!("container {}", ext_cont.id))?
+                }
+                ExtShape::Polygon(ep) => {
+                    import_described_polygon(&ep.outer, format_args!("container {}", ext_cont.id))?
+                }
                 ExtShape::MultiPolygon(_) => {
                     bail!("No support for multipolygon shapes yet")
                 }
@@ -143,7 +147,13 @@ impl Importer {
                 let json_holes = &jp.inner;
                 json_holes
                     .iter()
-                    .map(import_simple_polygon)
+                    .enumerate()
+                    .map(|(i, hole)| {
+                        import_described_polygon(
+                            hole,
+                            format_args!("hole {i} of container {}", ext_cont.id),
+                        )
+                    })
                     .collect::<Result<Vec<SPolygon>>>()?
             }
             ExtShape::MultiPolygon(_) => {
@@ -156,16 +166,19 @@ impl Importer {
                 ext_cont
                     .zones
                     .iter()
-                    .filter(|zone| zone.quality == q)
-                    .map(|zone| match &zone.shape {
+                    .enumerate()
+                    .filter(|(_, zone)| zone.quality == q)
+                    .map(|(i, zone)| match &zone.shape {
                         ExtShape::Rectangle {
                             x_min,
                             y_min,
                             width,
                             height,
-                        } => Rect::try_new(*x_min, *y_min, x_min + width, y_min + height)
-                            .map(Into::into),
-                        ExtShape::SimplePolygon(esp) => import_simple_polygon(esp),
+                        } => import_rectangle(*x_min, *y_min, *width, *height),
+                        ExtShape::SimplePolygon(esp) => import_described_polygon(
+                            esp,
+                            format_args!("quality zone {i} of container {}", ext_cont.id),
+                        ),
                         ExtShape::Polygon(_) => {
                             bail!("Quality zones require rectangles or simple polygons")
                         }
@@ -265,17 +278,28 @@ fn normalized_radians(angles: &[f32], period: f32) -> Result<Vec<f32>> {
         .collect())
 }
 
+/// Imports an axis-aligned rectangle as a [`SPolygon`].
+/// Fails for a non-positive width or height, or a rectangle too thin to be a valid [`SPolygon`].
+fn import_rectangle(x_min: f32, y_min: f32, width: f32, height: f32) -> Result<SPolygon> {
+    let rect = Rect::try_new(x_min, y_min, x_min + width, y_min + height)?;
+    SPolygon::try_from(rect)
+}
+
 pub fn import_simple_polygon(sp: &ExtSPolygon) -> Result<SPolygon> {
+    import_described_polygon(sp, "simple polygon")
+}
+
+/// [`import_simple_polygon`], with a description of the shape (e.g. "item 3") for its log messages.
+fn import_described_polygon(sp: &ExtSPolygon, shape: impl Display) -> Result<SPolygon> {
     let mut points = sp.0.iter().map(|(x, y)| Point(*x, *y)).collect_vec();
-    //Strip the last vertex if it is the same as the first one
+    //A closed ring repeats its first point at the end, an accepted way to write the format (no warning)
     if points.len() > 1 && points[0] == points[points.len() - 1] {
         points.pop();
     }
-    //Remove duplicates that are consecutive (e.g. [1, 2, 2, 3] -> [1, 2, 3])
-    eliminate_degenerate_vertices(&mut points);
-    //Bail if there are any non-consecutive duplicates.
-    if points.len() != points.iter().unique().count() {
-        bail!("Simple polygon has non-consecutive duplicate vertices");
+    //Remove vertices too close to their predecessor (SPolygon::new would remove them as well, but silently)
+    let removal = remove_short_edges(&mut points);
+    if !removal.removed.is_empty() {
+        warn!("[IMPORT] {shape}: {removal}");
     }
     SPolygon::new(points)
 }
@@ -303,30 +327,4 @@ pub fn ext_to_int_transformation(
         .transform(&pre_transf.compose().inverse())
         .transform_from_decomposed(ext_transf)
         .decompose()
-}
-
-fn eliminate_degenerate_vertices(points: &mut Vec<Point>) {
-    let mut indices_to_remove = vec![];
-    let n_points = points.len();
-    for i in 0..n_points {
-        let j = (i + 1) % n_points;
-        let p_i = points[i];
-        let p_j = points[j];
-        if approx_eq!(f32, p_i.0, p_j.0) && approx_eq!(f32, p_i.1, p_j.1) {
-            //points are equal, mark for removal
-            indices_to_remove.push(i);
-        }
-    }
-    //remove points in reverse order to avoid shifting indices
-    indices_to_remove.sort_unstable_by(|a, b| b.cmp(a));
-    for index in indices_to_remove {
-        if index < points.len() {
-            let j = (index + 1) % points.len();
-            debug!(
-                "[IMPORT] degenerate vertex eliminated (idx: {}, {:?}, {:?})",
-                index, points[index], points[j]
-            );
-            points.remove(index);
-        }
-    }
 }

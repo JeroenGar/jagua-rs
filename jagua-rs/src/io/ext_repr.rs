@@ -133,6 +133,10 @@ pub struct ExtPolygon {
 
 /// External representation of a [`SPolygon`](crate::geometry::primitives::SPolygon).
 /// A polygon with no holes and no self-intersections.
+///
+/// The ring may be closed: a last point equal to the first one is ignored.
+/// On import, vertices closer than [`SPolygon::MIN_EDGE_LENGTH_RATIO`](crate::geometry::primitives::SPolygon::MIN_EDGE_LENGTH_RATIO)
+/// times the diameter to the previous kept vertex, including duplicates, are removed with a warning.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ExtSPolygon(pub Vec<(f32, f32)>);
 

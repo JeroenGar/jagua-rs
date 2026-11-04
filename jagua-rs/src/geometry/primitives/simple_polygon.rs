@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use itertools::Itertools;
 use ordered_float::{NotNan, OrderedFloat};
 
@@ -15,9 +13,11 @@ use crate::geometry::primitives::Edge;
 use crate::geometry::primitives::GeometryError;
 use crate::geometry::primitives::Point;
 use crate::geometry::primitives::Rect;
+use crate::geometry::short_edges::remove_short_edges;
 use crate::util::FPA;
 use crate::util::assertions;
 use anyhow::{Result, bail};
+use log::debug;
 
 /// A Simple Polygon is a polygon that does not intersect itself and contains no holes.
 /// It is a closed shape with a finite number of vertices and edges.
@@ -39,8 +39,30 @@ pub struct SPolygon {
 }
 
 impl SPolygon {
+    /// Minimum length of an edge, as a fraction of the polygon's diameter.
+    ///
+    /// Shorter edges are removed on construction, see [`SPolygon::new`].
+    /// The margin is large compared to the `f32` rounding error of the coordinates of a centered polygon
+    /// (about `6e-8` times the diameter), so centering or rotating it cannot collapse an edge into a single point (issue #133).
+    ///
+    /// [`Transformable::transform`] and [`TransformableFrom::transform_from`] do not uphold this minimum:
+    /// translated far from the origin, where the `f32` spacing exceeds it, a short edge can still collapse.
+    /// Collision detection does not rely on the minimum; rebuild the polygon with [`SPolygon::new`] where it is needed.
+    pub const MIN_EDGE_LENGTH_RATIO: f32 = 1e-5;
+
     /// Create a new simple polygon from a set of points, expensive operations are performed here! Use [`Self::clone()`] or [`Self::transform()`] to avoid recomputation.
+    ///
+    /// Every vertex that lies closer than [`SPolygon::MIN_EDGE_LENGTH_RATIO`] times the diameter
+    /// to the previous kept vertex is removed, so no edge is shorter than that.
+    /// Returns an error if the remaining vertices do not form a valid simple polygon.
     pub fn new(mut points: Vec<Point>) -> Result<Self> {
+        if points.len() < 3 {
+            bail!(GeometryError::TooFewPoints(points.len()));
+        }
+        let removal = remove_short_edges(&mut points);
+        if !removal.removed.is_empty() {
+            debug!("[SP] {removal}");
+        }
         if points.len() < 3 {
             bail!(GeometryError::TooFewPoints(points.len()));
         }
@@ -118,7 +140,7 @@ impl SPolygon {
     }
 
     #[must_use]
-    fn calculate_diameter(points: Vec<Point>) -> f32 {
+    pub(crate) fn calculate_diameter(points: Vec<Point>) -> f32 {
         //The two points furthest apart must be part of the convex hull
         let ch = convex_hull_from_points(points);
 
@@ -128,7 +150,7 @@ impl SPolygon {
             .array_combinations::<2>()
             .map(|[p1, p2]| p1.sq_distance_to(p2))
             .max_by_key(|sq_d| NotNan::new(*sq_d).unwrap())
-            .expect("convex hull is empty");
+            .unwrap_or(0.0); // fewer than two distinct points
 
         sq_diam.sqrt()
     }
@@ -419,18 +441,26 @@ impl SeparationDistance<Point> for SPolygon {
     }
 }
 
-impl<T> From<T> for SPolygon
-where
-    T: Borrow<Rect>,
-{
-    fn from(r: T) -> Self {
-        let r = r.borrow();
+impl TryFrom<&Rect> for SPolygon {
+    type Error = anyhow::Error;
+
+    /// Fails if the rectangle is so thin that [`SPolygon::new`] removes its short sides,
+    /// see [`SPolygon::MIN_EDGE_LENGTH_RATIO`].
+    fn try_from(r: &Rect) -> Result<Self> {
         SPolygon::new(vec![
             (r.x_min, r.y_min).into(),
             (r.x_max, r.y_min).into(),
             (r.x_max, r.y_max).into(),
             (r.x_min, r.y_max).into(),
         ])
-        .unwrap()
+    }
+}
+
+impl TryFrom<Rect> for SPolygon {
+    type Error = anyhow::Error;
+
+    /// See [`SPolygon::try_from(&Rect)`](#impl-TryFrom%3C%26Rect%3E-for-SPolygon).
+    fn try_from(r: Rect) -> Result<Self> {
+        SPolygon::try_from(&r)
     }
 }

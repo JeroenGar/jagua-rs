@@ -21,8 +21,10 @@ pub struct OriginalShape {
 
 impl OriginalShape {
     pub fn convert_to_internal(&self) -> Result<SPolygon> {
-        // Apply the transformation
-        let mut internal = self.shape.transform_clone(&self.pre_transform.compose());
+        // Apply the transformation.
+        // Rounding can shorten edges slightly, so the polygon is rebuilt to uphold its minimum edge length.
+        let transformed = self.shape.transform_clone(&self.pre_transform.compose());
+        let mut internal = SPolygon::new(transformed.vertices)?;
 
         if let Some(offset) = self.modify_config.offset {
             // Offset the shape
