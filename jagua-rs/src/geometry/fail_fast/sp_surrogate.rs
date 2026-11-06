@@ -44,7 +44,7 @@ impl SPSurrogate {
             .map(|&i| simple_poly.vertices[i])
             .collect_vec();
         let convex_hull_area = SPolygon::calculate_area(&convex_hull_points);
-        let poles = pole::generate_surrogate_poles(simple_poly, &config.n_pole_limits)?;
+        let poles = pole::generate_surrogate_poles(simple_poly, &config.n_pole_limits);
         let n_ff_poles = if config.ff_pole_area_ratio == 0.0 {
             0
         } else {

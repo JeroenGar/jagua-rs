@@ -1,5 +1,5 @@
 use crate::io::import::Importer;
-use crate::probs::bpp::entities::{BPInstance, BPSolution, Bin};
+use crate::probs::bpp::entities::{BPInstance, Bin};
 use crate::probs::bpp::io::ext_repr::ExtBPInstance;
 use itertools::Itertools;
 use rayon::prelude::*;
@@ -58,10 +58,4 @@ pub fn import_instance(importer: &Importer, ext_instance: &ExtBPInstance) -> Res
     };
 
     Ok(BPInstance::new(items, bins))
-}
-
-/// Imports a solution into the library.
-#[must_use]
-pub fn import_solution(_instance: &BPInstance, _ext_solution: &ExtBPInstance) -> BPSolution {
-    unimplemented!("not yet implemented")
 }

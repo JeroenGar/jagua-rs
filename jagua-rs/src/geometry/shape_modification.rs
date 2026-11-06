@@ -519,17 +519,22 @@ pub fn close_narrow_concavities(
                     //If the edge collides with any edge of the shape, reject always
                     continue;
                 }
-                //the eliminated vertices should form a negative area (in inflation mode) or positive area (in deflation mode)
+                //the region cut off by the edge (from i to j, closed by the edge from j back to i)
+                //should have a negative area (in inflation mode) or positive area (in deflation mode)
                 let sub_shape_area = {
                     let sub_shape_points = if j > i {
-                        shape.vertices[i..j].to_vec()
+                        shape.vertices[i..=j].to_vec()
                     } else {
-                        [&shape.vertices[i..], &shape.vertices[..j]].concat()
+                        [&shape.vertices[i..], &shape.vertices[..=j]].concat()
                     };
                     SPolygon::calculate_area(&sub_shape_points)
                 };
-                if sub_shape_area >= 0.0 {
-                    //if the area is not negative, skip it
+                let wrong_side = match mode {
+                    ShapeModifyMode::Inflate => sub_shape_area >= 0.0,
+                    ShapeModifyMode::Deflate => sub_shape_area <= 0.0,
+                };
+                if wrong_side {
+                    //if the region lies on the wrong side of the edge, skip it
                     continue;
                 }
                 if sub_shape_area.abs() > cutoff_area_ratio * shape.area {
