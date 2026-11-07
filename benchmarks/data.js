@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794005668503,
+  "lastUpdate": 1794043495260,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -4419,6 +4419,48 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k",
             "value": 133682,
             "range": "± 2104",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jeroen.gardeyn@hotmail.com",
+            "name": "Jeroen Gardeyn",
+            "username": "JeroenGar"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "783a1f27171c3ee64c0ac7282d961ff210bb97ee",
+          "message": "Clean up the repository for 2.0.0 (#139)\n\n* Clean up the repository for 2.0.0\n\nRemove the LBF WASM demo with its workflow, build config and\ndependencies, the finished 1.0 polish notes, the uncompiled edge\nsensitivity bench and an unused SVG helper.\n\nTrim jagua-rs's dependencies: drop ndarray, rand_distr and getrandom,\nand pull in web-time only on wasm32-unknown-unknown. Native builds use\nstd::time::Instant.\n\nMake README links absolute so they resolve on crates.io, fix the LBF\nusage, ship the LICENSE with the crate, add crates.io categories, mark\nlbf as unpublished and ignore .DS_Store and local notes.\n\n* Complete the 2.0.0 release notes\n\nAdd GeometryError, the two offset fixes and this branch's dependency\nchanges.",
+          "timestamp": "2026-11-07T10:23:15+01:00",
+          "tree_id": "b2f0abb6cd05cec435a5f05359255ece4d4af913",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/783a1f27171c3ee64c0ac7282d961ff210bb97ee"
+        },
+        "date": 1794043494537,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k",
+            "value": 498022,
+            "range": "± 18921",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k",
+            "value": 513353,
+            "range": "± 38648",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k",
+            "value": 93498,
+            "range": "± 1859",
             "unit": "ns/iter"
           }
         ]
