@@ -20,3 +20,9 @@
 /act/
 
 input/
+
+# macOS Finder metadata
+.DS_Store
+
+# Local working notes, kept out of the repository
+/notes/

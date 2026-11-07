@@ -42,8 +42,7 @@ jobs:
           branch: gh-pages
           folder: target/doc
           clean: true # Automatically remove deleted files from the deploy branch
-          clean-exclude: | # Exclude benchmark data from being cleaned
+          clean-exclude: | # Keep the benchmark data
             benchmarks
-            lbf-wasm-demo
           commit-message: "auto deploy docs"
           single-commit: true

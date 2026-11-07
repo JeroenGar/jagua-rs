@@ -9,11 +9,9 @@ authors = ["Jeroen Gardeyn"]
 description = "A fast and fearless Collision Detection Engine for 2D irregular Cutting and Packing problems"
 readme = "../README.md"
 keywords = ["nesting", "packing", "strip", "bin", "irregular"]
+categories = ["algorithms", "mathematics", "science::geo"]
 
 [dependencies]
-ndarray = {workspace = true}
-rand_distr = {workspace = true}
-getrandom = { workspace = true }
 serde = {workspace = true}
 ordered-float = { workspace = true }
 log = {workspace = true}
@@ -27,6 +25,9 @@ document-features = {workspace = true}
 rayon = { workspace = true }
 geo-types = { workspace = true }
 geo = { workspace = true }
+
+# Only needed on wasm32-unknown-unknown, where std::time::Instant is unavailable
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 web-time = { workspace = true }
 
 [features]
@@ -37,4 +38,3 @@ bpp = []
 
 [package.metadata.docs.rs]
 all-features = true
-# rustdoc-args = ["--cfg", "docsrs"]
