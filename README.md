@@ -9,7 +9,7 @@
 This library is the implementation of the paper: ["_Decoupling Geometry from Optimization in 2D Irregular Cutting and Packing Problems: an Open-Source Collision Detection Engine_"](https://doi.org/10.1287/ijoc.2024.1025) published in _INFORMS Journal on Computing_.
 The author accepted manuscript of this paper is [freely available on arXiv](https://arxiv.org/abs/2508.08341).
 
-<img src="img/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
+<img src="https://raw.githubusercontent.com/JeroenGar/jagua-rs/main/img/jaguars_logo.svg" width="100%" height="300px" alt="jagua-rs logo">
 
 > [!IMPORTANT]
 > See [`sparrow`](https://github.com/JeroenGar/sparrow) for a state-of-the-art optimization algorithm based on `jagua-rs`
@@ -62,10 +62,10 @@ irregular C&P problems and boasts a **powerful Collision Detection Engine (CDE)*
 - **Currently supports:**
   - [x] Irregularly shaped items & containers
   - [x] Continuous rotation & translation
-  - [x] Optional reflections across specified local axes ([input format and native API](jagua-rs/src/io/reflections.md), [visual example](jagua-rs/src/io/reflection.svg))
+  - [x] Optional reflections across specified local axes ([input format and native API](https://github.com/JeroenGar/jagua-rs/blob/main/jagua-rs/src/io/reflections.md), [visual example](https://github.com/JeroenGar/jagua-rs/blob/main/jagua-rs/src/io/reflection.svg))
   - [x] Holes and inferior quality zones in containers
   - [x] Minimum separation distance between an item and any hazard
-  - [x] WebAssembly target for browser-based applications (see [WASM Demo](lbf/wasm-demo/README.md))
+  - [x] Compiles to WebAssembly for browser-based applications
   - [x] Modelled problem variants:
     - [x] Bin Packing Problem (with feature `bpp`)
     - [x] Strip Packing Problem (with feature `spp`)
@@ -92,9 +92,9 @@ Ensure [Rust and Cargo](https://www.rust-lang.org/learn/get-started) are install
 General usage:
 
 ```bash
-cd lbf
 cargo run --release --bin lbf -- \
   -i <input file> \
+  -p <problem variant: spp or bpp> \
   -c <config file (optional)> \
   -s <solution folder> \
   -l <log level (optional)>
@@ -112,7 +112,7 @@ cargo run --release --bin lbf -- \
 
 ### Input
 
-The [assets](assets) folder contains a set of problem instances from the academic literature that were converted to the
+The [assets](https://github.com/JeroenGar/jagua-rs/blob/main/assets) folder contains a set of problem instances from the academic literature that were converted to the
 same JSON structure.
 
 The files are also available in Oscar Oliveira's
@@ -140,9 +140,9 @@ options.
 
 Some examples of layout SVGs created by `lbf`:
 <p align="center">
-  <img src="img/sp_example.svg" width="22%" alt="strip packing example">
-  <img src="img/leather_example.svg" width="20%" alt="leather example">
-  <img src="img/bp_example.svg" width="50%" alt="bin packing example">
+  <img src="https://raw.githubusercontent.com/JeroenGar/jagua-rs/main/img/sp_example.svg" width="22%" alt="strip packing example">
+  <img src="https://raw.githubusercontent.com/JeroenGar/jagua-rs/main/img/leather_example.svg" width="20%" alt="leather example">
+  <img src="https://raw.githubusercontent.com/JeroenGar/jagua-rs/main/img/bp_example.svg" width="50%" alt="bin packing example">
 </p>
 
 > [!NOTE]  
@@ -152,7 +152,7 @@ Some examples of layout SVGs created by `lbf`:
 ### Config JSON
 
 Configuration of `jagua-rs` and the `lbf` heuristic is done through a JSON file.
-An example config file is provided [here](assets/config_lbf.json).
+An example config file is provided [here](https://github.com/JeroenGar/jagua-rs/blob/main/assets/config_lbf.json).
 If no config file is provided, the default configuration is used.
 
 The configuration file has the following structure:
@@ -223,7 +223,7 @@ commit your changes, and [submit a pull request](https://help.github.com/article
 
 ## License
 
-This project is licensed under Mozilla Public License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under Mozilla Public License 2.0 - see the [LICENSE](https://github.com/JeroenGar/jagua-rs/blob/main/LICENSE) file for details.
 
 ## Acknowledgements
 

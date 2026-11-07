@@ -4,7 +4,6 @@ use geo::algorithm::buffer::{BufferStyle, LineJoin};
 use itertools::Itertools;
 use log::{debug, error, info, warn};
 use ordered_float::OrderedFloat;
-use rand_distr::num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -445,11 +444,13 @@ fn offset_shape_once(sp: &SPolygon, mode: ShapeModifyMode, distance: f32) -> Res
         }
     };
 
-    // Convert back to internal representation, without the closing point of geo's exterior ring
+    // Convert back to internal representation, without the closing point of geo's exterior ring.
+    // The buffer of f32 input stays well within f32 range.
+    #[allow(clippy::cast_possible_truncation)]
     let mut points = geo_poly_offset
         .exterior()
         .points()
-        .map(|p| Point(p.x().to_f32().unwrap(), p.y().to_f32().unwrap()))
+        .map(|p| Point(p.x() as f32, p.y() as f32))
         .collect_vec();
     if points.len() > 1 && points.first() == points.last() {
         points.pop();
