@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794301143489,
+  "lastUpdate": 1794301150728,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -4503,6 +4503,48 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k",
             "value": 93561,
             "range": "± 1364",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c5fdfb51f6c91a19b0ab80158e8f75767c5b041a",
+          "message": "Bump jiff from 0.2.38 to 0.2.39 (#141)\n\nBumps [jiff](https://github.com/BurntSushi/jiff) from 0.2.38 to 0.2.39.\n- [Release notes](https://github.com/BurntSushi/jiff/releases)\n- [Changelog](https://github.com/BurntSushi/jiff/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/BurntSushi/jiff/compare/jiff-static-0.2.38...jiff-static-0.2.39)\n\n---\nupdated-dependencies:\n- dependency-name: jiff\n  dependency-version: 0.2.39\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-10T09:57:02+01:00",
+          "tree_id": "1dcb92523aae9b2b741a563e30c6609498341226",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/c5fdfb51f6c91a19b0ab80158e8f75767c5b041a"
+        },
+        "date": 1794301149946,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k",
+            "value": 749378,
+            "range": "± 25009",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k",
+            "value": 919803,
+            "range": "± 15024",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k",
+            "value": 132587,
+            "range": "± 2052",
             "unit": "ns/iter"
           }
         ]
