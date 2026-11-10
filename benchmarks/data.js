@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794043495260,
+  "lastUpdate": 1794301143489,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -4461,6 +4461,48 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k",
             "value": 93498,
             "range": "± 1859",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "13a0dfbde60713458fbb524f8c043f04631067ee",
+          "message": "Bump test-case from 3.4.0 to 3.4.1 (#140)\n\nBumps [test-case](https://github.com/frondeus/test-case) from 3.4.0 to 3.4.1.\n- [Release notes](https://github.com/frondeus/test-case/releases)\n- [Changelog](https://github.com/frondeus/test-case/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/frondeus/test-case/compare/v3.4.0...v3.4.1)\n\n---\nupdated-dependencies:\n- dependency-name: test-case\n  dependency-version: 3.4.1\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-10T09:57:29+01:00",
+          "tree_id": "4b5e1825764eda274fe39b54e9b0f77e1fa428f1",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/13a0dfbde60713458fbb524f8c043f04631067ee"
+        },
+        "date": 1794301143038,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k",
+            "value": 485304,
+            "range": "± 20275",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k",
+            "value": 517598,
+            "range": "± 13804",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k",
+            "value": 93561,
+            "range": "± 1364",
             "unit": "ns/iter"
           }
         ]
