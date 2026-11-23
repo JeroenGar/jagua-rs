@@ -19,7 +19,7 @@ thiserror = "2"
 fern = "0.7"
 test-case = "3.3"
 thousands = "0.2"
-jiff = "0.2"
+jiff = "1.0"
 criterion = { version = "0.8", default-features = false }
 clap = { version = "4.5", features = ["derive"] }
 web-time = "1.1"
