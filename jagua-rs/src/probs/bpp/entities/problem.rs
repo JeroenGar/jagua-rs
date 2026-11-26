@@ -136,12 +136,15 @@ impl BPProblem {
         }
 
         //Create new layouts for all keys present in solution but not in problem
-        for (lkey, ls) in &solution.layout_snapshots {
-            if !self.layouts.contains_key(lkey) {
-                let new_key = self.layouts.insert(Layout::from_snapshot(ls));
-                self.layout_bins.insert(new_key, solution.layout_bins[lkey]);
-                layout_keys_changed = true;
-            }
+        let layouts_to_add = solution
+            .layout_snapshots
+            .iter()
+            .filter(|&(lkey, _)| !self.layouts.contains_key(lkey))
+            .collect_vec();
+        for (lkey, ls) in layouts_to_add {
+            let new_key = self.layouts.insert(Layout::from_snapshot(ls));
+            self.layout_bins.insert(new_key, solution.layout_bins[lkey]);
+            layout_keys_changed = true;
         }
 
         //Restore the item demands and bin stocks
