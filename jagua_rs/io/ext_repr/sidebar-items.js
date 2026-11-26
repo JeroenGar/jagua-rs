@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ExtRotation","ExtShape"],"struct":["ExtContainer","ExtItem","ExtLayout","ExtOrientation","ExtPlacedItem","ExtPolygon","ExtQualityZone","ExtSPolygon","ExtTransformation"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":["AlmostCollidesWith","CollidesWith","DistanceTo","SeparationDistance","Transformable","TransformableFrom"]};

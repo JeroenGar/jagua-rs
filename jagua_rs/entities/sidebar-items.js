@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["N_QUALITIES"],"struct":["Container","ContainerMismatch","InferiorQualityZone","Item","Layout","LayoutSnapshot","PItemKey","PlacedItem"]};

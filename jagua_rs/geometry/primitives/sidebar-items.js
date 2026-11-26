@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["GeometryError"],"struct":["Circle","Edge","Point","Rect","SPolygon"]};
