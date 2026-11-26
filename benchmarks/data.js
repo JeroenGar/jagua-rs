@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795476310668,
+  "lastUpdate": 1795709698298,
   "repoUrl": "https://github.com/JeroenGar/jagua-rs",
   "entries": {
     "Performance Tracker": [
@@ -4713,6 +4713,48 @@ window.BENCHMARK_DATA = {
             "name": "cde_detect_1k",
             "value": 120299,
             "range": "± 1797",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "57560643+LesbianLemon@users.noreply.github.com",
+            "name": "Andrej Anžlovar",
+            "username": "LesbianLemon"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e1cd65e7722a6242b9da96900887181b108fa4d3",
+          "message": "Collect missing layouts before inserting in BPProblem::restore (#148)\n\nIn BPProblem::restore, inserting missing snapshots while checking\nLIFO free list to reuse a recently removed slot and mint a key equal\nto a later snapshot key. When the loop reached that later key, it\nappeared already present and was skipped, panicking in debug builds\nor silently dropping layouts in release builds.\nMissing (lkey, snapshot) pairs are now collected before mutating\nself.layouts, matching the existing layouts_to_remove pattern.",
+          "timestamp": "2026-11-26T17:12:57+01:00",
+          "tree_id": "19c5421c8c94ac8caa7221e08fa41aa48a8fa21d",
+          "url": "https://github.com/JeroenGar/jagua-rs/commit/e1cd65e7722a6242b9da96900887181b108fa4d3"
+        },
+        "date": 1795709697614,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "cde_collect_1k",
+            "value": 688176,
+            "range": "± 24945",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_update_1k",
+            "value": 635266,
+            "range": "± 9558",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "cde_detect_1k",
+            "value": 108448,
+            "range": "± 1712",
             "unit": "ns/iter"
           }
         ]
